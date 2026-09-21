@@ -102,7 +102,7 @@
   }
 
   function copyStyles(source, clone) {
-    const properties = ["color", "background", "background-color", "background-image", "background-size", "border", "border-radius", "box-shadow", "font", "font-family", "font-size", "font-weight", "line-height", "letter-spacing", "text-align", "display", "grid-template-columns", "grid-template-rows", "align-items", "justify-content", "gap", "padding", "margin", "width", "height", "min-width", "max-width", "min-height", "overflow", "opacity", "transform"];
+    const properties = ["color", "background", "background-color", "background-image", "background-size", "border", "border-radius", "box-shadow", "font", "font-family", "font-size", "font-weight", "line-height", "letter-spacing", "text-align", "display", "grid-template-columns", "grid-template-rows", "align-items", "justify-content", "gap", "padding", "margin", "width", "height", "min-width", "max-width", "min-height", "overflow", "opacity", "transform", "fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-linecap", "stroke-linejoin"];
     const sources = [source, ...source.querySelectorAll("*")];
     const clones = [clone, ...clone.querySelectorAll("*")];
     sources.forEach((node, index) => {
@@ -139,6 +139,82 @@
     }
   }
 
+  function numericValue(value) {
+    const raw = String(value || "").trim().replace(/,/g, "");
+    const match = raw.match(/-?\d+(?:\.\d+)?/);
+    if (!match) return 0;
+    let number = Number(match[0]);
+    if (/\bK\b/i.test(raw) || /\dK/i.test(raw)) number *= 1e3;
+    if (/\bM\b/i.test(raw) || /\dM/i.test(raw)) number *= 1e6;
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function panelSeries(panel) {
+    const candidates = Array.from(panel.querySelectorAll(".bar-row, .legend-item, .coverage-row, .position-row, [data-filter-value], [data-analysis-filter-value]"));
+    const seen = new Set();
+    return candidates.map(control => {
+      const label = control.dataset.filterLabel || control.dataset.filterValue || control.dataset.analysisFilterValue || text(control.querySelector("span:first-child")) || text(control);
+      const valueText = text(control.querySelector("b, strong, .value, span:last-child"));
+      const key = `${label}|${valueText}`;
+      if (!label || seen.has(key)) return null;
+      seen.add(key);
+      return { label, value: numericValue(valueText), display: valueText };
+    }).filter(Boolean).slice(0, 14);
+  }
+
+  function canvasPng(canvas) {
+    return canvas.toDataURL("image/png").split(",")[1];
+  }
+
+  function fallbackChartPng(panel) {
+    const canvas = document.createElement("canvas"), width = 1200, height = 650;
+    canvas.width = width; canvas.height = height;
+    const context = canvas.getContext("2d"), title = text(panel.querySelector("h2, h3")) || "Report chart", subtitle = text(panel.querySelector("small, p"));
+    context.fillStyle = "#ffffff"; context.fillRect(0, 0, width, height);
+    context.fillStyle = "#10233f"; context.font = "700 34px Arial"; context.fillText(title, 48, 58);
+    if (subtitle) { context.fillStyle = "#64758f"; context.font = "18px Arial"; context.fillText(subtitle.slice(0, 105), 48, 90); }
+    const series = panelSeries(panel);
+    if (!series.length) {
+      context.fillStyle = "#64758f"; context.font = "22px Arial"; context.fillText("Visual chart is available when this report has chart data.", 48, 160);
+      return canvasPng(canvas);
+    }
+    const palette = ["#087af1", "#08a99a", "#7658d9", "#e8942f", "#d94e62", "#168e72", "#3978d6"];
+    if (panel.querySelector(".donut, .abc-donut-css")) {
+      const total = series.reduce((sum, point) => sum + Math.max(0, point.value), 0) || 1;
+      let angle = -Math.PI / 2;
+      series.forEach((point, index) => { const next = angle + Math.max(0, point.value) / total * Math.PI * 2; context.beginPath(); context.arc(290, 350, 180, angle, next); context.arc(290, 350, 92, next, angle, true); context.closePath(); context.fillStyle = palette[index % palette.length]; context.fill(); angle = next; });
+      context.fillStyle = "#10233f"; context.font = "700 30px Arial"; context.textAlign = "center"; context.fillText(new Intl.NumberFormat().format(total), 290, 350); context.font = "17px Arial"; context.fillStyle = "#64758f"; context.fillText("Total", 290, 380); context.textAlign = "left";
+      series.slice(0, 10).forEach((point, index) => { const y = 165 + index * 43; context.fillStyle = palette[index % palette.length]; context.fillRect(565, y - 15, 18, 18); context.fillStyle = "#304b66"; context.font = "19px Arial"; context.fillText(point.label.slice(0, 38), 598, y); context.textAlign = "right"; context.fillStyle = "#10233f"; context.font = "700 19px Arial"; context.fillText(point.display || String(point.value), 1135, y); context.textAlign = "left"; });
+    } else {
+      const max = Math.max(1, ...series.map(point => Math.abs(point.value))), rowHeight = 470 / Math.max(1, series.length);
+      series.forEach((point, index) => { const y = 130 + index * rowHeight, barX = 350, barWidth = 700, barHeight = Math.max(12, Math.min(28, rowHeight * .55)); context.fillStyle = "#304b66"; context.font = "18px Arial"; context.fillText(point.label.slice(0, 30), 48, y + barHeight * .75); context.fillStyle = "#e8f0f5"; context.fillRect(barX, y, barWidth, barHeight); const gradient = context.createLinearGradient(barX, 0, barX + barWidth, 0); gradient.addColorStop(0, "#08a99a"); gradient.addColorStop(1, "#087af1"); context.fillStyle = gradient; context.fillRect(barX, y, Math.max(2, Math.abs(point.value) / max * barWidth), barHeight); context.fillStyle = "#10233f"; context.font = "700 18px Arial"; context.textAlign = "right"; context.fillText(point.display || String(point.value), 1145, y + barHeight * .75); context.textAlign = "left"; });
+    }
+    return canvasPng(canvas);
+  }
+
+  async function svgChartPng(svg, panel) {
+    const clone = svg.cloneNode(true);
+    copyStyles(svg, clone);
+    const box = svg.getBoundingClientRect(), width = Math.max(700, Math.ceil(box.width || 900)), height = Math.max(360, Math.ceil(box.height || 500));
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg"); clone.setAttribute("width", width); clone.setAttribute("height", height);
+    if (!clone.getAttribute("viewBox")) clone.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    const source = new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml;charset=utf-8" }), url = URL.createObjectURL(source);
+    try {
+      const image = new Image(); await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; image.src = url; });
+      const canvas = document.createElement("canvas"); canvas.width = 1200; canvas.height = 650; const context = canvas.getContext("2d"); context.fillStyle = "#fff"; context.fillRect(0, 0, 1200, 650); context.fillStyle = "#10233f"; context.font = "700 30px Arial"; context.fillText(text(panel.querySelector("h2, h3")) || "Report chart", 36, 46); context.drawImage(image, 35, 65, 1130, 550); return canvasPng(canvas);
+    } finally { URL.revokeObjectURL(url); }
+  }
+
+  async function panelToPng(panel) {
+    const sourceCanvas = panel.querySelector("canvas");
+    if (sourceCanvas) { try { const canvas = document.createElement("canvas"); canvas.width = 1200; canvas.height = 650; const context = canvas.getContext("2d"); context.fillStyle = "#fff"; context.fillRect(0, 0, 1200, 650); context.drawImage(sourceCanvas, 30, 30, 1140, 590); return canvasPng(canvas); } catch (_) {} }
+    const svg = panel.querySelector("svg");
+    if (svg) { try { return await svgChartPng(svg, panel); } catch (_) {} }
+    const series = panelSeries(panel);
+    if (series.length) return fallbackChartPng(panel);
+    try { return await elementToPng(panel); } catch (_) { return fallbackChartPng(panel); }
+  }
+
   function xmlEscape(value) {
     return String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }[character]));
   }
@@ -150,13 +226,13 @@
   async function embedCharts(workbookBytes, images) {
     if (!images.length) return new Blob([workbookBytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const zip = await JSZip.loadAsync(workbookBytes);
-    const sheetPath = "xl/worksheets/sheet1.xml";
+    const sheetPath = "xl/worksheets/sheet2.xml";
     let sheetXml = await zip.file(sheetPath).async("string");
     if (!/xmlns:r=/.test(sheetXml)) sheetXml = sheetXml.replace("<worksheet ", '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ');
     sheetXml = sheetXml.replace("</worksheet>", '<drawing r:id="rIdReportCharts"/></worksheet>');
     zip.file(sheetPath, sheetXml);
 
-    const relPath = "xl/worksheets/_rels/sheet1.xml.rels";
+    const relPath = "xl/worksheets/_rels/sheet2.xml.rels";
     const existing = zip.file(relPath);
     let relationships = existing ? await existing.async("string") : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
     relationships = relationships.replace("</Relationships>", '<Relationship Id="rIdReportCharts" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>');
@@ -164,7 +240,7 @@
 
     const anchors = images.map((_, index) => {
       const column = index % 2 ? 8 : 0;
-      const row = 15 + Math.floor(index / 2) * 23;
+      const row = 3 + Math.floor(index / 2) * 23;
       return pictureAnchor(index, column, row, column + 8, row + 21);
     });
     zip.file("xl/drawings/drawing1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${anchors.join("")}</xdr:wsDr>`);
@@ -219,6 +295,7 @@
     ];
     const workbook = XLSX.utils.book_new();
     appendSheet(workbook, "Dashboard", dashboardRows);
+    appendSheet(workbook, "Visual Charts", [[title], [`${region} market • Visual charts reflect the current page filters`], []]);
     if (filters.length) appendSheet(workbook, "Filters", [["Filter", "Selected value"], ...filters]);
     tables.forEach(table => appendSheet(workbook, table.name, table.rows));
     const chartData = collectChartData();
@@ -227,11 +304,19 @@
 
     const images = [];
     for (const panel of chartPanels()) {
-      try { images.push(await elementToPng(panel)); } catch (error) { console.warn("Chart capture skipped", error); }
+      try { images.push(await panelToPng(panel)); } catch (error) { console.warn("Chart capture skipped", error); }
     }
     const bytes = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const blob = await embedCharts(bytes, images);
     downloadBlob(blob, `${safeName(title)} ${region} ${exportedAt.toISOString().slice(0, 10)}.xlsx`);
+  }
+
+  async function captureChartImages() {
+    const images = [];
+    for (const panel of chartPanels()) {
+      try { images.push(await panelToPng(panel)); } catch (error) { console.warn("Chart capture skipped", error); }
+    }
+    return images;
   }
 
   async function exportReport(trigger) {
@@ -266,5 +351,5 @@
   if (!button.isConnected) document.body.appendChild(button);
   button.addEventListener("click", () => exportReport(button));
 
-  window.StarkReportExport = { exportReport: () => exportReport(button) };
+  window.StarkReportExport = { exportReport: () => exportReport(button), captureChartImages, embedCharts };
 })();
