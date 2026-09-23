@@ -1863,3 +1863,35 @@ body[data-page="tracking"] .hero :is(h1, p, strong, span) { color: inherit; }
   .runtime-notice { display: none !important; }
   body.premium-shell-active { margin-left: 0 !important; background: #fff !important; }
 }
+
+/* Reorder archive: browser-local Excel snapshots saved before Raw Report replacement. */
+body[data-page="reorder"] .reorder-history-panel {
+  margin: 0 0 16px;
+  padding: 0;
+  overflow: hidden;
+}
+body[data-page="reorder"] .reorder-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 17px 20px;
+}
+body[data-page="reorder"] .reorder-history-heading h2 { margin: 2px 0 3px; font-size: 1.05rem; }
+body[data-page="reorder"] .reorder-history-heading span { color: var(--ui-muted, #60738a); font-size: .78rem; }
+body[data-page="reorder"] .reorder-history-content { border-top: 1px solid var(--ui-line, #cbdde8); }
+body[data-page="reorder"] .reorder-history-content[hidden] { display: none; }
+body[data-page="reorder"] .reorder-history-note { margin: 0; padding: 12px 20px; color: #49647c; background: #eef7fa; font-size: .78rem; }
+body[data-page="reorder"] .reorder-history-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+body[data-page="reorder"] .reorder-history-table th,
+body[data-page="reorder"] .reorder-history-table td { padding: 11px 14px; border-bottom: 1px solid #d7e3ec; text-align: left; vertical-align: middle; }
+body[data-page="reorder"] .reorder-history-table th { color: #fff; background: #174f79; font-size: .68rem; text-transform: uppercase; letter-spacing: .04em; }
+body[data-page="reorder"] .reorder-history-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+body[data-page="reorder"] .reorder-history-table td:first-child strong,
+body[data-page="reorder"] .reorder-history-table td:first-child small { display: block; }
+body[data-page="reorder"] .reorder-history-table td:first-child small { margin-top: 3px; color: #718196; font-size: .68rem; }
+body[data-page="reorder"] .reorder-history-download { min-width: 126px; padding: 9px 12px; }
+@media (max-width: 760px) {
+  body[data-page="reorder"] .reorder-history-heading { align-items: flex-start; flex-direction: column; }
+  body[data-page="reorder"] .reorder-history-table { min-width: 720px; }
+}
