@@ -1811,6 +1811,13 @@ body[data-page="tracking"] .hero :is(h1, p, strong, span) { color: inherit; }
 }
 .report-export-action:hover { transform: translateY(-2px); filter: brightness(1.06); box-shadow: 0 19px 42px rgba(4, 38, 67, .3); }
 .report-export-action:disabled { cursor: wait; opacity: .8; }
+.report-export-action.report-export-unavailable:disabled {
+  cursor: not-allowed;
+  opacity: .52;
+  filter: grayscale(.35);
+  transform: none;
+  box-shadow: 0 10px 24px rgba(4, 38, 67, .16);
+}
 .report-export-spinner {
   width: 15px;
   height: 15px;

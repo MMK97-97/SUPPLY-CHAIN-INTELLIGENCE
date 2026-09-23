@@ -48,12 +48,12 @@
   }
 
   function collectKpis() {
-    const selectors = [".iar-kpi", ".inventory-kpi", ".kpi-card", ".reorder-kpi-card", ".metric-card", ".stat-card"];
+    const selectors = [".iar-kpi", ".inventory-kpi", ".kpi-card", ".reorder-kpi-card", ".metric-card", ".stat-card", ".kpi"];
     const seen = new Set();
     return Array.from(document.querySelectorAll(selectors.join(","))).filter(visible).map(card => {
       const label = text(card.querySelector("small, .kpi-label, span"));
       const value = text(card.querySelector("strong, .kpi-value, b"));
-      const detail = text(card.querySelector("p, em, span:last-child"));
+      const detail = text(card.querySelector("p, em, small, span:last-child"));
       const key = `${label}|${value}|${detail}`;
       if (!label || seen.has(key)) return null;
       seen.add(key);
@@ -96,8 +96,8 @@
   }
 
   function chartPanels() {
-    const candidates = Array.from(document.querySelectorAll(".analysis-card, .inventory-panel, .panel, .chart, [id$='-chart']"))
-      .filter(node => visible(node) && node.querySelector("svg, canvas, .donut, .bar-list, .bar-chart, .coverage-bars, .position-bars, .abc-donut-css"));
+    const candidates = Array.from(document.querySelectorAll(".analysis-card, .inventory-panel, .panel, .chart, [id$='-chart'], #kpis, #con-kpis"))
+      .filter(node => visible(node) && node.querySelector("svg, canvas, .donut, .bar-list, .bar-chart, .coverage-bars, .position-bars, .abc-donut-css, .kpi"));
     return candidates.filter(node => !candidates.some(other => other !== node && other.contains(node))).slice(0, 8);
   }
 
@@ -150,7 +150,7 @@
   }
 
   function panelSeries(panel) {
-    const candidates = Array.from(panel.querySelectorAll(".bar-row, .legend-item, .coverage-row, .position-row, [data-filter-value], [data-analysis-filter-value]"));
+    const candidates = Array.from(panel.querySelectorAll(".bar-row, .legend-item, .coverage-row, .position-row, .kpi, [data-filter-value], [data-analysis-filter-value]"));
     const seen = new Set();
     return candidates.map(control => {
       const label = control.dataset.filterLabel || control.dataset.filterValue || control.dataset.analysisFilterValue || text(control.querySelector("span:first-child")) || text(control);
@@ -320,6 +320,12 @@
   }
 
   async function exportReport(trigger) {
+    const readiness = exportReadiness();
+    if (!readiness.ready) {
+      notifyUnavailable(readiness.message);
+      updateButtonState();
+      return;
+    }
     const original = trigger.innerHTML;
     trigger.disabled = true;
     trigger.innerHTML = '<span class="report-export-spinner" aria-hidden="true"></span><span>Preparing Excel…</span>';
@@ -339,7 +345,67 @@
     } finally {
       trigger.disabled = false;
       trigger.innerHTML = original;
+      updateButtonState();
     }
+  }
+
+  function exportReadiness() {
+    if (/^reorder-report-/.test(path)) {
+      const source = document.getElementById("export-reorder-xlsx");
+      return { ready: Boolean(source && visible(source) && !source.disabled), message: "Upload a Raw Report before exporting the Reorder Report." };
+    }
+    if (/^inventory-analysis-report-/.test(path)) {
+      const source = document.getElementById("export-analysis");
+      return { ready: Boolean(source && !source.disabled), message: "Upload the required analysis reports before exporting Inventory Analysis." };
+    }
+    if (path === "sales-analysis.html") {
+      const source = document.getElementById("export-workbook");
+      return { ready: Boolean(source && !source.disabled), message: "Upload and analyze a sales report before exporting Sales Analysis." };
+    }
+    if (/^(inventory-dashboard|raw-report)-(us|eu|ca)\.html$/i.test(path)) {
+      const content = document.querySelector("[data-requires-data]");
+      return { ready: Boolean(content && visible(content)), message: "Upload a Raw Report before exporting this report." };
+    }
+    if (path === "freight-estimator.html") {
+      const results = document.getElementById("results");
+      return { ready: Boolean(results && visible(results) && document.querySelector("#kpis .kpi")), message: "Calculate a shipment plan before exporting the Freight Estimator." };
+    }
+    if (path === "freight-consolidate.html") {
+      const results = document.getElementById("con-results");
+      return { ready: Boolean(results && visible(results) && document.querySelector("#con-kpis .kpi")), message: "Calculate a consolidated shipment plan before exporting Freight Consolidate." };
+    }
+    if (path === "shipment-tracking.html") {
+      const results = document.getElementById("tracking-results");
+      return { ready: Boolean(results && visible(results)), message: "Track a shipment before exporting Tracking." };
+    }
+    return { ready: true, message: "This report is not ready to export." };
+  }
+
+  function notifyUnavailable(message) {
+    let notice = document.querySelector(".report-export-notice");
+    if (!notice) {
+      notice = document.createElement("div");
+      notice.className = "runtime-notice report-export-notice";
+      notice.setAttribute("role", "status");
+      notice.setAttribute("aria-live", "polite");
+      notice.innerHTML = '<strong>Report not ready</strong><span></span><button type="button" aria-label="Dismiss message">×</button>';
+      notice.querySelector("button").addEventListener("click", () => notice.remove());
+      document.body.appendChild(notice);
+    }
+    notice.querySelector("span").textContent = message;
+    clearTimeout(notifyUnavailable.timer);
+    notifyUnavailable.timer = setTimeout(() => notice.remove(), 6500);
+  }
+
+  function updateButtonState() {
+    const readiness = exportReadiness();
+    const disabled = !readiness.ready;
+    if (button.disabled !== disabled) button.disabled = disabled;
+    button.classList.toggle("report-export-unavailable", !readiness.ready);
+    button.setAttribute("aria-disabled", String(!readiness.ready));
+    button.title = readiness.ready
+      ? "Export the current report to Excel with KPIs, charts and visible tables"
+      : readiness.message;
   }
 
   const button = document.querySelector(".report-export-action") || document.createElement("button");
@@ -350,6 +416,20 @@
   button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v3h14v-3"/></svg><span>Export report</span>';
   if (!button.isConnected) document.body.appendChild(button);
   button.addEventListener("click", () => exportReport(button));
+
+  let stateFrame = 0;
+  const scheduleStateUpdate = () => {
+    cancelAnimationFrame(stateFrame);
+    stateFrame = requestAnimationFrame(updateButtonState);
+  };
+  new MutationObserver(scheduleStateUpdate).observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ["class", "hidden", "disabled"]
+  });
+  window.addEventListener("stark-report-state-change", scheduleStateUpdate);
+  updateButtonState();
 
   window.StarkReportExport = { exportReport: () => exportReport(button), captureChartImages, embedCharts };
 })();

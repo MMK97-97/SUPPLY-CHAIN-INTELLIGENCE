@@ -392,8 +392,8 @@
       *,*::before,*::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="assets/world-class-ui.css?v=20260918-4">
-  <script src="assets/premium-shell.js?v=20260918-6" defer></script>
+  <link rel="stylesheet" href="assets/world-class-ui.css?v=20260923-5">
+  <script src="assets/premium-shell.js?v=20260923-5" defer></script>
 </head>
 
 <body class="premium-shell-active" data-page="tracking">
@@ -434,8 +434,8 @@
           <button class="carrier-button" type="button" data-carrier="FEDEX" aria-pressed="false">FedEx</button>
         </div>
 
-        <form class="tracking-form" id="tracking-form">
-          <input class="tracking-input" id="tracking-number" maxlength="35" autocomplete="off" spellcheck="false" placeholder="Enter tracking number" aria-label="Tracking number" required>
+        <form class="tracking-form" id="tracking-form" novalidate>
+          <input class="tracking-input" id="tracking-number" maxlength="35" autocomplete="off" spellcheck="false" placeholder="Enter tracking number" aria-label="Tracking number" aria-describedby="tracking-message" aria-invalid="false">
           <button class="track-button" id="track-button" type="submit">Track shipment</button>
         </form>
         <p class="message" id="tracking-message" role="status" aria-live="polite"></p>
@@ -523,7 +523,16 @@
         const carrier = selectedCarrier === "auto" ? detectCarrier(trackingNumber) : selectedCarrier;
         const endpoint = apiEndpoint();
 
-        if (trackingNumber.length < 8) return showError("Enter a valid tracking number.");
+        if (!trackingNumber) {
+          showError("Enter a tracking number.");
+          $("tracking-number").focus();
+          return;
+        }
+        if (trackingNumber.length < 8) {
+          showError("Enter a valid tracking number with at least 8 characters.");
+          $("tracking-number").focus();
+          return;
+        }
         if (!carrier) return showError("Carrier could not be detected. Select UPS or FedEx and try again.");
         if (!endpoint) return showError("The secure tracking service is not connected. Add its URL in assets/tracking-config.js.");
 
@@ -629,11 +638,13 @@
       function showError(message) {
         $("tracking-message").className = "message error";
         $("tracking-message").textContent = message;
+        $("tracking-number").setAttribute("aria-invalid", "true");
       }
 
       function clearMessage() {
         $("tracking-message").className = "message";
         $("tracking-message").textContent = "";
+        $("tracking-number").setAttribute("aria-invalid", "false");
       }
     })();
   </script>

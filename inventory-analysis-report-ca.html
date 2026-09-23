@@ -9,12 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles-ca.css?v=20260915-4">
-  <link rel="stylesheet" href="assets/world-class-ui.css?v=20260918-4">
+  <link rel="stylesheet" href="assets/world-class-ui.css?v=20260923-5">
   <link rel="stylesheet" href="assets/inventory-analysis-report.css?v=20260918-3">
   <script src="assets/jszip.min.js" defer></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
-  <script src="assets/inventory-analysis-report.js?v=20260921-1" defer></script>
-  <script src="assets/premium-shell.js?v=20260918-6" defer></script>
+  <script src="assets/inventory-analysis-report.js?v=20260923-2" defer></script>
+  <script src="assets/premium-shell.js?v=20260923-5" defer></script>
 </head>
 <body data-page="analysis-report" data-region="CA">
   <main class="analysis-report-page">
@@ -24,7 +24,7 @@
     </section>
 
     <section class="analysis-section upload-section">
-      <div class="section-heading"><div><p class="eyebrow">Source control</p><h2>Analysis data</h2><p>Validated regional reports with independent replacement controls.</p></div><div class="button-row"><button class="iar-button" id="toggle-analysis-sources" type="button" aria-expanded="false">Manage sources</button><button class="iar-button primary" id="export-analysis" type="button">Export data + charts</button><button class="iar-button danger" id="clear-analysis" type="button">Clear regional data</button></div></div>
+      <div class="section-heading"><div><p class="eyebrow">Source control</p><h2>Analysis data</h2><p>Validated regional reports with independent replacement controls.</p></div><div class="button-row"><button class="iar-button" id="toggle-analysis-sources" type="button" aria-expanded="false">Manage sources</button><button class="iar-button primary" id="export-analysis" type="button" disabled title="Upload the required reports and produce analysis before exporting">Export data + charts</button><button class="iar-button danger" id="clear-analysis" type="button">Clear regional data</button></div></div>
       <div class="upload-grid" id="analysis-upload-grid" hidden>
         <label class="upload-card required"><span class="upload-icon">▦</span><span><h3>Item stock & sales history</h3><p>SKU status, current stock, and YYYYMM unit demand.</p></span><span class="upload-action">Upload</span><input type="file" data-upload="itemStock" accept=".xlsx,.xls,.csv,.tsv"><span class="upload-status" data-source-status="itemStock">Not loaded</span></label>
         <label class="upload-card required"><span class="upload-icon">⇄</span><span><h3>Average item & commitments</h3><p>ATS, client orders, supplier POs, and delivery windows.</p></span><span class="upload-action">Upload</span><input type="file" data-upload="average" accept=".xls,.xlsx,.html,.csv"><span class="upload-status" data-source-status="average">Not loaded</span></label>
