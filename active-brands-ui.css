@@ -292,6 +292,31 @@ body[data-page="brands"] .brand-detail-select:focus-visible {
   outline-offset: 1px;
 }
 
+body[data-page="brands"] .brand-choice-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+body[data-page="brands"] .brand-choice-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #29455f;
+  font-size: .74rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+body[data-page="brands"] .brand-choice-group input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: #0e9589;
+}
+
 body[data-page="brands"] .brand-status,
 body[data-page="brands"] .brand-source {
   display: inline-flex;

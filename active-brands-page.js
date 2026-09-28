@@ -30,6 +30,19 @@
     return SI.loadBrandSettings(REGION);
   }
 
+  function logisticsKey() {
+    return `stark-brand-logistics-${REGION}`;
+  }
+
+  function logisticsSettings() {
+    try { return JSON.parse(localStorage.getItem(logisticsKey()) || "{}"); }
+    catch (_) { return {}; }
+  }
+
+  function saveLogistics(settings) {
+    localStorage.setItem(logisticsKey(), JSON.stringify(settings));
+  }
+
   function allNames() {
     return SI.unique([...rows().map(row => row.brand), ...Object.keys(settings())])
       .filter(Boolean)
@@ -38,6 +51,7 @@
 
   function displayed() {
     const saved = settings();
+    const logistics = logisticsSettings();
     const search = el("brand-search").value.trim().toLowerCase();
     return allNames()
       .filter(brand => !search || brand.toLowerCase().includes(search))
@@ -53,6 +67,7 @@
             palletOption: ""
           },
           ...(saved[brand] || {}),
+          ...(logistics[brand] || {}),
           items: itemCount,
           source: itemCount > 0 ? "System" : "Manual"
         };
@@ -105,11 +120,10 @@
             <td><strong>${safeBrand}</strong></td>
             <td>${number.format(row.items)}</td>
             <td><input class="lead-time-input" data-brand-lead="${safeBrand}" value="${SI.escapeHtml(row.leadTime)}" placeholder="e.g. 2 weeks" aria-label="Lead time for ${safeBrand}"></td>
-            <td><select class="brand-detail-select" data-brand-shipping-cost="${safeBrand}" aria-label="Shipping cost responsibility for ${safeBrand}">
-              <option value="">Select</option>
-              <option value="Us" ${row.shippingCostResponsibility === "Us" ? "selected" : ""}>Us</option>
-              <option value="Brand/Supplier" ${row.shippingCostResponsibility === "Brand/Supplier" ? "selected" : ""}>Brand/Supplier</option>
-            </select></td>
+            <td><div class="brand-choice-group" role="group" aria-label="Shipping cost responsibility for ${safeBrand}">
+              <label><input type="checkbox" data-brand-shipping-cost="${safeBrand}" value="Us" ${row.shippingCostResponsibility === "Us" ? "checked" : ""}> Us</label>
+              <label><input type="checkbox" data-brand-shipping-cost="${safeBrand}" value="Supplier" ${["Supplier", "Brand/Supplier"].includes(row.shippingCostResponsibility) ? "checked" : ""}> Supplier</label>
+            </div></td>
             <td><select class="brand-detail-select" data-brand-shipping-info="${safeBrand}" aria-label="Shipping information availability for ${safeBrand}">
               <option value="">Select</option>
               <option value="Yes" ${row.shippingInfoAvailable === "Yes" ? "selected" : ""}>Yes</option>
@@ -138,6 +152,12 @@
 
   function bindRowEvents() {
     document.querySelectorAll("[data-brand-active]").forEach(input => input.addEventListener("change", saveActive));
+    document.querySelectorAll("[data-brand-shipping-cost]").forEach(input => input.addEventListener("change", () => {
+      if (!input.checked) return;
+      document.querySelectorAll("[data-brand-shipping-cost]").forEach(option => {
+        if (option !== input && option.dataset.brandShippingCost === input.dataset.brandShippingCost) option.checked = false;
+      });
+    }));
     document.querySelectorAll("[data-brand-lead]").forEach(input => input.addEventListener("keydown", event => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -207,37 +227,43 @@
 
   function saveRow(brand) {
     const saved = settings();
+    const logistics = logisticsSettings();
     const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
     const active = Array.from(document.querySelectorAll("[data-brand-active]")).find(input => input.dataset.brandActive === brand);
-    const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand);
+    const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand && input.checked);
     const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
     const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
     saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
     if (lead) saved[brand].leadTime = lead.value.trim();
     if (active) saved[brand].active = active.checked;
-    if (shippingCost) saved[brand].shippingCostResponsibility = shippingCost.value;
-    if (shippingInfo) saved[brand].shippingInfoAvailable = shippingInfo.value;
-    if (pallet) saved[brand].palletOption = pallet.value;
+    logistics[brand] = logistics[brand] || {};
+    logistics[brand].shippingCostResponsibility = shippingCost?.value || "";
+    logistics[brand].shippingInfoAvailable = shippingInfo?.value || "";
+    logistics[brand].palletOption = pallet?.value || "";
     SI.saveBrandSettings(REGION, saved);
+    saveLogistics(logistics);
     const button = Array.from(document.querySelectorAll("[data-brand-save]")).find(node => node.dataset.brandSave === brand);
     flashSaved(button);
   }
 
   function saveLeadTimes() {
     const saved = settings();
+    const logistics = logisticsSettings();
     document.querySelectorAll("[data-brand-save]").forEach(button => {
       const brand = button.dataset.brandSave;
       const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
-      const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand);
+      const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand && input.checked);
       const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
       const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
       saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
       if (lead) saved[brand].leadTime = lead.value.trim();
-      if (shippingCost) saved[brand].shippingCostResponsibility = shippingCost.value;
-      if (shippingInfo) saved[brand].shippingInfoAvailable = shippingInfo.value;
-      if (pallet) saved[brand].palletOption = pallet.value;
+      logistics[brand] = logistics[brand] || {};
+      logistics[brand].shippingCostResponsibility = shippingCost?.value || "";
+      logistics[brand].shippingInfoAvailable = shippingInfo?.value || "";
+      logistics[brand].palletOption = pallet?.value || "";
     });
     SI.saveBrandSettings(REGION, saved);
+    saveLogistics(logistics);
     flashSaved(el("save-lead-times"), "Saved ✓", "Save settings");
   }
 
