@@ -45,7 +45,14 @@
         const itemCount = rows().filter(row => String(row.brand).toLowerCase() === brand.toLowerCase()).length;
         return {
           brand,
-          ...(saved[brand] || { active: true, leadTime: "" }),
+          ...{
+            active: true,
+            leadTime: "",
+            shippingCostResponsibility: "",
+            shippingInfoAvailable: "",
+            palletOption: ""
+          },
+          ...(saved[brand] || {}),
           items: itemCount,
           source: itemCount > 0 ? "System" : "Manual"
         };
@@ -98,12 +105,28 @@
             <td><strong>${safeBrand}</strong></td>
             <td>${number.format(row.items)}</td>
             <td><input class="lead-time-input" data-brand-lead="${safeBrand}" value="${SI.escapeHtml(row.leadTime)}" placeholder="e.g. 2 weeks" aria-label="Lead time for ${safeBrand}"></td>
+            <td><select class="brand-detail-select" data-brand-shipping-cost="${safeBrand}" aria-label="Shipping cost responsibility for ${safeBrand}">
+              <option value="">Select</option>
+              <option value="Us" ${row.shippingCostResponsibility === "Us" ? "selected" : ""}>Us</option>
+              <option value="Brand/Supplier" ${row.shippingCostResponsibility === "Brand/Supplier" ? "selected" : ""}>Brand/Supplier</option>
+            </select></td>
+            <td><select class="brand-detail-select" data-brand-shipping-info="${safeBrand}" aria-label="Shipping information availability for ${safeBrand}">
+              <option value="">Select</option>
+              <option value="Yes" ${row.shippingInfoAvailable === "Yes" ? "selected" : ""}>Yes</option>
+              <option value="No" ${row.shippingInfoAvailable === "No" ? "selected" : ""}>No</option>
+              <option value="N/A" ${row.shippingInfoAvailable === "N/A" ? "selected" : ""}>N/A</option>
+            </select></td>
+            <td><select class="brand-detail-select" data-brand-pallet="${safeBrand}" aria-label="Pallet option for ${safeBrand}">
+              <option value="">Select</option>
+              <option value="Yes" ${row.palletOption === "Yes" ? "selected" : ""}>Yes</option>
+              <option value="No" ${row.palletOption === "No" ? "selected" : ""}>No</option>
+            </select></td>
             <td><span class="brand-status ${active ? "is-active" : "is-inactive"}" data-brand-status="${safeBrand}">${active ? "Active" : "Inactive"}</span></td>
             <td><span class="brand-source ${manual ? "is-manual" : ""}">${row.source}</span></td>
             <td><button class="brand-save" type="button" data-brand-save="${safeBrand}">Save</button></td>
           </tr>`;
         }).join("")
-      : `<tr><td class="brand-empty" colspan="7">No brands match the current search. Select Add brand to create one.</td></tr>`;
+      : `<tr><td class="brand-empty" colspan="10">No brands match the current search. Select Add brand to create one.</td></tr>`;
 
     const end = Math.min(start + visible.length, list.length);
     el("brand-result-count").textContent = list.length
@@ -160,7 +183,7 @@
       return;
     }
     const saved = settings();
-    saved[brand] = { active: true, leadTime: "" };
+    saved[brand] = { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
     SI.saveBrandSettings(REGION, saved);
     el("brand-search").value = brand;
     currentPage = 1;
@@ -172,7 +195,7 @@
   function saveActive(event) {
     const saved = settings();
     const brand = event.target.dataset.brandActive;
-    saved[brand] = saved[brand] || { active: true, leadTime: "" };
+    saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
     saved[brand].active = event.target.checked;
     SI.saveBrandSettings(REGION, saved);
     const status = Array.from(document.querySelectorAll("[data-brand-status]")).find(node => node.dataset.brandStatus === brand);
@@ -186,9 +209,15 @@
     const saved = settings();
     const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
     const active = Array.from(document.querySelectorAll("[data-brand-active]")).find(input => input.dataset.brandActive === brand);
-    saved[brand] = saved[brand] || { active: true, leadTime: "" };
+    const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand);
+    const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
+    const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
+    saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
     if (lead) saved[brand].leadTime = lead.value.trim();
     if (active) saved[brand].active = active.checked;
+    if (shippingCost) saved[brand].shippingCostResponsibility = shippingCost.value;
+    if (shippingInfo) saved[brand].shippingInfoAvailable = shippingInfo.value;
+    if (pallet) saved[brand].palletOption = pallet.value;
     SI.saveBrandSettings(REGION, saved);
     const button = Array.from(document.querySelectorAll("[data-brand-save]")).find(node => node.dataset.brandSave === brand);
     flashSaved(button);
@@ -196,13 +225,20 @@
 
   function saveLeadTimes() {
     const saved = settings();
-    document.querySelectorAll("[data-brand-lead]").forEach(input => {
-      const brand = input.dataset.brandLead;
-      saved[brand] = saved[brand] || { active: true, leadTime: "" };
-      saved[brand].leadTime = input.value.trim();
+    document.querySelectorAll("[data-brand-save]").forEach(button => {
+      const brand = button.dataset.brandSave;
+      const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
+      const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand);
+      const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
+      const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
+      saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
+      if (lead) saved[brand].leadTime = lead.value.trim();
+      if (shippingCost) saved[brand].shippingCostResponsibility = shippingCost.value;
+      if (shippingInfo) saved[brand].shippingInfoAvailable = shippingInfo.value;
+      if (pallet) saved[brand].palletOption = pallet.value;
     });
     SI.saveBrandSettings(REGION, saved);
-    flashSaved(el("save-lead-times"), "Saved ✓", "Save lead times");
+    flashSaved(el("save-lead-times"), "Saved ✓", "Save settings");
   }
 
   function flashSaved(button, savedText = "Saved ✓", defaultText = "Save") {
@@ -218,7 +254,7 @@
   function setAll(active) {
     const saved = settings();
     allNames().forEach(brand => {
-      saved[brand] = saved[brand] || { active: true, leadTime: "" };
+      saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
       saved[brand].active = active;
     });
     SI.saveBrandSettings(REGION, saved);
@@ -228,8 +264,8 @@
   function exportBrands() {
     const list = displayed();
     SI.downloadCsv([
-      ["Active Brand", "Included", "Lead Time", "Item Count", "Status", "Source"],
-      ...list.map(row => [row.brand, row.active !== false ? "Yes" : "No", row.leadTime, row.items, row.active !== false ? "Active" : "Inactive", row.source])
+      ["Active Brand", "Included", "Lead Time", "Shipping Cost Responsibility", "Shipping Info Available", "Pallet Option", "Item Count", "Status", "Source"],
+      ...list.map(row => [row.brand, row.active !== false ? "Yes" : "No", row.leadTime, row.shippingCostResponsibility, row.shippingInfoAvailable, row.palletOption, row.items, row.active !== false ? "Active" : "Inactive", row.source])
     ], `Active Brands ${SI.regionCode(REGION)}.csv`);
   }
 })();

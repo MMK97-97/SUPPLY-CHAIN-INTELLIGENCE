@@ -9,12 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles-us.css">
-  <script src="assets/inventory-core-us.js?v=20260918-4" defer></script>
+  <script src="assets/inventory-core-us.js?v=20260928-1" defer></script>
   <script src="assets/inventory-transitions.js?v=20260916-2" defer></script>
   <link rel="stylesheet" href="assets/world-class-ui.css?v=20260923-5">
-  <link rel="stylesheet" href="assets/active-brands-ui.css?v=20260916-1">
+  <link rel="stylesheet" href="assets/active-brands-ui.css?v=20260928-1">
   <script src="assets/premium-shell.js?v=20260923-5" defer></script>
-  <script src="assets/active-brands-page.js?v=20260916-1" defer></script>
+  <script src="assets/active-brands-page.js?v=20260928-1" defer></script>
 </head>
 <body data-page="brands" data-region="US">
   <header class="inventory-header">
@@ -37,12 +37,12 @@
       <button class="button button-secondary" id="add-brand" type="button">Add brand</button>
       <button class="button button-secondary" id="activate-all" type="button">Activate all</button>
       <button class="button button-secondary" id="deactivate-all" type="button">Deactivate all</button>
-      <button class="button button-secondary" id="save-lead-times" type="button">Save lead times</button>
+      <button class="button button-secondary" id="save-lead-times" type="button">Save settings</button>
       <button class="button button-primary" id="export-brands" type="button">Export CSV</button>
     </section>
     <section class="inventory-panel brand-workspace">
       <div class="panel-heading"><div><p class="eyebrow">Brand management</p><h2>Brand controls and lead times</h2></div><p>Manually added brands remain available for future reports.<br>Inactive brands are excluded from the Reorder Report.</p></div>
-      <div class="inventory-table-wrap"><table class="brand-table"><thead><tr><th>Included</th><th>Active Brand</th><th>Items</th><th>Lead Time</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead><tbody id="brands-table"></tbody></table></div>
+      <div class="inventory-table-wrap"><table class="brand-table"><thead><tr><th>Included</th><th>Active Brand</th><th>Items</th><th>Lead Time</th><th>Shipping Cost Responsibility</th><th>Shipping Info Available?</th><th>Pallet Option</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead><tbody id="brands-table"></tbody></table></div>
       <footer class="brand-pagination">
         <p class="result-count" id="brand-result-count"></p>
         <label class="page-size-label">Rows per page <select id="brand-page-size"><option>10</option><option>25</option><option>50</option></select></label>

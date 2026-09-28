@@ -126,7 +126,14 @@
     const merged = {};
     canonicalByKey.forEach((brand, key) => {
       const exact = saved[brand], fallbackKey = Object.keys(saved).find(name => cleanText(name).toLocaleLowerCase() === key), source = exact || (fallbackKey ? saved[fallbackKey] : null) || {};
-      merged[brand] = { active: source.active !== false, leadTime: cleanText(source.leadTime) };
+      const shippingCostResponsibility = cleanText(source.shippingCostResponsibility), shippingInfoAvailable = cleanText(source.shippingInfoAvailable), palletOption = cleanText(source.palletOption);
+      merged[brand] = {
+        active: source.active !== false,
+        leadTime: cleanText(source.leadTime),
+        shippingCostResponsibility: ["Us", "Brand/Supplier"].includes(shippingCostResponsibility) ? shippingCostResponsibility : "",
+        shippingInfoAvailable: ["Yes", "No", "N/A"].includes(shippingInfoAvailable) ? shippingInfoAvailable : "",
+        palletOption: ["Yes", "No"].includes(palletOption) ? palletOption : ""
+      };
     });
     saveBrandSettings(region, merged);
     return merged;
