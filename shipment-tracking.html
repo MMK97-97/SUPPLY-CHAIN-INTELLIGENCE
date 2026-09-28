@@ -252,6 +252,7 @@
     .track-button:disabled { opacity: .58; cursor: wait; }
 
     .message { min-height: 22px; margin: 11px 1px 0; color: var(--muted); font-size: 14px; }
+    .message a { color: var(--teal); font-weight: 800; }
     .message.error { color: var(--red); font-weight: 700; }
 
     .empty-state {
@@ -517,6 +518,28 @@
         return /\/track$/i.test(base) ? base : `${base}/track`;
       }
 
+      function officialTrackingUrl(carrier, trackingNumber) {
+        const number = encodeURIComponent(trackingNumber);
+        return carrier === "UPS"
+          ? `https://www.ups.com/track?loc=en_US&tracknum=${number}`
+          : `https://www.fedex.com/fedextrack/?trknbr=${number}`;
+      }
+
+      function openOfficialTracking(carrier, trackingNumber) {
+        const url = officialTrackingUrl(carrier, trackingNumber);
+        window.open(url, "_blank", "noopener,noreferrer");
+        const message = $("tracking-message");
+        message.className = "message";
+        message.textContent = `Opening live ${carrier === "FEDEX" ? "FedEx" : "UPS"} tracking in a new tab. `;
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Open official tracking";
+        message.appendChild(link);
+        $("tracking-number").setAttribute("aria-invalid", "false");
+      }
+
       async function trackShipment(event) {
         event.preventDefault();
         const trackingNumber = cleanTrackingNumber($("tracking-number").value);
@@ -534,7 +557,10 @@
           return;
         }
         if (!carrier) return showError("Carrier could not be detected. Select UPS or FedEx and try again.");
-        if (!endpoint) return showError("The secure tracking service is not connected. Add its URL in assets/tracking-config.js.");
+        if (!endpoint) {
+          openOfficialTracking(carrier, trackingNumber);
+          return;
+        }
 
         if (activeRequest) activeRequest.abort();
         activeRequest = new AbortController();

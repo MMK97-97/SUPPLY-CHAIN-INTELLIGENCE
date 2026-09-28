@@ -1451,6 +1451,28 @@
       box-shadow: 0 18px 50px rgba(3, 24, 46, 0.28);
     }
 
+    /* Events page: keep the hero clear and its primary actions aligned. */
+    .nav-shell {
+      display: none !important;
+    }
+
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hero-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      width: 100%;
+      max-width: none;
+      flex-wrap: nowrap;
+    }
+
+    .hero-actions .button {
+      width: 100%;
+      white-space: nowrap;
+    }
+
     @media (max-width: 1100px) {
       .nav-shell { top: 86px; }
       .hero-actions { max-width: none; }
@@ -1462,6 +1484,8 @@
       .page { width: min(100% - 22px, var(--width)); padding-top: 12px; }
       .nav-shell { position: relative; top: 0; }
       .hero { min-height: auto; border-radius: 21px; }
+      .hero-actions { grid-template-columns: 1fr; }
+      .hero-actions .button { white-space: normal; }
       .workspace-card { border-radius: 17px; }
     }
 
