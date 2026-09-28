@@ -119,6 +119,47 @@ body[data-page="brands"] .brand-filters {
   background: rgba(255, 255, 255, .96);
 }
 
+body[data-page="brands"] .brand-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
+body[data-page="brands"] .brand-kpis article {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid #c6dce9;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 8px 22px rgba(24, 73, 108, .07);
+}
+
+body[data-page="brands"] .brand-kpi-icon {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #086cce;
+  background: #e3f0ff;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+body[data-page="brands"] .brand-kpis article:nth-child(2) .brand-kpi-icon { color: #078c75; background: #ddf6ef; }
+body[data-page="brands"] .brand-kpis article:nth-child(3) .brand-kpi-icon { color: #dd7215; background: #fff0df; }
+body[data-page="brands"] .brand-kpis article:nth-child(4) .brand-kpi-icon { color: #176bd3; background: #e3efff; }
+
+body[data-page="brands"] .brand-kpis article div { min-width: 0; display: grid; }
+body[data-page="brands"] .brand-kpis strong { color: #102f5d; font: 800 1.55rem/1 Manrope, sans-serif; }
+body[data-page="brands"] .brand-kpis b { margin-top: 4px; color: #123b75; font-size: .82rem; }
+body[data-page="brands"] .brand-kpis small { margin-top: 2px; overflow: hidden; color: #657b96; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+
 body[data-page="brands"] .brand-filters .wide-filter {
   position: relative;
 }
@@ -165,12 +206,28 @@ body[data-page="brands"] .brand-workspace .panel-heading > p {
   text-align: right;
 }
 
+body[data-page="brands"] .brand-workspace .panel-heading > div > p:last-child {
+  margin: 4px 0 0;
+  color: #657b96;
+  font-size: .75rem;
+}
+
+body[data-page="brands"] .brand-workspace .brand-info-note {
+  max-width: 390px;
+  padding: 10px 14px 10px 38px;
+  border: 1px solid #c9def1;
+  border-radius: 9px;
+  color: #315987;
+  background: #f3f9ff;
+  text-align: left;
+}
+
 body[data-page="brands"] .brand-workspace .inventory-table-wrap {
   overflow-x: auto;
 }
 
 body[data-page="brands"] .brand-table {
-  min-width: 1420px;
+  min-width: 1240px;
 }
 
 body[data-page="brands"] .brand-table thead th {
@@ -206,31 +263,25 @@ body[data-page="brands"] .brand-table td:first-child {
 
 body[data-page="brands"] .brand-table th:nth-child(3),
 body[data-page="brands"] .brand-table td:nth-child(3) {
-  width: 96px;
-  text-align: center;
+  width: 135px;
 }
 
 body[data-page="brands"] .brand-table th:nth-child(4),
-body[data-page="brands"] .brand-table td:nth-child(4) {
-  width: 190px;
+body[data-page="brands"] .brand-table td:nth-child(4),
+body[data-page="brands"] .brand-table th:nth-child(5),
+body[data-page="brands"] .brand-table td:nth-child(5) {
+  width: 205px;
 }
 
-body[data-page="brands"] .brand-table th:nth-child(5),
-body[data-page="brands"] .brand-table td:nth-child(5),
 body[data-page="brands"] .brand-table th:nth-child(6),
 body[data-page="brands"] .brand-table td:nth-child(6) {
-  width: 175px;
+  width: 165px;
 }
 
 body[data-page="brands"] .brand-table th:nth-child(7),
-body[data-page="brands"] .brand-table td:nth-child(7) {
-  width: 130px;
-}
-
+body[data-page="brands"] .brand-table td:nth-child(7),
 body[data-page="brands"] .brand-table th:nth-child(8),
-body[data-page="brands"] .brand-table td:nth-child(8),
-body[data-page="brands"] .brand-table th:nth-child(9),
-body[data-page="brands"] .brand-table td:nth-child(9) {
+body[data-page="brands"] .brand-table td:nth-child(8) {
   width: 120px;
   text-align: center;
 }
@@ -465,6 +516,7 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
 }
 
 @media (max-width: 1180px) {
+  body[data-page="brands"] .brand-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body[data-page="brands"] .brand-filters {
     grid-template-columns: minmax(260px, 1fr) repeat(3, auto) !important;
   }
@@ -485,14 +537,15 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
 }
 
 @media (max-width: 540px) {
+  body[data-page="brands"] .brand-kpis { grid-template-columns: 1fr; }
   body[data-page="brands"] .brand-filters { grid-template-columns: 1fr !important; }
   body[data-page="brands"] .brand-filters .wide-filter,
   body[data-page="brands"] .brand-filters #save-lead-times,
   body[data-page="brands"] .brand-filters #export-brands { grid-column: auto; grid-row: auto; }
   body[data-page="brands"] .brand-page-buttons button:not(.active):not(:first-child):not(:last-child) { display: none; }
 }
-
 </style>
+  <script src="assets/report-export.js?v=20260928-1" defer></script>
   <script src="assets/premium-shell.js?v=20260923-5" defer></script>
   <script data-active-brands-inline>
 (() => {
@@ -512,11 +565,29 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
   async function init() {
     SI = window.StarkInventory;
     SI.initFrame("brands");
-    dataset = await SI.loadDataset(REGION);
-    if (dataset) SI.ensureBrandSettings(REGION, rows());
+    await refreshDataset();
     renderFileStatus();
     bindEvents();
     renderBrands();
+    window.StarkActiveBrandsReportData = reportData;
+    window.dispatchEvent(new Event("stark-report-state-change"));
+    window.addEventListener("focus", refreshDataset);
+    window.addEventListener("pageshow", refreshDataset);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshDataset();
+    });
+  }
+
+  async function refreshDataset() {
+    const latest = await SI.loadDataset(REGION);
+    if (latest) {
+      dataset = latest;
+      SI.ensureBrandSettings(REGION, rows());
+    }
+    if (!el("brand-file-status")) return;
+    renderFileStatus();
+    renderBrands();
+    window.dispatchEvent(new Event("stark-report-state-change"));
   }
 
   function rows() {
@@ -601,6 +672,7 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
 
   function renderBrands() {
     const list = displayed();
+    renderKpis();
     const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
     currentPage = Math.min(currentPage, pageCount);
     const start = (currentPage - 1) * pageSize;
@@ -615,29 +687,25 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
           return `<tr>
             <td><label class="brand-check" title="Include ${safeBrand} in reorder analysis"><input type="checkbox" aria-label="Include ${safeBrand}" data-brand-active="${safeBrand}" ${active ? "checked" : ""}></label></td>
             <td><strong>${safeBrand}</strong></td>
-            <td>${number.format(row.items)}</td>
-            <td><input class="lead-time-input" data-brand-lead="${safeBrand}" value="${SI.escapeHtml(row.leadTime)}" placeholder="e.g. 2 weeks" aria-label="Lead time for ${safeBrand}"></td>
+            <td><select class="lead-time-input" data-brand-lead="${safeBrand}" aria-label="Lead time for ${safeBrand}">${leadTimeOptions(row.leadTime)}</select></td>
             <td><div class="brand-choice-group" role="group" aria-label="Shipping cost responsibility for ${safeBrand}">
               <label><input type="checkbox" data-brand-shipping-cost="${safeBrand}" value="Us" ${row.shippingCostResponsibility === "Us" ? "checked" : ""}> Us</label>
               <label><input type="checkbox" data-brand-shipping-cost="${safeBrand}" value="Supplier" ${["Supplier", "Brand/Supplier"].includes(row.shippingCostResponsibility) ? "checked" : ""}> Supplier</label>
             </div></td>
-            <td><select class="brand-detail-select" data-brand-shipping-info="${safeBrand}" aria-label="Shipping information availability for ${safeBrand}">
-              <option value="">Select</option>
-              <option value="Yes" ${row.shippingInfoAvailable === "Yes" ? "selected" : ""}>Yes</option>
-              <option value="No" ${row.shippingInfoAvailable === "No" ? "selected" : ""}>No</option>
-              <option value="N/A" ${row.shippingInfoAvailable === "N/A" ? "selected" : ""}>N/A</option>
-            </select></td>
-            <td><select class="brand-detail-select" data-brand-pallet="${safeBrand}" aria-label="Pallet option for ${safeBrand}">
-              <option value="">Select</option>
-              <option value="Yes" ${row.palletOption === "Yes" ? "selected" : ""}>Yes</option>
-              <option value="No" ${row.palletOption === "No" ? "selected" : ""}>No</option>
-            </select></td>
+            <td><div class="brand-choice-group" role="group" aria-label="Shipping information availability for ${safeBrand}">
+              <label><input type="checkbox" data-brand-shipping-info="${safeBrand}" value="Yes" ${row.shippingInfoAvailable === "Yes" ? "checked" : ""}> Yes</label>
+              <label><input type="checkbox" data-brand-shipping-info="${safeBrand}" value="No" ${row.shippingInfoAvailable === "No" ? "checked" : ""}> No</label>
+            </div></td>
+            <td><div class="brand-choice-group" role="group" aria-label="Pallet option for ${safeBrand}">
+              <label><input type="checkbox" data-brand-pallet="${safeBrand}" value="Yes" ${row.palletOption === "Yes" ? "checked" : ""}> Yes</label>
+              <label><input type="checkbox" data-brand-pallet="${safeBrand}" value="No" ${row.palletOption === "No" ? "checked" : ""}> No</label>
+            </div></td>
             <td><span class="brand-status ${active ? "is-active" : "is-inactive"}" data-brand-status="${safeBrand}">${active ? "Active" : "Inactive"}</span></td>
             <td><span class="brand-source ${manual ? "is-manual" : ""}">${row.source}</span></td>
             <td><button class="brand-save" type="button" data-brand-save="${safeBrand}">Save</button></td>
           </tr>`;
         }).join("")
-      : `<tr><td class="brand-empty" colspan="10">No brands match the current search. Select Add brand to create one.</td></tr>`;
+      : `<tr><td class="brand-empty" colspan="9">No brands match the current search. Select Add brand to create one.</td></tr>`;
 
     const end = Math.min(start + visible.length, list.length);
     el("brand-result-count").textContent = list.length
@@ -645,6 +713,27 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
       : "Showing 0 brands";
     bindRowEvents();
     renderPagination(pageCount);
+  }
+
+  function leadTimeOptions(current) {
+    const value = String(current || "").trim();
+    const standard = Array.from({ length: 12 }, (_, index) => `${index + 1} ${index ? "weeks" : "week"}`);
+    const values = value && !standard.includes(value) ? [value, ...standard] : standard;
+    return `<option value="">Select</option>${values.map(option => `<option value="${SI.escapeHtml(option)}" ${option === value ? "selected" : ""}>${SI.escapeHtml(option)}</option>`).join("")}`;
+  }
+
+  function renderKpis() {
+    const list = displayed();
+    const active = list.filter(row => row.active !== false).length;
+    const missingLead = list.filter(row => !String(row.leadTime || "").trim()).length;
+    const manual = list.filter(row => row.source === "Manual").length;
+    const set = (id, value) => { if (el(id)) el(id).textContent = number.format(value); };
+    set("brand-kpi-total", list.length);
+    set("brand-kpi-active", active);
+    set("brand-kpi-missing", missingLead);
+    set("brand-kpi-manual", manual);
+    if (el("brand-kpi-active-detail")) el("brand-kpi-active-detail").textContent = list.length ? `${(active / list.length * 100).toFixed(1)}% of displayed` : "No displayed brands";
+    if (el("brand-kpi-missing-detail")) el("brand-kpi-missing-detail").textContent = list.length ? `${(missingLead / list.length * 100).toFixed(1)}% of displayed` : "No displayed brands";
   }
 
   function bindRowEvents() {
@@ -655,6 +744,14 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
         if (option !== input && option.dataset.brandShippingCost === input.dataset.brandShippingCost) option.checked = false;
       });
     }));
+    ["brandShippingInfo", "brandPallet"].forEach(key => {
+      document.querySelectorAll(`[data-${key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}]`).forEach(input => input.addEventListener("change", () => {
+        if (!input.checked) return;
+        document.querySelectorAll(`[data-${key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}]`).forEach(option => {
+          if (option !== input && option.dataset[key] === input.dataset[key]) option.checked = false;
+        });
+      }));
+    });
     document.querySelectorAll("[data-brand-lead]").forEach(input => input.addEventListener("keydown", event => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -720,6 +817,7 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
       status.textContent = event.target.checked ? "Active" : "Inactive";
       status.className = `brand-status ${event.target.checked ? "is-active" : "is-inactive"}`;
     }
+    renderKpis();
   }
 
   function saveRow(brand) {
@@ -728,8 +826,8 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
     const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
     const active = Array.from(document.querySelectorAll("[data-brand-active]")).find(input => input.dataset.brandActive === brand);
     const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand && input.checked);
-    const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
-    const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
+    const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand && input.checked);
+    const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand && input.checked);
     saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
     if (lead) saved[brand].leadTime = lead.value.trim();
     if (active) saved[brand].active = active.checked;
@@ -739,6 +837,7 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
     logistics[brand].palletOption = pallet?.value || "";
     SI.saveBrandSettings(REGION, saved);
     saveLogistics(logistics);
+    renderKpis();
     const button = Array.from(document.querySelectorAll("[data-brand-save]")).find(node => node.dataset.brandSave === brand);
     flashSaved(button);
   }
@@ -750,8 +849,8 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
       const brand = button.dataset.brandSave;
       const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
       const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand && input.checked);
-      const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
-      const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
+      const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand && input.checked);
+      const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand && input.checked);
       saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
       if (lead) saved[brand].leadTime = lead.value.trim();
       logistics[brand] = logistics[brand] || {};
@@ -761,7 +860,8 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
     });
     SI.saveBrandSettings(REGION, saved);
     saveLogistics(logistics);
-    flashSaved(el("save-lead-times"), "Saved ✓", "Save settings");
+    renderKpis();
+    flashSaved(el("save-lead-times"), "Saved ✓", "Save changes");
   }
 
   function flashSaved(button, savedText = "Saved ✓", defaultText = "Save") {
@@ -785,14 +885,28 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
   }
 
   function exportBrands() {
+    const report = reportData();
+    SI.downloadCsv([report.headers, ...report.rows], `Active Brands ${SI.regionCode(REGION)}.csv`);
+  }
+
+  function reportData() {
     const list = displayed();
-    SI.downloadCsv([
-      ["Active Brand", "Included", "Lead Time", "Shipping Cost Responsibility", "Shipping Info Available", "Pallet Option", "Item Count", "Status", "Source"],
-      ...list.map(row => [row.brand, row.active !== false ? "Yes" : "No", row.leadTime, row.shippingCostResponsibility, row.shippingInfoAvailable, row.palletOption, row.items, row.active !== false ? "Active" : "Inactive", row.source])
-    ], `Active Brands ${SI.regionCode(REGION)}.csv`);
+    return {
+      headers: ["Active Brand", "Included", "Item Count", "Lead Time", "Shipping Cost Responsibility", "Shipping Info Available", "Pallet Option", "Status", "Source"],
+      rows: list.map(row => [
+        row.brand,
+        row.active !== false ? "Yes" : "No",
+        row.items,
+        row.leadTime,
+        row.shippingCostResponsibility || "",
+        row.shippingInfoAvailable || "",
+        row.palletOption || "",
+        row.active !== false ? "Active" : "Inactive",
+        row.source
+      ])
+    };
   }
 })();
-
 </script>
 </head>
 <body data-page="brands" data-region="EU">
@@ -809,20 +923,26 @@ body[data-page="brands"] .brand-page-buttons button:disabled {
       <a data-inventory-page="instructions" href="instructions-eu.html">Instructions</a>
     </nav>
     <section class="inventory-page-heading">
-      <div><p class="eyebrow">Reorder scope • <span data-region-name>European Union</span></p><h1>Active Brands</h1><p class="page-description">Control which brands are included in reorder analysis and maintain the supplier lead time for each brand.</p></div>
+      <div><p class="eyebrow">Reorder scope • <span data-region-name>European Union</span></p><h1>Active Brands</h1><p class="page-description">Control which brands are included in reorder analysis and maintain supplier lead time and shipping details.</p></div>
       <div class="brand-live-status" id="brand-file-status"><strong>Waiting for report</strong><small>Upload an Item Sales Report to begin</small></div>
+    </section>
+    <section class="brand-kpis" aria-label="Active Brands summary">
+      <article><span class="brand-kpi-icon">◇</span><div><strong id="brand-kpi-total">0</strong><b>Total displayed brands</b><small>Across the current brand list</small></div></article>
+      <article><span class="brand-kpi-icon">✓</span><div><strong id="brand-kpi-active">0</strong><b>Active brands</b><small id="brand-kpi-active-detail">No displayed brands</small></div></article>
+      <article><span class="brand-kpi-icon">△</span><div><strong id="brand-kpi-missing">0</strong><b>Brands missing lead time</b><small id="brand-kpi-missing-detail">No displayed brands</small></div></article>
+      <article><span class="brand-kpi-icon">＋</span><div><strong id="brand-kpi-manual">0</strong><b>Manually added brands</b><small>Remain available for future reports</small></div></article>
     </section>
     <section class="inventory-filter-bar brand-filters">
       <label class="wide-filter">Brand<input id="brand-search" type="search" placeholder="Search brand..."></label>
       <button class="button button-secondary" id="add-brand" type="button">Add brand</button>
       <button class="button button-secondary" id="activate-all" type="button">Activate all</button>
       <button class="button button-secondary" id="deactivate-all" type="button">Deactivate all</button>
-      <button class="button button-secondary" id="save-lead-times" type="button">Save settings</button>
+      <button class="button button-secondary" id="save-lead-times" type="button">Save changes</button>
       <button class="button button-primary" id="export-brands" type="button">Export CSV</button>
     </section>
     <section class="inventory-panel brand-workspace">
-      <div class="panel-heading"><div><p class="eyebrow">Brand management</p><h2>Brand controls and lead times</h2></div><p>Manually added brands remain available for future reports.<br>Inactive brands are excluded from the Reorder Report.</p></div>
-      <div class="inventory-table-wrap"><table class="brand-table"><thead><tr><th>Included</th><th>Active Brand</th><th>Items</th><th>Lead Time</th><th>Shipping Cost Responsibility</th><th>Shipping Info Available?</th><th>Pallet Option</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead><tbody id="brands-table"></tbody></table></div>
+      <div class="panel-heading"><div><p class="eyebrow">Brand management</p><h2>Active Brands</h2><p>Manage brand inclusion, lead times and supplier shipping details for accurate reorder analysis.</p></div><p class="brand-info-note">These details are used in the Reorder Report, Freight Estimator and other analysis reports.</p></div>
+      <div class="inventory-table-wrap"><table class="brand-table"><thead><tr><th>Include</th><th>Brand</th><th>Lead Time</th><th>Shipping Cost Responsibility</th><th>Shipping Info Available?</th><th>Pallet Option</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead><tbody id="brands-table"></tbody></table></div>
       <footer class="brand-pagination">
         <p class="result-count" id="brand-result-count"></p>
         <label class="page-size-label">Rows per page <select id="brand-page-size"><option>10</option><option>25</option><option>50</option></select></label>

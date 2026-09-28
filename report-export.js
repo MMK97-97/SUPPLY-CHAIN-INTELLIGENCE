@@ -273,6 +273,17 @@
     setTimeout(() => URL.revokeObjectURL(link.href), 1600);
   }
 
+  function activeBrandsReportData() {
+    if (!/^active-brands-(us|eu|ca)\.html$/i.test(path)) return null;
+    try {
+      const report = window.StarkActiveBrandsReportData?.();
+      return report && Array.isArray(report.headers) && Array.isArray(report.rows) ? report : null;
+    } catch (error) {
+      console.warn("Active Brands report data is unavailable", error);
+      return null;
+    }
+  }
+
   async function buildWorkbook() {
     await Promise.all([
       ensureDependency("XLSX", "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"),
@@ -280,9 +291,25 @@
     ]);
     const exportedAt = new Date();
     const title = pageTitle();
+    const activeBrandsData = activeBrandsReportData();
     const kpis = collectKpis();
-    const filters = collectFilters();
-    const tables = collectTables();
+    const filters = activeBrandsData
+      ? [["Brand search", document.getElementById("brand-search")?.value?.trim() || "All brands"]]
+      : collectFilters();
+    const tables = activeBrandsData ? [] : collectTables();
+    if (activeBrandsData) {
+      const rows = activeBrandsData.rows;
+      const totalItems = rows.reduce((sum, row) => sum + (Number(row[2]) || 0), 0);
+      kpis.push(
+        ["Displayed brands", rows.length, "All brands matching the current search, across every page"],
+        ["Included brands", rows.filter(row => row[1] === "Yes").length, "Included in reorder analysis"],
+        ["Total item count", totalItems, "Items assigned to the displayed brands"],
+        ["Shipping cost — Us", rows.filter(row => row[4] === "Us").length, "Brands where shipping cost is our responsibility"],
+        ["Shipping cost — Supplier", rows.filter(row => row[4] === "Supplier").length, "Brands where shipping cost is supplier responsibility"],
+        ["Shipping information available", rows.filter(row => row[5] === "Yes").length, "Brands with shipping information available"],
+        ["Pallet option available", rows.filter(row => row[6] === "Yes").length, "Brands that can ship on a pallet"]
+      );
+    }
     const dashboardRows = [
       ["STARK PREMIUM — SUPPLY CHAIN INTELLIGENCE"],
       [title],
@@ -297,10 +324,11 @@
     appendSheet(workbook, "Dashboard", dashboardRows);
     appendSheet(workbook, "Visual Charts", [[title], [`${region} market • Visual charts reflect the current page filters`], []]);
     if (filters.length) appendSheet(workbook, "Filters", [["Filter", "Selected value"], ...filters]);
+    if (activeBrandsData) appendSheet(workbook, "Active Brands", [activeBrandsData.headers, ...activeBrandsData.rows]);
     tables.forEach(table => appendSheet(workbook, table.name, table.rows));
     const chartData = collectChartData();
     if (chartData.length > 1) appendSheet(workbook, "Chart Data", chartData);
-    if (!tables.length) appendSheet(workbook, "Visible Report", [["Section", "Displayed content"], ...Array.from(document.querySelectorAll("main h2, main h3, main p")).filter(visible).map(node => [node.tagName, text(node)])]);
+    if (!tables.length && !activeBrandsData) appendSheet(workbook, "Visible Report", [["Section", "Displayed content"], ...Array.from(document.querySelectorAll("main h2, main h3, main p")).filter(visible).map(node => [node.tagName, text(node)])]);
 
     const images = [];
     for (const panel of chartPanels()) {
@@ -350,6 +378,10 @@
   }
 
   function exportReadiness() {
+    if (/^active-brands-(us|eu|ca)\.html$/i.test(path)) {
+      const report = activeBrandsReportData();
+      return { ready: Boolean(report?.rows?.length), message: "Upload a Raw Report or add a brand before exporting Active Brands." };
+    }
     if (/^reorder-report-/.test(path)) {
       const source = document.getElementById("export-reorder-xlsx");
       return { ready: Boolean(source && visible(source) && !source.disabled), message: "Upload a Raw Report before exporting the Reorder Report." };
