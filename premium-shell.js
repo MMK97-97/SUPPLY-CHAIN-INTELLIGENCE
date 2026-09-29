@@ -2,7 +2,30 @@
   "use strict";
 
   const body = document.body;
-  if (!body || body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
+  if (!body) return;
+
+  /* MK is intentionally loaded before the workspace-shell guard so the
+     decision brain is available on every page, including legacy redirects
+     and the full-screen events view. */
+  const loadMkBrain = () => {
+    if (!document.querySelector('link[data-mk-brain-style]')) {
+      const style = document.createElement("link");
+      style.rel = "stylesheet";
+      style.href = "assets/mk-brain.css?v=20260929-1";
+      style.dataset.mkBrainStyle = "true";
+      document.head.appendChild(style);
+    }
+    if (!document.querySelector('script[data-mk-brain-script]')) {
+      const script = document.createElement("script");
+      script.src = "assets/mk-brain.js?v=20260929-1";
+      script.defer = true;
+      script.dataset.mkBrainScript = "true";
+      document.head.appendChild(script);
+    }
+  };
+  loadMkBrain();
+
+  if (body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
 
   const path = location.pathname.split("/").pop() || "index.html";
   const suffixMatch = path.match(/-(us|eu|ca)\.html$/i);
