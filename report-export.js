@@ -4,7 +4,7 @@
   if (window.StarkReportExport) return;
 
   const path = location.pathname.split("/").pop() || "index.html";
-  const reportPages = /^(inventory-dashboard|inventory-analysis-report|raw-report|reorder-report|active-brands|instructions)-(us|eu|ca)\.html$/i.test(path)
+  const reportPages = /^(inventory-dashboard|inventory-analysis-report|decision-intelligence|raw-report|reorder-report|active-brands|instructions)-(us|eu|ca)\.html$/i.test(path)
     || ["ats-eu.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"].includes(path);
   if (!reportPages || document.querySelector(".tv-app")) return;
 
@@ -48,7 +48,7 @@
   }
 
   function collectKpis() {
-    const selectors = [".iar-kpi", ".inventory-kpi", ".kpi-card", ".reorder-kpi-card", ".metric-card", ".stat-card", ".kpi"];
+    const selectors = [".iar-kpi", ".inventory-kpi", ".kpi-card", ".reorder-kpi-card", ".metric-card", ".stat-card", ".kpi", ".brain-kpis article"];
     const seen = new Set();
     return Array.from(document.querySelectorAll(selectors.join(","))).filter(visible).map(card => {
       const label = text(card.querySelector("small, .kpi-label, span"));
@@ -284,6 +284,17 @@
     }
   }
 
+  function decisionReportData() {
+    if (!/^decision-intelligence-(us|eu|ca)\.html$/i.test(path)) return null;
+    try {
+      const report = window.StarkDecisionReportData?.();
+      return report && Array.isArray(report.headers) && Array.isArray(report.rows) ? report : null;
+    } catch (error) {
+      console.warn("Decision Intelligence report data is unavailable", error);
+      return null;
+    }
+  }
+
   async function buildWorkbook() {
     await Promise.all([
       ensureDependency("XLSX", "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"),
@@ -292,11 +303,11 @@
     const exportedAt = new Date();
     const title = pageTitle();
     const activeBrandsData = activeBrandsReportData();
-    const kpis = collectKpis();
-    const filters = activeBrandsData
-      ? [["Brand search", document.getElementById("brand-search")?.value?.trim() || "All brands"]]
-      : collectFilters();
-    const tables = activeBrandsData ? [] : collectTables();
+    const decisionData = decisionReportData();
+    const specialData = activeBrandsData || decisionData;
+    const kpis = decisionData ? [] : collectKpis();
+    const filters = collectFilters();
+    const tables = specialData ? [] : collectTables();
     if (activeBrandsData) {
       const rows = activeBrandsData.rows;
       const totalItems = rows.reduce((sum, row) => sum + (Number(row[2]) || 0), 0);
@@ -308,6 +319,15 @@
         ["Shipping cost — Supplier", rows.filter(row => row[4] === "Supplier").length, "Brands where shipping cost is supplier responsibility"],
         ["Shipping information available", rows.filter(row => row[5] === "Yes").length, "Brands with shipping information available"],
         ["Pallet option available", rows.filter(row => row[6] === "Yes").length, "Brands that can ship on a pallet"]
+      );
+    }
+    if (decisionData) {
+      const rows = decisionData.rows;
+      kpis.push(
+        ["Exported decisions", rows.length, "All decisions matching the current filters"],
+        ["Stockout risks", rows.filter(row => row[3] === "STOCKOUT RISK").length, "Supply may expire before replenishment can arrive"],
+        ["Recommended units", rows.reduce((sum, row) => sum + (Number(row[12]) || 0), 0), "Calculated replenishment gap"],
+        ["High-confidence decisions", rows.filter(row => row[14] === "High").length, "Decisions with strong evidence and model confidence"]
       );
     }
     const dashboardRows = [
@@ -322,13 +342,14 @@
     ];
     const workbook = XLSX.utils.book_new();
     appendSheet(workbook, "Dashboard", dashboardRows);
-    appendSheet(workbook, "Visual Charts", [[title], [`${region} market • Visual charts reflect the current page filters`], []]);
+    if (!decisionData) appendSheet(workbook, "Visual Charts", [[title], [`${region} market • Visual charts reflect the current page filters`], []]);
     if (filters.length) appendSheet(workbook, "Filters", [["Filter", "Selected value"], ...filters]);
     if (activeBrandsData) appendSheet(workbook, "Active Brands", [activeBrandsData.headers, ...activeBrandsData.rows]);
+    if (decisionData) appendSheet(workbook, "Decision Queue", [decisionData.headers, ...decisionData.rows]);
     tables.forEach(table => appendSheet(workbook, table.name, table.rows));
     const chartData = collectChartData();
     if (chartData.length > 1) appendSheet(workbook, "Chart Data", chartData);
-    if (!tables.length && !activeBrandsData) appendSheet(workbook, "Visible Report", [["Section", "Displayed content"], ...Array.from(document.querySelectorAll("main h2, main h3, main p")).filter(visible).map(node => [node.tagName, text(node)])]);
+    if (!tables.length && !specialData) appendSheet(workbook, "Visible Report", [["Section", "Displayed content"], ...Array.from(document.querySelectorAll("main h2, main h3, main p")).filter(visible).map(node => [node.tagName, text(node)])]);
 
     const images = [];
     for (const panel of chartPanels()) {
@@ -378,6 +399,10 @@
   }
 
   function exportReadiness() {
+    if (/^decision-intelligence-(us|eu|ca)\.html$/i.test(path)) {
+      const report = decisionReportData();
+      return { ready: Boolean(report?.rows?.length), message: "Upload a Raw Report before exporting Decision Intelligence." };
+    }
     if (/^active-brands-(us|eu|ca)\.html$/i.test(path)) {
       const report = activeBrandsReportData();
       return { ready: Boolean(report?.rows?.length), message: "Upload a Raw Report or add a brand before exporting Active Brands." };

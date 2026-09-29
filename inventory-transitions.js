@@ -223,6 +223,7 @@
     if (bodyPage) return bodyPage;
     const filename = window.location.pathname.split("/").pop() || "";
     if (filename.includes("dashboard")) return "dashboard";
+    if (filename.includes("decision-intelligence")) return "decision";
     if (filename.includes("raw-report")) return "raw";
     if (filename.includes("reorder-report")) return "reorder";
     if (filename.includes("active-brands")) return "brands";

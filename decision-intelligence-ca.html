@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explainable supply chain decisions using current and historical regional inventory reports">
+  <title>Decision Intelligence | Stark Supply Chain Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles-ca.css?v=20260929-1">
+  <link rel="stylesheet" href="assets/world-class-ui.css?v=20260923-5">
+  <link rel="stylesheet" href="assets/decision-intelligence.css?v=20260929-1">
+  <script src="assets/inventory-core-ca.js?v=20260928-3" defer></script>
+  <script src="assets/inventory-transitions.js?v=20260916-2" defer></script>
+  <script src="assets/decision-intelligence.js?v=20260929-1" defer></script>
+  <script src="assets/report-export.js?v=20260929-1" defer></script>
+  <script src="assets/premium-shell.js?v=20260929-1" defer></script>
+</head>
+<body data-page="decision" data-region="CA">
+  <main class="inventory-main">
+    <section class="decision-hero">
+      <div class="decision-hero-copy">
+        <p class="eyebrow">Adaptive decision intelligence • Canada</p>
+        <h1>Supply Chain Decision Brain</h1>
+        <p>Analyzes current calculations and prior uploaded reports, learns the best demand signal, recommends the next action, and explains the business reason, stockout cause, demand cause, confidence, and formula behind every decision.</p>
+      </div>
+      <div class="brain-status"><strong><i></i><span id="brain-live-title">Loading decision brain</span></strong><span id="brain-live-detail">Connecting current and historical inventory data…</span></div>
+    </section>
+
+    <section class="brain-kpis" aria-label="Decision intelligence summary">
+      <article><small>Analyzed SKUs</small><strong id="brain-kpi-1">0</strong><b>Current eligible portfolio</b></article>
+      <article class="risk"><small>Stockout risks</small><strong id="brain-kpi-2">0</strong><b>Supply may expire before lead time</b></article>
+      <article class="warn"><small>Recommended units</small><strong id="brain-kpi-3">0</strong><b>Calculated supply gap</b></article>
+      <article class="warn"><small>Excess / no demand</small><strong id="brain-kpi-4">0</strong><b>Carrying-cost exposure</b></article>
+      <article class="good"><small>Learning files</small><strong id="brain-kpi-5">0</strong><b>Historical uploads retained</b></article>
+      <article><small>High-confidence decisions</small><strong id="brain-kpi-6">0</strong><b id="brain-kpi-accuracy">Learning</b></article>
+    </section>
+
+    <section class="brain-grid">
+      <article class="brain-card">
+        <div class="brain-card-head"><div><h2>How the brain is learning</h2><p>Forecast methods are backtested against later uploaded observations; the lowest-error method is selected by SKU.</p></div></div>
+        <div class="learning-metrics" id="learning-metrics"></div>
+        <div id="method-bars"></div>
+      </article>
+      <article class="brain-card">
+        <div class="brain-card-head"><div><h2>Concepts, controls and regulations</h2><p>Decision checkpoints applied to planning, purchasing, logistics, and governance.</p></div></div>
+        <div class="regulation-list" id="regulation-list"></div>
+        <p class="governance-note">Decision support only: laws and product rules change. Validate regulated products and material commitments with the responsible customs, tax, quality, legal, or compliance owner.</p>
+      </article>
+    </section>
+
+    <section class="brain-toolbar" aria-label="Decision filters">
+      <label>Search model, brand, action, or reason<input id="brain-search" type="search" placeholder="Search the decision evidence…"></label>
+      <label>Risk<select id="brain-risk"><option value="">All decisions</option><option>STOCKOUT RISK</option><option>REORDER</option><option>MONITOR</option><option>HEALTHY</option><option>EXCESS</option><option>NO DEMAND</option><option>DATA / SCOPE</option></select></label>
+      <label>Brand<select id="brain-brand"><option value="">All brands</option></select></label>
+      <button id="brain-export" type="button">Export decisions CSV</button>
+    </section>
+
+    <section class="decision-detail" id="decision-detail" aria-live="polite">
+      <div class="decision-detail-head"><div><h2 id="decision-detail-title">Decision explanation</h2><p id="decision-detail-subtitle"></p></div><button id="decision-close" type="button" aria-label="Close explanation">×</button></div>
+      <div class="decision-detail-grid">
+        <article><h3>Business reason</h3><p id="detail-business"></p></article>
+        <article><h3>Why a stockout could occur</h3><p id="detail-stockout"></p></article>
+        <article><h3>Why demand is expected</h3><p id="detail-demand"></p></article>
+        <article><h3>Calculation and evidence</h3><p id="detail-calculation"></p></article>
+        <article><h3>How history trained this decision</h3><p id="detail-learning"></p></article>
+        <article><h3>Rules and regulatory control point</h3><p id="detail-governance"></p></article>
+      </div>
+    </section>
+
+    <section class="decision-workspace">
+      <div class="decision-heading"><div><h2>Explainable decision queue</h2><p>Highest business risk first. Select any model or “Why?” to inspect its complete reasoning.</p></div><span class="decision-count" id="decision-count">0 decisions</span></div>
+      <div class="decision-table-wrap">
+        <table class="decision-table">
+          <thead><tr><th>Model</th><th>Brand</th><th>Decision</th><th class="num">Forecast/mo</th><th class="num">Net available</th><th class="num">Days to stockout</th><th class="num">Recommended</th><th>Next action</th><th>Business reason</th><th>Confidence</th><th class="num">Priority</th><th>Explain</th></tr></thead>
+          <tbody id="decision-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

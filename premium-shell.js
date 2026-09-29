@@ -25,6 +25,7 @@
   const icons = {
     dashboard: icon('<path d="M4 13h6V4H4zM14 20h6V11h-6zM4 20h6v-4H4zM14 8h6V4h-6z"/>'),
     analysis: icon('<path d="M4 19V9M10 19V5M16 19v-7M3 19h18"/><path d="m14 9 3-3 3 3"/>'),
+    decision: icon('<path d="M9 4a3 3 0 0 1 6 0 3 3 0 0 1 3 5 3 3 0 0 1-1 5v3a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3v-3a3 3 0 0 1-1-5 3 3 0 0 1 3-5Z"/><path d="M9 9h6M10 13h4M12 4v16"/>'),
     raw: icon('<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v5h5M8 12h8M8 16h8"/>'),
     reorder: icon('<path d="M4 7h16M4 12h16M4 17h10"/><path d="m17 15 3 3-3 3"/>'),
     brands: icon('<path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="m4 7 8 4 8-4M12 11v10"/>'),
@@ -40,6 +41,7 @@
   const inventoryPages = new Set([
     "inventory-dashboard-us.html", "inventory-dashboard-eu.html", "inventory-dashboard-ca.html",
     "inventory-analysis-report-us.html", "inventory-analysis-report-eu.html", "inventory-analysis-report-ca.html",
+    "decision-intelligence-us.html", "decision-intelligence-eu.html", "decision-intelligence-ca.html",
     "raw-report-us.html", "raw-report-eu.html", "raw-report-ca.html",
     "reorder-report-us.html", "reorder-report-eu.html", "reorder-report-ca.html",
     "active-brands-us.html", "active-brands-eu.html", "active-brands-ca.html",
@@ -66,7 +68,7 @@
   const loadSharedAsset = file => {
     if (document.querySelector(`script[data-shared-asset="${file}"]`)) return;
     const script = document.createElement("script");
-    script.src = `assets/${file}?v=20260923-4`;
+    script.src = `assets/${file}?v=20260929-1`;
     script.async = false;
     script.dataset.sharedAsset = file;
     document.head.appendChild(script);
@@ -76,6 +78,7 @@
 
   const activeKey = path.startsWith("inventory-dashboard") ? "dashboard"
     : path.startsWith("inventory-analysis-report") ? "analysis"
+    : path.startsWith("decision-intelligence") ? "decision"
     : path.startsWith("raw-report") ? "raw"
       : path.startsWith("reorder-report") ? "reorder"
         : path.startsWith("active-brands") ? "brands"
@@ -101,6 +104,7 @@
     const inventoryItems = [
       ["dashboard", "Inventory Dashboard", regional("inventory-dashboard"), icons.dashboard],
       ["analysis", "Analysis Report", regional("inventory-analysis-report"), icons.analysis],
+      ["decision", "Decision Intelligence", regional("decision-intelligence"), icons.decision],
       ["raw", "Raw Report", regional("raw-report"), icons.raw],
       ["reorder", "Reorder Report", regional("reorder-report"), icons.reorder],
       ["brands", "Active Brands", regional("active-brands"), icons.brands],
