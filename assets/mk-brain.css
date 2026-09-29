@@ -112,6 +112,8 @@
 .mk-icon-button:hover { background: rgba(255,255,255,.16); }
 .mk-icon-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .mk-voice-toggle[aria-pressed="true"] { color: #072e43; background: #74eee1; border-color: #74eee1; }
+.mk-ai-toggle { color: #a5f3fc; }
+.mk-ai-toggle:hover { color: #fff; background: rgba(34, 211, 238, 0.2); border-color: rgba(34, 211, 238, 0.4); }
 
 .mk-brain-state {
   display: flex;

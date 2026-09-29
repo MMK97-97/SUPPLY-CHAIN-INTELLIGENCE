@@ -124,6 +124,9 @@
       <header class="mk-brain-head">
         <div class="mk-brain-mark">MK</div>
         <div class="mk-brain-title"><strong>MK — Supply Chain Brain</strong><span>${ENGINE_VERSION} • decision engine ready</span></div>
+        <button class="mk-icon-button mk-ai-toggle" type="button" aria-label="Gemini AI status" title="Gemini AI connection">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+        </button>
         <button class="mk-icon-button mk-voice-toggle" type="button" aria-label="Enable voice" aria-pressed="false" title="Voice off">
           <svg viewBox="0 0 24 24"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path d="M17 9c1.3 1.7 1.3 4.3 0 6M19.5 6.5c3 3 3 8 0 11"/></svg>
         </button>
@@ -135,6 +138,8 @@
       <div class="mk-brain-feed" role="log" aria-live="polite"></div>
       <div class="mk-quick-actions" aria-label="MK actions">
         <button type="button" data-mk-question="Analyze my current data">Analyze data</button>
+        <button type="button" data-mk-question="Show decision trade-offs">Decision trade-offs</button>
+        <button type="button" data-mk-question="Generate executive brief">Executive brief</button>
         <button type="button" data-mk-question="Show top stockout risks">Stockout risks</button>
         <button type="button" data-mk-question="Show reorder summary">Reorder summary</button>
         <button type="button" data-mk-question="Explain demand">Explain demand</button>
@@ -163,6 +168,7 @@
     launcher.addEventListener("click", () => togglePanel(!panel.classList.contains("open")));
     panel.querySelector(".mk-close").addEventListener("click", () => togglePanel(false));
     voiceButton.addEventListener("click", toggleVoice);
+    panel.querySelector(".mk-ai-toggle")?.addEventListener("click", () => execute("gemini status"));
     panel.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
       const question = input.value.trim();
@@ -323,6 +329,26 @@
       return { intent: "voice", category: "voice", message: "Voice is disabled." };
     }
 
+    const geminiSet = raw.match(/^(?:set|save|update)\s+gemini\s+key\s+([A-Za-z0-9_\-]+)/i) || raw.match(/^gemini\s+key\s+([A-Za-z0-9_\-]+)/i);
+    if (geminiSet) {
+      const key = geminiSet[1].trim();
+      localStorage.setItem("mk-gemini-api-key", key);
+      return { intent: "gemini", category: "AI configuration", message: "Gemini API key saved locally in this browser. Generative strategic analysis and deep narrative business briefs are now active!" };
+    }
+    if (/^(?:clear|remove|delete)\s+gemini\s+key/i.test(q)) {
+      localStorage.removeItem("mk-gemini-api-key");
+      return { intent: "gemini", category: "AI configuration", message: "Gemini API key removed. Built-in deterministic prescriptive reasoning remains fully active." };
+    }
+    if (/^(?:gemini|ai)\s+(?:status|key|config)/i.test(q)) {
+      const hasKey = Boolean(localStorage.getItem("mk-gemini-api-key"));
+      return {
+        intent: "gemini", category: "AI status",
+        message: hasKey
+          ? "Gemini API key is configured and active. Generative strategic reasoning and executive briefs are enabled. Type `clear gemini key` to disconnect."
+          : "Gemini API key is not configured. Built-in deterministic AI business reasoning is fully active. To connect Gemini for generative C-level memos, type: `set gemini key YOUR_KEY`."
+      };
+    }
+
     const remember = raw.match(/^remember(?: that)?\s+(.+)/i);
     if (remember) {
       profile.notes = Array.isArray(profile.notes) ? profile.notes : [];
@@ -360,6 +386,8 @@
     if (!matched && /^(why|explain|how confident|what next|what should|and why|tell me more)/.test(q) && conversation.lastItemKey) {
       matched = analysis.items.find(item => item.key === conversation.lastItemKey) || null;
     }
+    if (/executive brief|strategic brief|executive memo|ai brief|c-suite brief/i.test(q)) return executiveBriefAnswer(analysis);
+    if (/\b(trade[- ]?offs?|prescriptive|why expedite|why reorder|why hold|why liquidate|business reason|decision logic)\b/i.test(q)) return tradeoffsAnswer(analysis, matched);
     if (/what[- ]?if|scenario|simulate|if demand|if lead|if supplier|if stock|if coverage/.test(q)) return scenarioAnswer(q, analysis, matched);
     if (/data quality|audit (the )?data|validate data|missing data|bad data|anomal/.test(q)) return dataQualityAnswer(analysis);
     if (/action plan|prioriti[sz]e|what should (i|we) do|next actions?/.test(q)) return actionPlanAnswer(analysis);
@@ -372,6 +400,13 @@
     if (/why.*demand|explain demand|demand reason|demand analysis/.test(q)) return demandAnswer(analysis);
     if (/reorder|replenish|purchase|buy/.test(q)) return reorderAnswer(analysis);
     if (/excess|dead stock|no demand|overstock/.test(q)) return excessAnswer(analysis);
+
+    const apiKey = localStorage.getItem("mk-gemini-api-key");
+    if (apiKey && (q.includes("strategy") || q.includes("recommend") || q.includes("advice") || q.includes("consult") || q.includes("how to") || q.includes("what should") || q.includes("c-suite") || q.includes("brief"))) {
+      const geminiRes = await queryGeminiAdvisor(apiKey, raw, analysis);
+      if (geminiRes) return { intent: "gemini-strategic", category: "Gemini Strategic AI", message: geminiRes };
+    }
+
     if (/analy|summary|overview|what.*action|recommend|decision|current data/.test(q)) return portfolioAnswer(analysis);
 
     return portfolioAnswer(analysis, `I interpreted this as a request for the current ${REGION_NAMES[regionCode()]} decision summary.`);
@@ -673,6 +708,77 @@
       : item.demand <= 0 && item.onHand > 0 ? "Stop replenishment and review excess disposition"
       : item.monthsCover > Math.max(4, settings.coverage * 2) ? "Freeze purchasing and rebalance excess stock"
       : "Monitor demand and supplier timing";
+    item.tradeoff = computePrescriptiveTradeoff(item, settings);
+  }
+
+  function computePrescriptiveTradeoff(item, settings) {
+    const leadMonths = Math.max(0, finite(item.leadMonths));
+    const leadDays = decimal.format(leadMonths * 30.44);
+    const stockoutDays = item.daysToStockout != null ? decimal.format(item.daysToStockout) : "unknown";
+    const inboundTotal = finite(item.openSupplier);
+    const countedInbound = finite(item.planningSupplier);
+    const uncountedInbound = Math.max(0, inboundTotal - countedInbound);
+
+    if (item.stockoutRisk) {
+      if (uncountedInbound > 0) {
+        return {
+          tradeoffAction: "Expedite Inbound Supplier PO",
+          reasonShort: `Expedite ${number.format(uncountedInbound)} inbound units vs issuing new PO; protects ${stockoutDays}-day runway against ${leadDays}-day lead time.`,
+          tradeoffDetail: `• Recommended Action: Expedite existing supplier commitments (${number.format(uncountedInbound)} units arriving outside standard ${settings.delay}-day window).\n• Trade-off Analysis: Releasing a new PO takes full ${leadDays} days and duplicates working capital. Negotiating priority carrier expediting or split shipments closes the stockout gap at a fraction of double-order capital lockup.\n• Business Risk: Stockout directly exposes Class-${item.abc} customer orders, revenue, and service SLA.`
+        };
+      }
+      return {
+        tradeoffAction: "Emergency Replenishment PO",
+        reasonShort: `Release urgent PO for ${number.format(item.recommended)} units; stockout in ~${stockoutDays} days vs ${leadDays} days lead time.`,
+        tradeoffDetail: `• Recommended Action: Issue expedited replenishment PO immediately for ${number.format(item.recommended)} units.\n• Trade-off Analysis: Inaction guarantees a stockout gap of ~${leadDays} days. Priority factory slot or express logistics surcharge is financially justified by preserving Class-${item.abc} gross margin and client retention.\n• Business Risk: Available stock is insufficient to buffer lead-time demand.`
+      };
+    }
+
+    if (item.recommended > 0) {
+      return {
+        tradeoffAction: "Release Standard Cycle PO",
+        reasonShort: `Order ${number.format(item.recommended)} units now to restore ${decimal.format(settings.coverage)} mo coverage and avoid emergency expedite freight fees.`,
+        tradeoffDetail: `• Recommended Action: Release cycle purchase order for ${number.format(item.recommended)} units.\n• Trade-off Analysis: Placing PO within standard lead time (${leadDays} days) captures contractual pricing without emergency expedite premiums, while ordering exactly the ${number.format(item.recommended)}-unit gap prevents excess holding cost.\n• Business Risk: Maintaining order discipline protects target service level without inventory bloat.`
+      };
+    }
+
+    if (item.monthsCover > Math.max(4, settings.coverage * 2)) {
+      return {
+        tradeoffAction: "Freeze Replenishment & Capital Preservation",
+        reasonShort: `Hold purchasing; ${item.monthsCover == null ? "high" : decimal.format(item.monthsCover)} months cover exceeds threshold. Halts ~20% annualized carrying cost.`,
+        tradeoffDetail: `• Recommended Action: Freeze all new purchase orders and monitor burn-down rate.\n• Trade-off Analysis: Holding excess inventory incurs ~18–24% annualized carrying costs (storage, insurance, cost of capital). Halting orders prevents compounding cash lockup and redeploys working capital toward Class-A reorders.\n• Business Risk: Aging inventory and markdown exposure.`
+      };
+    }
+
+    if (item.demand <= 0 && item.onHand > 0) {
+      return {
+        tradeoffAction: "Active Disposition & Liquidation",
+        reasonShort: `Zero demand for ${number.format(item.onHand)} units on hand; liquidate, transfer or return to avoid 100% write-off.`,
+        tradeoffDetail: `• Recommended Action: Initiate inventory disposition (channel transfer, promotional bundle, vendor return, or commercial clearance).\n• Trade-off Analysis: Inactive stock generates zero revenue while accumulating storage overhead. Proactive liquidation now recovers salvage value and frees physical space, outperforming passive holding until total write-off.\n• Business Risk: 100% salvage loss and dead storage fees.`
+      };
+    }
+
+    if (item.monthsCover < 2) {
+      return {
+        tradeoffAction: "Weekly Review / Avoid Bullwhip",
+        reasonShort: `Coverage is ${item.monthsCover == null ? "adequate" : decimal.format(item.monthsCover)} mo; withhold reorder to prevent bullwhip effect while tracking supplier timing.`,
+        tradeoffDetail: `• Recommended Action: Maintain weekly observation cadence; confirm supplier production capacity.\n• Trade-off Analysis: Prematurely ordering induces artificial demand amplification (bullwhip effect) and inflates holding cost. Existing buffer can absorb demand shifts until the safety threshold is breached.\n• Business Risk: Monitor lead-time creep or sudden demand acceleration.`
+      };
+    }
+
+    if (!item.activeBrand || !item.eligible || item.excluded) {
+      return {
+        tradeoffAction: "Master Data & Catalog Audit",
+        reasonShort: `Item status is excluded or brand is inactive; verify commercial eligibility before committing supplier funds.`,
+        tradeoffDetail: `• Recommended Action: Audit ERP master catalog, active-brand settings, and sales eligibility.\n• Trade-off Analysis: Reordering without verified eligibility risks procuring discontinued or unsellable stock.\n• Business Risk: Misallocated purchasing budget.`
+      };
+    }
+
+    return {
+      tradeoffAction: "Maintain Equilibrium Plan",
+      reasonShort: `Inventory and confirmed supply cover demand and safety buffer (${item.monthsCover == null ? "healthy" : decimal.format(item.monthsCover)} mo cover).`,
+      tradeoffDetail: `• Recommended Action: Maintain standard schedule and order cadence.\n• Trade-off Analysis: System is in equilibrium. No intervention needed; supply and demand remain aligned.\n• Business Risk: Negligible near-term disruption.`
+    };
   }
 
   function buildDataQualityReport(rows, items) {
@@ -806,9 +912,9 @@
 
   function actionPlanAnswer(analysis) {
     const risks = analysis.scoped.slice().sort((a, b) => b.riskScore - a.riskScore || b.recommended - a.recommended).slice(0, 5);
-    const actions = risks.map((item, index) => `${index + 1}. [${item.priority} ${item.riskScore}/100] ${item.model || item.itemid} — ${item.brand}: ${item.nextAction}${item.recommended ? `; ${number.format(item.recommended)} units` : ""}. Why: ${shortReason(item)}.`).join("\n");
+    const actions = risks.map((item, index) => `${index + 1}. [${item.priority} ${item.riskScore}/100] ${item.model || item.itemid} — ${item.brand}: **${item.tradeoff?.tradeoffAction || item.nextAction}**${item.recommended ? `; ${number.format(item.recommended)} units` : ""}.\n   • Business reason: ${item.tradeoff?.reasonShort || shortReason(item)}`).join("\n");
     const qualityAction = analysis.dataQuality.score < 85 ? `\nControl action: resolve the highest data-quality exceptions before approving low-confidence orders (current grade ${analysis.dataQuality.grade}).` : "";
-    return { intent: "action-plan", category: "ranked actions", message: `**Ranked next-action plan**\n${actions || "No eligible action is required."}${qualityAction}\nPriorities combine stockout timing, shortage size, demand acceleration, client commitments, inbound timing, ABC importance and evidence confidence. They do not replace an approval decision.` };
+    return { intent: "action-plan", category: "ranked actions", message: `**Prescriptive Ranked Next-Action Plan**\n${actions || "No eligible action is required."}${qualityAction}\nPriorities combine stockout timing, shortage size, demand acceleration, client commitments, inbound timing, ABC importance, trade-offs and evidence confidence. They do not replace an approval decision.` };
   }
 
   function confidenceAnswer(analysis, item) {
@@ -852,18 +958,118 @@
   function signedNumber(value) { return `${value >= 0 ? "+" : "−"}${number.format(Math.abs(value))}`; }
 
   function explainItem(item, analysis) {
+    const tradeoff = item.tradeoff || computePrescriptiveTradeoff(item, analysis.settings);
     const supplyGap = Math.max(0, item.recommended);
     const demandDirection = item.trend > .15 ? "accelerating" : item.trend < -.15 ? "softening" : "stable";
-    const supplierNote = item.openSupplier > item.planningSupplier ? "Some supplier units fall outside the configured arrival window and were not counted." : item.openSupplier ? "Eligible inbound supply was counted." : "No supplier quantity offsets the requirement.";
-    const action = supplyGap > 0 ? `Place or review a purchase for ${number.format(supplyGap)} units` : item.demand <= 0 && item.onHand > 0 ? "Hold purchasing and review transfer, promotion or disposition" : "Maintain the plan and monitor weekly";
+    const supplierNote = item.openSupplier > item.planningSupplier ? `Inbound note: ${number.format(item.openSupplier - item.planningSupplier)} supplier units are outside the arrival window.` : item.openSupplier ? "Eligible inbound supply is counted." : "No supplier quantity offsets the requirement.";
     const protectedNeed = item.demand * (item.leadMonths + analysis.settings.coverage) + analysis.settings.critical + item.openClient;
     const limitations = item.confidence.limitations.length ? ` Limits: ${item.confidence.limitations.join("; ")}.` : "";
     return {
       intent: "item-analysis",
       category: "model decision",
       itemKey: item.key,
-      message: `**${clean(item.model || item.itemid)} — ${item.brand}**\nDecision: ${action}. Priority is ${item.priority} (${item.riskScore}/100 risk), with ${item.confidence.level.toLowerCase()} confidence (${number.format(item.confidence.score)}/100).\nBusiness reason: protected need is ${number.format(protectedNeed)} units: monthly demand × (lead time + coverage) + ${number.format(analysis.settings.critical)} carrying units + ${number.format(item.openClient)} client commitments. On hand is ${number.format(item.onHand)} and counted inbound is ${number.format(item.planningSupplier)}. ${supplierNote}\nWhy stockout could occur: ${item.stockoutRisk ? `usable supply may last about ${decimal.format(item.daysToStockout)} days, while supplier lead time is ${decimal.format(item.leadMonths * 30.44)} days` : "usable supply is not projected to expire before the replenishment point"}.\nWhy demand is expected: the three-month rate is ${decimal.format(item.demand)} units/month and the last 30 days show ${number.format(item.last30)} units, indicating ${demandDirection} demand. MK forecasts ${decimal.format(item.forecast.value)} units/month (range ${decimal.format(item.forecast.low)}–${decimal.format(item.forecast.high)}) using ${item.forecast.method}, selected by ${item.forecast.selectedBy}.${limitations}`
+      message: `**${clean(item.model || item.itemid)} — ${item.brand}**\n` +
+        `**Prescriptive Action:** ${tradeoff.tradeoffAction} (${item.priority} priority • ${item.riskScore}/100 risk • ${item.confidence.level.toLowerCase()} confidence ${number.format(item.confidence.score)}/100).\n\n` +
+        `**Business Reason & Trade-Off:**\n${tradeoff.tradeoffDetail}\n\n` +
+        `**Calculation & Inventory Position:** Protected need is ${number.format(protectedNeed)} units [demand × (${decimal.format(item.leadMonths)} lead + ${decimal.format(analysis.settings.coverage)} coverage) + ${number.format(analysis.settings.critical)} min + ${number.format(item.openClient)} client]. On hand is ${number.format(item.onHand)} and counted inbound is ${number.format(item.planningSupplier)}. ${supplierNote}\n\n` +
+        `**Stockout Risk Analysis:** ${item.stockoutRisk ? `Usable supply may last about ${decimal.format(item.daysToStockout)} days, while supplier lead time is ${decimal.format(item.leadMonths * 30.44)} days.` : "Usable supply is not projected to expire before the replenishment point."}\n\n` +
+        `**Demand Evidence:** Three-month rate is ${decimal.format(item.demand)} units/month and the last 30 days show ${number.format(item.last30)} units, indicating ${demandDirection} demand. MK forecasts ${decimal.format(item.forecast.value)} units/month (range ${decimal.format(item.forecast.low)}–${decimal.format(item.forecast.high)}) using ${item.forecast.method}, selected by ${item.forecast.selectedBy}.${limitations}`
     };
+  }
+
+  function tradeoffsAnswer(analysis, matchedItem) {
+    if (matchedItem) {
+      const tradeoff = matchedItem.tradeoff || computePrescriptiveTradeoff(matchedItem, analysis.settings);
+      return {
+        intent: "tradeoffs",
+        category: "decision trade-off",
+        itemKey: matchedItem.key,
+        message: `**Decision Trade-Off: ${clean(matchedItem.model || matchedItem.itemid)} — ${matchedItem.brand}**\n` +
+          `**Prescriptive Action:** ${tradeoff.tradeoffAction}\n` +
+          `**Trade-Off Breakdown:**\n${tradeoff.tradeoffDetail}\n\n` +
+          `**Financial & Service Position:** On hand: ${number.format(matchedItem.onHand)} units | Usable runway: ${matchedItem.daysToStockout != null ? decimal.format(matchedItem.daysToStockout) + " days" : "stable"} | Lead time: ${decimal.format(matchedItem.leadMonths * 30.44)} days | Gap: ${number.format(matchedItem.recommended)} units.`
+      };
+    }
+
+    const expediteItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Expedite Inbound Supplier PO");
+    const emergencyItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Emergency Replenishment PO");
+    const cycleItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Release Standard Cycle PO");
+    const excessItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Freeze Replenishment & Capital Preservation");
+    const noDemandItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Active Disposition & Liquidation");
+
+    return {
+      intent: "tradeoffs",
+      category: "prescriptive trade-offs",
+      message: `**Prescriptive Supply Chain Trade-Offs — ${REGION_NAMES[analysis.code]}**\n` +
+        `Every inventory decision balances service reliability against working capital:\n\n` +
+        `1. **Expedite Inbound (${number.format(expediteItems.length)} SKUs):** Priority carrier expediting on already-placed POs delivers inventory faster than new POs and prevents double capital lockup.\n` +
+        `2. **Emergency PO (${number.format(emergencyItems.length)} SKUs):** Immediate factory allocation is financially justified to protect high-margin Class-A customers against imminent stockout.\n` +
+        `3. **Standard Cycle Reorder (${number.format(cycleItems.length)} SKUs, ${number.format(analysis.recommendedUnits)} units):** Restores target safety stock while avoiding emergency freight surcharges.\n` +
+        `4. **Freeze Purchasing (${number.format(excessItems.length)} SKUs):** Withholding orders prevents compounding 18-24% annual carrying costs and protects cash flow.\n` +
+        `5. **Active Disposition (${number.format(noDemandItems.length)} SKUs):** Liquidating dead stock frees warehouse space and recovers capital before 100% write-off.\n\n` +
+        `Ask for any model name to inspect its SKU-specific trade-off analysis.`
+    };
+  }
+
+  async function executiveBriefAnswer(analysis) {
+    const apiKey = localStorage.getItem("mk-gemini-api-key");
+    if (apiKey) {
+      const geminiRes = await queryGeminiAdvisor(apiKey, "Provide an executive strategic supply chain brief and decision trade-offs for executive leadership.", analysis);
+      if (geminiRes) return { intent: "executive-brief", category: "Gemini Executive Brief", message: geminiRes };
+    }
+
+    const expediteItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Expedite Inbound Supplier PO");
+    const reorderItems = analysis.scoped.filter(item => item.recommended > 0);
+    const excessItems = analysis.excess;
+    const noDemandItems = analysis.noDemand;
+    const totalReorders = analysis.recommendedUnits;
+    const topStockout = analysis.stockouts[0];
+    const topExcess = analysis.excess[0];
+
+    return {
+      intent: "executive-brief",
+      category: "Executive AI Brief",
+      message: `**Executive Supply Chain Brief — ${REGION_NAMES[analysis.code]}**\n` +
+        `**1. Executive Summary:** ${number.format(analysis.scoped.length)} active SKUs audited across ${number.format(analysis.activeBrands)} brands. Total replenishment requirement is ${number.format(totalReorders)} units across ${number.format(reorderItems.length)} items. Imminent stockout risk detected on ${number.format(analysis.stockouts.length)} items (${number.format(analysis.criticalRisks)} critical).\n\n` +
+        `**2. Prescriptive Decision Trade-Offs:**\n` +
+        `• **Expedite Inbound (${number.format(expediteItems.length)} SKUs):** Prioritize expediting open supplier commitments arriving outside the planning window over issuing duplicate purchase orders. Protects lead-time stockout window at a fraction of capital lockup.\n` +
+        `• **Release Replenishment POs (${number.format(reorderItems.length)} SKUs):** Release ${number.format(totalReorders)} units now to restore ${decimal.format(analysis.settings.coverage)} mo coverage without incurring emergency freight surcharges.\n` +
+        `• **Freeze Purchasing & Capital Preservation (${number.format(excessItems.length)} SKUs):** Halting new POs on excess inventory eliminates ~18-24% annual carrying costs and protects working capital liquidity.\n` +
+        `• **Active Disposition (${number.format(noDemandItems.length)} SKUs):** Initiate promotional bundles, transfers or supplier returns on zero-demand inventory to recover salvage value before 100% write-off.\n\n` +
+        `**3. Immediate Next Steps:**\n` +
+        `1. Expedite inbound for ${topStockout ? `${topStockout.model || topStockout.itemid} (${topStockout.brand})` : "top stockout criticals"}.\n` +
+        `2. Release procurement authorization for ${number.format(totalReorders)} units.\n` +
+        `3. Freeze vendor purchase orders on ${topExcess ? `${topExcess.model || topExcess.itemid}` : "excess SKUs"}.\n\n` +
+        `*(Note: To enable generative Gemini strategic briefings, type \`set gemini key YOUR_KEY\`)*`
+    };
+  }
+
+  async function queryGeminiAdvisor(apiKey, userQuestion, analysis) {
+    try {
+      const topStockout = analysis.stockouts.slice(0, 4).map(i => `${i.model} (${i.brand}): stockout in ${decimal.format(i.daysToStockout)}d, lead ${decimal.format(i.leadMonths * 30.44)}d, action: ${i.tradeoff?.tradeoffAction || i.nextAction}`).join("; ");
+      const topExcess = analysis.excess.slice(0, 3).map(i => `${i.model}: ${decimal.format(i.monthsCover)} mo cover`).join("; ");
+      const context = `Supply Chain Real-Time Context for ${REGION_NAMES[analysis.code]}:
+- Scope: ${analysis.scoped.length} active SKUs, ${analysis.activeBrands} brands.
+- Monthly Demand: ${decimal.format(analysis.totalDemand)} units. On Hand: ${number.format(analysis.totalStock)} units.
+- Reorder Demand: ${number.format(analysis.recommendedUnits)} units across ${analysis.reorders.length} SKUs.
+- Stockout Risks: ${analysis.stockouts.length} SKUs (${topStockout || "None"}).
+- Excess Inventory: ${analysis.excess.length} SKUs (${topExcess || "None"}).
+- Dead Stock: ${analysis.noDemand.length} SKUs.
+- Planning Policy: ${analysis.settings.coverage} mo coverage, ${analysis.settings.critical} units critical buffer, ${analysis.settings.delay} days delay window.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Question: ${userQuestion}\n\n${context}` }] }],
+          systemInstruction: { parts: [{ text: "You are MK, an executive AI supply chain and decision advisor. Provide structured, authoritative, and actionable business reasoning with clear trade-offs (capital impact, service level, supplier risks). Use concise bullet points and bold headers." }] }
+        })
+      });
+      const data = await response.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    } catch (_) {
+      return null;
+    }
   }
 
   function portfolioAnswer(analysis, prefix = "") {
@@ -880,8 +1086,8 @@
   function stockoutAnswer(analysis) {
     const risks = analysis.stockouts.slice().sort((a, b) => a.daysToStockout - b.daysToStockout || b.recommended - a.recommended).slice(0, 5);
     if (!risks.length) return { intent: "stockout", category: "risk analysis", message: "No eligible item currently has usable supply expiring before its replenishment point. I will recalculate this automatically when new data arrives." };
-    const lines = risks.map((item, index) => `${index + 1}. [${item.priority} ${item.riskScore}/100] ${item.model || item.itemid} — ${item.brand}: ${decimal.format(item.daysToStockout)} days to stockout; ${number.format(item.recommended)} units; confidence ${number.format(item.confidence.score)}/100.`).join("\n");
-    return { intent: "stockout", category: "risk analysis", itemKey: risks[0]?.key || "", message: `**Top stockout risks**\n${lines}\nWhy: demand consumes usable supply before replenishment can protect the lead-time requirement. Client orders reduce available stock, and only supplier units arriving inside the configured window are counted. The ranking also considers demand acceleration and ABC importance.` };
+    const lines = risks.map((item, index) => `${index + 1}. [${item.priority} ${item.riskScore}/100] ${item.model || item.itemid} — ${item.brand}: ${decimal.format(item.daysToStockout)} days to stockout; ${number.format(item.recommended)} units; action: **${item.tradeoff?.tradeoffAction || item.nextAction}**.\n   • Business reason: ${item.tradeoff?.reasonShort || shortReason(item)}`).join("\n");
+    return { intent: "stockout", category: "risk analysis", itemKey: risks[0]?.key || "", message: `**Top stockout risks & Prescriptive Trade-Offs**\n${lines}\n\nPrescriptive rationale: Demand consumes usable supply before replenishment arrives. When open supplier POs exist outside the window, expediting them is prioritized over issuing new orders to close the stockout gap without doubling capital commitment.` };
   }
 
   function demandAnswer(analysis) {
@@ -894,15 +1100,15 @@
   function reorderAnswer(analysis) {
     const items = analysis.reorders.slice().sort((a, b) => b.recommended - a.recommended).slice(0, 5);
     if (!items.length) return { intent: "reorder", category: "reorder decision", message: "No active eligible item currently has a positive reorder quantity under the configured formula." };
-    const lines = items.map((item, index) => `${index + 1}. [${item.priority}] ${item.model || item.itemid} — ${item.brand}: ${number.format(item.recommended)} units. ${shortReason(item)}.`).join("\n");
-    return { intent: "reorder", category: "reorder decision", itemKey: items[0]?.key || "", message: `**Recommended next purchases**\n${lines}\nFormula basis remains: monthly demand × (brand lead time + coverage months) + critical carrying units + client orders − on hand − eligible inbound supplier units. Positive results are rounded up. Risk and confidence scores explain priority; they do not change the quantity formula.` };
+    const lines = items.map((item, index) => `${index + 1}. [${item.priority}] ${item.model || item.itemid} — ${item.brand}: ${number.format(item.recommended)} units. **${item.tradeoff?.tradeoffAction || "Release Order"}**.\n   • Business reason: ${item.tradeoff?.reasonShort || shortReason(item)}`).join("\n");
+    return { intent: "reorder", category: "reorder decision", itemKey: items[0]?.key || "", message: `**Recommended next purchases & Trade-Offs**\n${lines}\n\nFormula basis: monthly demand × (brand lead time + coverage months) + critical carrying units + client orders − on hand − eligible inbound supplier units. Ordering now within standard vendor cycle captures contractual terms and avoids emergency freight surcharges.` };
   }
 
   function excessAnswer(analysis) {
     const items = [...analysis.noDemand, ...analysis.excess].filter((item, index, rows) => rows.indexOf(item) === index).sort((a, b) => b.onHand - a.onHand).slice(0, 5);
     if (!items.length) return { intent: "excess", category: "inventory health", message: "No material excess or no-demand inventory exception is detected in the current active-brand scope." };
-    const lines = items.map((item, index) => `${index + 1}. ${item.model || item.itemid} — ${item.brand}: ${number.format(item.onHand)} on hand; ${item.demand ? decimal.format(item.monthsCover) + " months cover" : "no supported demand"}.`).join("\n");
-    return { intent: "excess", category: "inventory health", message: `**Excess and no-demand priorities**\n${lines}\nNext actions: stop replenishment, validate demand and item status, then evaluate transfer, promotion, return, cancellation or controlled disposition.` };
+    const lines = items.map((item, index) => `${index + 1}. ${item.model || item.itemid} — ${item.brand}: ${number.format(item.onHand)} on hand; ${item.demand ? decimal.format(item.monthsCover) + " months cover" : "no supported demand"}. **${item.tradeoff?.tradeoffAction || "Review"}**.\n   • Trade-off: ${item.tradeoff?.reasonShort || "Preserve working capital"}`).join("\n");
+    return { intent: "excess", category: "inventory health", message: `**Excess and no-demand prescriptive trade-offs**\n${lines}\n\nPrescriptive trade-off: Freezing new purchase orders immediately halts ~18–24% annualized carrying costs. Proactively liquidating or transferring dead stock recovers salvage liquidity, outperforming passive warehouse holding until total write-off.` };
   }
 
   async function salesAnswer() {

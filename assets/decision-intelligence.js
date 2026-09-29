@@ -48,6 +48,7 @@
     ["brain-search", "brain-risk", "brain-brand"].forEach(id => $(id)?.addEventListener(id === "brain-search" ? "input" : "change", applyFilters));
     $("brain-export")?.addEventListener("click", exportCsv);
     $("decision-close")?.addEventListener("click", () => $("decision-detail")?.classList.remove("open"));
+    initAiBrief();
     window.addEventListener("focus", refreshIfChanged);
   }
 
@@ -199,14 +200,16 @@
       else if (monthsCover != null && monthsCover < 2) { risk = "MONITOR"; action = "Monitor weekly and confirm supplier capacity"; riskClass = "monitor"; }
       const demandWhy = demandExplanation({ forecast, historicalMean, trend, currentSignal, variability, observations, item });
       const stockoutWhy = stockoutExplanation({ forecast, netAvailable, daysToStockout, leadDays, inbound, delayedInbound, item, settings });
-      const businessReason = businessExplanation({ risk, gap, forecast, monthsCover, item, trend, delayedInbound });
+      const tradeoff = prescriptiveTradeoff({ risk, gap, forecast, monthsCover, item, trend, delayedInbound, settings, inbound, netAvailable, daysToStockout, leadDays });
+      const businessReason = tradeoff.reasonShort;
       const confidenceScore = clamp((observations >= 4 ? .38 : observations / 4 * .38) + (learned.accuracy == null ? .18 : learned.accuracy * .38) + (forecast > 0 ? .16 : .08) + (item.leadTime ? .08 : 0), 0, 1);
       const confidence = confidenceScore >= .75 ? "High" : confidenceScore >= .5 ? "Medium" : "Low";
       const priority = Math.round(clamp((riskClass === "urgent" ? 55 : riskClass === "reorder" ? 35 : riskClass === "monitor" ? 18 : 5) + Math.min(25, gap / Math.max(1, forecast) * 15) + (item.abc === "A" ? 12 : item.abc === "B" ? 6 : 2) + (delayedInbound ? 10 : 0), 0, 100));
       return {
         ...item, forecast, historicalMean, trend, variability, observations, method, netAvailable, target, gap,
         daysToStockout, leadDays, monthsCover, delayedInbound, risk, riskClass, action, demandWhy, stockoutWhy,
-        businessReason, confidence, confidenceScore, priority,
+        businessReason, tradeoffAction: tradeoff.tradeoffAction, tradeoffDetail: tradeoff.tradeoffDetail,
+        businessDetailHtml: tradeoff.detailHtml, confidence, confidenceScore, priority,
         calculation: `${decimal.format(forecast)} × (${decimal.format(leadMonths)} lead + ${decimal.format(settings.coverage)} coverage) + ${number.format(settings.critical)} minimum − ${number.format(netAvailable)} net available = ${number.format(gap)} units`
       };
     }).sort((a, b) => b.priority - a.priority || b.gap - a.gap || String(a.brand).localeCompare(String(b.brand)));
@@ -232,15 +235,111 @@
     return `${comparison} ${supply} ${delay} Open client commitments of ${number.format(item.openClient)} units reduce usable supply.`;
   }
 
+  function prescriptiveTradeoff(context) {
+    const { risk, gap, forecast, monthsCover, item, trend, delayedInbound, settings } = context;
+    const leadMonths = Math.max(0, finite(item.leadTimeMonths));
+    const leadDays = decimal.format(leadMonths * 30.44);
+    const stockoutDays = item.daysToStockout != null ? decimal.format(item.daysToStockout) : "unknown";
+    const inboundTotal = finite(item.openSupplier);
+    const countedInbound = finite(item.planningSupplierQty || item.planningSupplier);
+    const uncountedInbound = Math.max(0, inboundTotal - countedInbound);
+
+    if (risk === "STOCKOUT RISK") {
+      if (uncountedInbound > 0) {
+        const action = "Expedite Inbound Supplier PO";
+        const short = `Expedite ${number.format(uncountedInbound)} inbound units vs issuing new PO; protects ${stockoutDays}-day runway against ${leadDays}-day lead time.`;
+        const detail = `• Recommended Action: Expedite existing supplier commitments (${number.format(uncountedInbound)} units arriving outside standard ${settings.delay}-day window).\n• Trade-off Analysis: Releasing a new PO takes full ${leadDays} days and duplicates working capital. Negotiating priority carrier expediting or split shipments closes the stockout gap at a fraction of double-order capital lockup.\n• Business Risk: Stockout directly exposes Class-${item.abc} customer orders, revenue, and service SLA.`;
+        return {
+          tradeoffAction: action,
+          reasonShort: short,
+          tradeoffDetail: detail,
+          detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge urgent">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> Expediting existing inbound supplier orders (${number.format(uncountedInbound)} units) is financially superior to placing a duplicate purchase order. It restores coverage inside the ${stockoutDays}-day stockout window while avoiding double capital commitment.</p><p><strong>Business Impact:</strong> Prevents imminent Class-${item.abc} revenue loss and contractual backorder penalties.</p></div>`
+        };
+      }
+      const action = "Emergency Replenishment PO";
+      const short = `Release urgent PO for ${number.format(gap)} units; stockout in ~${stockoutDays} days vs ${leadDays} days lead time.`;
+      const detail = `• Recommended Action: Issue expedited replenishment PO immediately for ${number.format(gap)} units.\n• Trade-off Analysis: Inaction guarantees a stockout gap of ~${leadDays} days. Priority factory slot or express logistics surcharge is financially justified by preserving Class-${item.abc} gross margin and client retention.\n• Business Risk: Available stock is insufficient to buffer lead-time demand.`;
+      return {
+        tradeoffAction: action,
+        reasonShort: short,
+        tradeoffDetail: detail,
+        detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge urgent">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> Standard cycle reordering is too late; usable supply exhausts in ~${stockoutDays} days vs ${leadDays} days lead time. An immediate emergency replenishment order is required.</p><p><strong>Business Impact:</strong> The margin and customer retention protected far outweigh the operational cost of expedited order placement.</p></div>`
+      };
+    }
+
+    if (risk === "REORDER") {
+      const action = "Release Standard Cycle PO";
+      const short = `Order ${number.format(gap)} units now to restore ${decimal.format(settings.coverage)} mo coverage and avoid emergency expedite freight fees.`;
+      const detail = `• Recommended Action: Release cycle purchase order for ${number.format(gap)} units.\n• Trade-off Analysis: Placing PO within standard lead time (${leadDays} days) captures contractual pricing without emergency expedite premiums, while ordering exactly the ${number.format(gap)}-unit gap prevents excess holding cost.\n• Business Risk: Maintaining order discipline protects target service level without inventory bloat.`;
+      return {
+        tradeoffAction: action,
+        reasonShort: short,
+        tradeoffDetail: detail,
+        detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge reorder">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> Inventory is ${number.format(gap)} units below protected target (${decimal.format(leadMonths)} mo lead + ${decimal.format(settings.coverage)} mo coverage). Reordering now locks in regular freight rates and standard vendor schedules.</p><p><strong>Business Impact:</strong> Restores equilibrium before stock depletes into the urgent risk zone.</p></div>`
+      };
+    }
+
+    if (risk === "EXCESS") {
+      const action = "Freeze Replenishment & Capital Preservation";
+      const short = `Hold purchasing; ${monthsCover == null ? "high" : decimal.format(monthsCover)} months cover exceeds threshold. Halts ~20% annualized carrying cost.`;
+      const detail = `• Recommended Action: Freeze all new purchase orders and monitor burn-down rate.\n• Trade-off Analysis: Holding excess inventory incurs ~18–24% annualized carrying costs (storage, insurance, cost of capital). Halting orders prevents compounding cash lockup and redeploys working capital toward Class-A reorders.\n• Business Risk: Aging inventory and markdown exposure.`;
+      return {
+        tradeoffAction: action,
+        reasonShort: short,
+        tradeoffDetail: detail,
+        detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge excess">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> Current stock represents ${monthsCover == null ? "elevated" : decimal.format(monthsCover)} months of cover. Halting replenishment immediately stops working capital bleed and avoids costly warehouse holding fees.</p><p><strong>Business Impact:</strong> Preserves liquidity to fund fast-turning, high-return SKUs.</p></div>`
+      };
+    }
+
+    if (risk === "NO DEMAND") {
+      const action = "Active Disposition & Liquidation";
+      const short = `Zero demand for ${number.format(item.stockQty)} units on hand; liquidate, transfer or return to avoid 100% write-off.`;
+      const detail = `• Recommended Action: Initiate inventory disposition (channel transfer, promotional bundle, vendor return, or commercial clearance).\n• Trade-off Analysis: Inactive stock generates zero revenue while accumulating storage overhead. Proactive liquidation now recovers salvage value and frees physical space, outperforming passive holding until total write-off.\n• Business Risk: 100% salvage loss and dead storage fees.`;
+      return {
+        tradeoffAction: action,
+        reasonShort: short,
+        tradeoffDetail: detail,
+        detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge excess">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> Zero demand signal observed across recent periods. Retaining dead stock burns warehouse overhead. Proactive liquidation or cross-warehouse transfer yields immediate capital recovery.</p><p><strong>Business Impact:</strong> Eliminates continuous carrying costs and prevents complete write-down.</p></div>`
+      };
+    }
+
+    if (risk === "MONITOR") {
+      const action = "Weekly Review / Avoid Bullwhip";
+      const short = `Coverage is ${monthsCover == null ? "adequate" : decimal.format(monthsCover)} mo; withhold reorder to prevent bullwhip effect while tracking supplier timing.`;
+      const detail = `• Recommended Action: Maintain weekly observation cadence; confirm supplier production capacity.\n• Trade-off Analysis: Prematurely ordering induces artificial demand amplification (bullwhip effect) and inflates holding cost. Existing buffer can absorb demand shifts until the safety threshold is breached.\n• Business Risk: Monitor lead-time creep or sudden demand acceleration.`;
+      return {
+        tradeoffAction: action,
+        reasonShort: short,
+        tradeoffDetail: detail,
+        detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge monitor">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> Inventory coverage is within safe buffer parameters. Withholding orders avoids premature cash commitment and suppresses the bullwhip effect.</p><p><strong>Business Impact:</strong> Balances service reliability with working capital efficiency.</p></div>`
+      };
+    }
+
+    if (risk === "DATA / SCOPE") {
+      const action = "Master Data & Catalog Audit";
+      const short = `Item status is excluded or brand is inactive; verify commercial eligibility before committing supplier funds.`;
+      const detail = `• Recommended Action: Audit ERP master catalog, active-brand settings, and sales eligibility.\n• Trade-off Analysis: Reordering without verified eligibility risks procuring discontinued or unsellable stock.\n• Business Risk: Misallocated purchasing budget.`;
+      return {
+        tradeoffAction: action,
+        reasonShort: short,
+        tradeoffDetail: detail,
+        detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge data">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> The SKU is excluded by current active-brand configuration or ERP lifecycle status. Master catalog reconciliation must precede any procurement action.</p><p><strong>Business Impact:</strong> Prevents purchasing stranded or obsolete product lines.</p></div>`
+      };
+    }
+
+    const action = "Maintain Equilibrium Plan";
+    const short = `Inventory and confirmed supply cover demand and safety buffer (${monthsCover == null ? "healthy" : decimal.format(monthsCover)} mo cover).`;
+    const detail = `• Recommended Action: Maintain standard schedule and order cadence.\n• Trade-off Analysis: System is in equilibrium. No intervention needed; supply and demand remain aligned.\n• Business Risk: Negligible near-term disruption.`;
+    return {
+      tradeoffAction: action,
+      reasonShort: short,
+      tradeoffDetail: detail,
+      detailHtml: `<div class="tradeoff-callout"><span class="tradeoff-badge healthy">${esc(action)}</span><p><strong>Trade-off Rationale:</strong> Stock and confirmed pipeline match demand velocity and safety parameters.</p><p><strong>Business Impact:</strong> Predictable cash flow and stable customer fill rate.</p></div>`
+    };
+  }
+
   function businessExplanation(context) {
-    const { risk, gap, forecast, monthsCover, item, trend, delayedInbound } = context;
-    if (risk === "STOCKOUT RISK") return `Service level and revenue are exposed because supply may run out before replenishment can arrive. Acting now protects customer commitments and ABC ${item.abc} contribution.`;
-    if (risk === "REORDER") return `The inventory position is ${number.format(gap)} units below lead-time demand plus the configured coverage buffer. Replenishment restores target service without ordering beyond the calculated gap.`;
-    if (risk === "EXCESS") return `Inventory represents ${monthsCover == null ? "unknown" : decimal.format(monthsCover)} months of cover while demand is ${forecast ? (trend < 0 ? "softening" : "below the excess threshold") : "absent"}. Holding purchases reduces carrying cost, aging, and markdown risk.`;
-    if (risk === "MONITOR") return `Coverage is below two months but remains above the immediate reorder trigger. Weekly review is appropriate because ${delayedInbound ? "supplier timing is uncertain" : "the current buffer can absorb near-term demand"}.`;
-    if (risk === "NO DEMAND") return "Stock exists without a supported demand signal. The next decision should focus on disposition, transfer, promotion, or validation rather than replenishment.";
-    if (risk === "DATA / SCOPE") return "The item is outside the active reorder scope or lacks an eligible status. Confirm master data before committing inventory or supplier capacity.";
-    return "Available and inbound supply cover forecast demand, lead time, and the configured safety buffer. Maintain the plan and continue monitoring changes.";
+    return prescriptiveTradeoff(context).reasonShort;
   }
 
   function populateFilters() {
@@ -296,7 +395,9 @@
       <td>${esc(row.brand)}</td><td><span class="risk-badge ${row.riskClass}">${esc(row.risk)}</span></td>
       <td class="num">${decimal.format(row.forecast)}</td><td class="num">${number.format(row.netAvailable)}</td>
       <td class="num">${row.daysToStockout == null ? "—" : decimal.format(row.daysToStockout)}</td><td class="num">${number.format(row.gap)}</td>
-      <td>${esc(row.action)}</td><td class="reason">${esc(row.businessReason)}</td><td><span class="confidence-badge">${row.confidence}</span></td>
+      <td>${esc(row.action)}</td>
+      <td class="reason"><span class="tradeoff-pill ${row.riskClass}">${esc(row.tradeoffAction || row.action)}</span><div class="reason-text">${esc(row.businessReason)}</div></td>
+      <td><span class="confidence-badge">${row.confidence}</span></td>
       <td class="num">${number.format(row.priority)}</td><td><button type="button" data-decision-key="${esc(keyOf(row))}">Why?</button></td>
     </tr>`).join("") : `<tr><td colspan="12"><div class="empty-brain"><strong>No decisions match the filters</strong><span>Change the brand, risk, or search filter.</span></div></td></tr>`;
     $("decision-rows").querySelectorAll("[data-decision-key]").forEach(button => button.addEventListener("click", () => showDetail(button.dataset.decisionKey)));
@@ -307,7 +408,7 @@
     if (!row) return;
     $("decision-detail-title").textContent = `${row.model || row.itemid} • ${row.brand}`;
     $("decision-detail-subtitle").textContent = `${row.risk} • ${row.action} • Priority ${row.priority}/100`;
-    $("detail-business").textContent = row.businessReason;
+    $("detail-business").innerHTML = row.businessDetailHtml || `<p>${esc(row.businessReason)}</p>`;
     $("detail-stockout").textContent = row.stockoutWhy;
     $("detail-demand").textContent = row.demandWhy;
     $("detail-calculation").textContent = row.calculation;
@@ -354,8 +455,8 @@
 
   function reportData() {
     return {
-      headers: ["Model", "Brand", "Item", "Risk", "Priority", "Recommended next action", "Business reason", "Why stockout", "Why demand", "Forecast/month", "Net available", "Days to stockout", "Recommended units", "Forecast method", "Confidence", "Calculation", "Regulatory control point"],
-      rows: filtered.map(row => [row.model, row.brand, row.product, row.risk, row.priority, row.action, row.businessReason, row.stockoutWhy, row.demandWhy, row.forecast, row.netAvailable, row.daysToStockout == null ? "" : row.daysToStockout, row.gap, row.method, row.confidence, row.calculation, regulationDecision(row)])
+      headers: ["Model", "Brand", "Item", "Risk", "Priority", "Recommended next action", "Prescriptive Trade-Off Action", "Business reason", "Prescriptive Trade-Off Detail", "Why stockout", "Why demand", "Forecast/month", "Net available", "Days to stockout", "Recommended units", "Forecast method", "Confidence", "Calculation", "Regulatory control point"],
+      rows: filtered.map(row => [row.model, row.brand, row.product, row.risk, row.priority, row.action, row.tradeoffAction || row.action, row.businessReason, row.tradeoffDetail || "", row.stockoutWhy, row.demandWhy, row.forecast, row.netAvailable, row.daysToStockout == null ? "" : row.daysToStockout, row.gap, row.method, row.confidence, row.calculation, regulationDecision(row)])
     };
   }
 
@@ -368,4 +469,173 @@
     window.StarkDecisionReportData = reportData;
     window.dispatchEvent(new Event("stark-report-state-change"));
   }
+
+  function initAiBrief() {
+    const exportBtn = $("brain-export");
+    if (exportBtn && !$("brain-ai-brief")) {
+      const briefBtn = document.createElement("button");
+      briefBtn.id = "brain-ai-brief";
+      briefBtn.type = "button";
+      briefBtn.className = "brain-ai-brief-btn";
+      briefBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right:6px;vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>AI Strategic Brief';
+      exportBtn.parentNode.insertBefore(briefBtn, exportBtn.nextSibling);
+      briefBtn.addEventListener("click", toggleAiBrief);
+
+      const panel = document.createElement("section");
+      panel.id = "ai-brief-panel";
+      panel.className = "ai-brief-panel";
+      panel.setAttribute("aria-live", "polite");
+      const toolbar = exportBtn.closest(".brain-toolbar");
+      if (toolbar) toolbar.after(panel);
+    }
+  }
+
+  function toggleAiBrief() {
+    const panel = $("ai-brief-panel");
+    if (!panel) return;
+    if (panel.classList.contains("open")) {
+      panel.classList.remove("open");
+      return;
+    }
+    renderAiBrief();
+    panel.classList.add("open");
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function renderAiBrief(forceGemini = false) {
+    const panel = $("ai-brief-panel");
+    if (!panel) return;
+    if (!decisions.length) {
+      panel.innerHTML = `<div class="ai-brief-card"><div class="ai-brief-head"><h3>AI Executive Brief</h3><button type="button" class="ai-brief-close" id="ai-brief-close-btn" aria-label="Close brief">×</button></div><p style="padding:15px;color:#6b8097">No inventory dataset is loaded yet. Upload a Raw Report to generate strategic analysis.</p></div>`;
+      $("ai-brief-close-btn")?.addEventListener("click", () => panel.classList.remove("open"));
+      return;
+    }
+
+    const expediteItems = decisions.filter(row => row.tradeoffAction === "Expedite Inbound Supplier PO");
+    const reorderItems = decisions.filter(row => row.risk === "REORDER" || row.tradeoffAction === "Emergency Replenishment PO");
+    const excessItems = decisions.filter(row => row.risk === "EXCESS");
+    const noDemandItems = decisions.filter(row => row.risk === "NO DEMAND");
+    const totalReorderUnits = decisions.reduce((sum, row) => sum + row.gap, 0);
+    const totalStockoutRisks = decisions.filter(row => row.risk === "STOCKOUT RISK").length;
+    const apiKey = localStorage.getItem("mk-gemini-api-key") || "";
+
+    let geminiContent = "";
+    if (forceGemini && apiKey) {
+      panel.innerHTML = `<div class="ai-brief-card"><div class="ai-brief-head"><h3>Consulting Gemini AI Strategic Intelligence…</h3><button type="button" class="ai-brief-close" id="ai-brief-close-btn" aria-label="Close brief">×</button></div><p style="padding:18px 20px;color:#0b5c78">Synthesizing SKU signals, stockout timings, supplier delay windows, and financial trade-offs into an executive memorandum…</p></div>`;
+      $("ai-brief-close-btn")?.addEventListener("click", () => panel.classList.remove("open"));
+      geminiContent = await callGeminiStrategicAnalysis(apiKey, { expediteItems, reorderItems, excessItems, noDemandItems, totalReorderUnits, totalStockoutRisks });
+    }
+
+    panel.innerHTML = `
+      <div class="ai-brief-card">
+        <div class="ai-brief-head">
+          <div>
+            <span class="ai-brief-tag">AI Decision Intelligence • ${esc(REGION_NAME)}</span>
+            <h3>Prescriptive Strategic Supply Chain Brief</h3>
+          </div>
+          <button type="button" class="ai-brief-close" id="ai-brief-close-btn" aria-label="Close brief">×</button>
+        </div>
+
+        <div class="ai-brief-kpis">
+          <div class="brief-kpi"><small>Expedite Inbound POs</small><strong>${number.format(expediteItems.length)}</strong><span>Priority logistics focus</span></div>
+          <div class="brief-kpi"><small>Replenishment Orders</small><strong>${number.format(totalReorderUnits)} units</strong><span>Across ${number.format(reorderItems.length)} SKUs</span></div>
+          <div class="brief-kpi"><small>Freeze Purchasing</small><strong>${number.format(excessItems.length)} SKUs</strong><span>Preserves working capital</span></div>
+          <div class="brief-kpi"><small>Active Disposition</small><strong>${number.format(noDemandItems.length)} SKUs</strong><span>Avoids 100% write-off</span></div>
+        </div>
+
+        ${geminiContent ? `<div class="gemini-brief-box"><div class="gemini-brief-head"><span class="gemini-sparkle">✦</span><strong>Gemini Generative Strategic Assessment</strong></div><div class="gemini-text">${geminiContent}</div></div>` : ""}
+
+        <div class="ai-brief-grid">
+          <div class="brief-col">
+            <h4>Prescriptive Decision Trade-Offs</h4>
+            <div class="tradeoff-summary-item">
+              <span class="tradeoff-badge urgent">Expedite Inbound (${number.format(expediteItems.length)} SKUs)</span>
+              <p>Existing open supplier commitments are arriving outside the critical stockout window. <strong>Trade-off:</strong> Prioritizing split-shipments or carrier expediting closes stockout gaps within days while avoiding doubling capital lockup with new POs.</p>
+            </div>
+            <div class="tradeoff-summary-item">
+              <span class="tradeoff-badge reorder">Standard Replenishment (${number.format(reorderItems.length)} SKUs)</span>
+              <p>Reorder quantities restore exact buffer targets. <strong>Trade-off:</strong> Committing orders on standard vendor cycle avoids emergency freight penalties and smooths receiving capacity without exceeding demand velocity.</p>
+            </div>
+            <div class="tradeoff-summary-item">
+              <span class="tradeoff-badge excess">Freeze / Preserve Capital (${number.format(excessItems.length)} SKUs)</span>
+              <p>Current stock represents >4 months of cover. <strong>Trade-off:</strong> Halting purchase orders immediately eliminates compounding holding costs (~18-24% annualized) and frees liquidity to fund high-velocity Class-A reorders.</p>
+            </div>
+            <div class="tradeoff-summary-item">
+              <span class="tradeoff-badge excess">Liquidate Dead Stock (${number.format(noDemandItems.length)} SKUs)</span>
+              <p>Zero recent demand observed with inventory on hand. <strong>Trade-off:</strong> Initiating channel transfer, promotion, or vendor return yields immediate cash recovery, outperforming passive warehouse holding until total write-off.</p>
+            </div>
+          </div>
+
+          <div class="brief-col">
+            <h4>Executive Action Checklist</h4>
+            <ol class="brief-action-list">
+              <li><strong>Immediate (24–48h):</strong> Contact logistics and suppliers to expedite inbound shipments for top stockout risks (e.g. ${esc(decisions.find(r => r.risk === "STOCKOUT RISK")?.model || "top critical SKUs")}).</li>
+              <li><strong>Procurement Release:</strong> Approve ${number.format(totalReorderUnits)} units for eligible active-brand items before lead-time thresholds decay.</li>
+              <li><strong>Working Capital Freeze:</strong> Lock purchasing on ${number.format(excessItems.length)} excess models to preserve cash flow.</li>
+              <li><strong>Dead Stock Recovery:</strong> Review ${number.format(noDemandItems.length)} zero-demand models for liquidation or regional transfer.</li>
+            </ol>
+            <div class="gemini-toggle-bar">
+              ${apiKey
+                ? `<button type="button" id="btn-call-gemini" class="button-gemini">✨ Generate Gemini AI Strategic Review</button>`
+                : `<div class="gemini-key-prompt"><small>Connect Google Gemini API for generative strategic memos:</small><div class="gemini-input-row"><input type="password" id="gemini-key-input" placeholder="Paste Gemini API Key (AIza...)" autocomplete="off"><button type="button" id="btn-save-gemini-key">Connect</button></div></div>`}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    $("ai-brief-close-btn")?.addEventListener("click", () => panel.classList.remove("open"));
+    $("btn-call-gemini")?.addEventListener("click", () => renderAiBrief(true));
+    $("btn-save-gemini-key")?.addEventListener("click", () => {
+      const val = $("gemini-key-input")?.value?.trim();
+      if (val) {
+        localStorage.setItem("mk-gemini-api-key", val);
+        renderAiBrief(true);
+      }
+    });
+  }
+
+  async function callGeminiStrategicAnalysis(apiKey, data) {
+    try {
+      const topRisks = decisions.filter(r => r.risk === "STOCKOUT RISK").slice(0, 5).map(r => `- ${r.model} (${r.brand}): Stockout in ${decimal.format(r.daysToStockout)}d, Lead ${decimal.format(r.leadDays)}d, Recommended: ${r.gap} units, Action: ${r.tradeoffAction}`).join("\n");
+      const topExcess = decisions.filter(r => r.risk === "EXCESS").slice(0, 4).map(r => `- ${r.model} (${r.brand}): ${decimal.format(r.monthsCover)} mo cover, Stock: ${r.stockQty}`).join("\n");
+      const prompt = `As a Senior VP of Global Supply Chain and Inventory Strategy, deliver a concise, high-impact executive strategic brief for ${REGION_NAME}.
+Key metrics:
+- Total eligible SKUs analyzed: ${decisions.length}
+- Imminent stockout risks: ${data.totalStockoutRisks}
+- Total reorder requirement: ${data.totalReorderUnits} units
+- Inbound expedite candidates: ${data.expediteItems.length}
+- Working capital freeze items (excess): ${data.excessItems.length}
+- Dead stock liquidation targets: ${data.noDemandItems.length}
+
+Top Stockout Criticals:
+${topRisks || "None"}
+
+Top Excess Exposure:
+${topExcess || "None"}
+
+Provide a structured, executive memorandum covering:
+1. Commercial Risk & Revenue Protection (prioritizing expedite vs reorder)
+2. Working Capital Optimization (freezing excess vs liquidation trade-offs)
+3. Operational Next-Best-Action Priorities for the commercial team. Keep it authoritative, clear, and actionable.`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          systemInstruction: { parts: [{ text: "You are an elite enterprise supply chain AI advisor. Format output using clean HTML paragraphs and bullet points." }] }
+        })
+      });
+      const res = await response.json();
+      const text = res?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        return text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+      }
+      return "Unable to parse Gemini response. Please verify API key.";
+    } catch (e) {
+      return `Gemini API notice: ${e.message || "Request could not be completed"}. Deterministic AI analysis remains fully active.`;
+    }
+  }
 })();
+
