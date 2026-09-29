@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const REGION = (location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1] || "US").toUpperCase();
+  const body = document.body;
+  const REGION = body.dataset.region || "US";
   const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   const el = id => document.getElementById(id);
   let SI;
@@ -14,29 +15,11 @@
   async function init() {
     SI = window.StarkInventory;
     SI.initFrame("brands");
-    await refreshDataset();
+    dataset = await SI.loadDataset(REGION);
+    if (dataset) SI.ensureBrandSettings(REGION, rows());
     renderFileStatus();
     bindEvents();
     renderBrands();
-    window.StarkActiveBrandsReportData = reportData;
-    window.dispatchEvent(new Event("stark-report-state-change"));
-    window.addEventListener("focus", refreshDataset);
-    window.addEventListener("pageshow", refreshDataset);
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) refreshDataset();
-    });
-  }
-
-  async function refreshDataset() {
-    const latest = await SI.loadDataset(REGION);
-    if (latest) {
-      dataset = latest;
-      SI.ensureBrandSettings(REGION, rows());
-    }
-    if (!el("brand-file-status")) return;
-    renderFileStatus();
-    renderBrands();
-    window.dispatchEvent(new Event("stark-report-state-change"));
   }
 
   function rows() {
@@ -47,19 +30,6 @@
     return SI.loadBrandSettings(REGION);
   }
 
-  function logisticsKey() {
-    return `stark-brand-logistics-${REGION}`;
-  }
-
-  function logisticsSettings() {
-    try { return JSON.parse(localStorage.getItem(logisticsKey()) || "{}"); }
-    catch (_) { return {}; }
-  }
-
-  function saveLogistics(settings) {
-    localStorage.setItem(logisticsKey(), JSON.stringify(settings));
-  }
-
   function allNames() {
     return SI.unique([...rows().map(row => row.brand), ...Object.keys(settings())])
       .filter(Boolean)
@@ -68,7 +38,6 @@
 
   function displayed() {
     const saved = settings();
-    const logistics = logisticsSettings();
     const search = el("brand-search").value.trim().toLowerCase();
     return allNames()
       .filter(brand => !search || brand.toLowerCase().includes(search))
@@ -84,7 +53,6 @@
             palletOption: ""
           },
           ...(saved[brand] || {}),
-          ...(logistics[brand] || {}),
           items: itemCount,
           source: itemCount > 0 ? "System" : "Manual"
         };
@@ -121,7 +89,6 @@
 
   function renderBrands() {
     const list = displayed();
-    renderKpis();
     const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
     currentPage = Math.min(currentPage, pageCount);
     const start = (currentPage - 1) * pageSize;
@@ -136,25 +103,30 @@
           return `<tr>
             <td><label class="brand-check" title="Include ${safeBrand} in reorder analysis"><input type="checkbox" aria-label="Include ${safeBrand}" data-brand-active="${safeBrand}" ${active ? "checked" : ""}></label></td>
             <td><strong>${safeBrand}</strong></td>
-            <td><select class="lead-time-input" data-brand-lead="${safeBrand}" aria-label="Lead time for ${safeBrand}">${leadTimeOptions(row.leadTime)}</select></td>
-            <td><div class="brand-choice-group" role="group" aria-label="Shipping cost responsibility for ${safeBrand}">
-              <label><input type="checkbox" data-brand-shipping-cost="${safeBrand}" value="Us" ${row.shippingCostResponsibility === "Us" ? "checked" : ""}> Us</label>
-              <label><input type="checkbox" data-brand-shipping-cost="${safeBrand}" value="Supplier" ${["Supplier", "Brand/Supplier"].includes(row.shippingCostResponsibility) ? "checked" : ""}> Supplier</label>
-            </div></td>
-            <td><div class="brand-choice-group" role="group" aria-label="Shipping information availability for ${safeBrand}">
-              <label><input type="checkbox" data-brand-shipping-info="${safeBrand}" value="Yes" ${row.shippingInfoAvailable === "Yes" ? "checked" : ""}> Yes</label>
-              <label><input type="checkbox" data-brand-shipping-info="${safeBrand}" value="No" ${row.shippingInfoAvailable === "No" ? "checked" : ""}> No</label>
-            </div></td>
-            <td><div class="brand-choice-group" role="group" aria-label="Pallet option for ${safeBrand}">
-              <label><input type="checkbox" data-brand-pallet="${safeBrand}" value="Yes" ${row.palletOption === "Yes" ? "checked" : ""}> Yes</label>
-              <label><input type="checkbox" data-brand-pallet="${safeBrand}" value="No" ${row.palletOption === "No" ? "checked" : ""}> No</label>
-            </div></td>
+            <td>${number.format(row.items)}</td>
+            <td><input class="lead-time-input" data-brand-lead="${safeBrand}" value="${SI.escapeHtml(row.leadTime)}" placeholder="e.g. 2 weeks" aria-label="Lead time for ${safeBrand}"></td>
+            <td><select class="brand-detail-select" data-brand-shipping-cost="${safeBrand}" aria-label="Shipping cost responsibility for ${safeBrand}">
+              <option value="">Select</option>
+              <option value="Us" ${row.shippingCostResponsibility === "Us" ? "selected" : ""}>Us</option>
+              <option value="Brand/Supplier" ${row.shippingCostResponsibility === "Brand/Supplier" ? "selected" : ""}>Brand/Supplier</option>
+            </select></td>
+            <td><select class="brand-detail-select" data-brand-shipping-info="${safeBrand}" aria-label="Shipping information availability for ${safeBrand}">
+              <option value="">Select</option>
+              <option value="Yes" ${row.shippingInfoAvailable === "Yes" ? "selected" : ""}>Yes</option>
+              <option value="No" ${row.shippingInfoAvailable === "No" ? "selected" : ""}>No</option>
+              <option value="N/A" ${row.shippingInfoAvailable === "N/A" ? "selected" : ""}>N/A</option>
+            </select></td>
+            <td><select class="brand-detail-select" data-brand-pallet="${safeBrand}" aria-label="Pallet option for ${safeBrand}">
+              <option value="">Select</option>
+              <option value="Yes" ${row.palletOption === "Yes" ? "selected" : ""}>Yes</option>
+              <option value="No" ${row.palletOption === "No" ? "selected" : ""}>No</option>
+            </select></td>
             <td><span class="brand-status ${active ? "is-active" : "is-inactive"}" data-brand-status="${safeBrand}">${active ? "Active" : "Inactive"}</span></td>
             <td><span class="brand-source ${manual ? "is-manual" : ""}">${row.source}</span></td>
             <td><button class="brand-save" type="button" data-brand-save="${safeBrand}">Save</button></td>
           </tr>`;
         }).join("")
-      : `<tr><td class="brand-empty" colspan="9">No brands match the current search. Select Add brand to create one.</td></tr>`;
+      : `<tr><td class="brand-empty" colspan="10">No brands match the current search. Select Add brand to create one.</td></tr>`;
 
     const end = Math.min(start + visible.length, list.length);
     el("brand-result-count").textContent = list.length
@@ -164,43 +136,8 @@
     renderPagination(pageCount);
   }
 
-  function leadTimeOptions(current) {
-    const value = String(current || "").trim();
-    const standard = Array.from({ length: 12 }, (_, index) => `${index + 1} ${index ? "weeks" : "week"}`);
-    const values = value && !standard.includes(value) ? [value, ...standard] : standard;
-    return `<option value="">Select</option>${values.map(option => `<option value="${SI.escapeHtml(option)}" ${option === value ? "selected" : ""}>${SI.escapeHtml(option)}</option>`).join("")}`;
-  }
-
-  function renderKpis() {
-    const list = displayed();
-    const active = list.filter(row => row.active !== false).length;
-    const missingLead = list.filter(row => !String(row.leadTime || "").trim()).length;
-    const manual = list.filter(row => row.source === "Manual").length;
-    const set = (id, value) => { if (el(id)) el(id).textContent = number.format(value); };
-    set("brand-kpi-total", list.length);
-    set("brand-kpi-active", active);
-    set("brand-kpi-missing", missingLead);
-    set("brand-kpi-manual", manual);
-    if (el("brand-kpi-active-detail")) el("brand-kpi-active-detail").textContent = list.length ? `${(active / list.length * 100).toFixed(1)}% of displayed` : "No displayed brands";
-    if (el("brand-kpi-missing-detail")) el("brand-kpi-missing-detail").textContent = list.length ? `${(missingLead / list.length * 100).toFixed(1)}% of displayed` : "No displayed brands";
-  }
-
   function bindRowEvents() {
     document.querySelectorAll("[data-brand-active]").forEach(input => input.addEventListener("change", saveActive));
-    document.querySelectorAll("[data-brand-shipping-cost]").forEach(input => input.addEventListener("change", () => {
-      if (!input.checked) return;
-      document.querySelectorAll("[data-brand-shipping-cost]").forEach(option => {
-        if (option !== input && option.dataset.brandShippingCost === input.dataset.brandShippingCost) option.checked = false;
-      });
-    }));
-    ["brandShippingInfo", "brandPallet"].forEach(key => {
-      document.querySelectorAll(`[data-${key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}]`).forEach(input => input.addEventListener("change", () => {
-        if (!input.checked) return;
-        document.querySelectorAll(`[data-${key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}]`).forEach(option => {
-          if (option !== input && option.dataset[key] === input.dataset[key]) option.checked = false;
-        });
-      }));
-    });
     document.querySelectorAll("[data-brand-lead]").forEach(input => input.addEventListener("keydown", event => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -266,51 +203,42 @@
       status.textContent = event.target.checked ? "Active" : "Inactive";
       status.className = `brand-status ${event.target.checked ? "is-active" : "is-inactive"}`;
     }
-    renderKpis();
   }
 
   function saveRow(brand) {
     const saved = settings();
-    const logistics = logisticsSettings();
     const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
     const active = Array.from(document.querySelectorAll("[data-brand-active]")).find(input => input.dataset.brandActive === brand);
-    const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand && input.checked);
-    const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand && input.checked);
-    const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand && input.checked);
+    const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand);
+    const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
+    const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
     saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
     if (lead) saved[brand].leadTime = lead.value.trim();
     if (active) saved[brand].active = active.checked;
-    logistics[brand] = logistics[brand] || {};
-    logistics[brand].shippingCostResponsibility = shippingCost?.value || "";
-    logistics[brand].shippingInfoAvailable = shippingInfo?.value || "";
-    logistics[brand].palletOption = pallet?.value || "";
+    if (shippingCost) saved[brand].shippingCostResponsibility = shippingCost.value;
+    if (shippingInfo) saved[brand].shippingInfoAvailable = shippingInfo.value;
+    if (pallet) saved[brand].palletOption = pallet.value;
     SI.saveBrandSettings(REGION, saved);
-    saveLogistics(logistics);
-    renderKpis();
     const button = Array.from(document.querySelectorAll("[data-brand-save]")).find(node => node.dataset.brandSave === brand);
     flashSaved(button);
   }
 
   function saveLeadTimes() {
     const saved = settings();
-    const logistics = logisticsSettings();
     document.querySelectorAll("[data-brand-save]").forEach(button => {
       const brand = button.dataset.brandSave;
       const lead = Array.from(document.querySelectorAll("[data-brand-lead]")).find(input => input.dataset.brandLead === brand);
-      const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand && input.checked);
-      const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand && input.checked);
-      const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand && input.checked);
+      const shippingCost = Array.from(document.querySelectorAll("[data-brand-shipping-cost]")).find(input => input.dataset.brandShippingCost === brand);
+      const shippingInfo = Array.from(document.querySelectorAll("[data-brand-shipping-info]")).find(input => input.dataset.brandShippingInfo === brand);
+      const pallet = Array.from(document.querySelectorAll("[data-brand-pallet]")).find(input => input.dataset.brandPallet === brand);
       saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
       if (lead) saved[brand].leadTime = lead.value.trim();
-      logistics[brand] = logistics[brand] || {};
-      logistics[brand].shippingCostResponsibility = shippingCost?.value || "";
-      logistics[brand].shippingInfoAvailable = shippingInfo?.value || "";
-      logistics[brand].palletOption = pallet?.value || "";
+      if (shippingCost) saved[brand].shippingCostResponsibility = shippingCost.value;
+      if (shippingInfo) saved[brand].shippingInfoAvailable = shippingInfo.value;
+      if (pallet) saved[brand].palletOption = pallet.value;
     });
     SI.saveBrandSettings(REGION, saved);
-    saveLogistics(logistics);
-    renderKpis();
-    flashSaved(el("save-lead-times"), "Saved ✓", "Save changes");
+    flashSaved(el("save-lead-times"), "Saved ✓", "Save settings");
   }
 
   function flashSaved(button, savedText = "Saved ✓", defaultText = "Save") {
@@ -334,25 +262,10 @@
   }
 
   function exportBrands() {
-    const report = reportData();
-    SI.downloadCsv([report.headers, ...report.rows], `Active Brands ${SI.regionCode(REGION)}.csv`);
-  }
-
-  function reportData() {
     const list = displayed();
-    return {
-      headers: ["Active Brand", "Included", "Item Count", "Lead Time", "Shipping Cost Responsibility", "Shipping Info Available", "Pallet Option", "Status", "Source"],
-      rows: list.map(row => [
-        row.brand,
-        row.active !== false ? "Yes" : "No",
-        row.items,
-        row.leadTime,
-        row.shippingCostResponsibility || "",
-        row.shippingInfoAvailable || "",
-        row.palletOption || "",
-        row.active !== false ? "Active" : "Inactive",
-        row.source
-      ])
-    };
+    SI.downloadCsv([
+      ["Active Brand", "Included", "Lead Time", "Shipping Cost Responsibility", "Shipping Info Available", "Pallet Option", "Item Count", "Status", "Source"],
+      ...list.map(row => [row.brand, row.active !== false ? "Yes" : "No", row.leadTime, row.shippingCostResponsibility, row.shippingInfoAvailable, row.palletOption, row.items, row.active !== false ? "Active" : "Inactive", row.source])
+    ], `Active Brands ${SI.regionCode(REGION)}.csv`);
   }
 })();

@@ -70,6 +70,16 @@
     };
   }
 
+  function trainingRows(rows) {
+    return rows.map(row => ({
+      brand: row.brand, itemid: row.itemid, model: row.model, product: row.product, status: row.status,
+      vol3: row.vol3, last30: row.last30, avg3: row.avg3, stockQty: row.stockQty,
+      available: row.available, ats: row.ats, openClient: row.openClient, openSupplier: row.openSupplier,
+      supplierDueQty: row.supplierDueQty, supplierWindow: row.supplierWindow,
+      supplierStart: row.supplierStart, supplierEnd: row.supplierEnd
+    }));
+  }
+
   function xml(value) {
     return String(value == null ? "" : value).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&apos;" }[character]));
   }
@@ -148,6 +158,7 @@
       rawItems: dataset.rows.length,
       reorderItems: items.length,
       recommendedUnits: items.reduce((total, item) => total + (Number(item.recommended) || 0), 0),
+      trainingRows: trainingRows(dataset.rows),
       fileName: `Reorder Report ${regionCode(region)} ${stamp}.xlsx`,
       snapshot,
       workbook
