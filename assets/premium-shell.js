@@ -11,13 +11,13 @@
     if (!document.querySelector('link[data-mk-brain-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20260929-2";
+      style.href = "assets/mk-brain.css?v=20260929-3";
       style.dataset.mkBrainStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-mk-brain-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20260929-2";
+      script.src = "assets/mk-brain.js?v=20260929-3";
       script.defer = true;
       script.dataset.mkBrainScript = "true";
       document.head.appendChild(script);
