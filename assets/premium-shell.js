@@ -9,13 +9,13 @@
     if (!document.querySelector('link[data-ai-copilot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20260930-5";
+      style.href = "assets/mk-brain.css?v=20260930-6";
       style.dataset.aiCopilotStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-ai-copilot-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20260930-5";
+      script.src = "assets/mk-brain.js?v=20260930-6";
       script.defer = true;
       script.dataset.aiCopilotScript = "true";
       document.head.appendChild(script);
@@ -26,6 +26,7 @@
   if (body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
 
   const path = location.pathname.split("/").pop() || "index.html";
+  if (path === "index.html") return;
   const suffixMatch = path.match(/-(us|eu|ca)\.html$/i);
   const queryRegion = new URLSearchParams(location.search).get("region") || new URLSearchParams(location.search).get("workspace");
   const storedRegion = localStorage.getItem("stark-selected-region");
@@ -90,7 +91,7 @@
   ]);
 
   const supported = inventoryPages.has(path) || [
-    "index.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html", "inventory-dashboard.html", "raw-report.html", "reorder-report.html", "active-brands.html", "instructions.html", "inventory.html"
+    "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html", "inventory-dashboard.html", "raw-report.html", "reorder-report.html", "active-brands.html", "instructions.html", "inventory.html"
   ].includes(path);
   if (!supported) return;
 
@@ -120,8 +121,7 @@
                 : path === "freight-consolidate.html" ? "consolidate"
                   : path === "freight-estimator.html" ? "freight"
                     : path === "shipment-tracking.html" ? "tracking"
-                      : path === "cloud-agent.html" ? "cloudai"
-                        : "";
+                      : "";
 
   const navLink = ([key, label, href, glyph], submenu = false) =>
     `<a href="${href}" data-premium-nav="${key}" title="${label}" class="${submenu ? "premium-nav-subitem " : ""}${key === activeKey ? "active" : ""}" ${key === activeKey ? 'aria-current="page"' : ""}>${glyph}<span>${label}</span></a>`;
@@ -193,8 +193,7 @@
       ["events", "Events", `events.html?region=${nextRegionCode}`, icons.events],
       ["freight", "Freight Estimator", "freight-estimator.html", icons.freight],
       ["consolidate", "Freight Consolidate", "freight-consolidate.html", icons.consolidate],
-      ["tracking", "Tracking", "shipment-tracking.html", icons.tracking],
-      ["cloudai", "Cloud AI Agent", "cloud-agent.html", icons.ai]
+      ["tracking", "Tracking", "shipment-tracking.html", icons.tracking]
     ];
 
     rail.innerHTML = `
@@ -381,7 +380,7 @@
           </div>
         </div>
 
-        <button class="topbar-pill topbar-ai-btn" id="topbar-ai-btn" type="button" aria-label="STARK Copilot AI Agent" title="STARK Copilot (AI Agent)">
+        <button class="topbar-pill topbar-ai-btn" id="topbar-ai-btn" type="button" aria-label="MK Supply Chain Intelligence" title="Open MK Intelligence">
           <span class="topbar-ai-avatar">AI</span>
           <span class="topbar-ai-label">STARK Copilot</span>
           <svg class="chevron-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
