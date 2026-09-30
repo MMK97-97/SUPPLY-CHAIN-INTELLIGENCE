@@ -773,7 +773,7 @@ body.sidebar-collapsed {
 
 @media (min-width: 1480px) {
   body.copilot-docked {
-    --current-copilot-width: var(--copilot-width);
+    --current-copilot-width: 0px;
   }
 }
 
@@ -823,8 +823,8 @@ body.sidebar-collapsed {
 @media (min-width: 1480px) {
   body.premium-shell-active.copilot-docked,
   body[data-page].copilot-docked {
-    padding-right: var(--current-copilot-width) !important;
-    transition: padding-left 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), padding-right 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    padding-right: 0 !important;
+    transition: padding-left 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 }
 

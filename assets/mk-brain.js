@@ -75,14 +75,12 @@
 
   function init() {
     buildInterface();
-    if (document.body.classList.contains("copilot-docked")) {
-      panel?.classList.add("open");
-      const aiBtn = document.getElementById("topbar-ai-btn");
-      if (aiBtn) aiBtn.classList.add("active");
-    } else {
-      panel?.classList.remove("open");
-      const aiBtn = document.getElementById("topbar-ai-btn");
-      if (aiBtn) aiBtn.classList.remove("active");
+    document.body.classList.remove("copilot-docked", "copilot-modal-open");
+    panel?.classList.remove("open");
+    const aiBtn = document.getElementById("topbar-ai-btn");
+    if (aiBtn) {
+      aiBtn.classList.remove("active");
+      aiBtn.setAttribute("aria-expanded", "false");
     }
     bindLiveData();
     selectVoice();
@@ -447,37 +445,25 @@
       }
     });
 
-    // Initial dock state on ultrawide desktop (>=1480px) only when explicitly opted in, never on landing index.html
-    const path = window.location.pathname.split("/").pop() || "index.html";
-    const isLandingPage = path === "index.html" || path === "" || window.location.pathname.endsWith("/index.html") || window.location.pathname.endsWith("/");
-    const shouldDock = localStorage.getItem("stark-copilot-docked") === "true" && window.innerWidth >= 1480 && !isLandingPage;
-    if (shouldDock) {
-      togglePanel(true);
-    } else {
-      togglePanel(false);
-    }
+    // Keep every page stable: Copilot starts closed and opens only on request.
+    togglePanel(false);
   }
 
   function togglePanel(open) {
-    const path = window.location.pathname.split("/").pop() || "index.html";
-    const isLandingPage = path === "index.html" || path === "" || window.location.pathname.endsWith("/index.html") || window.location.pathname.endsWith("/");
-    const isWideDesktop = window.innerWidth >= 1480 && !isLandingPage;
     panel.classList.toggle("open", open);
     if (open) {
-      if (isWideDesktop) {
-        document.body.classList.add("copilot-docked");
-        document.body.classList.remove("copilot-modal-open");
-      } else {
-        document.body.classList.add("copilot-modal-open");
-        document.body.classList.remove("copilot-docked");
-      }
+      document.body.classList.add("copilot-modal-open");
+      document.body.classList.remove("copilot-docked");
     } else {
       document.body.classList.remove("copilot-docked");
       document.body.classList.remove("copilot-modal-open");
     }
     const aiBtn = document.getElementById("topbar-ai-btn");
-    if (aiBtn) aiBtn.classList.toggle("active", open);
-    try { localStorage.setItem("stark-copilot-docked", open && isWideDesktop ? "true" : "false"); } catch (_) {}
+    if (aiBtn) {
+      aiBtn.classList.toggle("active", open);
+      aiBtn.setAttribute("aria-expanded", String(open));
+    }
+    try { localStorage.removeItem("stark-copilot-docked"); } catch (_) {}
     if (open) {
       window.setTimeout(() => input?.focus(), 120);
     }

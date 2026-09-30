@@ -9,13 +9,13 @@
     if (!document.querySelector('link[data-ai-copilot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20260930-4";
+      style.href = "assets/mk-brain.css?v=20260930-5";
       style.dataset.aiCopilotStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-ai-copilot-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20260930-4";
+      script.src = "assets/mk-brain.js?v=20260930-5";
       script.defer = true;
       script.dataset.aiCopilotScript = "true";
       document.head.appendChild(script);
@@ -57,16 +57,9 @@
     document.documentElement.classList.add("sidebar-collapsed");
   }
 
-  /* Restore Copilot dock preference - default to closed, open only if user explicitly docked on ultrawide desktop (>=1480px) and not on landing index.html */
-  const storedCopilot = localStorage.getItem("stark-copilot-docked");
-  const isLandingPage = path === "index.html" || path === "" || window.location.pathname.endsWith("/index.html") || window.location.pathname.endsWith("/");
-  const isCopilotDocked = storedCopilot === "true" && window.innerWidth >= 1480 && !isLandingPage;
-  if (isCopilotDocked) {
-    body.classList.add("copilot-docked");
-  } else {
-    body.classList.remove("copilot-docked");
-    body.classList.remove("copilot-modal-open");
-  }
+  /* Copilot always starts closed and opens as an overlay so page width stays stable. */
+  body.classList.remove("copilot-docked", "copilot-modal-open");
+  try { localStorage.removeItem("stark-copilot-docked"); } catch (_) {}
 
   const icon = paths => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
   const icons = {
