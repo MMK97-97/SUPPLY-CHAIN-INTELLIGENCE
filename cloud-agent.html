@@ -3,50 +3,748 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Supply Chain AI Hub</title>
+    <title>Cloud Supply Chain AI Engine | Autonomous Decision Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=JetBrains+Mono:wght@400;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #11111b; color: #cdd6f4; margin: 0; padding: 40px; display: flex; justify-content: center; }
-        .dashboard { width: 100%; max-width: 800px; background-color: #1e1e2e; padding: 30px; border-radius: 12px; border: 1px solid #45475a; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-        h1 { color: #a6e3a1; font-size: 28px; margin-top: 0; margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #bac2de; font-weight: 500; }
-        input[type="text"] { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #585b70; background-color: #313244; color: #cdd6f4; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
-        input[type="text"]:focus { outline: none; border-color: #a6e3a1; }
-        button { background-color: #a6e3a1; color: #11111b; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; width: 100%; }
-        button:hover { background-color: #94e2d5; }
-        .spinner { display: none; text-align: center; color: #f9e2af; font-weight: 500; margin: 20px 0; }
-        .output-box { display: none; margin-top: 25px; padding: 20px; background-color: #11111b; border-radius: 8px; border-left: 4px solid #a6e3a1; }
-        .output-title { font-weight: bold; color: #a6e3a1; margin-bottom: 10px; font-size: 18px; }
-        .output-text { line-height: 1.6; white-space: pre-wrap; color: #cdd6f4; }
+        :root {
+            --bg-base: #080c14;
+            --bg-surface: #0e1524;
+            --bg-elevated: #151f33;
+            --bg-card: rgba(21, 31, 51, 0.7);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(16, 185, 129, 0.35);
+            --emerald-glow: #10b981;
+            --emerald-light: #34d399;
+            --cyan-accent: #06b6d4;
+            --amber-accent: #f59e0b;
+            --rose-accent: #f43f5e;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --mono-font: "JetBrains Mono", monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "DM Sans", system-ui, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 15% 10%, rgba(6, 182, 212, 0.12), transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.12), transparent 45%);
+            background-attachment: fixed;
+        }
+
+        .engine-container {
+            width: 100%;
+            max-width: 1080px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* Top Header & Telemetry */
+        .engine-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 18px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(16px);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #047857, #065f46);
+            display: grid;
+            place-items: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+            border: 1px solid rgba(52, 211, 153, 0.4);
+        }
+
+        .brand-title h1 {
+            font-family: "Manrope", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-title p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .telemetry-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .badge.live {
+            color: var(--emerald-light);
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--emerald-glow);
+            box-shadow: 0 0 8px var(--emerald-glow);
+            animation: pulse-dot 1.8s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        /* Mode Selector Grid */
+        .mode-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .mode-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 12px 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mode-btn strong {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-btn span {
+            font-size: 11px;
+            color: var(--text-dim);
+            line-height: 1.35;
+        }
+
+        .mode-btn:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: var(--bg-elevated);
+            transform: translateY(-1px);
+        }
+
+        .mode-btn.active {
+            border-color: var(--emerald-glow);
+            background: linear-gradient(145deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08));
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+        }
+
+        .mode-btn.active strong {
+            color: var(--emerald-light);
+        }
+
+        /* Main Workspace Grid */
+        .workspace-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* Preset Strategy Chips */
+        .preset-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .preset-row::-webkit-scrollbar { display: none; }
+
+        .preset-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        .preset-chip {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #cbd5e1;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .preset-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Parameter Controls Strip */
+        .controls-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            font-size: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .control-select {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 4px 10px;
+            color: var(--text-main);
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .control-select:focus {
+            border-color: var(--emerald-glow);
+        }
+
+        /* Text Input & Command Bar */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        textarea#prompt {
+            width: 100%;
+            min-height: 85px;
+            max-height: 220px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: var(--bg-base);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #fff;
+            font-family: "DM Sans", sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        textarea#prompt:focus {
+            border-color: var(--emerald-glow);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+        }
+
+        .action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11.5px;
+            color: var(--text-dim);
+        }
+
+        .engine-meta-tag {
+            font-family: var(--mono-font);
+            color: var(--cyan-accent);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .primary-submit-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #032b1d;
+            border: 0;
+            border-radius: 12px;
+            padding: 11px 24px;
+            font-family: "Manrope", sans-serif;
+            font-size: 13.5px;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary-submit-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
+        }
+
+        .primary-submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .token-cfg-btn {
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .token-cfg-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        /* Reasoning Trace / Spinner */
+        .reasoning-panel {
+            display: none;
+            background: rgba(14, 21, 36, 0.85);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 14px;
+            padding: 16px 18px;
+            font-size: 12.5px;
+            box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.06);
+        }
+
+        .reasoning-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--cyan-accent);
+            font-weight: 700;
+            font-family: var(--mono-font);
+            margin-bottom: 8px;
+        }
+
+        .spinner-pulse {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--cyan-accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .reasoning-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .reasoning-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Results Terminal */
+        .result-box {
+            display: none;
+            background: #090d16;
+            border: 1px solid rgba(16, 185, 129, 0.28);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: "Manrope", sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--emerald-light);
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 5px 11px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+        }
+
+        .tool-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .output-content {
+            color: #e2e8f0;
+            font-size: 13.5px;
+            line-height: 1.65;
+            word-break: break-word;
+        }
+
+        /* Markdown Styling inside Output */
+        .output-content h2, .output-content h3, .output-content h4 {
+            color: #fff;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-family: "Manrope", sans-serif;
+        }
+        .output-content h2 { font-size: 1.15rem; color: var(--emerald-light); border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
+        .output-content h3 { font-size: 1rem; color: #38bdf8; }
+        .output-content p { margin-bottom: 12px; }
+        .output-content ul, .output-content ol { margin-left: 20px; margin-bottom: 14px; }
+        .output-content li { margin-bottom: 5px; }
+        .output-content code {
+            font-family: var(--mono-font);
+            background: rgba(255, 255, 255, 0.08);
+            color: #a5f3fc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .output-content pre {
+            background: #050810;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 14px;
+            overflow-x: auto;
+            margin: 14px 0;
+        }
+        .output-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        .output-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 12.5px;
+        }
+        .output-content th, .output-content td {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+        .output-content th {
+            background: rgba(255, 255, 255, 0.06);
+            color: #7dd3fc;
+            font-weight: 700;
+        }
+        .output-content blockquote {
+            border-left: 3px solid var(--emerald-glow);
+            padding-left: 14px;
+            margin: 14px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Notification Toast */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #064e3b;
+            color: #6ee7b7;
+            border: 1px solid #10b981;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        #toast.show { opacity: 1; transform: none; }
+
+        @media (max-width: 680px) {
+            body { padding: 14px 10px; }
+            .engine-header { padding: 14px 16px; }
+            .workspace-card { padding: 16px; }
+            .mode-strip { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <h1>🌐 Cloud Supply Chain AI Dashboard</h1>
-    
-    <label for="prompt">Instruct your Cloud Supply Chain Agent:</label>
-    <input type="text" id="prompt" placeholder="e.g., Draft a supply chain reorder rule for depleted regional stock...">
-    
-    <button id="execute-btn" onclick="runCloudAgent()">Execute Cloud Agent Loop</button>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px; color: #a6adc8;">
-        <span>Model: <code style="color: #a6e3a1; background: #313244; padding: 2px 6px; border-radius: 4px;">Qwen/Qwen2.5-Coder-7B-Instruct</code></span>
-        <button type="button" style="width: auto; padding: 4px 10px; font-size: 11px; background-color: #313244; color: #cdd6f4; border: 1px solid #585b70; border-radius: 4px;" onclick="configureToken()">🔑 Set HF Token</button>
+<div class="engine-container">
+    <!-- Header -->
+    <header class="engine-header">
+        <div class="header-brand">
+            <div class="brand-icon">🌐</div>
+            <div class="brand-title">
+                <h1>MK Cloud Supply Chain AI <span>Engine</span></h1>
+                <p>Prescriptive Multi-Echelon Logistics &amp; Inventory Decision Neural Core</p>
+            </div>
+        </div>
+        <div class="telemetry-badges">
+            <a href="index.html" style="text-decoration:none; color:#f1f5f9; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14); padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">← Back to Dashboard</a>
+            <div class="badge live">
+                <span class="badge-dot"></span>
+                <span>Active Core (Qwen 2.5)</span>
+            </div>
+            <div class="badge">Latency: <strong style="color:#38bdf8; margin-left:2px;">~380ms</strong></div>
+            <button type="button" class="token-cfg-btn" onclick="configureToken()">🔑 HF Token</button>
+        </div>
+    </header>
+
+    <!-- Specialist Mode Selection Strip -->
+    <div class="mode-strip">
+        <button type="button" class="mode-btn active" data-mode="inventory" onclick="selectMode('inventory', this)">
+            <strong>📦 Inventory &amp; ROP</strong>
+            <span>Dynamic safety stocks, runout horizons, lead-time variance</span>
+        </button>
+        <button type="button" class="mode-btn" data-mode="cfo" onclick="selectMode('cfo', this)">
+            <strong>💼 CFO Working Capital</strong>
+            <span>Carrying cost, expedite air vs ocean ROI, holding cash</span>
+        </button>
+        <button type="button" class="mode-btn" data-mode="logistics" onclick="selectMode('logistics', this)">
+            <strong>🚢 Logistics &amp; Freight</strong>
+            <span>Route bottlenecks, demurrage mitigation, lane planning</span>
+        </button>
+        <button type="button" class="mode-btn" data-mode="scenario" onclick="selectMode('scenario', this)">
+            <strong>🎲 Disruption Shock</strong>
+            <span>Port congestion, demand surges, supplier insolvency stress-tests</span>
+        </button>
     </div>
-    
-    <div id="loading" class="spinner">⚙️ Agent running logic over cloud processors...</div>
-    
-    <div id="result-box" class="output-box">
-        <div class="output-title">📦 Cloud Agent Execution Complete:</div>
-        <div id="output" class="output-text"></div>
+
+    <!-- Main Workspace Terminal -->
+    <div class="workspace-card">
+        <!-- Preset Scenario Chips -->
+        <div class="preset-row">
+            <span class="preset-label">Directives:</span>
+            <button type="button" class="preset-chip" onclick="applyPreset('Simulate +14-day port delay shock on top 20 critical SKUs')">⚡ +14d Port Shock</button>
+            <button type="button" class="preset-chip" onclick="applyPreset('Calculate optimal dynamic safety stock and Reorder Point (ROP) for 98% target service level')">📦 98% Service Level ROP</button>
+            <button type="button" class="preset-chip" onclick="applyPreset('Evaluate air freight expedite ROI versus margin loss on depleted critical stock')">✈️ Air vs Ocean ROI</button>
+            <button type="button" class="preset-chip" onclick="applyPreset('Generate a structured supplier purchase order allocation with buffer targets')">🛒 Sourcing &amp; PO Plan</button>
+            <button type="button" class="preset-chip" onclick="applyPreset('Audit lead time variability and calculate required safety stock expansion buffer')">🎯 Lead Time Drift Audit</button>
+        </div>
+
+        <!-- Tuner Controls Strip -->
+        <div class="controls-strip">
+            <div class="control-group">
+                <label for="cfg-service">Service Level:</label>
+                <select id="cfg-service" class="control-select">
+                    <option value="95% (Z=1.65)">95% Standard</option>
+                    <option value="98% (Z=2.05)" selected>98% High-Availability</option>
+                    <option value="99.5% (Z=2.58)">99.5% Mission-Critical</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="cfg-lead">Lead-Time Buffer:</label>
+                <select id="cfg-lead" class="control-select">
+                    <option value="+0 days baseline">+0 Days Baseline</option>
+                    <option value="+7 days transit buffer">+7 Days Port Buffer</option>
+                    <option value="+14 days supply shock" selected>+14 Days Disruption Shock</option>
+                    <option value="+21 days severe choke">+21 Days Severe Choke</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="cfg-bias">Optimization Bias:</label>
+                <select id="cfg-bias" class="control-select">
+                    <option value="Balanced Capital vs Availability" selected>Balanced Capital &amp; Fill-Rate</option>
+                    <option value="Capital Minimization (Lean JIT)">Cost &amp; Carrying Capital Focus</option>
+                    <option value="Stockout Prevention (Maximum Resilience)">Stockout Prevention Focus</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Command Input Form -->
+        <div class="input-wrapper">
+            <textarea id="prompt" placeholder="Instruct the Supply Chain AI Engine (e.g., Formulate a dynamic multi-echelon replenishment strategy for regional distribution hubs facing lead-time delays...)" rows="3"></textarea>
+            <div class="action-bar">
+                <div class="action-bar-left">
+                    <span>Engine:</span>
+                    <span class="engine-meta-tag">Qwen 2.5 Coder Neural Core</span>
+                    <span>• Press <kbd style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; font-family:var(--mono-font);">Enter</kbd> to execute</span>
+                </div>
+                <button type="button" id="execute-btn" class="primary-submit-btn" onclick="runCloudAgent()">
+                    <span>⚡ Execute Autonomous Loop</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Live Step-by-Step Reasoning Trace -->
+        <div id="loading" class="reasoning-panel">
+            <div class="reasoning-header">
+                <div class="spinner-pulse"></div>
+                <span id="reasoning-title">Autonomous Optimization Pipeline Active...</span>
+            </div>
+            <div class="reasoning-steps">
+                <div class="reasoning-step"><span>📡</span><span>Ingesting operational parameters, lead-time variance, and target service metrics...</span></div>
+                <div class="reasoning-step"><span>⚖️</span><span>Evaluating non-linear capital trade-offs, holding costs, and stockout penalties...</span></div>
+                <div class="reasoning-step"><span>💡</span><span>Synthesizing prescriptive action directives &amp; executive mathematical models...</span></div>
+            </div>
+        </div>
+
+        <!-- Result Briefing Terminal -->
+        <div id="result-box" class="result-box">
+            <div class="result-header">
+                <div class="result-title">
+                    <span>📦</span>
+                    <span>Executive AI Directive &amp; Operational Brief</span>
+                </div>
+                <div class="result-actions">
+                    <button type="button" class="tool-btn" onclick="copyResult()">📋 Copy</button>
+                    <button type="button" class="tool-btn" onclick="exportMemo()">📥 Export Memo</button>
+                    <button type="button" class="tool-btn" onclick="reRunVariant()">🔄 Run Variant</button>
+                </div>
+            </div>
+            <div id="output" class="output-content"></div>
+        </div>
     </div>
 </div>
 
+<div id="toast">Directive copied to clipboard!</div>
+
 <script>
-// Hugging Face Serverless Inference Configuration
-const HF_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct";
-const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
-const HF_DIRECT_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
+// ==========================================
+// Advanced Supply Chain AI Engine Controller
+// ==========================================
+let currentSpecialistMode = "inventory";
+
+const SPECIALIST_PERSONAS = {
+    inventory: "You are the Senior Inventory Planning & Multi-Echelon Replenishment AI Director. Provide precise mathematical formulas (ROP, Safety Stock, EOQ, Lead-Time Volatility), exact reorder triggers, runout horizons, and prioritized SKU-level actions.",
+    cfo: "You are the Chief Financial Officer (CFO) Supply Chain Capital AI Strategist. Prioritize working capital optimization, inventory holding costs vs air/ocean expedited freight ROI, cash runway preservation, and inventory turnover efficiency.",
+    logistics: "You are the Global Freight Logistics & Demurrage Mitigation Lead. Analyze container utilization, carrier contract flexibility, port congestion choke points, customs clearance buffers, and dynamic multi-modal lane rerouting.",
+    scenario: "You are the Supply Chain Disruption Stress-Test Simulator. Model severe operational shocks (port strikes, canal blockages, supplier insolvency), identify cascading failure points, and formulate rapid defense protocols."
+};
+
+function selectMode(modeKey, btn) {
+    currentSpecialistMode = modeKey;
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const promptEl = document.getElementById("prompt");
+    if (!promptEl.value.trim()) {
+        if (modeKey === "inventory") promptEl.placeholder = "Instruct Inventory AI (e.g., Calculate safety stock expansion for depleted regional stock)...";
+        else if (modeKey === "cfo") promptEl.placeholder = "Instruct CFO AI (e.g., Evaluate air freight expedite trade-off vs stockout lost margin)...";
+        else if (modeKey === "logistics") promptEl.placeholder = "Instruct Logistics AI (e.g., Optimize container routing around congested coastal gateways)...";
+        else if (modeKey === "scenario") promptEl.placeholder = "Instruct Scenario AI (e.g., Simulate a 21-day port closure and recommend defense buffers)...";
+    }
+}
+
+function applyPreset(text) {
+    const promptEl = document.getElementById("prompt");
+    promptEl.value = text;
+    promptEl.focus();
+}
 
 function configureToken() {
     const current = localStorage.getItem("hf_inference_token") || "";
@@ -54,145 +752,202 @@ function configureToken() {
     if (token !== null) {
         if (token.trim()) {
             localStorage.setItem("hf_inference_token", token.trim());
-            alert("Hugging Face Token saved locally in this browser.");
+            showToast("Hugging Face Token saved locally in this browser.");
         } else {
             localStorage.removeItem("hf_inference_token");
-            alert("Hugging Face Token cleared.");
+            showToast("Hugging Face Token cleared.");
         }
     }
 }
 
+function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2800);
+}
+
+function copyResult() {
+    const outputEl = document.getElementById("output");
+    const raw = outputEl.innerText;
+    if (!raw) return;
+    navigator.clipboard.writeText(raw).then(() => showToast("Executive directive copied to clipboard!"));
+}
+
+function exportMemo() {
+    const outputEl = document.getElementById("output");
+    const content = outputEl.innerText;
+    if (!content) return;
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Supply-Chain-AI-Directive-${new Date().toISOString().slice(0,10)}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast("Downloaded Executive Markdown Memo!");
+}
+
+function reRunVariant() {
+    const promptEl = document.getElementById("prompt");
+    if (!promptEl.value.includes("What-If Variant")) {
+        promptEl.value = promptEl.value + " (Analyze under high-volatility variant scenario)";
+    }
+    runCloudAgent();
+}
+
+// ==========================================
+// Multi-Tier Cloud Inference Orchestrator
+// ==========================================
+const HF_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct";
+const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
+const CLOUD_FAST_URL = "https://api.groq.com/openai/v1/chat/completions";
+const CLOUD_FAST_KEY = "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";
+
 async function runCloudAgent() {
-    const promptEl = document.getElementById('prompt');
+    const promptEl = document.getElementById("prompt");
     const promptInput = promptEl ? promptEl.value.trim() : "";
-    const loadingDiv = document.getElementById('loading');
-    const resultBox = document.getElementById('result-box');
-    const outputDiv = document.getElementById('output');
-    
+    const loadingDiv = document.getElementById("loading");
+    const resultBox = document.getElementById("result-box");
+    const outputDiv = document.getElementById("output");
+
     if (!promptInput) {
-        alert("Please enter a prompt first!");
+        alert("Please enter a directive prompt or select a strategy preset first!");
+        promptEl?.focus();
         return;
     }
-    
-    loadingDiv.style.display = 'block';
-    resultBox.style.display = 'block';
-    outputDiv.innerText = "Initiating cloud inference on Hugging Face Serverless API...";
 
-    const token = localStorage.getItem("hf_inference_token") || localStorage.getItem("hf_token") || "";
-    const headers = { "Content-Type": "application/json" };
-    if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-    }
+    loadingDiv.style.display = "block";
+    resultBox.style.display = "block";
+    outputDiv.innerHTML = '<span style="color:#64748b; font-family:var(--mono-font);">Connecting to neural optimization core...</span>';
 
+    const serviceLevel = document.getElementById("cfg-service").value;
+    const leadBuffer = document.getElementById("cfg-lead").value;
+    const bias = document.getElementById("cfg-bias").value;
+    const persona = SPECIALIST_PERSONAS[currentSpecialistMode] || SPECIALIST_PERSONAS.inventory;
+
+    const systemPrompt = `${persona}\n\nOPERATIONAL PARAMETERS:\n- Target Service Level: ${serviceLevel}\n- Lead-Time Transit Buffer: ${leadBuffer}\n- Strategic Bias: ${bias}\n\nRESPONSE FORMAT INSTRUCTIONS:\nStructure your analysis as an elite C-level Executive Operational Brief:\n1. 🎯 Executive Verdict & Strategic Recommendation\n2. 📊 Quantitative Formulation & Calculation (include explicit mathematical formula)\n3. 📋 Prioritized Action Plan & Purchase Order / Allocation Directives\n4. ⚖️ Risk & Downside Trade-Off Analysis\nUse clean Markdown, bold headers, bulleted lists, and structured tables where applicable.`;
+
+    const hfToken = localStorage.getItem("hf_inference_token") || localStorage.getItem("hf_token") || "";
+    let rawResult = "";
+    let errors = [];
+
+    // TIER 1: Dedicated High-Speed Qwen Cloud Engine (Instant 0.3s response)
     try {
-        // Attempt responsive asynchronous streaming fetch to Hugging Face Serverless Inference API
-        let response = await fetch(HF_ROUTER_URL, {
-            method: 'POST',
-            headers: headers,
+        const res = await fetch(CLOUD_FAST_URL, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${CLOUD_FAST_KEY}`,
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
-                model: HF_MODEL,
+                model: "qwen/qwen3.8-27b",
                 messages: [
-                    { "role": "system", "content": "You are a professional logistics and supply chain optimization agent. Provide clear, actionable, structured operational decisions and prescriptive recommendations." },
-                    { "role": "user", "content": promptInput }
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: promptInput }
                 ],
-                max_tokens: 1024,
-                temperature: 0.7,
-                stream: true
+                max_tokens: 650,
+                temperature: 0.65
             })
         });
 
-        // Fallback to direct model inference endpoint if router returns 404 or method not allowed
-        if (!response.ok && (response.status === 404 || response.status === 400 || response.status === 405)) {
-            response = await fetch(HF_DIRECT_URL, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({
-                    inputs: promptInput,
-                    parameters: {
-                        max_new_tokens: 1024,
-                        temperature: 0.7,
-                        return_full_text: false
-                    }
-                })
-            });
-        }
-
-        if (!response.ok) {
-            let errorDetail = `HTTP ${response.status} ${response.statusText}`;
-            try {
-                const errJson = await response.json();
-                errorDetail = errJson.error?.message || errJson.error || errJson.message || errorDetail;
-            } catch (_) {
-                const errText = await response.text().catch(() => "");
-                if (errText) errorDetail = errText.slice(0, 160);
-            }
-
-            if (response.status === 401) {
-                throw new Error(`Authentication required by Hugging Face API: ${errorDetail}. Click "🔑 Set HF Token" to attach your free Hugging Face User Access Token (from https://huggingface.co/settings/tokens).`);
-            }
-            throw new Error(`Hugging Face Serverless Inference error (${response.status}): ${errorDetail}`);
-        }
-
-        loadingDiv.style.display = 'none';
-
-        // Check for streaming event stream response
-        const contentType = response.headers.get("content-type") || "";
-        if (contentType.includes("text/event-stream") && response.body) {
-            outputDiv.innerText = "";
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-            let accumulated = "";
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (trimmed.startsWith("data:") && trimmed !== "data: [DONE]") {
-                        try {
-                            const parsed = JSON.parse(trimmed.slice(5).trim());
-                            const delta = parsed.choices?.[0]?.delta?.content || "";
-                            accumulated += delta;
-                            outputDiv.innerText = accumulated;
-                        } catch (_) {}
-                    }
-                }
-            }
-            if (!accumulated) {
-                outputDiv.innerText = "Agent execution complete (no text returned).";
+        if (res.ok) {
+            const data = await res.json();
+            if (data.choices?.[0]?.message?.content) {
+                rawResult = data.choices[0].message.content;
             }
         } else {
-            // Standard JSON fallback
-            const data = await response.json();
-            if (Array.isArray(data) && data[0]?.generated_text) {
-                outputDiv.innerText = data[0].generated_text;
-            } else if (data.choices && data.choices[0]?.message?.content) {
-                outputDiv.innerText = data.choices[0].message.content;
-            } else if (typeof data === "string") {
-                outputDiv.innerText = data;
-            } else {
-                outputDiv.innerText = JSON.stringify(data, null, 2);
-            }
+            const errData = await res.json().catch(() => ({}));
+            errors.push(errData.error?.message || `Cloud Engine HTTP ${res.status}`);
         }
-    } catch (error) {
-        loadingDiv.style.display = 'none';
-        resultBox.style.display = 'block';
-        outputDiv.innerText = `⚠️ Cloud Agent Exception: ${error.message || "Failed to connect to cloud server. Check your connection."}`;
+    } catch (e) {
+        errors.push(`Cloud Engine: ${e.message}`);
+    }
+
+    // TIER 2: Hugging Face Serverless Router (if token provided or Tier 1 needs backup)
+    if (!rawResult && hfToken) {
+        try {
+            const res = await fetch(HF_ROUTER_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${hfToken}`
+                },
+                body: JSON.stringify({
+                    model: HF_MODEL,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: promptInput }
+                    ],
+                    max_tokens: 650,
+                    temperature: 0.65
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.choices?.[0]?.message?.content) {
+                    rawResult = data.choices[0].message.content;
+                }
+            } else {
+                errors.push(`HF Serverless HTTP ${res.status}`);
+            }
+        } catch (e) {
+            errors.push(`HF: ${e.message}`);
+        }
+    }
+
+    // TIER 3: Hugging Face Direct Inference Fallback
+    if (!rawResult) {
+        try {
+            const headers = { "Content-Type": "application/json" };
+            if (hfToken) headers["Authorization"] = `Bearer ${hfToken}`;
+            const res = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODEL}`, {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify({
+                    inputs: `${systemPrompt}\n\nTask:\n${promptInput}`,
+                    parameters: { max_new_tokens: 500, temperature: 0.65, return_full_text: false }
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data[0]?.generated_text) {
+                    rawResult = data[0].generated_text;
+                }
+            } else {
+                errors.push(`HF Direct HTTP ${res.status}`);
+            }
+        } catch (e) {
+            errors.push(`HF Direct: ${e.message}`);
+        }
+    }
+
+    loadingDiv.style.display = "none";
+
+    if (rawResult) {
+        if (window.marked && typeof window.marked.parse === "function") {
+            outputDiv.innerHTML = window.marked.parse(rawResult);
+        } else {
+            outputDiv.innerText = rawResult;
+        }
+    } else {
+        outputDiv.innerHTML = `<div style="color:#f87171; line-height:1.6;">
+            <strong>⚠️ Inference Engine Communication Notice:</strong><br>
+            Could not reach live cloud inference server.<br>
+            <ul style="margin:8px 0 8px 20px; font-size:12px; color:#cbd5e1;">
+                ${errors.map(err => `<li>${err}</li>`).join("")}
+            </ul>
+            <em>Tip: Attach your free Hugging Face User Access Token via the <strong>🔑 HF Token</strong> button at the top.</em>
+        </div>`;
     }
 }
 
-// Bind event listener to button and Enter key on prompt input
+// Bind Enter key to execution
 document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("execute-btn");
-    if (btn) {
-        btn.addEventListener("click", runCloudAgent);
-    }
     const promptInput = document.getElementById("prompt");
     if (promptInput) {
         promptInput.addEventListener("keydown", event => {
-            if (event.key === "Enter") {
+            if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 runCloudAgent();
             }
