@@ -9,13 +9,13 @@
     if (!document.querySelector('link[data-ai-copilot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20260930-6";
+      style.href = "assets/mk-brain.css?v=20260930-10";
       style.dataset.aiCopilotStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-ai-copilot-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20260930-9";
+      script.src = "assets/mk-brain.js?v=20260930-10";
       script.defer = true;
       script.dataset.aiCopilotScript = "true";
       document.head.appendChild(script);

@@ -10,9 +10,18 @@
   const eligibleStatuses = new Set(["live", "fashion", "backorder"]);
   const sourceTypes = ["itemStock", "average", "skuSales", "brandSales", "customerSales", "stateSales", "priceCost", "pipeline"];
   const requiredSources = ["itemStock", "average", "skuSales"];
+  const syncChannelName = "stark-analytics-sync-v1";
+  const syncPulseKey = "stark-analytics-sync-pulse";
+  const inventoryDatabases = {
+    US: { name:"stark-regional-inventory", key:"US" },
+    EU: { name:"stark-regional-inventory-eu", key:"EU" },
+    CA: { name:"stark-regional-inventory-ca", key:"Canada" }
+  };
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const colors = ["#08a696", "#0878d1", "#f5a623", "#dc4b65", "#7657d6", "#4eb4cc", "#9aafbf"];
   const state = { data: {}, meta: {}, analysis: [], filtered: [], activeView: "overview", kpiFilter: "", chartFilter: null, periodFilter: "", brandFilter: "" };
+  let syncChannel = null;
+  let connectedRefreshTimer = 0;
 
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[character]));
@@ -54,6 +63,103 @@
   const loadStored = type => dbAction("readonly", store => store.get(dbKey(type))).catch(() => null);
   const saveStored = (type, value) => dbAction("readwrite", store => store.put(value, dbKey(type)));
   const deleteStored = type => dbAction("readwrite", store => store.delete(dbKey(type))).catch(() => null);
+
+  function publishSync(type) {
+    const message = { source:"analysis-report", type, region:regionCode, timestamp:Date.now(), nonce:`${Date.now()}-${Math.random().toString(36).slice(2)}` };
+    try {
+      syncChannel = syncChannel || ("BroadcastChannel" in window ? new BroadcastChannel(syncChannelName) : null);
+      syncChannel?.postMessage(message);
+    } catch (_) {}
+    try { localStorage.setItem(syncPulseKey, JSON.stringify(message)); } catch (_) {}
+  }
+
+  function loadIndexedValue(databaseName, storeName, key) {
+    if (!window.indexedDB) return Promise.resolve(null);
+    return new Promise(resolve => {
+      const request = indexedDB.open(databaseName, 1);
+      request.onerror = () => resolve(null);
+      request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains(storeName)) request.result.createObjectStore(storeName); };
+      request.onsuccess = () => {
+        const db = request.result;
+        try {
+          const tx = db.transaction(storeName, "readonly"), get = tx.objectStore(storeName).get(key);
+          get.onsuccess = () => { resolve(get.result || null); db.close(); };
+          get.onerror = () => { resolve(null); db.close(); };
+        } catch (_) { resolve(null); db.close(); }
+      };
+    });
+  }
+
+  function connectedMonths(importedAt) {
+    const anchor = importedAt ? new Date(importedAt) : new Date();
+    const result = [];
+    for (let offset = 3; offset >= 1; offset -= 1) {
+      const date = new Date(anchor.getFullYear(), anchor.getMonth() - offset, 1);
+      result.push(`${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return result;
+  }
+
+  function inventorySettings() {
+    try {
+      const stored={ critical:3, coverage:1, delay:15, a:80, b:95, ...JSON.parse(localStorage.getItem(`stark-inventory-settings-${region}`) || "{}") },bounded=(value,fallback,min,max)=>Number.isFinite(Number(value))?Math.min(max,Math.max(min,Number(value))):fallback,a=bounded(stored.a,80,1,98),b=bounded(stored.b,95,a+1,100);
+      return { critical:bounded(stored.critical,3,0,Number.MAX_SAFE_INTEGER),coverage:bounded(stored.coverage,1,0,120),delay:bounded(stored.delay,15,0,3650),a,b };
+    } catch (_) { return { critical:3, coverage:1, delay:15, a:80, b:95 }; }
+  }
+
+  function rawPlanningSupplier(row, settings) {
+    const quantity = Math.max(0, number(row.openSupplier));
+    const date = regionCode === "EU" ? (row.supplierStart || row.supplierEnd) : (row.supplierEnd || row.supplierStart);
+    if (date) {
+      const due = new Date(date), today = reportDate();
+      if (!isNaN(due)) {
+        const days = Math.round((Date.UTC(due.getFullYear(),due.getMonth(),due.getDate())-Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()))/86400000);
+        return days >= 0 && days <= Math.max(0, number(settings.delay)) ? quantity : 0;
+      }
+    }
+    return Number.isFinite(Number(row.supplierDueQty)) ? Math.max(0, number(row.supplierDueQty)) : 0;
+  }
+
+  async function hydrateConnectedRaw() {
+    const config = inventoryDatabases[regionCode], dataset = await loadIndexedValue(config.name, "datasets", config.key);
+    state.meta.connectedRaw = dataset?.rows?.length ? { name:dataset.fileName || "Raw Report", rows:dataset.rows.length, uploadedAt:dataset.importedAt || "" } : null;
+    const hasManualStock = Boolean(state.data.itemStock?.length && !state.meta.itemStock?.linkedRaw);
+    if (!dataset?.rows?.length || hasManualStock) return dataset;
+    const months = connectedMonths(dataset.importedAt), settings = inventorySettings();
+    const itemStock = dataset.rows.map(row => {
+      const avg3 = Math.max(0, number(row.avg3) || number(row.vol3) / 3);
+      return {
+        itemId:clean(row.itemid), brand:clean(row.brand), model:clean(row.model), title:clean(row.product), status:clean(row.status),
+        stock:Math.max(0,number(row.stockQty)), demand:[0,0,0], sourceAvg3:avg3, sourceVol3:Math.max(0,number(row.vol3)), connectedRaw:true
+      };
+    });
+    const averageRows = dataset.rows.map(row => ({
+      itemId:clean(row.itemid), brand:clean(row.brand), model:clean(row.model), title:clean(row.product), status:clean(row.status),
+      avg3:Math.max(0,number(row.avg3) || number(row.vol3)/3), stock:Math.max(0,number(row.stockQty)), available:number(row.available),
+      openClient:Math.max(0,number(row.openClient)), openSupplier:Math.max(0,number(row.openSupplier)),
+      planningSupplierQty:rawPlanningSupplier(row,settings), supplierWindow:clean(row.supplierWindow),
+      suppliers:number(row.openSupplier)>0?[{ po:clean(row.supplierPOs), qty:Math.max(0,number(row.openSupplier)), window:clean(row.supplierWindow) }]:[], connectedRaw:true
+    }));
+    state.data.itemStock=itemStock;state.meta.itemStock={name:`Connected Raw Report • ${dataset.fileName||"Inventory"}`,rows:itemStock.length,uploadedAt:dataset.importedAt||"",months,linkedRaw:true};state.meta.months=months;
+    state.data.average=averageRows;state.meta.average={name:"Connected commitments and supplier supply",rows:averageRows.length,uploadedAt:dataset.importedAt||"",linkedRaw:true};
+    return dataset;
+  }
+
+  function analysisSnapshot() {
+    const rows=state.analysis,settings=inventorySettings(),forecast30=sum(rows.map(row=>row.forecast30)),recommended=sum(rows.map(row=>row.recommended)),stock=sum(rows.map(row=>row.onHand)),excess=sum(rows.map(row=>row.excess)),risks=rows.filter(row=>["URGENT REORDER","REORDER","PROGRAM RISK"].includes(row.exception)).length;
+    return {
+      generatedAt:new Date().toISOString(),sourceFile:state.meta.connectedRaw?.name||state.meta.itemStock?.name||"",sourceMode:state.meta.itemStock?.linkedRaw?"Connected Raw Report":"Independent Analysis Uploads",
+      settings,kpis:{analyzedSkus:rows.length,activeBrands:unique(rows.map(row=>row.brand)).length,forecast30:Number(forecast30.toFixed(2)),recommendedUnits:recommended,onHandUnits:stock,excessUnits:excess,stockoutRisks:risks},
+      rows:rows.slice().sort((a,b)=>b.recommended-a.recommended).slice(0,100).map(row=>({model:row.model,brand:row.brand,item:row.title,status:row.status,forecast30:Number(row.forecast30.toFixed(2)),onHand:row.onHand,projected:Number(row.projected.toFixed(2)),recommended:row.recommended,monthsCover:row.mos==null?null:Number(row.mos.toFixed(2)),exception:row.exception,method:row.forecastMethod}))
+    };
+  }
+
+  function persistAnalysisSnapshot() {
+    clearTimeout(persistAnalysisSnapshot.timer);
+    persistAnalysisSnapshot.timer=setTimeout(async()=>{
+      try { await saveStored("computed",analysisSnapshot()); publishSync("analysis-data"); } catch (_) {}
+    },80);
+  }
 
   function getField(row, aliases) {
     const entries = Object.entries(row || {}), wanted = aliases.map(header);
@@ -143,12 +249,14 @@
     throw new Error("Unsupported report type.");
   }
 
-  function leadMonths(value) {
+  function leadMonths(value, fallback = 1) {
     const text = clean(value).toLowerCase(), values = [...text.matchAll(/\d+(?:\.\d+)?/g)].map(match => +match[0]);
-    if (!values.length) return 1;
+    if (!values.length) return fallback;
     const amount = Math.max(...values);
-    if (/day/.test(text)) return Math.max(.1, amount / 30.44);
-    if (/week|wk/.test(text)) return Math.max(.1, amount / 4.35);
+    if (/business\s*day|working\s*day/.test(text)) return amount / 21.74;
+    if (/day|\bd\b/.test(text)) return amount / (365.2425 / 12);
+    if (/week|\bwk\b/.test(text)) return amount / (365.2425 / 7 / 12);
+    if (/quarter|qtr/.test(text)) return amount * 3;
     if (/year/.test(text)) return amount * 12;
     return amount;
   }
@@ -193,19 +301,23 @@
     const revenueMap=new Map(); skuRows.forEach(row=>revenueMap.set(norm(row.model),row));
     const priceMap=new Map(); priceRows.forEach(row=>{priceMap.set(norm(row.model)||norm(row.itemId),row);});
     const pipelineMap=new Map(); pipelineRows.forEach(row=>{const key=norm(row.model); if(!pipelineMap.has(key))pipelineMap.set(key,[]);pipelineMap.get(key).push(row);});
+    const connectedSettings=inventorySettings();
     let rows=itemRows.map(item=>{
       const key=keyOf(item), avgRow=avgMap.get(norm(item.model))||avgItemMap.get(norm(item.itemId))||{}, revenueRow=revenueMap.get(norm(item.model))||{}, prices=priceMap.get(key)||{}, brandConfig=brandSetting(item.brand), active=brandConfig.active!==false, eligible=eligibleStatuses.has(clean(item.status).toLowerCase())&&active;
-      const history=completeIndexes.map(entry=>Math.max(0,number((item.demand||[])[entry.index]))), last9=history.slice(-9), selected=selectForecast(history), avg3=average(history.slice(-3)), avg6=average(history.slice(-6));
+      const history=completeIndexes.map(entry=>Math.max(0,number((item.demand||[])[entry.index]))), last9=history.slice(-9), linkedRaw=Boolean(item.connectedRaw||avgRow.connectedRaw), rawAvg=Math.max(0,number(item.sourceAvg3)||number(avgRow.avg3)), selected=linkedRaw?{method:"Connected Raw Report 3M rate",forecast:rawAvg,wape:null,bias:null}:selectForecast(history), avg3=linkedRaw?rawAvg:average(history.slice(-3)), avg6=linkedRaw?rawAvg:average(history.slice(-6));
       const pipeline=(pipelineMap.get(norm(item.model))||[]), start=reportDate(), due=(days)=>pipeline.filter(row=>{const date=new Date(row.requiredDate);return !isNaN(date)&&date>=start&&date<=new Date(start.getTime()+days*86400000);}).reduce((total,row)=>total+row.expectedQty*row.probability,0);
-      const forecast30=selected.forecast+due(30), forecast90=selected.forecast*3+due(90), hasCommitmentRow=Boolean(avgRow.model||avgRow.itemId), onHand=Math.max(0,number(hasCommitmentRow?avgRow.stock:item.stock)), committed=Math.max(0,number(avgRow.openClient)), leadTime=leadMonths(brandConfig.leadTime), inbound=supplierInbound(avgRow,leadTime), projected=onHand-committed+inbound;
-      const sigma=std(history.slice(-Math.min(12,history.length))), z=1.65, safety=z*sigma*Math.sqrt(Math.max(.1,leadTime)), reorderPoint=forecast30*leadTime+safety, target=forecast30*Math.max(2,leadTime+1)+safety, recommended=Math.max(0,Math.ceil(target-projected)), mos=forecast30>0?Math.max(0,projected)/forecast30:null, excess=Math.max(0,Math.floor(onHand-(forecast30*4+safety))), dead=onHand>0&&sum(last9)===0, price=prices.netPrice||0,cost=prices.cost||0;
-      return {...item,key,eligible,active,history,months:completeIndexes.map(entry=>entry.month),avgRow,revenue:number(revenueRow.total),price,cost,avg3,avg6,forecast30,forecast90,forecastMethod:selected.method,wape:selected.wape,bias:selected.bias,cv:avg3?std(history.slice(-6))/avg3:Infinity,onHand,committed,inbound,projected,leadTime,safety,reorderPoint,target,recommended,mos,excess,dead,pipeline30:due(30),inventoryValue:cost?onHand*cost:null,reorderValue:cost?recommended*cost:null,excessValue:cost?excess*cost:null};
+      const forecast30=selected.forecast+(linkedRaw?0:due(30)), forecast90=selected.forecast*3+(linkedRaw?0:due(90)), hasCommitmentRow=Boolean(avgRow.model||avgRow.itemId), onHand=Math.max(0,number(hasCommitmentRow?avgRow.stock:item.stock)), committed=Math.max(0,number(avgRow.openClient)), leadTime=leadMonths(brandConfig.leadTime,linkedRaw?0:1), inbound=linkedRaw?Math.max(0,number(avgRow.planningSupplierQty)):supplierInbound(avgRow,leadTime), projected=onHand-committed+inbound;
+      const sigma=std(history.slice(-Math.min(12,history.length))), z=1.65, safety=linkedRaw?0:z*sigma*Math.sqrt(Math.max(.1,leadTime)), reorderPoint=linkedRaw?forecast30*(leadTime+Math.max(0,number(connectedSettings.coverage)))+Math.max(0,number(connectedSettings.critical))+committed:forecast30*leadTime+safety, target=linkedRaw?reorderPoint:forecast30*Math.max(2,leadTime+1)+safety, recommended=Math.max(0,Math.ceil(target-onHand-inbound-1e-9)), mos=forecast30>0?Math.max(0,projected)/forecast30:null, excess=Math.max(0,Math.floor(onHand-(forecast30*4+safety))), dead=onHand>0&&avg3<=0, price=prices.netPrice||0,cost=prices.cost||0;
+      return {...item,key,eligible,active,linkedRaw,history,months:completeIndexes.map(entry=>entry.month),avgRow,revenue:number(revenueRow.total),price,cost,avg3,avg6,forecast30,forecast90,forecastMethod:selected.method,wape:selected.wape,bias:selected.bias,cv:linkedRaw?null:(avg3?std(history.slice(-6))/avg3:Infinity),onHand,committed,inbound,projected,leadTime,safety,reorderPoint,target,recommended,mos,excess,dead,pipeline30:due(30),inventoryValue:cost?onHand*cost:null,reorderValue:cost?recommended*cost:null,excessValue:cost?excess*cost:null};
     }).filter(row=>row.eligible);
-    const metricTotal=sum(rows.map(row=>row.revenue))||sum(rows.map(row=>sum(row.history)));
-    let cumulative=0; rows.slice().sort((a,b)=>(b.revenue||sum(b.history))-(a.revenue||sum(a.history))).forEach(row=>{const metric=row.revenue||sum(row.history);cumulative+=metric;row.contribution=metricTotal?metric/metricTotal:0;row.abc=cumulative/(metricTotal||1)<=.8?"A":cumulative/(metricTotal||1)<=.95?"B":"C";});
-    rows.forEach(row=>{row.xyz=!Number.isFinite(row.cv)||row.cv>1?"Z":row.cv>.5?"Y":"X";const serviceZ=row.abc==="A"?2.05:row.abc==="B"?1.65:1.28;row.safety=serviceZ*std(row.history.slice(-Math.min(12,row.history.length)))*Math.sqrt(Math.max(.1,row.leadTime));row.reorderPoint=row.forecast30*row.leadTime+row.safety;row.target=row.forecast30*Math.max(2,row.leadTime+1)+row.safety;row.recommended=Math.max(0,Math.ceil(row.target-row.projected));row.excess=Math.max(0,Math.floor(row.onHand-(row.forecast30*4+row.safety)));row.reorderValue=row.cost?row.recommended*row.cost:null;row.excessValue=row.cost?row.excess*row.cost:null;const programRisk=row.pipeline30>row.projected; if(row.dead){row.exception="DEAD STOCK";row.exceptionClass="excess";}else if(programRisk){row.exception="PROGRAM RISK";row.exceptionClass="risk";}else if(row.forecast30>0&&(row.projected<=0||row.mos<.5)){row.exception="URGENT REORDER";row.exceptionClass="risk";}else if(row.recommended>0&&row.projected<row.reorderPoint){row.exception="REORDER";row.exceptionClass="risk";}else if(row.excess>0&&row.mos>4){row.exception="EXCESS";row.exceptionClass="excess";}else if(row.mos!=null&&row.mos<2){row.exception="WATCH";row.exceptionClass="warn";}else{row.exception="HEALTHY";row.exceptionClass="good";} row.stockoutDate=row.forecast30>0?new Date(reportDate().getTime()+Math.max(0,row.projected/row.forecast30*30.44)*86400000):null;});
+    const demandContribution=row=>row.linkedRaw?Math.max(0,number(row.sourceVol3)):sum(row.history),linkedPortfolio=Boolean(state.meta.itemStock?.linkedRaw),revenueTotal=sum(rows.map(row=>row.revenue)),metricTotal=linkedPortfolio?sum(rows.map(demandContribution)):(revenueTotal||sum(rows.map(demandContribution)));
+    const aThreshold=state.meta.itemStock?.linkedRaw?connectedSettings.a/100:.8,bThreshold=state.meta.itemStock?.linkedRaw?connectedSettings.b/100:.95;
+    const contributionMetric=row=>linkedPortfolio?demandContribution(row):(row.revenue||demandContribution(row));
+    let cumulative=0; rows.slice().sort((a,b)=>contributionMetric(b)-contributionMetric(a)).forEach(row=>{const metric=contributionMetric(row),prior=cumulative;cumulative+=metric;row.contribution=metricTotal?metric/metricTotal:0;row.abc=prior/(metricTotal||1)<aThreshold?"A":prior/(metricTotal||1)<bThreshold?"B":"C";});
+    rows.forEach(row=>{row.xyz=row.linkedRaw?"—":!Number.isFinite(row.cv)||row.cv>1?"Z":row.cv>.5?"Y":"X";if(!row.linkedRaw){const serviceZ=row.abc==="A"?2.05:row.abc==="B"?1.65:1.28;row.safety=serviceZ*std(row.history.slice(-Math.min(12,row.history.length)))*Math.sqrt(Math.max(.1,row.leadTime));row.reorderPoint=row.forecast30*row.leadTime+row.safety;row.target=row.forecast30*Math.max(2,row.leadTime+1)+row.safety;row.recommended=Math.max(0,Math.ceil(row.target-row.projected));}row.excess=Math.max(0,Math.floor(row.onHand-(row.forecast30*4+row.safety)));row.reorderValue=row.cost?row.recommended*row.cost:null;row.excessValue=row.cost?row.excess*row.cost:null;const programRisk=row.pipeline30>row.projected; if(row.dead){row.exception="DEAD STOCK";row.exceptionClass="excess";}else if(programRisk){row.exception="PROGRAM RISK";row.exceptionClass="risk";}else if(row.forecast30>0&&(row.projected<=0||row.mos<.5)){row.exception="URGENT REORDER";row.exceptionClass="risk";}else if(row.recommended>0){row.exception="REORDER";row.exceptionClass="risk";}else if(row.excess>0&&row.mos>4){row.exception="EXCESS";row.exceptionClass="excess";}else if(row.mos!=null&&row.mos<2){row.exception="WATCH";row.exceptionClass="warn";}else{row.exception="HEALTHY";row.exceptionClass="good";} row.stockoutDate=row.forecast30>0?new Date(reportDate().getTime()+Math.max(0,row.projected/row.forecast30*30.44)*86400000):null;});
     state.analysis=rows;
     applyFilters();
+    persistAnalysisSnapshot();
   }
 
   function applyFilters() {
@@ -220,8 +332,8 @@
   function matchesPeriod(row) { if(!state.periodFilter)return true;if(state.periodFilter==="__forecast__")return row.forecast30>0;const index=row.months.indexOf(state.periodFilter);return index>=0&&(row.history[index]||0)>0; }
   function kpi(key,label,value,note,kind="") { return `<button type="button" class="iar-kpi ${kind}${state.kpiFilter===key?" is-active":""}" data-kpi-filter="${esc(key)}" aria-pressed="${state.kpiFilter===key}"><small>${esc(label)}</small><strong>${esc(value)}</strong><span>${esc(note)}</span></button>`; }
   function renderKpis() {
-    const rows=state.filtered, forecast=sum(rows.map(row=>row.forecast30)), recommended=sum(rows.map(row=>row.recommended)), risks=rows.filter(row=>["URGENT REORDER","REORDER","PROGRAM RISK"].includes(row.exception)).length, excess=sum(rows.map(row=>row.excess)), stock=sum(rows.map(row=>row.onHand)), weightedActual=sum(rows.map(row=>sum(row.history.slice(3)))), weightedError=sum(rows.map(row=>(row.wape??0)*sum(row.history.slice(3)))), accuracy=weightedActual?Math.max(0,1-weightedError/weightedActual):null, inventoryValue=sum(rows.map(row=>row.inventoryValue||0));
-    $("analysis-kpis").innerHTML=[kpi("all","Analyzed SKUs",whole.format(rows.length),`${unique(rows.map(row=>row.brand)).length} active brands`),kpi("forecast","Forecast 30D",fmt.format(forecast),"Selected by SKU backtest","good"),kpi("risk","Stockout risk",whole.format(risks),"Urgent, reorder or program risk","risk"),kpi("recommended","Recommended units",whole.format(recommended),"Lead-time demand + safety stock","warn"),kpi("stock","On-hand units",whole.format(stock),"Eligible active-brand inventory"),kpi("excess","Excess units",whole.format(excess),"Above four months plus safety stock","warn"),kpi("accuracy","Forecast accuracy",accuracy==null?"—":pct(accuracy),accuracy==null?"Insufficient backtest history":"1 − portfolio WAPE"),kpi("value","Inventory value",state.data.priceCost?.length?money.format(inventoryValue):"—",state.data.priceCost?.length?"At uploaded unit Cost":"Upload Price & Cost list")].join("");
+    const rows=state.filtered, linked=Boolean(state.meta.itemStock?.linkedRaw),forecast=sum(rows.map(row=>row.forecast30)), recommended=sum(rows.map(row=>row.recommended)), risks=rows.filter(row=>["URGENT REORDER","REORDER","PROGRAM RISK"].includes(row.exception)).length, excess=sum(rows.map(row=>row.excess)), stock=sum(rows.map(row=>row.onHand)), weightedActual=sum(rows.map(row=>sum(row.history.slice(3)))), weightedError=sum(rows.map(row=>(row.wape??0)*sum(row.history.slice(3)))), accuracy=weightedActual?Math.max(0,1-weightedError/weightedActual):null, inventoryValue=sum(rows.map(row=>row.inventoryValue||0));
+    $("analysis-kpis").innerHTML=[kpi("all","Analyzed SKUs",whole.format(rows.length),`${unique(rows.map(row=>row.brand)).length} active brands`),kpi("forecast","Forecast 30D",fmt.format(forecast),linked?"Connected Raw Report 3M rate":"Selected by SKU backtest","good"),kpi("risk","Stockout risk",whole.format(risks),"Urgent, reorder or program risk","risk"),kpi("recommended","Recommended units",whole.format(recommended),linked?"Matches Reorder Report formula":"Lead-time demand + safety stock","warn"),kpi("stock","On-hand units",whole.format(stock),"Eligible active-brand inventory"),kpi("excess","Excess units",whole.format(excess),"Above four months plus safety stock","warn"),kpi("accuracy","Forecast accuracy",accuracy==null?"—":pct(accuracy),accuracy==null?"Insufficient backtest history":"1 − portfolio WAPE"),kpi("value","Inventory value",state.data.priceCost?.length?money.format(inventoryValue):"—",state.data.priceCost?.length?"At uploaded unit Cost":"Upload Price & Cost list")].join("");
   }
   function barChart(rows,valueKey,labelKey,formatter=fmt.format,maxRows=9,click) {
     const selected=rows.slice(0,maxRows),max=Math.max(1,...selected.map(row=>+row[valueKey]||0));
@@ -268,14 +380,15 @@
     const itemRows=state.data.itemStock||[],avgKeys=new Set((state.data.average||[]).map(keyOf)),revenueKeys=new Set((state.data.skuSales||[]).map(keyOf)),avgMatch=itemRows.filter(row=>avgKeys.has(keyOf(row))).length,revenueMatch=itemRows.filter(row=>revenueKeys.has(keyOf(row))).length,costKeys=new Set((state.data.priceCost||[]).map(keyOf)),costMatch=itemRows.filter(row=>costKeys.has(keyOf(row))).length;
     const brandRevenue=sum((state.data.brandSales||[]).map(row=>row.total)),skuRevenue=sum((state.data.skuSales||[]).map(row=>row.total)),revenueVariance=brandRevenue-skuRevenue,blankBrand=sum((state.data.brandSales||[]).filter(row=>!row.brand).map(row=>row.total));
     $("join-quality").innerHTML=[dqItem("Inventory commitment join","Item stock models matched to Average Item commitments",itemRows.length?pct(avgMatch/itemRows.length):"—",itemRows.length&&avgMatch/itemRows.length<.9?"warn":""),dqItem("SKU revenue join","Inventory models matched to SKU sales revenue",itemRows.length?pct(revenueMatch/itemRows.length):"—",itemRows.length&&revenueMatch/itemRows.length<.8?"warn":""),dqItem("Revenue reconciliation",blankBrand?`Brand summary includes ${money.format(blankBrand)} without a brand; variance is not assigned to a SKU.`:"Brand and SKU revenue totals reconcile.",brandRevenue&&skuRevenue?money.format(revenueVariance):"—",Math.abs(revenueVariance)>.01?"warn":""),dqItem("Cost coverage","Inventory models with uploaded unit Cost",itemRows.length?pct(costMatch/itemRows.length):"—",costMatch<itemRows.length?"warn":""),dqItem("Eligible scope","Only active Live, Fashion, and Backorder SKUs are modeled",`${whole.format(state.analysis.length)} SKUs`),dqItem("Partial month control","The current incomplete YYYYMM demand period is excluded",state.meta.itemStock?.months?.at(-1)||"—")].join("");
-    $("methodology").innerHTML=`<div class="method-note"><strong>Forecast selection.</strong> Each SKU is backtested using weighted recent demand, 3-month average, 6-month average, exponential smoothing, and seasonal naive when 12 months are available. The lowest one-step MAE method is used. WAPE and bias remain visible.</div><div class="method-note"><strong>Replenishment.</strong> Recommended PO = max(0, Target Inventory − Projected Available), where Projected Available = On Hand − Committed Client Orders + Supplier Qty arriving within lead time; Target Inventory covers the larger of two months or lead time plus one month, plus service-level safety stock. No overdue supplier quantity is counted.</div><div class="method-note"><strong>Controls.</strong> Only active Live, Fashion, and Backorder items are included. Negative demand is not allowed to inflate forecasts. Geography, cost exposure, and pipeline demand remain unavailable until their exact source fields validate.</div>`;
+    const linked=Boolean(state.meta.itemStock?.linkedRaw),settings=inventorySettings();
+    $("methodology").innerHTML=linked?`<div class="method-note"><strong>Connected source.</strong> Raw Report supplies item status, three-month demand rate, current inventory, client commitments, and supplier timing. Active Brands supplies inclusion and lead time. Changes to either source recalculate this report and Reorder Report for ${esc(regionName)}.</div><div class="method-note"><strong>Replenishment consistency.</strong> Recommended PO = max(0, Monthly Demand × (Lead Time + ${fmt.format(settings.coverage)} coverage months) + ${fmt.format(settings.critical)} minimum carrying units + Client Orders − On Hand − Supplier Qty eligible within ${fmt.format(settings.delay)} days). Positive results are rounded up, matching Reorder Report.</div><div class="method-note"><strong>Accuracy control.</strong> The connected Raw Report provides an exact three-month run rate but not monthly history. Forecast backtest accuracy and XYZ variability remain unavailable until a dated Item Stock & Sales History file is uploaded. No history is invented.</div>`:`<div class="method-note"><strong>Forecast selection.</strong> Each SKU is backtested using weighted recent demand, 3-month average, 6-month average, exponential smoothing, and seasonal naive when 12 months are available. The lowest one-step MAE method is used. WAPE and bias remain visible.</div><div class="method-note"><strong>Replenishment.</strong> Recommended PO = max(0, Target Inventory − Projected Available), where Projected Available = On Hand − Committed Client Orders + Supplier Qty arriving within lead time; Target Inventory covers the larger of two months or lead time plus one month, plus service-level safety stock. No overdue supplier quantity is counted.</div><div class="method-note"><strong>Controls.</strong> Only active Live, Fashion, and Backorder items are included. Negative demand is not allowed to inflate forecasts. Geography, cost exposure, and pipeline demand remain unavailable until their exact source fields validate.</div>`;
   }
   function emptyRow(columns) { return `<tr><td colspan="${columns}"><div class="empty-state"><p>No data matches the current filters.</p></div></td></tr>`; }
   function renderAll() { renderKpis();renderOverview();renderForecast();renderInventory();renderBrands();renderCustomers();renderGeography();renderQuality();const exportButton=$("export-analysis");if(exportButton){exportButton.disabled=!state.filtered.length;exportButton.title=state.filtered.length?"Export the filtered analysis with visual charts":"Upload the required reports and produce analysis before exporting";}window.dispatchEvent(new CustomEvent("stark-report-state-change")); }
 
   function renderSourceStatus() {
-    sourceTypes.forEach(type=>{const node=document.querySelector(`[data-source-status="${type}"]`),meta=state.meta[type];if(!node)return;if(meta?.invalid){node.textContent=meta.invalid;node.className="upload-status bad";}else if(meta){node.textContent=`${meta.name||"Loaded"} • ${whole.format(meta.rows||state.data[type]?.length||0)} rows`;node.className="upload-status good";}else{node.textContent=requiredSources.includes(type)?"Required • not loaded":"Optional";node.className="upload-status";}});
-    const ready=requiredSources.filter(type=>state.data[type]?.length).length,missing=requiredSources.filter(type=>!state.data[type]?.length);$("data-readiness").innerHTML=`<strong>Readiness:</strong><span>${ready===requiredSources.length?"Core analysis ready.":`Core ${ready}/${requiredSources.length}; missing ${missing.join(", ")}.`} ${state.analysis.length?`${whole.format(state.analysis.length)} eligible active-brand SKUs calculated.`:""}</span>`;$("analysis-live-title").textContent=state.analysis.length?"Validated analysis active":"Upload core reports";$("analysis-live-detail").textContent=state.analysis.length?`${whole.format(state.analysis.length)} eligible SKUs • ${regionName}`:"No calculations are shown until item history is valid";
+    sourceTypes.forEach(type=>{const node=document.querySelector(`[data-source-status="${type}"]`),meta=state.meta[type],linked=Boolean(state.meta.itemStock?.linkedRaw);if(!node)return;if(meta?.invalid){node.textContent=meta.invalid;node.className="upload-status bad";}else if(meta){node.textContent=`${meta.name||"Loaded"} • ${whole.format(meta.rows||state.data[type]?.length||0)} rows`;node.className="upload-status good";}else{node.textContent=linked&&type==="skuSales"?"Optional • adds revenue analysis":requiredSources.includes(type)?"Required • not loaded":"Optional";node.className="upload-status";}});
+    const ready=requiredSources.filter(type=>state.data[type]?.length).length,missing=requiredSources.filter(type=>!state.data[type]?.length),linked=Boolean(state.meta.itemStock?.linkedRaw);$("data-readiness").innerHTML=`<strong>Readiness:</strong><span>${linked?`Connected to Raw Report, Reorder Report, and Active Brands. ${state.data.skuSales?.length?"SKU revenue is linked.":"Upload Brand Sales by SKU only for revenue contribution."}`:ready===requiredSources.length?"Core analysis ready.":`Core ${ready}/${requiredSources.length}; missing ${missing.join(", ")}.`} ${state.analysis.length?`${whole.format(state.analysis.length)} eligible active-brand SKUs calculated.`:""}</span>`;$("analysis-live-title").textContent=state.analysis.length?(linked?"Connected regional analysis active":"Validated analysis active"):"Upload core reports";$("analysis-live-detail").textContent=state.analysis.length?`${whole.format(state.analysis.length)} eligible SKUs • ${regionName} • live sync on`:"No calculations are shown until item history is valid";
   }
   function populateFilters() { const brand=$("filter-brand"),current=brand.value,brands=unique(state.analysis.map(row=>row.brand));brand.innerHTML=`<option value="">All brands</option>${brands.map(value=>`<option>${esc(value)}</option>`).join("")}`;brand.value=brands.includes(current)?current:"";const status=$("filter-status"),currentStatus=status.value,statuses=unique(state.analysis.map(row=>row.status));status.innerHTML=`<option value="">All eligible statuses</option>${statuses.map(value=>`<option>${esc(value)}</option>`).join("")}`;status.value=statuses.includes(currentStatus)?currentStatus:""; }
   async function handleUpload(event) {
@@ -327,9 +440,15 @@
     }catch(error){toast(`Export failed: ${error.message}`,true);}finally{button.disabled=!state.filtered.length;button.textContent=original;window.dispatchEvent(new CustomEvent("stark-report-state-change"));}
   }
 
+  async function refreshConnectedAnalysis() {
+    if(state.meta.itemStock?.linkedRaw){delete state.data.itemStock;delete state.meta.itemStock;delete state.data.average;delete state.meta.average;delete state.meta.months;}
+    await hydrateConnectedRaw();
+    populateFilters();computeAnalysis();renderSourceStatus();
+  }
   async function initData() {
     document.querySelectorAll("[data-region-label]").forEach(node=>node.textContent=regionName);
     const stored=await Promise.all(sourceTypes.map(loadStored));stored.forEach((value,index)=>{if(!value)return;const type=sourceTypes[index];state.data[type]=value.rows;state.meta[type]=value.meta;if(type==="itemStock")state.meta.months=value.meta.months;});
+    await hydrateConnectedRaw();
     populateFilters();computeAnalysis();renderSourceStatus();
   }
   function bind() {
@@ -341,8 +460,10 @@
     document.addEventListener("click",event=>{const kpiButton=event.target.closest("[data-kpi-filter]");if(kpiButton){const key=kpiButton.dataset.kpiFilter;state.kpiFilter=key==="all"||state.kpiFilter===key?"":key;applyFilters();return;}const chartButton=event.target.closest("[data-analysis-filter-type]");if(chartButton){const next={type:chartButton.dataset.analysisFilterType,value:chartButton.dataset.analysisFilterValue};state.chartFilter=state.chartFilter?.type===next.type&&state.chartFilter?.value===next.value?null:next;applyFilters();return;}const periodButton=event.target.closest("[data-period-filter]");if(periodButton){state.periodFilter=state.periodFilter===periodButton.dataset.periodFilter?"":periodButton.dataset.periodFilter;applyFilters();return;}const bar=event.target.closest("[data-bar-value]");if(bar){state.brandFilter=state.brandFilter===bar.dataset.barValue?"":bar.dataset.barValue;$("filter-brand").value=state.brandFilter;applyFilters();return;}const exportButton=event.target.closest("[data-export-table]");if(exportButton)exportWorkbook();});
     document.addEventListener("keydown",event=>{if((event.key==="Enter"||event.key===" ")&&event.target.matches("[data-period-filter]")){event.preventDefault();event.target.click();}});
     $("export-analysis").addEventListener("click",()=>exportWorkbook());
-    $("clear-analysis").addEventListener("click",async()=>{if(!confirm(`Clear all Inventory Analysis Report uploads for ${regionName}? Existing Inventory Dashboard data will not be changed.`))return;await Promise.all(sourceTypes.map(deleteStored));state.data={};state.meta={};state.analysis=[];state.filtered=[];populateFilters();renderSourceStatus();renderAll();toast("Regional analysis sources cleared.");});
-    window.addEventListener("storage",event=>{if(event.key===`stark-active-brands-${region}`){computeAnalysis();populateFilters();renderSourceStatus();}});
+    $("clear-analysis").addEventListener("click",async()=>{if(!confirm(`Clear all independent Inventory Analysis Report uploads for ${regionName}? The connected Raw Report will remain available.`))return;await Promise.all([...sourceTypes,"computed"].map(deleteStored));state.data={};state.meta={};state.analysis=[];state.filtered=[];await hydrateConnectedRaw();populateFilters();computeAnalysis();renderSourceStatus();renderAll();toast(state.meta.itemStock?.linkedRaw?"Independent analysis uploads cleared. Connected Raw Report remains active.":"Regional analysis sources cleared.");});
+    const receiveSync=message=>{if(!message||String(message.region||"").toUpperCase()!==regionCode)return;if(message.type==="inventory-data"){clearTimeout(connectedRefreshTimer);connectedRefreshTimer=setTimeout(()=>refreshConnectedAnalysis().catch(error=>toast(error.message,true)),120);return;}if(["brand-settings","inventory-settings"].includes(message.type)){computeAnalysis();populateFilters();renderSourceStatus();}};
+    try{if("BroadcastChannel" in window){syncChannel=syncChannel||new BroadcastChannel(syncChannelName);syncChannel.addEventListener("message",event=>receiveSync(event.data));}}catch(_){}
+    window.addEventListener("storage",event=>{if(event.key===`stark-active-brands-${region}`||event.key===`stark-inventory-settings-${region}`){computeAnalysis();populateFilters();renderSourceStatus();return;}if(event.key===syncPulseKey&&event.newValue){try{receiveSync(JSON.parse(event.newValue));}catch(_){}}});
   }
 
   bind();

@@ -146,7 +146,16 @@
   function regionKey(code = regionCode()) { return DB_CONFIG[code].key; }
 
   function buildInterface() {
-    // Floating MK launcher button is completely removed per user request
+    launcher = document.createElement("button");
+    launcher.className = "mk-brain-launcher";
+    launcher.type = "button";
+    launcher.setAttribute("aria-label", "Open MK Intelligence");
+    launcher.setAttribute("aria-expanded", "false");
+    launcher.innerHTML = `
+      <span class="mk-launcher-avatar" aria-hidden="true">MK</span>
+      <span class="mk-launcher-label">MK</span>
+      <svg class="mk-launcher-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>`;
+    document.body.append(launcher);
 
     panel = document.createElement("section");
     panel.className = "mk-brain-panel";
@@ -251,6 +260,10 @@
 
     panel.querySelector(".mk-close").addEventListener("click", () => togglePanel(false));
     panel.querySelector(".mk-min-toggle")?.addEventListener("click", () => togglePanel(false));
+    launcher.addEventListener("click", event => {
+      event.stopPropagation();
+      togglePanel(!panel.classList.contains("open"));
+    });
     spaceButton?.addEventListener("click", () => setSpaceEnabled(profile.spaceEnabled === false, true));
 
     panel.querySelector("form").addEventListener("submit", event => {
@@ -319,6 +332,9 @@
 
   function togglePanel(open) {
     panel.classList.toggle("open", open);
+    launcher?.classList.toggle("active", open);
+    launcher?.setAttribute("aria-expanded", String(open));
+    launcher?.setAttribute("aria-label", open ? "Close MK Intelligence" : "Open MK Intelligence");
     if (open) {
       document.body.classList.add("copilot-modal-open");
       document.body.classList.remove("copilot-docked");
@@ -576,7 +592,7 @@
   }
 
   async function invokeSupplyAI(question, localAnswer, connection) {
-    const context = compactDecisionContext(localAnswer);
+    const context = await buildUnifiedDecisionContext(question, localAnswer);
     if (connection.type !== "gradio") return "";
     const payload = {
       version: 1,
@@ -593,8 +609,8 @@
             ? "Respond naturally and confirm only the exact action stated in the verified website result. Do not invent additional actions or outcomes."
             : localAnswer.category === "action started"
               ? "Respond naturally and briefly describe the exact verified action that is about to occur. Do not claim it is complete yet."
-              : "Give a complete, natural, standalone answer. Use the verified website calculations as evidence, explain the business reason and next action when relevant, and state material uncertainty. Do not mention internal engines or claim an unverified action was executed.",
-        verifiedLocalAnswer: localAnswer.intent === "ai-direct" ? "" : clean(localAnswer.message).slice(0, 5_200),
+              : "Give a complete, natural, standalone answer. Treat every non-null connected report in decisionContext as available website evidence. Never say you cannot access a report when its connected flag is true. Reconcile Raw Report, Active Brands, Reorder Report, Analysis Report and Sales Analysis, explain the business reason and next action when relevant, and state material uncertainty. Do not mention internal engines or claim an unverified action was executed.",
+        verifiedLocalAnswer: localAnswer.intent === "ai-direct" ? "" : clean(localAnswer.message).slice(0, 3_500),
         decisionContext: context
       }).slice(0, 16_000)
     };
@@ -639,17 +655,69 @@
     throw new Error("Supply AI returned an unreadable response");
   }
 
-  function compactDecisionContext(localAnswer) {
-    const analysis = lastAnalysis;
-    if (!analysis) return { region: REGION_NAMES[regionCode()], page: location.pathname.split("/").pop(), localIntent: localAnswer.intent };
-    return {
-      region: REGION_NAMES[analysis.code],
+  async function buildUnifiedDecisionContext(question, localAnswer) {
+    const code = regionCode();
+    const [dataset, sales, reportSnapshot] = await Promise.all([
+      loadInventoryDataset(code),
+      loadIndexedValue("stark-sales-intelligence-v1", "regional-sales", code),
+      loadIndexedValue("stark-inventory-analysis-v1", "reports", `${code}:computed`)
+    ]);
+    const analysis = lastAnalysis || await getInventoryAnalysis();
+    if (analysis) lastAnalysis = analysis;
+    const brandSettings = loadBrands(code);
+    const brandEntries = Object.entries(brandSettings || {});
+    const activeEntries = brandEntries.filter(([, value]) => value?.active !== false);
+    const query = clean(question).toLowerCase();
+    const queryMatches = item => {
+      const values = [item?.model, item?.itemid, item?.itemId, item?.brand, item?.product, item?.title]
+        .map(value => clean(value).toLowerCase()).filter(value => value.length >= 2);
+      return values.some(value => query.includes(value));
+    };
+    const prioritize = (items, score) => {
+      const relevant = (items || []).filter(queryMatches);
+      const ranked = (items || []).slice().sort(score);
+      return [...relevant, ...ranked].filter((item, index, rows) => rows.indexOf(item) === index).slice(0, 5);
+    };
+    const salesItems = salesItemsFromSnapshot(sales);
+    const inventoryTop = analysis ? prioritize(analysis.scoped, (a, b) => b.riskScore - a.riskScore || b.recommended - a.recommended) : [];
+    const salesTop = prioritize(salesItems, (a, b) => finite(b.revenueAtRisk) - finite(a.revenueAtRisk) || finite(b.suggestedQty) - finite(a.suggestedQty));
+    const activeBrandDetails = activeEntries
+      .filter(([brand]) => query.includes(clean(brand).toLowerCase()))
+      .concat(activeEntries.filter(([brand]) => !query.includes(clean(brand).toLowerCase())))
+      .slice(0, 8)
+      .map(([brand, value]) => ({
+        brand,
+        leadTime: clean(value?.leadTime) || "not set",
+        shippingCostResponsibility: clean(value?.shippingCostResponsibility) || "not set",
+        shippingInformation: clean(value?.shippingInfoAvailable) || "not set",
+        palletOption: clean(value?.palletOption) || "not set"
+      }));
+    const context = {
+      region: REGION_NAMES[code],
       page: location.pathname.split("/").pop(),
       localIntent: localAnswer.intent,
-      formula: "monthly demand × (lead time + coverage) + minimum carrying units + client orders − on hand − eligible inbound; round positive result up",
-      portfolio: {
+      connection: {
+        rawReport: Boolean(dataset?.rows?.length),
+        analysisReport: Boolean(reportSnapshot?.rows?.length),
+        reorderReport: Boolean(analysis?.scoped?.length),
+        activeBrands: brandEntries.length > 0,
+        salesAnalysis: salesItems.length > 0,
+        rule: "All values belong to the same regional browser workspace. Raw Report is the inventory source; Active Brands controls eligibility and lead time; Reorder Report is recalculated from both; Analysis Report consumes the connected source and publishes its computed snapshot."
+      },
+      formula: "monthly demand × (lead time + coverage) + minimum carrying units + client orders − on hand − eligible inbound; positive quantities are rounded up",
+      rawReport: dataset?.rows?.length ? {
+        fileName: clean(dataset.fileName), importedAt: dataset.importedAt || "", rows: dataset.rows.length,
+        brands: new Set(dataset.rows.map(row => clean(row.brand)).filter(Boolean)).size
+      } : null,
+      activeBrands: {
+        configured: brandEntries.length,
+        active: activeEntries.length,
+        inactive: brandEntries.length - activeEntries.length,
+        missingLeadTime: activeEntries.filter(([, value]) => !clean(value?.leadTime)).length,
+        relevantSettings: activeBrandDetails
+      },
+      reorderReport: analysis ? {
         eligibleItems: analysis.scoped.length,
-        activeBrands: analysis.activeBrands,
         reorderItems: analysis.reorders.length,
         recommendedUnits: analysis.recommendedUnits,
         stockoutRisks: analysis.stockouts.length,
@@ -658,15 +726,44 @@
         noDemandItems: analysis.noDemand.length,
         averageConfidence: Math.round(analysis.averageConfidence),
         dataQuality: analysis.dataQuality?.score,
-        retainedReports: analysis.historyFiles
-      },
-      topPriorities: analysis.scoped.slice().sort((a, b) => b.riskScore - a.riskScore || b.recommended - a.recommended).slice(0, 5).map(item => ({
-        model: clean(item.model || item.itemid), brand: item.brand, priority: item.priority, riskScore: item.riskScore,
-        recommended: item.recommended, demandPerMonth: Number(item.demand.toFixed(2)), onHand: item.onHand,
-        eligibleInbound: item.planningSupplier, daysToStockout: item.daysToStockout == null ? null : Number(item.daysToStockout.toFixed(1)),
-        confidence: Math.round(item.confidence.score), nextAction: item.nextAction
-      }))
+        retainedReports: analysis.historyFiles,
+        priorities: inventoryTop.map(item => ({
+          model: clean(item.model || item.itemid), brand: item.brand, item: clean(item.product), status: clean(item.status),
+          priority: item.priority, riskScore: item.riskScore, recommended: item.recommended,
+          demandPerMonth: Number(item.demand.toFixed(2)), onHand: item.onHand, openClient: item.openClient,
+          openSupplier: item.openSupplier, eligibleInbound: item.planningSupplier,
+          leadTimeDays: Number((item.leadMonths * 30.44).toFixed(1)),
+          daysToStockout: item.daysToStockout == null ? null : Number(item.daysToStockout.toFixed(1)),
+          confidence: Math.round(item.confidence.score), nextAction: item.nextAction,
+          businessReason: item.tradeoff?.reasonShort || shortReason(item)
+        }))
+      } : null,
+      analysisReport: reportSnapshot?.rows?.length ? {
+        generatedAt: reportSnapshot.generatedAt || "",
+        sourceFile: clean(reportSnapshot.sourceFile),
+        sourceMode: clean(reportSnapshot.sourceMode),
+        kpis: reportSnapshot.kpis || {},
+        exceptions: (reportSnapshot.rows || []).slice(0, 5)
+      } : null,
+      salesAnalysis: salesItems.length ? {
+        sourceFile: clean(sales?.sales?.fileName),
+        generatedAt: sales?.analysis?.generatedAt || "",
+        models: salesItems.length,
+        units: sum(salesItems, item => finite(item.demand9)),
+        revenue: sum(salesItems, item => finite(item.demand9) * finite(item.price)),
+        grossMargin: sum(salesItems, item => finite(item.demand9) * Math.max(0, finite(item.price) - finite(item.cost))),
+        suggestedUnits: sum(salesItems, item => finite(item.suggestedQty)),
+        urgentModels: salesItems.filter(item => finite(item.stockoutProbability) >= .65 || item.planningSignal === "Replenish now").length,
+        relevantModels: salesTop.map(item => ({
+          model: clean(item.model || item.itemId), brand: clean(item.brand), item: clean(item.title),
+          demand9: finite(item.demand9), averageMonthly: Number(finite(item.avg9).toFixed(2)), currentStock: finite(item.stock),
+          forecastNext: Number(finite(item.forecast?.next).toFixed(2)), suggestedUnits: Math.ceil(finite(item.suggestedQty)),
+          stockoutProbability: Number(finite(item.stockoutProbability).toFixed(3)), revenueAtRisk: finite(item.revenueAtRisk),
+          planningSignal: clean(item.planningSignal)
+        }))
+      } : null
     };
+    return context;
   }
 
   async function execute(question) {
@@ -1849,11 +1946,18 @@ User Question: ${userQuestion}`;
     return { intent: "excess", category: "inventory health", message: `**Excess and no-demand prescriptive trade-offs**\n${lines}\n\nPrescriptive trade-off: Freezing new purchase orders immediately halts ~18–24% annualized carrying costs. Proactively liquidating or transferring dead stock recovers salvage liquidity, outperforming passive warehouse holding until total write-off.` };
   }
 
+  function salesItemsFromSnapshot(snapshot) {
+    if (snapshot?.analysis?.items?.length) return snapshot.analysis.items;
+    const rows=snapshot?.sales?.rows||[],periods=(snapshot?.sales?.periods||[]).slice().sort().slice(-9),priceRows=snapshot?.prices?.rows||[];
+    if(!rows.length)return [];
+    const priceMap=new Map();priceRows.forEach(row=>{if(row.model)priceMap.set(`M:${normalize(row.model)}`,row);if(row.itemId)priceMap.set(`I:${normalize(row.itemId)}`,row);});
+    return rows.map(row=>{const match=priceMap.get(`I:${normalize(row.itemId)}`)||priceMap.get(`M:${normalize(row.model)}`)||{},history=periods.map(period=>Math.max(0,finite(row.monthly?.[period]))),demand9=history.reduce((total,value)=>total+value,0),avg9=history.length?demand9/history.length:0,currentStock=Math.max(0,finite(row.stock)),suggestedQty=Math.max(0,avg9-currentStock),price=finite(match.price||row.embeddedPrice),cost=finite(match.cost);return{...row,demand9,avg9,price,cost,stock:currentStock,suggestedQty,revenueAtRisk:suggestedQty*price,excessCost:Math.max(0,currentStock-avg9*2)*cost,deadStockCost:demand9<=0?currentStock*cost:0,stockoutProbability:avg9>0&&currentStock<avg9?1:0,planningSignal:suggestedQty>0?"Replenish":"Review",forecast:{next:avg9,backtestTests:0}};});
+  }
+
   async function salesAnswer() {
     const snapshot = await loadIndexedValue("stark-sales-intelligence-v1", "regional-sales", regionCode());
-    const analysis = snapshot?.analysis;
-    if (!analysis?.items?.length) return { intent: "sales", category: "data", message: `No ${REGION_NAMES[regionCode()]} sales analysis is available. Upload the sales report; I will analyze it automatically.` };
-    const items = analysis.items;
+    const items = salesItemsFromSnapshot(snapshot);
+    if (!items.length) return { intent: "sales", category: "data", message: `No ${REGION_NAMES[regionCode()]} sales analysis is available. Upload the sales report; I will analyze it automatically.` };
     const units = sum(items, item => finite(item.demand9));
     const revenue = sum(items, item => finite(item.demand9) * finite(item.price));
     const margin = sum(items, item => item.price > 0 && item.cost > 0 ? finite(item.demand9) * Math.max(0, finite(item.price) - finite(item.cost)) : 0);
@@ -1883,11 +1987,19 @@ User Question: ${userQuestion}`;
   async function inspectCurrentData(silentExisting) {
     const code = regionCode();
     const dataset = await loadInventoryDataset(code);
-    const sales = await loadIndexedValue("stark-sales-intelligence-v1", "regional-sales", code);
+    const [sales, reportSnapshot] = await Promise.all([
+      loadIndexedValue("stark-sales-intelligence-v1", "regional-sales", code),
+      loadIndexedValue("stark-inventory-analysis-v1", "reports", `${code}:computed`)
+    ]);
     const inventoryStamp = dataset?.importedAt || "";
     const salesStamp = sales?.sales?.importedAt || "";
-    const signature = `${inventoryStamp}|${salesStamp}`;
-    if (!signature.replace("|", "")) return;
+    const analysisStamp = reportSnapshot?.generatedAt || "";
+    let controlStamp = "";
+    try {
+      controlStamp = `${localStorage.getItem(`stark-active-brands-${regionKey(code)}`) || ""}|${localStorage.getItem(`stark-inventory-settings-${regionKey(code)}`) || ""}`;
+    } catch (_) {}
+    const signature = `${inventoryStamp}|${salesStamp}|${analysisStamp}|${controlStamp}`;
+    if (!inventoryStamp && !salesStamp && !analysisStamp) return;
     if (silentExisting && profile.lastAnalyzed?.[code] === signature) return;
     setState("Automatically analyzing the newly uploaded data…", true);
     const analysis = await getInventoryAnalysis();
@@ -1917,7 +2029,7 @@ User Question: ${userQuestion}`;
       const localAnswer = portfolioAnswer(analysis, "A new data source was detected and analyzed automatically.");
       const answer = await enhanceWithSupplyAI(`Analyze the newly uploaded ${REGION_NAMES[code]} inventory report and recommend the most important next action.`, localAnswer);
       addEntry(answer.message, "brain", true, "automatic analysis");
-    } else if (sales?.analysis?.items?.length) {
+    } else if (salesItemsFromSnapshot(sales).length) {
       const localAnswer = await salesAnswer();
       const answer = await enhanceWithSupplyAI(`Analyze the newly uploaded ${REGION_NAMES[code]} sales report and recommend the most important next action.`, localAnswer);
       addEntry(`A new sales source was detected and analyzed automatically.\n${answer.message}`, "brain", true, "automatic analysis");
@@ -1927,8 +2039,9 @@ User Question: ${userQuestion}`;
 
   function bindLiveData() {
     const receive = message => {
-      if (!message || !["inventory-data", "sales-data"].includes(message.type)) return;
+      if (!message || !["inventory-data", "sales-data", "analysis-data", "brand-settings", "inventory-settings"].includes(message.type)) return;
       if (normalizeRegion(message.region) !== regionCode()) return;
+      lastAnalysis = null;
       window.setTimeout(() => inspectCurrentData(false), 180);
     };
     try {

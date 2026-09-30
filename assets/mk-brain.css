@@ -9,17 +9,81 @@
   --mk-surface: #ffffff;
 }
 
-/* Floating MK bot launcher and floating export button are completely removed */
-.mk-brain-launcher,
+/* Report export remains page-owned; MK is the shared floating intelligence control. */
 .report-export-action {
   display: none !important;
+}
+
+.mk-brain-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2147483001;
+  min-width: 132px;
+  height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 7px 14px 7px 8px;
+  border: 1px solid #9fd0ee;
+  border-radius: 999px;
+  color: #0b5f91;
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 12px 30px rgba(5, 55, 88, .16);
+  font-family: "DM Sans", system-ui, sans-serif;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.mk-brain-launcher:hover,
+.mk-brain-launcher:focus-visible,
+.mk-brain-launcher.active {
+  border-color: #1594c7;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(5, 55, 88, .22);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.mk-launcher-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #0c74b8, #08a69a);
+  box-shadow: 0 5px 14px rgba(3, 105, 161, .24);
+  font: 800 11px/1 "Manrope", sans-serif;
+  letter-spacing: -.03em;
+}
+
+.mk-launcher-label {
+  font: 800 15px/1 "Manrope", sans-serif;
+  letter-spacing: -.02em;
+}
+
+.mk-launcher-chevron {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #0f172a;
+  stroke-width: 2.4;
+  transition: transform .18s ease;
+}
+
+.mk-brain-launcher.active .mk-launcher-chevron {
+  transform: rotate(180deg);
 }
 
 /* STARK Copilot Side Panel / Dock */
 .mk-brain-panel {
   position: fixed;
   right: 22px;
-  bottom: 22px;
+  bottom: 90px;
   z-index: 2147482999;
   width: min(420px, calc(100vw - 28px));
   height: min(690px, calc(100dvh - 100px));
@@ -530,6 +594,18 @@ body.copilot-modal-open::after {
 }
 
 @media (max-width: 900px) {
+  .mk-brain-launcher {
+    right: 14px;
+    bottom: 14px;
+    min-width: 112px;
+    height: 50px;
+  }
+
+  body.copilot-modal-open .mk-brain-launcher {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   body.copilot-modal-open .mk-brain-panel.open,
   body.copilot-docked .mk-brain-panel {
     inset: 0 !important;

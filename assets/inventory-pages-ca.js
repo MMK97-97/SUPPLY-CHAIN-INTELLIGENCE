@@ -289,13 +289,13 @@
   }
 
   async function refreshLinkedData(message) {
-    if (page !== "dashboard") return;
-    if (message.source === "sales") { await refreshSalesSnapshot(); return; }
+    if (message.source === "sales") { if(page === "dashboard") await refreshSalesSnapshot(); return; }
     dataset = await SI.loadDataset(region);
     items = dataset ? SI.analyze(dataset.rows, region) : [];
     renderDataNote();
-    renderDashboard();
-    await refreshSalesSnapshot();
+    if(page === "dashboard"){renderDashboard();await refreshSalesSnapshot();return;}
+    if(page === "raw"&&dataset){const brand=el("raw-brand").value,status=el("raw-status").value;fillSelect("raw-brand",SI.unique(items.map(item=>item.brand)),"All brands");fillSelect("raw-status",SI.unique(items.map(item=>item.status)),"All statuses");if([...el("raw-brand").options].some(option=>option.value===brand))el("raw-brand").value=brand;if([...el("raw-status").options].some(option=>option.value===status))el("raw-status").value=status;renderRaw();return;}
+    if(page === "reorder"&&dataset){const brand=el("reorder-brand").value,reorders=items.filter(item=>item.reorderRequired);fillSelect("reorder-brand",SI.unique(reorders.map(item=>item.brand)),"All brands");if([...el("reorder-brand").options].some(option=>option.value===brand))el("reorder-brand").value=brand;renderReorder();}
   }
 
   function initPageTransitions() {
