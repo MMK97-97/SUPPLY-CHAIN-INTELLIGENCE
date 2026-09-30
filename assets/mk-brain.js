@@ -32,7 +32,7 @@
     CA: { name: "stark-regional-inventory-ca", key: "Canada" }
   };
   const DEFAULT_SETTINGS = { critical: 3, coverage: 1, delay: 15, a: 80, b: 95 };
-  const ENGINE_VERSION = "MK Intelligence 2.0";
+  const ENGINE_VERSION = "MK Autonomous AI 3.0";
   const ROUTES = {
     "inventory dashboard": "inventory-dashboard", dashboard: "inventory-dashboard",
     "analysis report": "inventory-analysis-report", "inventory analysis": "inventory-analysis-report",
@@ -44,6 +44,10 @@
     "freight consolidate": "freight-consolidate.html", consolidate: "freight-consolidate.html",
     tracking: "shipment-tracking.html"
   };
+
+  const HF_STORAGE_KEY = "mk-huggingface-space-url";
+  const DEFAULT_HF_SPACE_URL = "https://mmk97-supply-ai-chain-hub.static.hf.space/index.html";
+  const DEFAULT_HF_PUBLIC_URL = "https://huggingface.co/spaces/MMK97/supply-ai-chain-hub";
 
   let profile = loadProfile();
   let panel;
@@ -57,6 +61,13 @@
   let recognition = null;
   let syncChannel = null;
   let busy = false;
+  let hfView;
+  let hfIframe;
+  let hfUrlInput;
+  let hfSetupCard;
+  let hfFrameWrap;
+  let hfPopoutLink;
+  let currentView = "chat";
   const conversation = { lastIntent: "", lastItemKey: "", lastQuestion: "", lastAnswer: "", turns: [] };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
@@ -71,10 +82,19 @@
     window.MKBrain = {
       open: () => togglePanel(true),
       close: () => togglePanel(false),
+      openSpace: () => { togglePanel(true); switchView("hf"); },
+      setSpaceUrl: url => setHfSpaceUrl(url),
+      getSpaceUrl: () => getHfSpaceUrl(),
       ask: question => execute(String(question || "")),
       analyze: () => inspectCurrentData(false),
       getLastAnalysis: () => lastAnalysis,
       getProfile: () => ({ ...profile }),
+      downloadPO: () => downloadPoCsv(lastAnalysis),
+      setPersona: name => {
+        const chip = panel?.querySelector(`[data-persona="${name}"]`);
+        if (chip) chip.click();
+      },
+      controlTable: action => controlDashboardTable(action),
       version: ENGINE_VERSION
     };
   }
@@ -108,6 +128,88 @@
 
   function regionKey(code = regionCode()) { return DB_CONFIG[code].key; }
 
+  function formatHfEmbedUrl(url) {
+    const raw = clean(url);
+    if (!raw) return DEFAULT_HF_SPACE_URL;
+    if (raw.includes("MMK97/supply-ai-chain-hub") || raw.includes("mmk97-supply-ai-chain-hub")) {
+      return DEFAULT_HF_SPACE_URL;
+    }
+    if (/^https?:\/\/[a-z0-9\-]+(\.static)?\.hf\.space/i.test(raw)) {
+      return raw.startsWith("http") ? raw : `https://${raw}`;
+    }
+    const match = raw.match(/huggingface\.co\/spaces\/([^/?#]+)\/([^/?#]+)/i);
+    if (match) {
+      const owner = match[1].toLowerCase().replace(/[^a-z0-9]/g, "-");
+      const space = match[2].toLowerCase().replace(/[^a-z0-9]/g, "-");
+      return `https://${owner}-${space}.static.hf.space/index.html`;
+    }
+    return raw.startsWith("http") ? raw : `https://${raw}`;
+  }
+
+  function getHfSpaceUrl() {
+    return localStorage.getItem(HF_STORAGE_KEY) || DEFAULT_HF_SPACE_URL;
+  }
+
+  function getHfPublicUrl(embedUrl = getHfSpaceUrl()) {
+    if (embedUrl.includes("mmk97-supply-ai-chain-hub")) return DEFAULT_HF_PUBLIC_URL;
+    const match = embedUrl.match(/https?:\/\/([a-z0-9]+)-([a-z0-9\-]+)\.(?:static\.)?hf\.space/i);
+    if (match) return `https://huggingface.co/spaces/${match[1]}/${match[2]}`;
+    return embedUrl;
+  }
+
+  function updateHfBarTitle(url = getHfSpaceUrl()) {
+    const nameEl = panel?.querySelector(".mk-hf-name");
+    if (!nameEl) return;
+    if (url.includes("mmk97-supply-ai-chain-hub")) {
+      nameEl.textContent = "MMK97 / supply-ai-chain-hub (Cloud Agent)";
+      return;
+    }
+    const match = url.match(/https?:\/\/([a-z0-9]+)-([a-z0-9\-]+)\.(?:static\.)?hf\.space/i);
+    if (match) {
+      nameEl.textContent = `${match[1]} / ${match[2]}`;
+    } else {
+      nameEl.textContent = "Hugging Face Agent";
+    }
+  }
+
+  function setHfSpaceUrl(url) {
+    const formatted = formatHfEmbedUrl(url);
+    localStorage.setItem(HF_STORAGE_KEY, formatted);
+    if (hfIframe) hfIframe.src = formatted;
+    if (hfUrlInput) hfUrlInput.value = url;
+    if (hfPopoutLink) hfPopoutLink.href = getHfPublicUrl(formatted);
+    const hint = panel?.querySelector(".mk-hf-current-hint");
+    if (hint) hint.textContent = formatted;
+    updateHfBarTitle(formatted);
+    return formatted;
+  }
+
+  function switchView(viewName) {
+    currentView = viewName;
+    const isHf = viewName === "hf";
+    panel.querySelectorAll(".mk-view-tab").forEach(tab => {
+      const active = tab.dataset.mkTab === viewName;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", String(active));
+    });
+
+    feed.hidden = isHf;
+    panel.querySelector(".mk-quick-actions").hidden = isHf;
+    panel.querySelector(".mk-persona-bar").hidden = isHf;
+    panel.querySelector(".mk-brain-compose").hidden = isHf;
+    panel.querySelector(".mk-brain-state").hidden = isHf;
+
+    if (hfView) {
+      hfView.hidden = !isHf;
+      if (isHf) {
+        panel.classList.add("expanded");
+        if (!hfIframe.src || hfIframe.src === "about:blank" || hfIframe.getAttribute("src") === "about:blank") {
+          hfIframe.src = getHfSpaceUrl();
+        }
+      }
+    }
+  }
+
   function buildInterface() {
     launcher = document.createElement("button");
     launcher.type = "button";
@@ -123,7 +225,10 @@
     panel.innerHTML = `
       <header class="mk-brain-head">
         <div class="mk-brain-mark">MK</div>
-        <div class="mk-brain-title"><strong>MK — Supply Chain Brain</strong><span>${ENGINE_VERSION} • decision engine ready</span></div>
+        <div class="mk-brain-title"><strong>MK — Supply Chain Brain</strong><span>${ENGINE_VERSION} • complete AI ready</span></div>
+        <button class="mk-icon-button mk-expand-toggle" type="button" aria-label="Toggle panel width" title="Toggle panel expand/collapse">
+          <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        </button>
         <button class="mk-icon-button mk-ai-toggle" type="button" aria-label="Gemini AI status" title="Gemini AI connection">
           <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
         </button>
@@ -134,16 +239,34 @@
           <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
         </button>
       </header>
-      <div class="mk-brain-state"><b>${esc(REGION_NAMES[regionCode()])}</b><span>Local data • explainable decisions • private learning</span></div>
+      <div class="mk-view-switcher" role="tablist" aria-label="MK Intelligence Mode">
+        <button type="button" class="mk-view-tab active" data-mk-tab="chat" role="tab" aria-selected="true">
+          <span>💬 MK Intelligence</span>
+        </button>
+        <button type="button" class="mk-view-tab" data-mk-tab="hf" role="tab" aria-selected="false">
+          <span>🤗 Hugging Face Agent</span>
+        </button>
+      </div>
+      <div class="mk-brain-state"><b>${esc(REGION_NAMES[regionCode()])}</b><span>Local data • multi-persona AI • predictive what-if</span></div>
+      <div class="mk-persona-bar" aria-label="MK AI Persona">
+        <button type="button" class="mk-persona-chip active" data-persona="executive">🌐 Executive AI</button>
+        <button type="button" class="mk-persona-chip" data-persona="cfo">💼 CFO Capital</button>
+        <button type="button" class="mk-persona-chip" data-persona="coo">🏭 COO Operations</button>
+        <button type="button" class="mk-persona-chip" data-persona="procurement">🛒 Procurement PO</button>
+        <button type="button" class="mk-persona-chip" data-persona="scenario">🎲 What-If Sandbox</button>
+      </div>
       <div class="mk-brain-feed" role="log" aria-live="polite"></div>
       <div class="mk-quick-actions" aria-label="MK actions">
+        <button type="button" data-mk-tab-trigger="hf">🤗 Cloud AI Agent</button>
         <button type="button" data-mk-question="Analyze my current data">Analyze data</button>
         <button type="button" data-mk-question="Show decision trade-offs">Decision trade-offs</button>
         <button type="button" data-mk-question="Generate executive brief">Executive brief</button>
+        <button type="button" data-mk-question="CFO working capital analysis">CFO analysis</button>
+        <button type="button" data-mk-question="COO operational risk review">COO review</button>
+        <button type="button" data-mk-question="Draft purchase order">Draft PO</button>
+        <button type="button" data-mk-question="Simulate +14 day lead time">What-if simulation</button>
         <button type="button" data-mk-question="Show top stockout risks">Stockout risks</button>
         <button type="button" data-mk-question="Show reorder summary">Reorder summary</button>
-        <button type="button" data-mk-question="Explain demand">Explain demand</button>
-        <button type="button" data-mk-question="Build my action plan">Action plan</button>
         <button type="button" data-mk-question="Audit data quality">Data quality</button>
         <button type="button" data-mk-question="Export this report">Export report</button>
       </div>
@@ -155,20 +278,99 @@
         <button class="mk-send" type="submit" aria-label="Run task">
           <svg viewBox="0 0 24 24"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 8-10"/></svg>
         </button>
-      </form>`;
+      </form>
+      <div class="mk-hf-view" hidden>
+        <div class="mk-hf-bar">
+          <div class="mk-hf-status">
+            <span class="mk-hf-dot"></span>
+            <span class="mk-hf-name">MMK97 / supply-ai-chain-hub (Cloud Agent)</span>
+          </div>
+          <div class="mk-hf-controls">
+            <button type="button" class="mk-hf-btn mk-hf-reload-btn" title="Reload Agent Frame">↻ Reload</button>
+            <button type="button" class="mk-hf-btn mk-hf-config-btn" title="Configure Space URL">⚙ Change URL</button>
+            <a href="${esc(DEFAULT_HF_PUBLIC_URL)}" target="_blank" rel="noopener noreferrer" class="mk-hf-btn mk-hf-popout" title="Open Space in New Tab">↗ Popout</a>
+          </div>
+        </div>
+        <div class="mk-hf-frame-wrap">
+          <iframe class="mk-hf-iframe" title="Hugging Face AI Space" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" src="about:blank"></iframe>
+        </div>
+        <div class="mk-hf-setup" hidden>
+          <div class="mk-hf-setup-card">
+            <div class="mk-hf-icon">🤗</div>
+            <h3>Connect Hugging Face Space</h3>
+            <p>Embed any live Hugging Face AI agent directly into your Supply Chain cockpit.</p>
+            <div class="mk-hf-input-row">
+              <input type="url" class="mk-hf-url-input" placeholder="https://huggingface.co/spaces/MMK97/supply-ai-chain-hub" value="${esc(DEFAULT_HF_PUBLIC_URL)}">
+              <button type="button" class="mk-hf-save-btn">Connect &amp; Embed Agent</button>
+            </div>
+            <span class="mk-hf-hint">Active endpoint: <code class="mk-hf-current-hint">${esc(DEFAULT_HF_SPACE_URL)}</code></span>
+          </div>
+        </div>
+      </div>`;
 
     document.body.append(panel, launcher);
     feed = panel.querySelector(".mk-brain-feed");
     input = panel.querySelector("textarea");
     stateNode = panel.querySelector(".mk-brain-state");
     voiceButton = panel.querySelector(".mk-voice-toggle");
+    hfView = panel.querySelector(".mk-hf-view");
+    hfIframe = panel.querySelector(".mk-hf-iframe");
+    hfUrlInput = panel.querySelector(".mk-hf-url-input");
+    hfSetupCard = panel.querySelector(".mk-hf-setup");
+    hfFrameWrap = panel.querySelector(".mk-hf-frame-wrap");
+    hfPopoutLink = panel.querySelector(".mk-hf-popout");
     syncVoiceUi();
+    updateHfBarTitle(getHfSpaceUrl());
 
-    addEntry("MK is ready. I analyze uploaded inventory and sales data, explain why action is needed, and execute supported dashboard tasks. Voice is off until you enable it.", "brain", false);
+    addEntry("MK 3.0 Complete AI is active. I run multi-persona C-level analyses (Executive, CFO, COO, Procurement), evaluate prescriptive trade-offs, execute what-if simulations, and embed your live Hugging Face Agent (MMK97/supply-ai-chain-hub). Switch modes anytime via the top tabs. Voice is off until you enable it.", "brain", false);
     launcher.addEventListener("click", () => togglePanel(!panel.classList.contains("open")));
     panel.querySelector(".mk-close").addEventListener("click", () => togglePanel(false));
+    panel.querySelector(".mk-expand-toggle")?.addEventListener("click", () => panel.classList.toggle("expanded"));
+    panel.querySelectorAll(".mk-view-tab").forEach(tab => tab.addEventListener("click", () => switchView(tab.dataset.mkTab)));
+    panel.querySelectorAll("[data-mk-tab-trigger]").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.mkTabTrigger)));
+
+    panel.querySelector(".mk-hf-reload-btn")?.addEventListener("click", () => {
+      if (hfIframe) {
+        const cur = hfIframe.src;
+        hfIframe.src = "about:blank";
+        window.setTimeout(() => { hfIframe.src = cur || getHfSpaceUrl(); }, 80);
+      }
+    });
+
+    panel.querySelector(".mk-hf-config-btn")?.addEventListener("click", () => {
+      const showSetup = hfSetupCard.hidden;
+      hfSetupCard.hidden = !showSetup;
+      hfFrameWrap.hidden = showSetup;
+      if (showSetup) {
+        hfUrlInput.value = getHfPublicUrl(getHfSpaceUrl());
+        hfUrlInput.focus();
+      }
+    });
+
+    panel.querySelector(".mk-hf-save-btn")?.addEventListener("click", () => {
+      const newUrl = hfUrlInput.value.trim();
+      if (newUrl) {
+        setHfSpaceUrl(newUrl);
+        hfSetupCard.hidden = true;
+        hfFrameWrap.hidden = false;
+        addEntry(`Connected Hugging Face Space: **${newUrl}**`, "brain", false, "AI configuration");
+      }
+    });
+
     voiceButton.addEventListener("click", toggleVoice);
     panel.querySelector(".mk-ai-toggle")?.addEventListener("click", () => execute("gemini status"));
+    panel.querySelectorAll("[data-persona]").forEach(chip => {
+      chip.addEventListener("click", () => {
+        panel.querySelectorAll("[data-persona]").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        const persona = chip.dataset.persona;
+        if (persona === "cfo") execute("CFO working capital analysis");
+        else if (persona === "coo") execute("COO operational risk review");
+        else if (persona === "procurement") execute("Draft purchase order");
+        else if (persona === "scenario") execute("Simulate a +14 day lead time shock");
+        else execute("Generate executive brief");
+      });
+    });
     panel.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
       const question = input.value.trim();
@@ -201,14 +403,20 @@
     stateNode.innerHTML = `<b>${esc(REGION_NAMES[regionCode()])}</b><span>${esc(text)}</span>`;
   }
 
-  function addEntry(message, role = "brain", speak = true, category = "answer") {
+  function addEntry(message, role = "brain", speak = true, category = "answer", htmlExtra = "") {
     const entry = document.createElement("div");
     entry.className = `mk-entry ${role === "user" ? "user" : "brain"}`;
     const controls = role === "brain" ? `<div class="mk-feedback"><button type="button" data-feedback="useful">Useful</button><button type="button" data-feedback="correction">Needs correction</button></div>` : "";
-    entry.innerHTML = `<div class="mk-entry-card"><div class="mk-entry-meta">${role === "user" ? "You" : "MK • " + esc(category)}</div>${formatMessage(message)}${controls}</div>`;
+    entry.innerHTML = `<div class="mk-entry-card"><div class="mk-entry-meta">${role === "user" ? "You" : "MK • " + esc(category)}</div>${formatMessage(message)}${htmlExtra}${controls}</div>`;
     feed.appendChild(entry);
     feed.scrollTop = feed.scrollHeight;
     entry.querySelectorAll("[data-feedback]").forEach(button => button.addEventListener("click", () => recordFeedback(button, category)));
+    entry.querySelectorAll("[data-mk-run]").forEach(button => button.addEventListener("click", () => execute(button.dataset.mkRun)));
+    entry.querySelectorAll("[data-po-download]").forEach(button => button.addEventListener("click", () => downloadPoCsv(lastAnalysis)));
+    entry.querySelectorAll("[data-control-action]").forEach(button => button.addEventListener("click", () => {
+      const res = controlDashboardTable(button.dataset.controlAction);
+      if (res?.message) addEntry(res.message, "brain", false, "control");
+    }));
     if (role === "brain" && speak && profile.voiceEnabled) speakText(message);
     if (role === "brain" && !panel.classList.contains("open")) { badge.hidden = false; badge.textContent = "1"; }
     return entry;
@@ -301,7 +509,7 @@
     setState("Thinking through current and historical signals…", true);
     try {
       const answer = await routeQuestion(question);
-      addEntry(answer.message, "brain", true, answer.category || "decision");
+      addEntry(answer.message, "brain", true, answer.category || "decision", answer.htmlExtra || "");
       learnTask(answer.intent || "question");
       conversation.lastIntent = answer.intent || "question";
       conversation.lastItemKey = answer.itemKey || conversation.lastItemKey;
@@ -349,6 +557,40 @@
       };
     }
 
+    const spaceSet = raw.match(/^(?:set|save|connect|update)\s+(?:hf|hugging\s*face|cloud\s*ai)?\s*space\s+(https?:\/\/[^\s]+)/i);
+    if (spaceSet) {
+      const url = spaceSet[1].trim();
+      const resolved = setHfSpaceUrl(url);
+      switchView("hf");
+      return {
+        intent: "hf-space",
+        category: "AI configuration",
+        message: `Hugging Face Space connected: **${url}** (embedded as \`${resolved}\`). Switched to the Hugging Face Agent view.`
+      };
+    }
+
+    if (/^(?:open|show|view|switch\s+to|launch)\s+(?:the\s+)?(?:hf|hugging\s*face|cloud\s*ai)?\s*space/i.test(q) ||
+        /^(?:open|show|view)\s+(?:cloud\s+)?agent/i.test(q) ||
+        q === "huggingface" || q === "hugging face" || q === "hf space" || q === "cloud agent") {
+      switchView("hf");
+      return {
+        intent: "hf-space",
+        category: "AI view",
+        message: "Switched to your embedded Hugging Face Cloud Agent view. You can also pop it out in a new tab anytime."
+      };
+    }
+
+    if (/^(?:clear|reset|delete)\s+(?:hf|hugging\s*face)?\s*space/i.test(q)) {
+      localStorage.removeItem(HF_STORAGE_KEY);
+      if (hfIframe) hfIframe.src = DEFAULT_HF_SPACE_URL;
+      updateHfBarTitle(DEFAULT_HF_SPACE_URL);
+      return {
+        intent: "hf-space",
+        category: "AI configuration",
+        message: `Hugging Face Space reset to default (**MMK97/supply-ai-chain-hub**).`
+      };
+    }
+
     const remember = raw.match(/^remember(?: that)?\s+(.+)/i);
     if (remember) {
       profile.notes = Array.isArray(profile.notes) ? profile.notes : [];
@@ -369,7 +611,7 @@
       if (/open|go to|show/.test(q)) return navigateTo("tracking");
     }
 
-    if (/\b(export|download)\b/.test(q)) return exportCurrentReport();
+    if (/\b(export|download)\b/.test(q) && !/po|purchase order/i.test(q)) return exportCurrentReport();
 
     const route = Object.keys(ROUTES).sort((a, b) => b.length - a.length).find(name => q.includes(name));
     if (route && /\b(open|go|navigate|show|take me)\b/.test(q)) return navigateTo(route);
@@ -386,9 +628,23 @@
     if (!matched && /^(why|explain|how confident|what next|what should|and why|tell me more)/.test(q) && conversation.lastItemKey) {
       matched = analysis.items.find(item => item.key === conversation.lastItemKey) || null;
     }
+
+    // Persona-based executive queries
+    if (/cfo|working capital|carrying cost|holding cost|burn rate|cash flow|tied[- ]up|salvage|turnover/i.test(q)) return cfoAnswer(analysis);
+    if (/coo|operations|service level|98%|otif|fill rate|bottleneck|operational risk|runout horizon/i.test(q)) return cooAnswer(analysis);
+    if (/procurement|sourcing|purchase order|draft po|generate po|create po|download po|po draft|vendor order|supplier order/i.test(q)) {
+      const brand = findBrandInQuestion(q, analysis.scoped);
+      return procurementAnswer(analysis, brand);
+    }
+
+    // Table controls
+    if (/(?:filter|show)\s+(?:only\s+)?critical/i.test(q)) return controlDashboardTable("critical");
+    if (/(?:filter|show)\s+(?:only\s+)?expedite/i.test(q)) return controlDashboardTable("expedite");
+    if (/(?:clear|reset)\s+(?:all\s+)?filters?|show all/i.test(q)) return controlDashboardTable("reset");
+
     if (/executive brief|strategic brief|executive memo|ai brief|c-suite brief/i.test(q)) return executiveBriefAnswer(analysis);
     if (/\b(trade[- ]?offs?|prescriptive|why expedite|why reorder|why hold|why liquidate|business reason|decision logic)\b/i.test(q)) return tradeoffsAnswer(analysis, matched);
-    if (/what[- ]?if|scenario|simulate|if demand|if lead|if supplier|if stock|if coverage/.test(q)) return scenarioAnswer(q, analysis, matched);
+    if (/what[- ]?if|scenario|simulate|if demand|if lead|if supplier|if stock|if coverage|lead time (?:increase|plus|\+)|port delay/i.test(q)) return scenarioAnswer(q, analysis, matched);
     if (/data quality|audit (the )?data|validate data|missing data|bad data|anomal/.test(q)) return dataQualityAnswer(analysis);
     if (/action plan|prioriti[sz]e|what should (i|we) do|next actions?/.test(q)) return actionPlanAnswer(analysis);
     if (/confidence|how certain|accuracy|reliab/.test(q)) return confidenceAnswer(analysis, matched);
@@ -401,15 +657,18 @@
     if (/reorder|replenish|purchase|buy/.test(q)) return reorderAnswer(analysis);
     if (/excess|dead stock|no demand|overstock/.test(q)) return excessAnswer(analysis);
 
+    // Complete AI fallback: Try Gemini -> Try Chrome Built-in AI -> Run Deep Local Complete AI Advisory
     const apiKey = localStorage.getItem("mk-gemini-api-key");
-    if (apiKey && (q.includes("strategy") || q.includes("recommend") || q.includes("advice") || q.includes("consult") || q.includes("how to") || q.includes("what should") || q.includes("c-suite") || q.includes("brief"))) {
+    if (apiKey) {
       const geminiRes = await queryGeminiAdvisor(apiKey, raw, analysis);
       if (geminiRes) return { intent: "gemini-strategic", category: "Gemini Strategic AI", message: geminiRes };
     }
+    const nativeAiRes = await queryBrowserNativeAi(raw, analysis);
+    if (nativeAiRes) return { intent: "native-ai", category: "Browser Native AI", message: nativeAiRes };
 
     if (/analy|summary|overview|what.*action|recommend|decision|current data/.test(q)) return portfolioAnswer(analysis);
 
-    return portfolioAnswer(analysis, `I interpreted this as a request for the current ${REGION_NAMES[regionCode()]} decision summary.`);
+    return completeAiConsultation(raw, analysis);
   }
 
   function updateSettingFromQuestion(q) {
@@ -826,7 +1085,7 @@
   function scenarioAnswer(question, analysis, matchedItem) {
     const scenario = parseScenario(question, analysis.settings);
     if (!scenario.changed) {
-      return { intent: "scenario", category: "scenario", message: "Give me a measurable scenario, for example: “What if demand increases 20%?”, “Simulate an 8-week lead time”, “What if 100 supplier units arrive?”, or “Set on hand to 50 for MODEL#”. I will compare it with the current plan without changing stored data." };
+      return { intent: "scenario", category: "scenario", message: "Give me a measurable scenario, for example: “What if demand increases 20%?”, “Simulate a +14 day lead time delay”, “What if 100 supplier units arrive?”, or “Set on hand to 50 for MODEL#”. I will compare it with the current plan without changing stored data." };
     }
     const scope = matchedItem ? [matchedItem] : analysis.scoped;
     const results = scope.map(item => simulateItem(item, analysis.settings, scenario));
@@ -837,9 +1096,15 @@
     const delta = scenarioUnits - currentUnits;
     const top = results.slice().sort((a, b) => Math.abs(b.recommended - b.item.recommended) - Math.abs(a.recommended - a.item.recommended)).slice(0, matchedItem ? 1 : 3);
     const lines = top.map(result => `${result.item.model || result.item.itemid}: ${number.format(result.item.recommended)} → ${number.format(result.recommended)} units (${signedNumber(result.recommended - result.item.recommended)})`).join("\n");
+    const html = `<div class="mk-inline-actions">
+      <button type="button" class="mk-inline-btn primary" data-mk-run="What if demand increases 30%?">Demand +30%</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Simulate +14 day lead time">Lead Time +14d</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="What if demand decreases 20%?">Demand -20%</button>
+    </div>`;
     return {
       intent: "scenario", category: "what-if analysis", itemKey: matchedItem?.key || "",
-      message: `**Scenario result — ${scenario.description.join(", ")}**\nScope: ${matchedItem ? `${matchedItem.model || matchedItem.itemid} — ${matchedItem.brand}` : `${number.format(scope.length)} eligible items`}. Recommended units change from ${number.format(currentUnits)} to ${number.format(scenarioUnits)} (${signedNumber(delta)}). Lead-time stockout risks change from ${number.format(currentRisks)} to ${number.format(scenarioRisks)}.\nLargest effects:\n${lines || "No item-level change."}\nThis is a simulation only; stored settings and reports were not changed.`
+      message: `**Scenario result — ${scenario.description.join(", ")}**\nScope: ${matchedItem ? `${matchedItem.model || matchedItem.itemid} — ${matchedItem.brand}` : `${number.format(scope.length)} eligible items`}. Recommended units change from ${number.format(currentUnits)} to ${number.format(scenarioUnits)} (${signedNumber(delta)}). Lead-time stockout risks change from ${number.format(currentRisks)} to ${number.format(scenarioRisks)}.\nLargest effects:\n${lines || "No item-level change."}\nThis is a simulation only; stored settings and reports were not changed.`,
+      htmlExtra: html
     };
   }
 
@@ -854,11 +1119,21 @@
       scenario.description.push(`demand ${negative ? "down" : "up"} ${decimal.format(percent.amount)}%`);
       scenario.changed = true;
     }
-    const lead = q.match(/lead\s*time.{0,18}?(?:to|at|is|of)\s*(\d+(?:\.\d+)?)\s*(business\s*days?|working\s*days?|days?|weeks?|months?)/);
-    if (lead) {
-      scenario.leadMonths = leadTimeMonths(`${lead[1]} ${lead[2]}`);
-      scenario.description.push(`lead time ${decimal.format(Number(lead[1]))} ${lead[2]}`);
+    const leadDelta = q.match(/(?:lead\s*time|port|supplier|inbound).{0,20}?(?:increase|increases|rise|up|delay|delayed|longer|plus|\+)\s*(?:by\s*)?(\d+(?:\.\d+)?)\s*(business\s*days?|working\s*days?|days?|weeks?|months?)/) ||
+      q.match(/(\+?\d+(?:\.\d+)?)\s*(?:days?|weeks?|months?)\s*(?:lead\s*time|port\s*delay|supplier\s*delay)/);
+    if (leadDelta) {
+      const unit = leadDelta[2] || (leadDelta[0].includes("week") ? "weeks" : leadDelta[0].includes("month") ? "months" : "days");
+      const addedMonths = leadTimeMonths(`${leadDelta[1]} ${unit}`);
+      scenario.leadMonthsDelta = addedMonths;
+      scenario.description.push(`lead time +${decimal.format(Number(leadDelta[1]))} ${unit}`);
       scenario.changed = true;
+    } else {
+      const lead = q.match(/lead\s*time.{0,18}?(?:to|at|is|of)\s*(\d+(?:\.\d+)?)\s*(business\s*days?|working\s*days?|days?|weeks?|months?)/);
+      if (lead) {
+        scenario.leadMonths = leadTimeMonths(`${lead[1]} ${lead[2]}`);
+        scenario.description.push(`lead time ${decimal.format(Number(lead[1]))} ${lead[2]}`);
+        scenario.changed = true;
+      }
     }
     const coverage = q.match(/coverage.{0,14}?(?:to|at|is|of)\s*(\d+(?:\.\d+)?)\s*months?/);
     if (coverage) {
@@ -884,7 +1159,9 @@
 
   function simulateItem(item, settings, scenario) {
     const demand = item.demand * (scenario.demandMultiplier ?? 1);
-    const leadMonths = scenario.leadMonths ?? item.leadMonths;
+    let leadMonths = item.leadMonths;
+    if (scenario.leadMonthsDelta != null) leadMonths = Math.max(0, leadMonths + scenario.leadMonthsDelta);
+    else if (scenario.leadMonths != null) leadMonths = scenario.leadMonths;
     const coverage = scenario.coverage ?? settings.coverage;
     const onHand = scenario.onHand ?? item.onHand;
     const planningSupplier = scenario.planningSupplier ?? item.planningSupplier;
@@ -980,6 +1257,10 @@
   function tradeoffsAnswer(analysis, matchedItem) {
     if (matchedItem) {
       const tradeoff = matchedItem.tradeoff || computePrescriptiveTradeoff(matchedItem, analysis.settings);
+      const html = `<div class="mk-inline-actions">
+        <button type="button" class="mk-inline-btn primary" data-mk-run="Explain ${clean(matchedItem.model || matchedItem.itemid)}">Full Explanation</button>
+        <button type="button" class="mk-inline-btn" data-mk-run="Draft purchase order">Draft PO</button>
+      </div>`;
       return {
         intent: "tradeoffs",
         category: "decision trade-off",
@@ -987,7 +1268,8 @@
         message: `**Decision Trade-Off: ${clean(matchedItem.model || matchedItem.itemid)} — ${matchedItem.brand}**\n` +
           `**Prescriptive Action:** ${tradeoff.tradeoffAction}\n` +
           `**Trade-Off Breakdown:**\n${tradeoff.tradeoffDetail}\n\n` +
-          `**Financial & Service Position:** On hand: ${number.format(matchedItem.onHand)} units | Usable runway: ${matchedItem.daysToStockout != null ? decimal.format(matchedItem.daysToStockout) + " days" : "stable"} | Lead time: ${decimal.format(matchedItem.leadMonths * 30.44)} days | Gap: ${number.format(matchedItem.recommended)} units.`
+          `**Financial & Service Position:** On hand: ${number.format(matchedItem.onHand)} units | Usable runway: ${matchedItem.daysToStockout != null ? decimal.format(matchedItem.daysToStockout) + " days" : "stable"} | Lead time: ${decimal.format(matchedItem.leadMonths * 30.44)} days | Gap: ${number.format(matchedItem.recommended)} units.`,
+        htmlExtra: html
       };
     }
 
@@ -996,6 +1278,13 @@
     const cycleItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Release Standard Cycle PO");
     const excessItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Freeze Replenishment & Capital Preservation");
     const noDemandItems = analysis.scoped.filter(item => item.tradeoff?.tradeoffAction === "Active Disposition & Liquidation");
+
+    const html = `<div class="mk-inline-actions">
+      <button type="button" class="mk-inline-btn primary" data-mk-run="Generate executive brief">Executive Brief</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="CFO working capital analysis">CFO View</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="COO operational risk review">COO View</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Draft purchase order">Draft PO</button>
+    </div>`;
 
     return {
       intent: "tradeoffs",
@@ -1007,7 +1296,8 @@
         `3. **Standard Cycle Reorder (${number.format(cycleItems.length)} SKUs, ${number.format(analysis.recommendedUnits)} units):** Restores target safety stock while avoiding emergency freight surcharges.\n` +
         `4. **Freeze Purchasing (${number.format(excessItems.length)} SKUs):** Withholding orders prevents compounding 18-24% annual carrying costs and protects cash flow.\n` +
         `5. **Active Disposition (${number.format(noDemandItems.length)} SKUs):** Liquidating dead stock frees warehouse space and recovers capital before 100% write-off.\n\n` +
-        `Ask for any model name to inspect its SKU-specific trade-off analysis.`
+        `Ask for any model name to inspect its SKU-specific trade-off analysis.`,
+      htmlExtra: html
     };
   }
 
@@ -1026,6 +1316,13 @@
     const topStockout = analysis.stockouts[0];
     const topExcess = analysis.excess[0];
 
+    const html = `<div class="mk-inline-actions">
+      <button type="button" class="mk-inline-btn primary" data-mk-run="Show decision trade-offs">Decision Trade-Offs</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="CFO working capital analysis">CFO Analysis</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Draft purchase order">Draft PO</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Simulate +14 day lead time">What-If (+14d)</button>
+    </div>`;
+
     return {
       intent: "executive-brief",
       category: "Executive AI Brief",
@@ -1040,7 +1337,8 @@
         `1. Expedite inbound for ${topStockout ? `${topStockout.model || topStockout.itemid} (${topStockout.brand})` : "top stockout criticals"}.\n` +
         `2. Release procurement authorization for ${number.format(totalReorders)} units.\n` +
         `3. Freeze vendor purchase orders on ${topExcess ? `${topExcess.model || topExcess.itemid}` : "excess SKUs"}.\n\n` +
-        `*(Note: To enable generative Gemini strategic briefings, type \`set gemini key YOUR_KEY\`)*`
+        `*(Note: To enable generative Gemini strategic briefings, type \`set gemini key YOUR_KEY\`)*`,
+      htmlExtra: html
     };
   }
 
@@ -1070,6 +1368,232 @@
     } catch (_) {
       return null;
     }
+  }
+
+  function cfoAnswer(analysis) {
+    const currency = analysis.code === "EU" ? "EUR" : analysis.code === "CA" ? "CAD" : "USD";
+    const money = val => new Intl.NumberFormat(analysis.code === "EU" ? "en-IE" : "en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(val);
+    const unitVal = item => finite(item.cost) || finite(item.price) * 0.6 || 25;
+
+    const excessValue = sum(analysis.excess, item => item.onHand * unitVal(item));
+    const annualHoldingBurn = excessValue * 0.22;
+    const monthlyHoldingBurn = annualHoldingBurn / 12;
+
+    const deadStockValue = sum(analysis.noDemand, item => item.onHand * unitVal(item));
+    const salvageRecovery = deadStockValue * 0.45;
+
+    const reorderValue = sum(analysis.reorders, item => item.recommended * unitVal(item));
+    const turnoverRate = analysis.totalStock > 0 ? (analysis.totalDemand * 12) / analysis.totalStock : 0;
+    const topExcess = analysis.excess.slice().sort((a,b) => (b.onHand * unitVal(b)) - (a.onHand * unitVal(a)))[0];
+
+    const msg = `**CFO Financial & Working Capital Brief — ${REGION_NAMES[analysis.code]}**\n\n` +
+      `• **Trapped Capital in Excess:** ~${money(excessValue)} locked across ${number.format(analysis.excess.length)} SKUs (>4 mo cover).\n` +
+      `• **Carrying Cost Burn Rate:** Burning ~${money(monthlyHoldingBurn)}/month (~${money(annualHoldingBurn)}/year) in warehouse carrying costs (22% annual cost of capital, insurance, and obsolescence).\n` +
+      `• **Replenishment Budget Required:** ~${money(reorderValue)} needed to fund ${number.format(analysis.recommendedUnits)} recommended units across ${number.format(analysis.reorders.length)} SKUs.\n` +
+      `• **Dead Stock Salvage Opportunity:** ~${money(deadStockValue)} at risk of 100% write-off. Prompt liquidation/bundling could unlock ~${money(salvageRecovery)} in liquid cash.\n` +
+      `• **Portfolio Velocity:** Annualized inventory turns: **${decimal.format(turnoverRate)}x**.\n\n` +
+      `**CFO Strategic Recommendation:** Freeze purchasing immediately on overstocked SKUs${topExcess ? ` (e.g. ${topExcess.model})` : ""}, channel salvage capital toward Class-A reorder gaps, and halt compounding cash drag.`;
+
+    const html = `<div class="mk-inline-actions">
+      <button type="button" class="mk-inline-btn primary" data-mk-run="Show decision trade-offs">Decision Trade-Offs</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Draft purchase order">Draft Reorder PO</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="What if demand decreases 20%?">Simulate Downturn (-20%)</button>
+    </div>`;
+
+    return { intent: "cfo", category: "CFO Capital Intelligence", message: msg, htmlExtra: html };
+  }
+
+  function cooAnswer(analysis) {
+    const urgentRunouts = analysis.stockouts.filter(i => i.daysToStockout != null && i.daysToStockout <= 7);
+    const mediumRunouts = analysis.stockouts.filter(i => i.daysToStockout != null && i.daysToStockout > 7 && i.daysToStockout <= 14);
+    const lateInbound = analysis.scoped.filter(i => i.openSupplier > i.planningSupplier);
+    const uncountedUnits = sum(lateInbound, i => i.openSupplier - i.planningSupplier);
+
+    const otifThreat = analysis.stockouts.filter(i => i.abc === "A" || i.abc === "B").length;
+    const avgLeadDays = mean(analysis.scoped.map(i => i.leadMonths * 30.44));
+
+    const msg = `**COO Operational Reliability & Service Level Review — ${REGION_NAMES[analysis.code]}**\n\n` +
+      `• **Service Level Threat (98% SLA at Risk):** ${number.format(otifThreat)} Class-A/B revenue-driving SKUs face imminent stockout before replenishment arrives.\n` +
+      `• **Stockout Horizon:**\n` +
+      `   - **≤ 7 Days (Critical Stockout):** ${number.format(urgentRunouts.length)} SKUs\n` +
+      `   - **8–14 Days (Severe Runway Risk):** ${number.format(mediumRunouts.length)} SKUs\n` +
+      `   - **Total Lead-Time Deficits:** ${number.format(analysis.stockouts.length)} SKUs\n` +
+      `• **Inbound Supply Disruption:** ${number.format(lateInbound.length)} SKUs have ${number.format(uncountedUnits)} inbound units arriving outside the standard delivery window (${analysis.settings.delay} days).\n` +
+      `• **Supply Chain Vulnerability:** Portfolio average lead time is ${decimal.format(avgLeadDays)} days. High lead time variance requires active expediting.\n\n` +
+      `**COO Operational Action:** Coordinate immediate carrier split-shipments for the top ${number.format(urgentRunouts.length)} critical SKUs to protect client OTIF fulfillment without waiting for bulk sea freight.`;
+
+    const html = `<div class="mk-inline-actions">
+      <button type="button" class="mk-inline-btn primary" data-mk-run="Show top stockout risks">Stockout SKUs</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Simulate +14 day lead time">Simulate Port Delay (+14d)</button>
+      <button type="button" class="mk-inline-btn" data-control-action="critical">Filter Table to Critical</button>
+    </div>`;
+
+    return { intent: "coo", category: "COO Operations Review", message: msg, htmlExtra: html };
+  }
+
+  function procurementAnswer(analysis, brandFilter = null) {
+    let reorders = analysis.reorders;
+    if (brandFilter) {
+      reorders = reorders.filter(i => normalize(i.brand) === normalize(brandFilter));
+    }
+    reorders = reorders.slice().sort((a,b) => b.riskScore - a.riskScore || b.recommended - a.recommended);
+
+    const totalUnits = sum(reorders, i => i.recommended);
+    const brands = [...new Set(reorders.map(i => i.brand))];
+    const expediteCount = reorders.filter(i => i.tradeoff?.tradeoffAction === "Expedite Inbound Supplier PO").length;
+
+    const topPreview = reorders.slice(0, 5);
+    const tableHtml = topPreview.length ? `
+      <div class="mk-po-preview">
+        <table>
+          <thead>
+            <tr><th>SKU / Model</th><th>Brand</th><th class="num">Order Qty</th><th class="num">Lead Days</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            ${topPreview.map(i => `<tr><td>${esc(i.model || i.itemid)}</td><td>${esc(i.brand)}</td><td class="num"><strong>${number.format(i.recommended)}</strong></td><td class="num">${decimal.format(i.leadMonths * 30.44)}</td><td>${esc(i.priority)}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>` : "";
+
+    const msg = `**Procurement & Sourcing Action Plan — ${REGION_NAMES[analysis.code]}**\n\n` +
+      `• **Purchase Order Scope:** ${number.format(reorders.length)} line items across ${number.format(brands.length)} vendors.\n` +
+      `• **Total Procurement Quantity:** **${number.format(totalUnits)} units**.\n` +
+      `• **Inbound Expedite Opportunities:** ${number.format(expediteCount)} SKUs have open commitments that should be expedited rather than duplicating orders.\n` +
+      `• **Batching Optimization:** Consolidate PO releases by supplier to meet container fill rates and capture volume tier discounts.\n\n` +
+      `Click below to download the complete Purchase Order CSV ready for ERP or vendor submission.`;
+
+    const html = `${tableHtml}
+      <div class="mk-inline-actions">
+        <button type="button" class="mk-inline-btn primary" data-po-download="true">📥 Download PO CSV (${number.format(reorders.length)} SKUs)</button>
+        <button type="button" class="mk-inline-btn" data-mk-run="Show decision trade-offs">Trade-Off Analysis</button>
+      </div>`;
+
+    return { intent: "procurement", category: "Procurement Intelligence", message: msg, htmlExtra: html };
+  }
+
+  async function downloadPoCsv(analysis) {
+    const data = analysis || lastAnalysis || await getInventoryAnalysis();
+    if (!data?.reorders?.length) {
+      addEntry("There are no recommended replenishment items in the current scope to export.", "brain", true, "control");
+      return;
+    }
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const headers = [
+      "PO Line", "Model / Item ID", "Brand", "Product Description", "ABC Class",
+      "Priority", "Recommended Order Qty", "Lead Time (Days)", "On Hand",
+      "Counted Inbound", "Open Client", "Monthly Demand", "Runway Days",
+      "Prescriptive Action", "Business Reason"
+    ];
+    const rows = data.reorders.map((item, idx) => [
+      idx + 1,
+      `"${clean(item.model || item.itemid).replace(/"/g, '""')}"`,
+      `"${clean(item.brand).replace(/"/g, '""')}"`,
+      `"${clean(item.product).replace(/"/g, '""')}"`,
+      item.abc,
+      item.priority,
+      item.recommended,
+      Math.round(item.leadMonths * 30.44),
+      item.onHand,
+      item.planningSupplier,
+      item.openClient,
+      decimal.format(item.demand),
+      item.daysToStockout != null ? decimal.format(item.daysToStockout) : "N/A",
+      `"${clean(item.tradeoff?.tradeoffAction || item.nextAction).replace(/"/g, '""')}"`,
+      `"${clean(item.tradeoff?.reasonShort || shortReason(item)).replace(/"/g, '""')}"`
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Purchase-Order-Replenishment-${data.code}-${dateStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+    addEntry(`Generated and downloaded **Purchase-Order-Replenishment-${data.code}-${dateStr}.csv** with ${number.format(data.reorders.length)} replenishment line items.`, "brain", true, "automation");
+  }
+
+  function controlDashboardTable(action) {
+    const riskFilter = document.getElementById("brain-risk");
+    const searchFilter = document.getElementById("brain-search");
+    if (riskFilter && searchFilter) {
+      if (action === "critical" || action === "filter-critical") {
+        riskFilter.value = "Critical";
+        riskFilter.dispatchEvent(new Event("change", { bubbles: true }));
+        return { intent: "table-control", category: "dashboard automation", message: "Filtered Decision Matrix to **Critical** risk items." };
+      }
+      if (action === "expedite" || action === "filter-expedite") {
+        searchFilter.value = "Expedite";
+        searchFilter.dispatchEvent(new Event("input", { bubbles: true }));
+        return { intent: "table-control", category: "dashboard automation", message: "Filtered Decision Matrix to items requiring **Inbound Supplier Expediting**." };
+      }
+      if (action === "reset") {
+        riskFilter.value = "all";
+        searchFilter.value = "";
+        riskFilter.dispatchEvent(new Event("change", { bubbles: true }));
+        searchFilter.dispatchEvent(new Event("input", { bubbles: true }));
+        return { intent: "table-control", category: "dashboard automation", message: "Reset all table filters to show all active items." };
+      }
+    }
+    return { intent: "table-control", category: "dashboard automation", message: `Filter action '${action}' applied to the active view.` };
+  }
+
+  async function queryBrowserNativeAi(userQuestion, analysis) {
+    try {
+      const ai = window.ai;
+      if (!ai?.languageModel) return null;
+      const topStockout = analysis.stockouts.slice(0, 3).map(i => `${i.model} (${decimal.format(i.daysToStockout)}d runway)`).join(", ");
+      const topExcess = analysis.excess.slice(0, 3).map(i => `${i.model} (${decimal.format(i.monthsCover)} mo)`).join(", ");
+      const systemInstruction = "You are MK, an executive autonomous AI supply chain advisor. Provide authoritative, concise, bulleted C-level advice balancing service level, working capital, and supplier risks.";
+      const prompt = `Context for ${REGION_NAMES[analysis.code]}:
+- Scope: ${analysis.scoped.length} active SKUs, ${analysis.activeBrands} brands.
+- Stockout Risks: ${analysis.stockouts.length} SKUs (${topStockout || "None"}).
+- Excess Inventory: ${analysis.excess.length} SKUs (${topExcess || "None"}).
+- Reorder Demand: ${number.format(analysis.recommendedUnits)} units across ${analysis.reorders.length} SKUs.
+User Question: ${userQuestion}`;
+
+      const session = await ai.languageModel.create({ systemPrompt: systemInstruction });
+      const result = await session.prompt(prompt);
+      session.destroy();
+      return result;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function completeAiConsultation(question, analysis) {
+    const topStockout = analysis.stockouts[0];
+    const topExcess = analysis.excess[0];
+    const urgentExpedite = analysis.scoped.filter(i => i.tradeoff?.tradeoffAction === "Expedite Inbound Supplier PO");
+
+    const currency = analysis.code === "EU" ? "EUR" : analysis.code === "CA" ? "CAD" : "USD";
+    const money = val => new Intl.NumberFormat(analysis.code === "EU" ? "en-IE" : "en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(val);
+    const unitVal = item => finite(item.cost) || finite(item.price) * 0.6 || 25;
+    const tiedUpCapital = sum(analysis.excess, item => item.onHand * unitVal(item));
+    const reorderCapital = sum(analysis.reorders, item => item.recommended * unitVal(item));
+
+    const msg = `**MK Autonomous Strategic AI — ${REGION_NAMES[analysis.code]}**\n\n` +
+      `Regarding: *“${clean(question)}”*\n\n` +
+      `**1. Executive Supply Chain Situation:**\n` +
+      `Network active scope is ${number.format(analysis.scoped.length)} SKUs across ${number.format(analysis.activeBrands)} brands. ` +
+      `Operating health exhibits **${number.format(analysis.stockouts.length)} SKUs at stockout risk** (${number.format(analysis.criticalRisks)} critical), balanced against **${number.format(analysis.excess.length)} SKUs in excess** representing ~${money(tiedUpCapital)} in trapped capital.\n\n` +
+      `**2. Cross-Functional Trade-Off Analysis:**\n` +
+      `• **Operations & OTIF:** Prioritize expediting inbound shipments for ${urgentExpedite.length ? `${number.format(urgentExpedite.length)} SKUs (e.g. ${urgentExpedite[0].model})` : "critical items"} to prevent service failures without placing duplicate rush orders.\n` +
+      `• **Finance & Working Capital:** Release ~${money(reorderCapital)} in replenishment capital strictly for high-velocity Class-A lines, while enforcing an immediate purchase freeze on ${topExcess ? `${topExcess.model} and ` : ""}other excess items to halt holding cost drag.\n` +
+      `• **Procurement Execution:** Standard lead time averages ${decimal.format(mean(analysis.scoped.map(i => i.leadMonths * 30.44)))} days. Reordering now locks contractual terms and avoids air freight expedite penalties.\n\n` +
+      `**3. Prescriptive Next Steps:**\n` +
+      `Review executive trade-offs, draft supplier purchase orders, or run what-if simulations using the action buttons below.`;
+
+    const html = `<div class="mk-inline-actions">
+      <button type="button" class="mk-inline-btn primary" data-mk-run="Generate executive brief">Executive Brief</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="CFO working capital analysis">CFO Analysis</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="COO operational risk review">COO Review</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Draft purchase order">Draft PO</button>
+      <button type="button" class="mk-inline-btn" data-mk-run="Simulate +14 day lead time">What-If (+14d)</button>
+    </div>`;
+
+    return { intent: "ai-consult", category: "Complete AI Advisory", message: msg, htmlExtra: html };
   }
 
   function portfolioAnswer(analysis, prefix = "") {
