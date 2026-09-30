@@ -455,6 +455,7 @@
   }
 
   function updateButtonState() {
+    if (!button) return;
     const readiness = exportReadiness();
     const disabled = !readiness.ready;
     if (button.disabled !== disabled) button.disabled = disabled;
@@ -465,14 +466,9 @@
       : readiness.message;
   }
 
-  const button = document.querySelector(".report-export-action") || document.createElement("button");
-  button.type = "button";
-  button.className = "report-export-action";
-  button.title = "Export the current report to Excel with KPIs, charts and visible tables";
-  button.setAttribute("aria-label", "Export current report to Excel with charts");
-  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v3h14v-3"/></svg><span>Export report</span>';
-  if (!button.isConnected) document.body.appendChild(button);
-  button.addEventListener("click", () => exportReport(button));
+  // Floating export button completely removed per user request
+  const button = document.querySelector(".report-export-action");
+  if (button) button.remove();
 
   let stateFrame = 0;
   const scheduleStateUpdate = () => {

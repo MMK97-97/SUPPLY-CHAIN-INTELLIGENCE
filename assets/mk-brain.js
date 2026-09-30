@@ -97,6 +97,7 @@
       controlTable: action => controlDashboardTable(action),
       version: ENGINE_VERSION
     };
+    window.StarkCopilot = window.MKBrain;
   }
 
   function loadProfile() {
@@ -198,15 +199,13 @@
     });
 
     feed.hidden = isHf;
-    panel.querySelector(".mk-quick-actions").hidden = isHf;
-    panel.querySelector(".mk-persona-bar").hidden = isHf;
-    panel.querySelector(".mk-brain-compose").hidden = isHf;
-    panel.querySelector(".mk-brain-state").hidden = isHf;
+    const suggested = panel.querySelector("#mk-suggested-wrap");
+    if (suggested) suggested.hidden = isHf;
+    panel.querySelector(".mk-copilot-compose").hidden = isHf;
 
     if (hfView) {
       hfView.hidden = !isHf;
       if (isHf) {
-        panel.classList.add("expanded");
         if (!hfIframe.src || hfIframe.src === "about:blank" || hfIframe.getAttribute("src") === "about:blank") {
           hfIframe.src = getHfSpaceUrl();
         }
@@ -215,75 +214,71 @@
   }
 
   function buildInterface() {
-    launcher = document.createElement("button");
-    launcher.type = "button";
-    launcher.className = "mk-brain-launcher";
-    launcher.setAttribute("aria-label", "Open MK Supply Chain Brain");
-    launcher.setAttribute("aria-expanded", "false");
-    launcher.innerHTML = 'MK<span class="mk-badge" hidden>1</span>';
-    badge = launcher.querySelector(".mk-badge");
+    // Floating MK launcher button is completely removed per user request
 
     panel = document.createElement("section");
     panel.className = "mk-brain-panel view-chat";
     panel.setAttribute("data-view", "chat");
-    panel.setAttribute("aria-label", "MK Supply Chain Brain");
+    panel.setAttribute("aria-label", "STARK Copilot AI Agent");
     panel.innerHTML = `
-      <header class="mk-brain-head">
-        <div class="mk-brain-mark">MK</div>
-        <div class="mk-brain-title"><strong>MK — Supply Chain Brain</strong><span>${ENGINE_VERSION} • complete AI ready</span></div>
-        <button class="mk-icon-button mk-expand-toggle" type="button" aria-label="Toggle panel width" title="Toggle panel expand/collapse">
-          <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-        </button>
-        <button class="mk-icon-button mk-ai-toggle" type="button" aria-label="Gemini AI status" title="Gemini AI connection">
-          <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
-        </button>
-        <button class="mk-icon-button mk-voice-toggle" type="button" aria-label="Enable voice" aria-pressed="false" title="Voice off">
-          <svg viewBox="0 0 24 24"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path d="M17 9c1.3 1.7 1.3 4.3 0 6M19.5 6.5c3 3 3 8 0 11"/></svg>
-        </button>
-        <button class="mk-icon-button mk-close" type="button" aria-label="Close MK">
-          <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
-        </button>
+      <header class="mk-copilot-head">
+        <div class="mk-copilot-brand">
+          <div class="mk-copilot-avatar">AI</div>
+          <div class="mk-copilot-title">
+            <strong>STARK Copilot</strong>
+            <span>Your supply chain analyst</span>
+          </div>
+        </div>
+        <div class="mk-copilot-controls">
+          <button class="mk-icon-button mk-min-toggle" type="button" aria-label="Minimize Copilot" title="Minimize">−</button>
+          <button class="mk-icon-button mk-close" type="button" aria-label="Close Copilot" title="Close">✕</button>
+        </div>
       </header>
-      <div class="mk-view-switcher" role="tablist" aria-label="MK Intelligence Mode">
+
+      <div class="mk-view-switcher" role="tablist" aria-label="Copilot AI Mode">
         <button type="button" class="mk-view-tab active" data-mk-tab="chat" role="tab" aria-selected="true">
-          <span>💬 MK Intelligence</span>
+          <span>💬 AI Copilot</span>
         </button>
         <button type="button" class="mk-view-tab" data-mk-tab="hf" role="tab" aria-selected="false">
-          <span>🤗 Hugging Face Agent</span>
+          <span>🤗 Cloud AI Agent</span>
         </button>
       </div>
-      <div class="mk-brain-state"><b>${esc(REGION_NAMES[regionCode()])}</b><span>Local data • multi-persona AI • predictive what-if</span></div>
-      <div class="mk-persona-bar" aria-label="MK AI Persona">
-        <button type="button" class="mk-persona-chip active" data-persona="executive">🌐 Executive AI</button>
-        <button type="button" class="mk-persona-chip" data-persona="cfo">💼 CFO Capital</button>
-        <button type="button" class="mk-persona-chip" data-persona="coo">🏭 COO Operations</button>
-        <button type="button" class="mk-persona-chip" data-persona="procurement">🛒 Procurement PO</button>
-        <button type="button" class="mk-persona-chip" data-persona="scenario">🎲 What-If Sandbox</button>
-      </div>
+
       <div class="mk-brain-feed" role="log" aria-live="polite"></div>
-      <div class="mk-quick-actions" aria-label="MK actions">
-        <button type="button" data-mk-tab-trigger="hf">🤗 Cloud AI Agent</button>
-        <button type="button" data-mk-question="Analyze my current data">Analyze data</button>
-        <button type="button" data-mk-question="Show decision trade-offs">Decision trade-offs</button>
-        <button type="button" data-mk-question="Generate executive brief">Executive brief</button>
-        <button type="button" data-mk-question="CFO working capital analysis">CFO analysis</button>
-        <button type="button" data-mk-question="COO operational risk review">COO review</button>
-        <button type="button" data-mk-question="Draft purchase order">Draft PO</button>
-        <button type="button" data-mk-question="Simulate +14 day lead time">What-if simulation</button>
-        <button type="button" data-mk-question="Show top stockout risks">Stockout risks</button>
-        <button type="button" data-mk-question="Show reorder summary">Reorder summary</button>
-        <button type="button" data-mk-question="Audit data quality">Data quality</button>
-        <button type="button" data-mk-question="Export this report">Export report</button>
+
+      <div class="mk-suggested-wrap" id="mk-suggested-wrap">
+        <div class="mk-suggested-head">
+          <span>Suggested questions</span>
+          <button type="button" class="mk-suggested-refresh-btn" id="mk-suggested-refresh" title="Refresh suggestions">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>
+          </button>
+        </div>
+        <div class="mk-suggested-list">
+          <button type="button" class="mk-suggested-pill" data-mk-question="What are the top stockout risks?">
+            <span>What are the top stockout risks?</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button type="button" class="mk-suggested-pill" data-mk-question="Show inventory coverage by brand.">
+            <span>Show inventory coverage by brand.</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button type="button" class="mk-suggested-pill" data-mk-question="Which items should we reorder now?">
+            <span>Which items should we reorder now?</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
-      <form class="mk-brain-compose">
-        <textarea rows="1" aria-label="Ask MK or give MK a task" placeholder="Ask a question or give MK a task…"></textarea>
-        <button class="mk-mic" type="button" aria-label="Speak to MK" title="Speak to MK">
-          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>
+
+      <form class="mk-copilot-compose">
+        <input type="text" class="mk-compose-input" placeholder="Ask a question or request an analysis..." aria-label="Ask STARK Copilot" />
+        <button class="mk-mic" type="button" aria-label="Voice input" title="Voice input">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/></svg>
         </button>
-        <button class="mk-send" type="submit" aria-label="Run task">
-          <svg viewBox="0 0 24 24"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 8-10"/></svg>
+        <button class="mk-send" type="submit" aria-label="Send analysis request" title="Send">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
       </form>
+
       <div class="mk-hf-view" hidden>
         <div class="mk-hf-bar">
           <div class="mk-hf-status">
@@ -313,11 +308,9 @@
         </div>
       </div>`;
 
-    document.body.append(panel, launcher);
+    document.body.append(panel);
     feed = panel.querySelector(".mk-brain-feed");
-    input = panel.querySelector("textarea");
-    stateNode = panel.querySelector(".mk-brain-state");
-    voiceButton = panel.querySelector(".mk-voice-toggle");
+    input = panel.querySelector(".mk-compose-input");
     hfView = panel.querySelector(".mk-hf-view");
     hfIframe = panel.querySelector(".mk-hf-iframe");
     hfUrlInput = panel.querySelector(".mk-hf-url-input");
@@ -327,12 +320,39 @@
     syncVoiceUi();
     updateHfBarTitle(getHfSpaceUrl());
 
-    addEntry("MK 3.0 Complete AI is active. I run multi-persona C-level analyses (Executive, CFO, COO, Procurement), evaluate prescriptive trade-offs, execute what-if simulations, and embed your live Hugging Face Agent (MMK97/supply-ai-chain-hub). Switch modes anytime via the top tabs. Voice is off until you enable it.", "brain", false);
-    launcher.addEventListener("click", () => togglePanel(!panel.classList.contains("open")));
+    // Inject Welcome Agent Response card matching reference design
+    const regName = REGION_NAMES[regionCode()] || "United States";
+    const welcomeEntry = document.createElement("div");
+    welcomeEntry.className = "mk-entry brain mk-welcome-entry";
+    welcomeEntry.innerHTML = `
+      <div class="mk-entry-card">
+        <div class="mk-entry-top">
+          <div class="mk-agent-badge">AI</div>
+          <div class="mk-agent-meta">
+            <strong>Agent Response</strong>
+            <small>Today, 10:24 AM</small>
+          </div>
+        </div>
+        <div class="mk-agent-body">
+          <p>I can help you analyze your inventory data, identify risks, and recommend actions.</p>
+          <p>Once you upload the Item Sales Report, I'll generate a summary of inventory health, stockout risks, and key recommendations for the ${esc(regName)} region.</p>
+          <div class="mk-agent-capabilities">
+            <strong>Here's what I can do:</strong>
+            <ul>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> <span>Analyze uploaded inventory data</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> <span>Identify stockout and excess risks</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18v3h14v-3"/></svg> <span>Recommend reorder actions</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l8-4 6 3v15M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg> <span>Provide brand and category insights</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> <span>Answer your supply chain questions</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>`;
+    feed.appendChild(welcomeEntry);
+
     panel.querySelector(".mk-close").addEventListener("click", () => togglePanel(false));
-    panel.querySelector(".mk-expand-toggle")?.addEventListener("click", () => panel.classList.toggle("expanded"));
+    panel.querySelector(".mk-min-toggle")?.addEventListener("click", () => togglePanel(false));
     panel.querySelectorAll(".mk-view-tab").forEach(tab => tab.addEventListener("click", () => switchView(tab.dataset.mkTab)));
-    panel.querySelectorAll("[data-mk-tab-trigger]").forEach(btn => btn.addEventListener("click", () => switchView(btn.dataset.mkTabTrigger)));
 
     panel.querySelector(".mk-hf-reload-btn")?.addEventListener("click", () => {
       if (hfIframe) {
@@ -358,24 +378,10 @@
         setHfSpaceUrl(newUrl);
         hfSetupCard.hidden = true;
         hfFrameWrap.hidden = false;
-        addEntry(`Connected Hugging Face Space: **${newUrl}**`, "brain", false, "AI configuration");
+        addEntry(`Connected Hugging Face Space: **${newUrl}**`, "brain", false, "AI Configuration");
       }
     });
 
-    voiceButton.addEventListener("click", toggleVoice);
-    panel.querySelector(".mk-ai-toggle")?.addEventListener("click", () => execute("gemini status"));
-    panel.querySelectorAll("[data-persona]").forEach(chip => {
-      chip.addEventListener("click", () => {
-        panel.querySelectorAll("[data-persona]").forEach(c => c.classList.remove("active"));
-        chip.classList.add("active");
-        const persona = chip.dataset.persona;
-        if (persona === "cfo") execute("CFO working capital analysis");
-        else if (persona === "coo") execute("COO operational risk review");
-        else if (persona === "procurement") execute("Draft purchase order");
-        else if (persona === "scenario") execute("Simulate a +14 day lead time shock");
-        else execute("Generate executive brief");
-      });
-    });
     panel.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
       const question = input.value.trim();
@@ -383,47 +389,99 @@
       input.value = "";
       execute(question);
     });
-    input.addEventListener("input", () => { input.style.height = "auto"; input.style.height = `${Math.min(112, input.scrollHeight)}px`; });
+
     input.addEventListener("keydown", event => {
-      if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); panel.querySelector("form").requestSubmit(); }
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        panel.querySelector("form").requestSubmit();
+      }
     });
-    panel.querySelectorAll("[data-mk-question]").forEach(button => button.addEventListener("click", () => execute(button.dataset.mkQuestion)));
-    panel.querySelector(".mk-mic").addEventListener("click", toggleListening);
-    document.addEventListener("keydown", event => { if (event.key === "Escape" && panel.classList.contains("open")) togglePanel(false); });
+
+    // Suggested questions click handlers
+    panel.querySelectorAll("[data-mk-question]").forEach(button => {
+      button.addEventListener("click", () => execute(button.dataset.mkQuestion));
+    });
+
+    // Refresh suggested questions
+    const questionSets = [
+      ["What are the top stockout risks?", "Show inventory coverage by brand.", "Which items should we reorder now?"],
+      ["Show ABC classification distribution", "Simulate +14 day supplier delay", "Which models have zero stock?"],
+      ["Audit regional data quality", "Compare supplier lead times", "Generate strategic action plan"]
+    ];
+    let qSetIdx = 0;
+    panel.querySelector("#mk-suggested-refresh")?.addEventListener("click", () => {
+      qSetIdx = (qSetIdx + 1) % questionSets.length;
+      const set = questionSets[qSetIdx];
+      const list = panel.querySelector(".mk-suggested-list");
+      if (list) {
+        list.innerHTML = set.map(q => `
+          <button type="button" class="mk-suggested-pill" data-mk-question="${esc(q)}">
+            <span>${esc(q)}</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>`).join("");
+        list.querySelectorAll("[data-mk-question]").forEach(b => b.addEventListener("click", () => execute(b.dataset.mkQuestion)));
+      }
+    });
+
+    panel.querySelector(".mk-mic")?.addEventListener("click", toggleListening);
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && panel.classList.contains("open")) togglePanel(false);
+    });
+
+    // Initial dock state on desktop
+    const shouldDock = localStorage.getItem("stark-copilot-docked") !== "false" && window.innerWidth >= 1200;
+    if (shouldDock) {
+      togglePanel(true);
+    }
   }
 
   function togglePanel(open) {
+    const isDesktop = window.innerWidth >= 1200;
     panel.classList.toggle("open", open);
-    launcher.classList.toggle("is-open", open);
-    launcher.setAttribute("aria-expanded", String(open));
-    document.body.classList.toggle("mk-brain-open", open);
+    if (isDesktop) {
+      document.body.classList.toggle("copilot-docked", open);
+    } else {
+      document.body.classList.toggle("copilot-modal-open", open);
+    }
+    try { localStorage.setItem("stark-copilot-docked", open ? "true" : "false"); } catch (_) {}
     if (open) {
-      badge.hidden = true;
-      window.setTimeout(() => input.focus(), 120);
+      window.setTimeout(() => input?.focus(), 120);
     }
   }
 
   function setState(text, running = false) {
-    stateNode.classList.toggle("is-running", running);
-    stateNode.innerHTML = `<b>${esc(REGION_NAMES[regionCode()])}</b><span>${esc(text)}</span>`;
+    const titleSpan = panel?.querySelector(".mk-copilot-title span");
+    if (titleSpan) {
+      titleSpan.textContent = running ? "Analyzing supply chain data..." : "Your supply chain analyst";
+    }
   }
 
-  function addEntry(message, role = "brain", speak = true, category = "answer", htmlExtra = "") {
+  function addEntry(message, role = "brain", speak = true, category = "Analysis", htmlExtra = "") {
     const entry = document.createElement("div");
     entry.className = `mk-entry ${role === "user" ? "user" : "brain"}`;
-    const controls = role === "brain" ? `<div class="mk-feedback"><button type="button" data-feedback="useful">Useful</button><button type="button" data-feedback="correction">Needs correction</button></div>` : "";
-    entry.innerHTML = `<div class="mk-entry-card"><div class="mk-entry-meta">${role === "user" ? "You" : "MK • " + esc(category)}</div>${formatMessage(message)}${htmlExtra}${controls}</div>`;
+    entry.innerHTML = `
+      <div class="mk-entry-card">
+        <div class="mk-entry-top">
+          <div class="mk-agent-badge">${role === "user" ? "YOU" : "AI"}</div>
+          <div class="mk-agent-meta">
+            <strong>${role === "user" ? "You" : "Agent Response"}</strong>
+            <small>${role === "user" ? "Direct query" : esc(category)}</small>
+          </div>
+        </div>
+        <div class="mk-entry-content">
+          ${formatMessage(message)}
+          ${htmlExtra}
+        </div>
+      </div>`;
     feed.appendChild(entry);
     feed.scrollTop = feed.scrollHeight;
-    entry.querySelectorAll("[data-feedback]").forEach(button => button.addEventListener("click", () => recordFeedback(button, category)));
     entry.querySelectorAll("[data-mk-run]").forEach(button => button.addEventListener("click", () => execute(button.dataset.mkRun)));
     entry.querySelectorAll("[data-po-download]").forEach(button => button.addEventListener("click", () => downloadPoCsv(lastAnalysis)));
     entry.querySelectorAll("[data-control-action]").forEach(button => button.addEventListener("click", () => {
       const res = controlDashboardTable(button.dataset.controlAction);
-      if (res?.message) addEntry(res.message, "brain", false, "control");
+      if (res?.message) addEntry(res.message, "brain", false, "Control");
     }));
     if (role === "brain" && speak && profile.voiceEnabled) speakText(message);
-    if (role === "brain" && !panel.classList.contains("open")) { badge.hidden = false; badge.textContent = "1"; }
     return entry;
   }
 
