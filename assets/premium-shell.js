@@ -9,13 +9,13 @@
     if (!document.querySelector('link[data-ai-copilot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20260930-3";
+      style.href = "assets/mk-brain.css?v=20260930-4";
       style.dataset.aiCopilotStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-ai-copilot-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20260930-3";
+      script.src = "assets/mk-brain.js?v=20260930-4";
       script.defer = true;
       script.dataset.aiCopilotScript = "true";
       document.head.appendChild(script);
@@ -57,13 +57,15 @@
     document.documentElement.classList.add("sidebar-collapsed");
   }
 
-  /* Restore Copilot dock preference - default to closed, open only if user explicitly docked and not on landing index.html */
+  /* Restore Copilot dock preference - default to closed, open only if user explicitly docked on ultrawide desktop (>=1480px) and not on landing index.html */
   const storedCopilot = localStorage.getItem("stark-copilot-docked");
-  const isCopilotDocked = storedCopilot === "true" && window.innerWidth >= 1200 && path !== "index.html";
+  const isLandingPage = path === "index.html" || path === "" || window.location.pathname.endsWith("/index.html") || window.location.pathname.endsWith("/");
+  const isCopilotDocked = storedCopilot === "true" && window.innerWidth >= 1480 && !isLandingPage;
   if (isCopilotDocked) {
     body.classList.add("copilot-docked");
   } else {
     body.classList.remove("copilot-docked");
+    body.classList.remove("copilot-modal-open");
   }
 
   const icon = paths => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
@@ -437,8 +439,8 @@
         if (window.StarkCopilot || window.MKBrain) {
           const copilot = window.StarkCopilot || window.MKBrain;
           const panel = document.querySelector(".mk-brain-panel");
-          const isDocked = body.classList.contains("copilot-docked") || (panel && panel.classList.contains("open"));
-          if (isDocked) {
+          const isOpen = body.classList.contains("copilot-docked") || body.classList.contains("copilot-modal-open") || (panel && panel.classList.contains("open"));
+          if (isOpen) {
             copilot.close();
             aiBtn.classList.remove("active");
           } else {

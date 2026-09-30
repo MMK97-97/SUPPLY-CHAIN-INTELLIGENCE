@@ -75,24 +75,42 @@ body.copilot-docked .mk-brain-panel {
   z-index: 65 !important;
 }
 
-/* Mobile/Tablet Modal Mode */
+/* Drawer Overlay Mode (<1480px and mobile/tablets) */
 body.copilot-modal-open .mk-brain-panel.open {
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
   left: auto !important;
-  width: min(420px, 92vw) !important;
+  width: min(440px, 92vw) !important;
   height: 100dvh !important;
-  border-radius: 0 !important;
-  box-shadow: -12px 0 45px rgba(5, 30, 50, 0.18) !important;
+  border-radius: 18px 0 0 18px !important;
+  border: 1px solid rgba(210, 226, 238, 0.9) !important;
+  border-right: none !important;
+  box-shadow: -12px 0 50px rgba(5, 30, 50, 0.25) !important;
   background: #ffffff !important;
   opacity: 1 !important;
   visibility: visible !important;
   transform: none !important;
   display: flex !important;
   flex-direction: column !important;
-  z-index: 100 !important;
+  z-index: 99999 !important;
+}
+
+body.copilot-modal-open::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 25, 45, 0.32);
+  backdrop-filter: blur(2px);
+  z-index: 99998;
+  animation: fadeInBackdrop 0.2s ease;
+  pointer-events: auto;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Header */

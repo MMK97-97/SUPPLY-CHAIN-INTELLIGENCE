@@ -553,8 +553,12 @@ body[data-page="dashboard"] .inventory-dashboard-hero {
     radial-gradient(circle at 90% 20%, rgba(91, 226, 211, .22), transparent 28%),
     linear-gradient(118deg, #072a4d 0%, #164f76 58%, #16867f 100%);
 }
-body[data-page="dashboard"] .inventory-dashboard-hero h1 { letter-spacing: -.055em; }
-body[data-page="dashboard"] .dashboard-action-row { flex-wrap: wrap; }
+body[data-page="dashboard"] .dashboard-action-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px 10px !important;
+}
 body[data-page="dashboard"] .inventory-settings {
   position: relative;
   overflow: hidden;
@@ -766,8 +770,18 @@ html:has(body[data-page]) {
 body.sidebar-collapsed {
   --current-sidebar-width: var(--sidebar-collapsed-width);
 }
-body.copilot-docked {
-  --current-copilot-width: var(--copilot-width);
+
+@media (min-width: 1480px) {
+  body.copilot-docked {
+    --current-copilot-width: var(--copilot-width);
+  }
+}
+
+@media (max-width: 1479.98px) {
+  body,
+  body.copilot-docked {
+    --current-copilot-width: 0px !important;
+  }
 }
 
 /* Floating MK bot launcher and floating export button completely removed */
@@ -804,10 +818,22 @@ body.copilot-docked {
     padding-top: var(--topbar-height) !important;
     transition: padding-left 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+}
+
+@media (min-width: 1480px) {
   body.premium-shell-active.copilot-docked,
   body[data-page].copilot-docked {
     padding-right: var(--current-copilot-width) !important;
     transition: padding-left 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), padding-right 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+@media (max-width: 1479.98px) {
+  body.premium-shell-active,
+  body[data-page],
+  body.premium-shell-active.copilot-docked,
+  body[data-page].copilot-docked {
+    padding-right: 0px !important;
   }
 }
 
@@ -1209,6 +1235,12 @@ body.sidebar-collapsed .premium-side-rail nav a {
   transition: left 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), right 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+@media (max-width: 1479.98px) {
+  .app-topbar {
+    right: 0 !important;
+  }
+}
+
 .topbar-search {
   display: flex;
   align-items: center;
@@ -1424,6 +1456,12 @@ body.premium-shell-active:not(:has(.tv-app)) :is(.eyebrow) {
 
 /* Settings Controls Strip matching reference design */
 body.premium-shell-active:not(:has(.tv-app)) .inventory-settings {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) auto !important;
+  align-items: flex-end !important;
+  gap: 12px 14px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   background: #ffffff !important;
   border: 1px solid rgba(205, 225, 238, 0.85) !important;
   border-radius: 16px !important;
@@ -1432,6 +1470,10 @@ body.premium-shell-active:not(:has(.tv-app)) .inventory-settings {
 }
 
 body.premium-shell-active:not(:has(.tv-app)) .inventory-settings label {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  min-width: 0 !important;
   color: #64748b !important;
   font-size: 0.68rem !important;
   font-weight: 800 !important;
@@ -1439,6 +1481,9 @@ body.premium-shell-active:not(:has(.tv-app)) .inventory-settings label {
 }
 
 body.premium-shell-active:not(:has(.tv-app)) .inventory-settings input {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   border: 1px solid #cbd5e1 !important;
   border-radius: 10px !important;
   padding: 7px 12px !important;
@@ -1455,6 +1500,38 @@ body.premium-shell-active:not(:has(.tv-app)) .inventory-settings #save-inventory
   padding: 8px 18px !important;
   border: none !important;
   box-shadow: 0 4px 12px rgba(0, 138, 138, 0.25) !important;
+  white-space: nowrap !important;
+  align-self: flex-end !important;
+  min-height: 42px !important;
+}
+
+/* Universal Filter Bar Responsive Layout (Raw Report, Reorder Report, Active Brands) */
+body.premium-shell-active:not(:has(.tv-app)) .inventory-filter-bar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
+  gap: 10px 14px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(205, 225, 238, 0.85) !important;
+  border-radius: 16px !important;
+  padding: 14px 18px !important;
+  box-shadow: 0 4px 18px rgba(7, 38, 68, 0.045) !important;
+}
+
+body.premium-shell-active:not(:has(.tv-app)) .inventory-filter-bar label {
+  flex: 1 1 150px !important;
+  min-width: 130px !important;
+}
+
+body.premium-shell-active:not(:has(.tv-app)) .inventory-filter-bar label:has(input[type="search"]),
+body.premium-shell-active:not(:has(.tv-app)) .inventory-filter-bar .wide-filter {
+  flex: 2 1 240px !important;
+  min-width: 200px !important;
+}
+
+body.premium-shell-active:not(:has(.tv-app)) .inventory-filter-bar .button {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
 }
 
 /* Empty State / Upload card matching reference design */
@@ -1629,6 +1706,9 @@ body.premium-shell-active:not(:has(.tv-app)) :is(.kpi, .inventory-kpi) {
     min-height: 118px;
     gap: 22px;
     padding: 18px 24px;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
   }
   body[data-page="dashboard"] .inventory-dashboard-hero h1 {
     font-size: clamp(2.2rem, 3vw, 3.25rem);
@@ -1639,22 +1719,74 @@ body.premium-shell-active:not(:has(.tv-app)) :is(.kpi, .inventory-kpi) {
     font-size: .82rem;
   }
   body[data-page="dashboard"] .dashboard-hero-actions {
-    gap: 7px;
-    padding: 9px;
-    border-radius: 14px;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
+    min-width: 320px !important;
+    max-width: 500px !important;
+    box-sizing: border-box !important;
   }
-  body[data-page="dashboard"] .dashboard-hero-actions .file-status { min-height: 32px; font-size: .7rem; }
+  body[data-page="dashboard"] .dashboard-hero-actions .file-status {
+    min-height: 32px !important;
+    font-size: .72rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  body[data-page="dashboard"] .dashboard-action-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px 10px !important;
+    width: 100% !important;
+  }
   body[data-page="dashboard"] .hero-primary-action,
-  body[data-page="dashboard"] .hero-secondary-action { min-height: 34px; padding-block: 6px; font-size: .72rem; }
-  body[data-page="dashboard"] .inventory-settings {
-    gap: 7px;
-    margin: 8px 0;
-    padding: 8px 10px;
-    border-radius: 13px;
+  body[data-page="dashboard"] .hero-secondary-action {
+    min-height: 36px !important;
+    padding: 6px 14px !important;
+    font-size: .74rem !important;
+    font-weight: 750 !important;
+    white-space: nowrap !important;
+    flex: 1 1 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
   }
-  body[data-page="dashboard"] .inventory-settings label { gap: 3px; font-size: .6rem; }
-  body[data-page="dashboard"] .inventory-settings :is(input, select),
-  body[data-page="dashboard"] .inventory-settings .button { min-height: 33px; padding-block: 5px; }
+  body[data-page="dashboard"] .inventory-settings {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) auto !important;
+    align-items: flex-end !important;
+    gap: 8px 12px !important;
+    margin: 8px 0 !important;
+    padding: 10px 14px !important;
+    border-radius: 13px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  body[data-page="dashboard"] .inventory-settings label {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    font-size: .62rem !important;
+    min-width: 0 !important;
+  }
+  body[data-page="dashboard"] .inventory-settings :is(input, select) {
+    min-height: 34px !important;
+    padding-block: 5px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  body[data-page="dashboard"] .inventory-settings .button {
+    min-height: 34px !important;
+    padding-block: 5px !important;
+    white-space: nowrap !important;
+    align-self: flex-end !important;
+  }
   body[data-page="dashboard"] .inventory-kpi-grid { gap: 8px; margin-bottom: 7px; }
   body[data-page="dashboard"] .inventory-kpi { min-height: 88px; padding: 12px 13px; border-radius: 13px; }
   body[data-page="dashboard"] .inventory-kpi span { font-size: .64rem; }
