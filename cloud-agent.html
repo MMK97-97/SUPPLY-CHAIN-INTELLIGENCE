@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Supply Chain AI Hub</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #11111b; color: #cdd6f4; margin: 0; padding: 40px; display: flex; justify-content: center; }
+        .dashboard { width: 100%; max-width: 800px; background-color: #1e1e2e; padding: 30px; border-radius: 12px; border: 1px solid #45475a; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        h1 { color: #a6e3a1; font-size: 28px; margin-top: 0; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #bac2de; font-weight: 500; }
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #585b70; background-color: #313244; color: #cdd6f4; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
+        input[type="text"]:focus { outline: none; border-color: #a6e3a1; }
+        button { background-color: #a6e3a1; color: #11111b; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; width: 100%; }
+        button:hover { background-color: #94e2d5; }
+        .spinner { display: none; text-align: center; color: #f9e2af; font-weight: 500; margin: 20px 0; }
+        .output-box { display: none; margin-top: 25px; padding: 20px; background-color: #11111b; border-radius: 8px; border-left: 4px solid #a6e3a1; }
+        .output-title { font-weight: bold; color: #a6e3a1; margin-bottom: 10px; font-size: 18px; }
+        .output-text { line-height: 1.6; white-space: pre-wrap; color: #cdd6f4; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h1>🌐 Cloud Supply Chain AI Dashboard</h1>
+    
+    <label for="prompt">Instruct your Cloud Supply Chain Agent:</label>
+    <input type="text" id="prompt" placeholder="e.g., Draft a supply chain reorder rule for depleted regional stock...">
+    
+    <button id="execute-btn" onclick="runCloudAgent()">Execute Cloud Agent Loop</button>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px; color: #a6adc8;">
+        <span>Model: <code style="color: #a6e3a1; background: #313244; padding: 2px 6px; border-radius: 4px;">Qwen/Qwen2.5-Coder-7B-Instruct</code></span>
+        <button type="button" style="width: auto; padding: 4px 10px; font-size: 11px; background-color: #313244; color: #cdd6f4; border: 1px solid #585b70; border-radius: 4px;" onclick="configureToken()">🔑 Set HF Token</button>
+    </div>
+    
+    <div id="loading" class="spinner">⚙️ Agent running logic over cloud processors...</div>
+    
+    <div id="result-box" class="output-box">
+        <div class="output-title">📦 Cloud Agent Execution Complete:</div>
+        <div id="output" class="output-text"></div>
+    </div>
+</div>
+
+<script>
+// Hugging Face Serverless Inference Configuration
+const HF_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct";
+const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
+const HF_DIRECT_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
+
+function configureToken() {
+    const current = localStorage.getItem("hf_inference_token") || "";
+    const token = prompt("Enter your free Hugging Face User Access Token (from https://huggingface.co/settings/tokens):", current);
+    if (token !== null) {
+        if (token.trim()) {
+            localStorage.setItem("hf_inference_token", token.trim());
+            alert("Hugging Face Token saved locally in this browser.");
+        } else {
+            localStorage.removeItem("hf_inference_token");
+            alert("Hugging Face Token cleared.");
+        }
+    }
+}
+
+async function runCloudAgent() {
+    const promptEl = document.getElementById('prompt');
+    const promptInput = promptEl ? promptEl.value.trim() : "";
+    const loadingDiv = document.getElementById('loading');
+    const resultBox = document.getElementById('result-box');
+    const outputDiv = document.getElementById('output');
+    
+    if (!promptInput) {
+        alert("Please enter a prompt first!");
+        return;
+    }
+    
+    loadingDiv.style.display = 'block';
+    resultBox.style.display = 'block';
+    outputDiv.innerText = "Initiating cloud inference on Hugging Face Serverless API...";
+
+    const token = localStorage.getItem("hf_inference_token") || localStorage.getItem("hf_token") || "";
+    const headers = { "Content-Type": "application/json" };
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    try {
+        // Attempt responsive asynchronous streaming fetch to Hugging Face Serverless Inference API
+        let response = await fetch(HF_ROUTER_URL, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                model: HF_MODEL,
+                messages: [
+                    { "role": "system", "content": "You are a professional logistics and supply chain optimization agent. Provide clear, actionable, structured operational decisions and prescriptive recommendations." },
+                    { "role": "user", "content": promptInput }
+                ],
+                max_tokens: 1024,
+                temperature: 0.7,
+                stream: true
+            })
+        });
+
+        // Fallback to direct model inference endpoint if router returns 404 or method not allowed
+        if (!response.ok && (response.status === 404 || response.status === 400 || response.status === 405)) {
+            response = await fetch(HF_DIRECT_URL, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    inputs: promptInput,
+                    parameters: {
+                        max_new_tokens: 1024,
+                        temperature: 0.7,
+                        return_full_text: false
+                    }
+                })
+            });
+        }
+
+        if (!response.ok) {
+            let errorDetail = `HTTP ${response.status} ${response.statusText}`;
+            try {
+                const errJson = await response.json();
+                errorDetail = errJson.error?.message || errJson.error || errJson.message || errorDetail;
+            } catch (_) {
+                const errText = await response.text().catch(() => "");
+                if (errText) errorDetail = errText.slice(0, 160);
+            }
+
+            if (response.status === 401) {
+                throw new Error(`Authentication required by Hugging Face API: ${errorDetail}. Click "🔑 Set HF Token" to attach your free Hugging Face User Access Token (from https://huggingface.co/settings/tokens).`);
+            }
+            throw new Error(`Hugging Face Serverless Inference error (${response.status}): ${errorDetail}`);
+        }
+
+        loadingDiv.style.display = 'none';
+
+        // Check for streaming event stream response
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("text/event-stream") && response.body) {
+            outputDiv.innerText = "";
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let accumulated = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split("\n");
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (trimmed.startsWith("data:") && trimmed !== "data: [DONE]") {
+                        try {
+                            const parsed = JSON.parse(trimmed.slice(5).trim());
+                            const delta = parsed.choices?.[0]?.delta?.content || "";
+                            accumulated += delta;
+                            outputDiv.innerText = accumulated;
+                        } catch (_) {}
+                    }
+                }
+            }
+            if (!accumulated) {
+                outputDiv.innerText = "Agent execution complete (no text returned).";
+            }
+        } else {
+            // Standard JSON fallback
+            const data = await response.json();
+            if (Array.isArray(data) && data[0]?.generated_text) {
+                outputDiv.innerText = data[0].generated_text;
+            } else if (data.choices && data.choices[0]?.message?.content) {
+                outputDiv.innerText = data.choices[0].message.content;
+            } else if (typeof data === "string") {
+                outputDiv.innerText = data;
+            } else {
+                outputDiv.innerText = JSON.stringify(data, null, 2);
+            }
+        }
+    } catch (error) {
+        loadingDiv.style.display = 'none';
+        resultBox.style.display = 'block';
+        outputDiv.innerText = `⚠️ Cloud Agent Exception: ${error.message || "Failed to connect to cloud server. Check your connection."}`;
+    }
+}
+
+// Bind event listener to button and Enter key on prompt input
+document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("execute-btn");
+    if (btn) {
+        btn.addEventListener("click", runCloudAgent);
+    }
+    const promptInput = document.getElementById("prompt");
+    if (promptInput) {
+        promptInput.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                runCloudAgent();
+            }
+        });
+    }
+});
+</script>
+
+</body>
+</html>
