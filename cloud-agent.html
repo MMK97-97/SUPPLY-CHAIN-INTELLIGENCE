@@ -1427,8 +1427,7 @@ function reRunVariant() {
 // ========================================================
 const HF_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct";
 const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
-const CLOUD_FAST_URL = "https://api.groq.com/openai/v1/chat/completions";
-const CLOUD_FAST_KEY = "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";
+const HF_INFERENCE_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
 
 async function runCloudAgent() {
     const promptEl = document.getElementById("prompt");
@@ -1467,50 +1466,18 @@ Structure your response as an elite C-level Executive Operational Brief:
 4. ⚖️ Risk & Downside Trade-Off Analysis
 Use clean Markdown, bold headers, bulleted lists, and structured tables where applicable.`;
 
-    const hfToken = localStorage.getItem("hf_inference_token") || localStorage.getItem("hf_token") || "";
+    const userToken = localStorage.getItem("hf_inference_token") || localStorage.getItem("hf_token") || "";
     let rawResult = "";
     let errors = [];
 
-    // TIER 1: Dedicated High-Speed Qwen Cloud Engine (~380ms response)
-    try {
-        const res = await fetch(CLOUD_FAST_URL, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${CLOUD_FAST_KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "qwen/qwen3.8-27b",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: promptInput }
-                ],
-                max_tokens: 750,
-                temperature: 0.65
-            })
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            if (data.choices?.[0]?.message?.content) {
-                rawResult = data.choices[0].message.content;
-            }
-        } else {
-            const errData = await res.json().catch(() => ({}));
-            errors.push(errData.error?.message || `Cloud Engine HTTP ${res.status}`);
-        }
-    } catch (e) {
-        errors.push(`Cloud Engine: ${e.message}`);
-    }
-
-    // TIER 2: Hugging Face Serverless Router
-    if (!rawResult && hfToken) {
+    // TIER 1: Dedicated Hugging Face Serverless Chat Completions (if user configured token)
+    if (userToken) {
         try {
             const res = await fetch(HF_ROUTER_URL, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${hfToken}`
+                    "Authorization": `Bearer ${userToken}`
                 },
                 body: JSON.stringify({
                     model: HF_MODEL,
@@ -1518,7 +1485,7 @@ Use clean Markdown, bold headers, bulleted lists, and structured tables where ap
                         { role: "system", content: systemPrompt },
                         { role: "user", content: promptInput }
                     ],
-                    max_tokens: 700,
+                    max_tokens: 750,
                     temperature: 0.65
                 })
             });
@@ -1531,16 +1498,16 @@ Use clean Markdown, bold headers, bulleted lists, and structured tables where ap
                 errors.push(`HF Serverless HTTP ${res.status}`);
             }
         } catch (e) {
-            errors.push(`HF: ${e.message}`);
+            errors.push(`HF Serverless: ${e.message}`);
         }
     }
 
-    // TIER 3: Hugging Face Direct Inference Fallback
+    // TIER 2: Hugging Face Serverless Inference Fallback
     if (!rawResult) {
         try {
             const headers = { "Content-Type": "application/json" };
-            if (hfToken) headers["Authorization"] = `Bearer ${hfToken}`;
-            const res = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODEL}`, {
+            if (userToken) headers["Authorization"] = `Bearer ${userToken}`;
+            const res = await fetch(HF_INFERENCE_URL, {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify({
@@ -1554,14 +1521,14 @@ Use clean Markdown, bold headers, bulleted lists, and structured tables where ap
                     rawResult = data[0].generated_text;
                 }
             } else {
-                errors.push(`HF Direct HTTP ${res.status}`);
+                errors.push(`HF Inference HTTP ${res.status}`);
             }
         } catch (e) {
-            errors.push(`HF Direct: ${e.message}`);
+            errors.push(`HF Inference: ${e.message}`);
         }
     }
 
-    // TIER 4: Local Heuristic Synthesis (Zero Failure Guarantee)
+    // TIER 3: Local Heuristic Synthesis (Zero Failure Guarantee)
     if (!rawResult) {
         rawResult = generateHeuristicBrief(promptInput, currentSpecialistMode, serviceLevel, leadBuffer, bias);
     }
