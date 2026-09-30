@@ -37,7 +37,6 @@
   const SPACE_ORIGIN = clean(window.MK_SUPPLY_AI_ORIGIN || "https://mmk97-supply-ai-chain-hub.hf.space").replace(/\/+$/, "");
   const SPACE_API_NAME = "website_chat";
   const SPACE_TIMEOUT = 65000;
-  const LOCAL_ONLY_INTENTS = new Set(["voice", "space", "settings", "navigation", "export", "tracking", "learn", "help", "gemini", "hf-space"]);
   const ROUTES = {
     "inventory dashboard": "inventory-dashboard", dashboard: "inventory-dashboard",
     "analysis report": "inventory-analysis-report", "inventory analysis": "inventory-analysis-report",
@@ -155,7 +154,7 @@
     panel.innerHTML = `
       <header class="mk-copilot-head">
         <div class="mk-copilot-brand">
-          <div class="mk-copilot-avatar">AI</div>
+          <div class="mk-copilot-avatar">MK</div>
           <div class="mk-copilot-title">
             <strong>MK Intelligence</strong>
             <span>Your supply chain analyst</span>
@@ -219,16 +218,16 @@
     syncVoiceUi();
     syncSpaceUi();
 
-    // Inject Welcome Agent Response card matching reference design
+    // Inject the MK welcome card.
     const regName = REGION_NAMES[regionCode()] || "United States";
     const welcomeEntry = document.createElement("div");
     welcomeEntry.className = "mk-entry brain mk-welcome-entry";
     welcomeEntry.innerHTML = `
       <div class="mk-entry-card">
         <div class="mk-entry-top">
-          <div class="mk-agent-badge">AI</div>
+          <div class="mk-agent-badge">MK</div>
           <div class="mk-agent-meta">
-            <strong>Agent Response</strong>
+            <strong>MK</strong>
             <small>Today, 10:24 AM</small>
           </div>
         </div>
@@ -350,9 +349,9 @@
     entry.innerHTML = `
       <div class="mk-entry-card">
         <div class="mk-entry-top">
-          <div class="mk-agent-badge">${role === "user" ? "YOU" : "AI"}</div>
+          <div class="mk-agent-badge">${role === "user" ? "YOU" : "MK"}</div>
           <div class="mk-agent-meta">
-            <strong>${role === "user" ? "You" : "Agent Response"}</strong>
+            <strong>${role === "user" ? "You" : "MK"}</strong>
             <small>${role === "user" ? "Direct query" : esc(category)}</small>
           </div>
         </div>
@@ -549,7 +548,7 @@
   }
 
   async function enhanceWithSupplyAI(question, localAnswer) {
-    if (profile.spaceEnabled === false || LOCAL_ONLY_INTENTS.has(localAnswer.intent) || ["control", "action completed", "action started"].includes(localAnswer.category)) return localAnswer;
+    if (profile.spaceEnabled === false) return localAnswer;
     setState("Combining verified calculations with Supply AI reasoning…", true);
     try {
       const connection = await discoverSpace(spaceConnection.state === "offline");
@@ -560,13 +559,16 @@
       profile.lastSpaceSuccess = new Date().toISOString();
       saveProfile();
       spaceConnection.fallbackNotified = false;
-      return { ...localAnswer, category: `${localAnswer.category || "decision"} + Supply AI`, message: `${localAnswer.message}\n\n**Supply AI reasoning**\n${reasoning}` };
+      return { ...localAnswer, category: "MK Intelligence · Supply AI", message: reasoning };
     } catch (error) {
       spaceConnection.state = "offline";
       spaceConnection.lastError = clean(error?.message || "Supply AI connection failed");
       profile.spaceFailures = finite(profile.spaceFailures) + 1;
       saveProfile();
       syncSpaceUi();
+      if (localAnswer.intent === "ai-direct") {
+        return { ...localAnswer, category: "AI connection", message: "I couldn’t reach Supply AI just now. Please try again in a moment; no dashboard data was changed." };
+      }
       if (spaceConnection.fallbackNotified) return localAnswer;
       spaceConnection.fallbackNotified = true;
       return { ...localAnswer, message: `${localAnswer.message}\n\nSupply AI is temporarily unavailable, so this response uses MK’s verified local engine. No calculation or dashboard task was interrupted.` };
@@ -585,8 +587,14 @@
         assistant: clean(turn.assistant).slice(0, 8_000)
       })).filter(turn => turn.user && turn.assistant),
       context: JSON.stringify({
-        instruction: "Explain the business reason, key risk, recommended next action and uncertainty. Preserve verified website calculations and do not claim an action was executed.",
-        verifiedLocalAnswer: clean(localAnswer.message).slice(0, 5_200),
+        instruction: localAnswer.intent === "ai-direct"
+          ? "Respond naturally and directly to the user. Do not force a supply-chain report, dashboard summary, numbered framework or executive analysis unless the user asks for one."
+          : localAnswer.category === "action completed"
+            ? "Respond naturally and confirm only the exact action stated in the verified website result. Do not invent additional actions or outcomes."
+            : localAnswer.category === "action started"
+              ? "Respond naturally and briefly describe the exact verified action that is about to occur. Do not claim it is complete yet."
+              : "Give a complete, natural, standalone answer. Use the verified website calculations as evidence, explain the business reason and next action when relevant, and state material uncertainty. Do not mention internal engines or claim an unverified action was executed.",
+        verifiedLocalAnswer: localAnswer.intent === "ai-direct" ? "" : clean(localAnswer.message).slice(0, 5_200),
         decisionContext: context
       }).slice(0, 16_000)
     };
@@ -670,7 +678,7 @@
     setState("Thinking through current and historical signals…", true);
     try {
       const localAnswer = await routeQuestion(question);
-      const answer = await enhanceWithSupplyAI(question, localAnswer);
+      const answer = await enhanceWithSupplyAI(sanitizedQuestion, localAnswer);
       addEntry(answer.message, "brain", true, answer.category || "decision", answer.htmlExtra || "");
       learnTask(answer.intent || "question");
       conversation.lastIntent = answer.intent || "question";
@@ -684,6 +692,7 @@
         at: Date.now()
       });
       conversation.turns = conversation.turns.slice(-12);
+      performDeferredAction(answer);
     } catch (error) {
       addEntry(`I couldn’t complete that task: ${error.message || "unknown error"}. No data was changed.`, "brain", true, "control");
     } finally {
@@ -747,6 +756,10 @@
       return { intent: "space", category: "AI connection", message: `Supply AI is integrated directly into this MK panel; there is no detached embedded frame. ${spaceStatusMessage()}` };
     }
 
+    if (/^(?:hi|hello|hey|good\s+(?:morning|afternoon|evening)|how are you|what'?s up|thank you|thanks)[\s!?.]*$/i.test(q)) {
+      return { intent: "ai-direct", category: "MK Intelligence", message: "Supply AI is unavailable right now. Please try again shortly." };
+    }
+
     const remember = raw.match(/^remember(?: that)?\s+(.+)/i);
     if (remember) {
       profile.notes = Array.isArray(profile.notes) ? profile.notes : [];
@@ -776,6 +789,11 @@
 
     const knowledge = supplyChainKnowledge(q);
     if (knowledge) return knowledge;
+
+    const needsInventoryContext = /\b(?:inventory|stock|sku|model|item|reorder|replenish|purchase|buy|supplier|vendor|lead\s*time|demand|forecast|coverage|excess|overstock|dead\s*stock|shortage|stockout|service\s*level|otif|fill\s*rate|working\s*capital|carrying\s*cost|holding\s*cost|runout|abc|available|on\s*hand|ats|data\s*quality|current\s*data|portfolio)\b|what[- ]?if|scenario|simulate|action plan|executive brief|strategic brief|c-suite/i.test(q);
+    if (!needsInventoryContext) {
+      return { intent: "ai-direct", category: "MK Intelligence", message: "Supply AI is unavailable right now. Please try again shortly." };
+    }
 
     const analysis = await getInventoryAnalysis();
     if (!analysis) return { intent: "analysis", category: "data", message: `There is no ${REGION_NAMES[regionCode()]} inventory report available. Upload a Raw Report first; I will analyze it automatically as soon as it is stored.` };
@@ -814,7 +832,8 @@
     if (/reorder|replenish|purchase|buy/.test(q)) return reorderAnswer(analysis);
     if (/excess|dead stock|no demand|overstock/.test(q)) return excessAnswer(analysis);
 
-    // Complete AI fallback: Try Gemini -> Try Chrome Built-in AI -> Run Deep Local Complete AI Advisory
+    // Connected Supply AI handles open-ended reasoning; deterministic analysis
+    // remains the authoritative fallback if the hosted model is unavailable.
     const apiKey = localStorage.getItem("mk-gemini-api-key");
     if (apiKey) {
       const geminiRes = await queryGeminiAdvisor(apiKey, raw, analysis);
@@ -825,7 +844,7 @@
 
     if (/analy|summary|overview|what.*action|recommend|decision|current data/.test(q)) return portfolioAnswer(analysis);
 
-    return completeAiConsultation(raw, analysis);
+    return { ...completeAiConsultation(raw, analysis), intent: "ai-grounded" };
   }
 
   function updateSettingFromQuestion(q) {
@@ -857,37 +876,75 @@
     const url = route.endsWith(".html")
       ? `${route}${route === "sales-analysis.html" || route === "events.html" ? `?region=${code}` : ""}`
       : `${route}-${code.toLowerCase()}.html`;
-    window.setTimeout(() => location.assign(url), 550);
-    return { intent: "navigation", category: "action started", message: `Opening ${name} for ${REGION_NAMES[code]}.` };
+    return {
+      intent: "navigation",
+      category: "action started",
+      message: `Opening ${name} for ${REGION_NAMES[code]}.`,
+      deferredAction: { type: "navigate", url }
+    };
   }
 
-  function exportCurrentReport() {
-    const candidates = [
+  function performDeferredAction(answer) {
+    const action = answer?.deferredAction;
+    if (!action) return;
+    if (action.type === "navigate" && action.url) {
+      window.setTimeout(() => location.assign(action.url), 550);
+      return;
+    }
+    if (action.type === "export") {
+      window.setTimeout(() => findExportButton()?.click(), 250);
+      return;
+    }
+    if (action.type === "tracking-submit" && action.trackingNumber) {
+      const field = document.getElementById("tracking-number");
+      const form = document.getElementById("tracking-form");
+      if (!field || !form) return;
+      field.value = action.trackingNumber;
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      window.setTimeout(() => form.requestSubmit(), 200);
+    }
+  }
+
+  function findExportButton() {
+    return [
       document.querySelector(".report-export-action:not([disabled])"),
       document.querySelector("#export-workbook:not([disabled])"),
       document.querySelector("#export-reorder-xlsx:not([disabled])"),
       document.querySelector("#export-active-brands:not([disabled])"),
       document.querySelector("[data-export]:not([disabled])")
-    ].filter(Boolean);
-    const button = candidates[0];
+    ].find(Boolean) || null;
+  }
+
+  function exportCurrentReport() {
+    const button = findExportButton();
     if (!button) return { intent: "export", category: "control", message: "There is no exportable report on this page yet. Upload or generate the report first; I will keep export disabled to prevent an empty file." };
-    window.setTimeout(() => button.click(), 250);
-    return { intent: "export", category: "action completed", message: "The current report export has started. The workbook will include the report data and supported visual charts." };
+    return {
+      intent: "export",
+      category: "action started",
+      message: "The current report export is ready to start. The workbook will include the report data and supported visual charts.",
+      deferredAction: { type: "export" }
+    };
   }
 
   function executeTracking(trackingNumber) {
     if (!/shipment-tracking\.html$/i.test(location.pathname)) {
       try { sessionStorage.setItem("mk-pending-tracking", trackingNumber); } catch (_) {}
-      window.setTimeout(() => location.assign("shipment-tracking.html"), 550);
-      return { intent: "tracking", category: "action started", message: `Opening Tracking for ${trackingNumber}.` };
+      return {
+        intent: "tracking",
+        category: "action started",
+        message: `Opening Tracking for ${trackingNumber}.`,
+        deferredAction: { type: "navigate", url: "shipment-tracking.html" }
+      };
     }
     const field = document.getElementById("tracking-number");
     const form = document.getElementById("tracking-form");
     if (!field || !form) return { intent: "tracking", category: "control", message: "The tracking control is unavailable on this page." };
-    field.value = trackingNumber;
-    field.dispatchEvent(new Event("input", { bubbles: true }));
-    window.setTimeout(() => form.requestSubmit(), 200);
-    return { intent: "tracking", category: "action completed", message: `Tracking ${trackingNumber}.` };
+    return {
+      intent: "tracking",
+      category: "action started",
+      message: `Tracking ${trackingNumber} is ready to start.`,
+      deferredAction: { type: "tracking-submit", trackingNumber }
+    };
   }
 
   function capabilityAnswer() {
