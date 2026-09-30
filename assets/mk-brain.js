@@ -187,6 +187,10 @@
   function switchView(viewName) {
     currentView = viewName;
     const isHf = viewName === "hf";
+    panel.classList.toggle("view-hf", isHf);
+    panel.classList.toggle("view-chat", !isHf);
+    panel.setAttribute("data-view", viewName);
+
     panel.querySelectorAll(".mk-view-tab").forEach(tab => {
       const active = tab.dataset.mkTab === viewName;
       tab.classList.toggle("active", active);
@@ -220,7 +224,8 @@
     badge = launcher.querySelector(".mk-badge");
 
     panel = document.createElement("section");
-    panel.className = "mk-brain-panel";
+    panel.className = "mk-brain-panel view-chat";
+    panel.setAttribute("data-view", "chat");
     panel.setAttribute("aria-label", "MK Supply Chain Brain");
     panel.innerHTML = `
       <header class="mk-brain-head">
