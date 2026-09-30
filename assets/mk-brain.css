@@ -45,6 +45,14 @@
   transform: none;
 }
 
+/* Ensure closed panel is strictly non-rendered and non-interactive */
+body:not(.copilot-docked):not(.copilot-modal-open) .mk-brain-panel:not(.open) {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Desktop Docked Mode (matches reference design 3-column layout) */
 body.copilot-docked .mk-brain-panel {
   position: fixed !important;

@@ -75,6 +75,11 @@
 
   function init() {
     buildInterface();
+    if (document.body.classList.contains("copilot-docked")) {
+      panel?.classList.add("open");
+      const aiBtn = document.getElementById("topbar-ai-btn");
+      if (aiBtn) aiBtn.classList.add("active");
+    }
     bindLiveData();
     selectVoice();
     window.speechSynthesis?.addEventListener?.("voiceschanged", selectVoice);
@@ -440,9 +445,13 @@
     panel.classList.toggle("open", open);
     if (isDesktop) {
       document.body.classList.toggle("copilot-docked", open);
+      document.body.classList.remove("copilot-modal-open");
     } else {
       document.body.classList.toggle("copilot-modal-open", open);
+      document.body.classList.remove("copilot-docked");
     }
+    const aiBtn = document.getElementById("topbar-ai-btn");
+    if (aiBtn) aiBtn.classList.toggle("active", open);
     try { localStorage.setItem("stark-copilot-docked", open ? "true" : "false"); } catch (_) {}
     if (open) {
       window.setTimeout(() => input?.focus(), 120);

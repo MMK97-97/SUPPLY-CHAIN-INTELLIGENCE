@@ -9,13 +9,13 @@
     if (!document.querySelector('link[data-ai-copilot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20260930-2";
+      style.href = "assets/mk-brain.css?v=20260930-3";
       style.dataset.aiCopilotStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-ai-copilot-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20260930-2";
+      script.src = "assets/mk-brain.js?v=20260930-3";
       script.defer = true;
       script.dataset.aiCopilotScript = "true";
       document.head.appendChild(script);
@@ -57,11 +57,13 @@
     document.documentElement.classList.add("sidebar-collapsed");
   }
 
-  /* Restore Copilot dock preference */
+  /* Restore Copilot dock preference - default to closed, open only if user explicitly docked and not on landing index.html */
   const storedCopilot = localStorage.getItem("stark-copilot-docked");
-  const isCopilotDocked = storedCopilot !== "false" && window.innerWidth >= 1200;
+  const isCopilotDocked = storedCopilot === "true" && window.innerWidth >= 1200 && path !== "index.html";
   if (isCopilotDocked) {
     body.classList.add("copilot-docked");
+  } else {
+    body.classList.remove("copilot-docked");
   }
 
   const icon = paths => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
@@ -102,7 +104,7 @@
   const loadSharedAsset = file => {
     if (document.querySelector(`script[data-shared-asset="${file}"]`)) return;
     const script = document.createElement("script");
-    script.src = `assets/${file}?v=20260930-2`;
+    script.src = `assets/${file}?v=20260930-3`;
     script.async = false;
     script.dataset.sharedAsset = file;
     document.head.appendChild(script);
@@ -260,15 +262,21 @@
     if (regionTrigger && regionDropdown) {
       regionTrigger.addEventListener("click", e => {
         e.stopPropagation();
-        const isOpen = !regionDropdown.hidden;
-        regionDropdown.hidden = isOpen;
-        regionTrigger.setAttribute("aria-expanded", String(!isOpen));
+        const isCurrentlyOpen = !regionDropdown.hidden && !regionDropdown.hasAttribute("hidden");
+        if (isCurrentlyOpen) {
+          regionDropdown.hidden = true;
+          regionDropdown.setAttribute("hidden", "");
+          regionTrigger.setAttribute("aria-expanded", "false");
+        } else {
+          regionDropdown.hidden = false;
+          regionDropdown.removeAttribute("hidden");
+          regionTrigger.setAttribute("aria-expanded", "true");
+        }
       });
       document.addEventListener("click", () => {
-        if (!regionDropdown.hidden) {
-          regionDropdown.hidden = true;
-          regionTrigger.setAttribute("aria-expanded", "false");
-        }
+        regionDropdown.hidden = true;
+        regionDropdown.setAttribute("hidden", "");
+        regionTrigger.setAttribute("aria-expanded", "false");
       });
     }
   };
@@ -391,10 +399,18 @@
     if (regionBtn && regionMenu) {
       regionBtn.addEventListener("click", e => {
         e.stopPropagation();
-        const isOpen = !regionMenu.hidden;
-        topbar.querySelectorAll(".topbar-dropdown").forEach(d => (d.hidden = true));
-        regionMenu.hidden = isOpen;
-        regionBtn.setAttribute("aria-expanded", String(!isOpen));
+        const isCurrentlyOpen = !regionMenu.hidden && !regionMenu.hasAttribute("hidden");
+        topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
+          d.hidden = true;
+          d.setAttribute("hidden", "");
+        });
+        if (!isCurrentlyOpen) {
+          regionMenu.hidden = false;
+          regionMenu.removeAttribute("hidden");
+          regionBtn.setAttribute("aria-expanded", "true");
+        } else {
+          regionBtn.setAttribute("aria-expanded", "false");
+        }
       });
     }
 
@@ -403,9 +419,15 @@
     if (bellBtn && bellMenu) {
       bellBtn.addEventListener("click", e => {
         e.stopPropagation();
-        const isOpen = !bellMenu.hidden;
-        topbar.querySelectorAll(".topbar-dropdown").forEach(d => (d.hidden = true));
-        bellMenu.hidden = isOpen;
+        const isCurrentlyOpen = !bellMenu.hidden && !bellMenu.hasAttribute("hidden");
+        topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
+          d.hidden = true;
+          d.setAttribute("hidden", "");
+        });
+        if (!isCurrentlyOpen) {
+          bellMenu.hidden = false;
+          bellMenu.removeAttribute("hidden");
+        }
       });
     }
 
@@ -414,17 +436,24 @@
       aiBtn.addEventListener("click", () => {
         if (window.StarkCopilot || window.MKBrain) {
           const copilot = window.StarkCopilot || window.MKBrain;
-          if (body.classList.contains("copilot-docked")) {
+          const panel = document.querySelector(".mk-brain-panel");
+          const isDocked = body.classList.contains("copilot-docked") || (panel && panel.classList.contains("open"));
+          if (isDocked) {
             copilot.close();
+            aiBtn.classList.remove("active");
           } else {
             copilot.open();
+            aiBtn.classList.add("active");
           }
         }
       });
     }
 
     document.addEventListener("click", () => {
-      topbar.querySelectorAll(".topbar-dropdown").forEach(d => (d.hidden = true));
+      topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
+        d.hidden = true;
+        d.setAttribute("hidden", "");
+      });
       regionBtn?.setAttribute("aria-expanded", "false");
     });
 
