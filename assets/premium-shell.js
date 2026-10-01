@@ -4,12 +4,19 @@
   const body = document.body;
   if (!body) return;
 
+  const requestedPath = location.pathname.split("/").filter(Boolean).pop() || "index.html";
+  const path = requestedPath === "index"
+    ? "index.html"
+    : requestedPath.includes(".")
+      ? requestedPath
+      : `${requestedPath}.html`;
+
   /* Load STARK Copilot AI Agent early so it is available across all pages */
   const loadAiCopilot = () => {
     if (!document.querySelector('link[data-ai-copilot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20261001-1";
+      style.href = "assets/mk-brain.css?v=20261001-3";
       style.dataset.aiCopilotStyle = "true";
       document.head.appendChild(style);
     }
@@ -21,16 +28,9 @@
       document.head.appendChild(script);
     }
   };
-  loadAiCopilot();
+  if (path !== "index.html") loadAiCopilot();
 
   if (body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
-
-  const requestedPath = location.pathname.split("/").filter(Boolean).pop() || "index.html";
-  const path = requestedPath === "index"
-    ? "index.html"
-    : requestedPath.includes(".")
-      ? requestedPath
-      : `${requestedPath}.html`;
   if (path === "index.html") return;
   const suffixMatch = path.match(/-(us|eu|ca)\.html$/i);
   const queryRegion = new URLSearchParams(location.search).get("region") || new URLSearchParams(location.search).get("workspace");
@@ -363,13 +363,6 @@
                 <div class="notif-text">
                   <strong>USTR &amp; WTO Regulatory Notice</strong>
                   <p>Import compliance and customs reporting rules updated for active trade corridors.</p>
-                </div>
-              </div>
-              <div class="notif-item">
-                <span class="notif-badge notif-badge-teal">PO</span>
-                <div class="notif-text">
-                  <strong>MK Intelligence Ready</strong>
-                  <p>MK and the connected Supply AI engine are active for this workspace.</p>
                 </div>
               </div>
             </div>

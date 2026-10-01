@@ -789,6 +789,12 @@ body.sidebar-collapsed {
   display: none !important;
 }
 
+/* MK is opened only from its page-level launcher, never from a top application bar. */
+#home-ai-button,
+#topbar-ai-btn {
+  display: none !important;
+}
+
 /* Strict universal hidden attribute enforcement across all pages */
 [hidden],
 [hidden="true"],

@@ -179,6 +179,18 @@ body.copilot-modal-open::after {
   pointer-events: auto;
 }
 
+/* The launcher becomes the open panel's close control, so never layer it over the composer. */
+body.copilot-modal-open {
+  overflow: hidden;
+}
+
+body.copilot-modal-open .mk-brain-launcher {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(12px) scale(.94) !important;
+}
+
 @keyframes fadeInBackdrop {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -533,6 +545,7 @@ body.copilot-modal-open::after {
 
 .mk-compose-input {
   flex: 1;
+  min-width: 0;
   border: 1px solid #cbd5e1;
   border-radius: 9999px;
   padding: 9px 16px;
@@ -626,5 +639,9 @@ body.copilot-modal-open::after {
 
   .mk-native-ai-copy small {
     white-space: normal;
+  }
+
+  .mk-copilot-compose {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 }
