@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles-ca.css?v=20260929-1">
   <link rel="stylesheet" href="assets/world-class-ui.css?v=20261001-2">
-  <link rel="stylesheet" href="assets/decision-intelligence.css?v=20261001-5">
+  <link rel="stylesheet" href="assets/decision-intelligence.css?v=20261001-7">
   <script src="assets/inventory-core-ca.js?v=20260928-3" defer></script>
   <script src="assets/inventory-transitions.js?v=20260916-2" defer></script>
-  <script src="assets/decision-intelligence.js?v=20261001-5" defer></script>
+  <script src="assets/decision-intelligence.js?v=20261001-7" defer></script>
   <script src="assets/report-export.js?v=20260929-1" defer></script>
   <script src="assets/premium-shell.js?v=20261001-3" defer></script>
 </head>
@@ -28,25 +28,11 @@
       <div class="brain-status"><strong><i></i><span id="brain-live-title">Loading decision brain</span></strong><span id="brain-live-detail">Connecting current and historical inventory data…</span></div>
     </section>
 
-    <section class="brain-kpis" aria-label="Decision intelligence summary">
-      <article><small>Analyzed SKUs</small><strong id="brain-kpi-1">0</strong><b>Current eligible portfolio</b></article>
-      <article class="risk"><small>Stockout risks</small><strong id="brain-kpi-2">0</strong><b>Supply may expire before lead time</b></article>
-      <article class="warn"><small>Recommended units</small><strong id="brain-kpi-3">0</strong><b>Calculated supply gap</b></article>
-      <article class="warn"><small>Excess / no demand</small><strong id="brain-kpi-4">0</strong><b>Carrying-cost exposure</b></article>
-      <article class="good"><small>Learning files</small><strong id="brain-kpi-5">0</strong><b>Historical uploads retained</b></article>
-      <article><small>High-confidence decisions</small><strong id="brain-kpi-6">0</strong><b id="brain-kpi-accuracy">Learning</b></article>
-    </section>
-
-    <section class="brain-grid">
+    <section class="brain-grid brain-grid-single">
       <article class="brain-card">
         <div class="brain-card-head"><div><h2>How the brain is learning</h2><p>Forecast methods are backtested against later uploaded observations; the lowest-error method is selected by SKU.</p></div></div>
         <div class="learning-metrics" id="learning-metrics"></div>
         <div id="method-bars"></div>
-      </article>
-      <article class="brain-card">
-        <div class="brain-card-head"><div><h2>Concepts, controls and regulations</h2><p>Decision checkpoints applied to planning, purchasing, logistics, and governance.</p></div></div>
-        <div class="regulation-list" id="regulation-list"></div>
-        <p class="governance-note">Decision support only: laws and product rules change. Validate regulated products and material commitments with the responsible customs, tax, quality, legal, or compliance owner.</p>
       </article>
     </section>
 
