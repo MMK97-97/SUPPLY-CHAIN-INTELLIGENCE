@@ -1,0 +1,12 @@
+{
+  "name": "supply-chain-intelligence",
+  "compatibility_date": "2026-09-30",
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./dist"
+  }
+}
