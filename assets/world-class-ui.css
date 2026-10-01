@@ -1302,6 +1302,73 @@ body.sidebar-collapsed .premium-side-rail nav a {
   position: relative;
 }
 
+.topbar-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 4px 9px 4px 5px;
+  color: #173653;
+  border: 1px solid rgba(190, 215, 230, .82);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(9, 54, 83, .05);
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.topbar-account-btn:hover,
+.topbar-account-btn[aria-expanded="true"] {
+  border-color: rgba(8, 146, 138, .55);
+  box-shadow: 0 6px 18px rgba(9, 54, 83, .1);
+}
+
+.topbar-account-avatar {
+  display: grid;
+  flex: 0 0 31px;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  color: #fff;
+  border-radius: 9px;
+  background: linear-gradient(145deg, #0a92a0, #1164a0);
+  font: 800 .65rem/1 "Manrope", sans-serif;
+}
+
+.topbar-account-copy { display: grid; min-width: 0; text-align: left; line-height: 1.12; }
+.topbar-account-copy strong { max-width: 140px; overflow: hidden; color: #173653; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-account-copy small { margin-top: 3px; color: #6b8094; font-size: .59rem; }
+.topbar-account-chevron { width: 14px; height: 14px; fill: none; stroke: #71869a; stroke-width: 2; transition: transform .16s ease; }
+.topbar-account-btn[aria-expanded="true"] .topbar-account-chevron { transform: rotate(180deg); }
+.topbar-account-menu { width: 286px; padding: 8px; }
+.topbar-account-summary { display: grid; gap: 4px; padding: 10px 11px 12px; border-bottom: 1px solid #e8eff3; }
+.topbar-account-summary strong { color: #173653; font-size: .75rem; }
+.topbar-account-summary span { overflow: hidden; color: #6b8094; font-size: .67rem; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-signout {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 11px;
+  color: #a72642;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: 800 .73rem/1 "DM Sans", sans-serif;
+  cursor: pointer;
+}
+.topbar-signout:hover { background: #fff0f3; }
+.topbar-signout:disabled { opacity: .55; cursor: wait; }
+.topbar-signout svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; }
+
+@media (max-width: 640px) {
+  .topbar-account-copy,
+  .topbar-account-chevron { display: none; }
+  .topbar-account-btn { padding-right: 5px; }
+  .topbar-account-menu { width: min(286px, calc(100vw - 28px)); }
+}
+
 .topbar-pill {
   display: flex;
   align-items: center;

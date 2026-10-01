@@ -323,9 +323,20 @@
     body.prepend(topbar);
   }
 
+  const escapeText = value => String(value == null ? "" : value).replace(/[&<>\"]/g, character => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
+  }[character]));
+
   const renderTopbar = value => {
     const nextRegionCode = normalizeRegionCode(value);
     const meta = REGION_META[nextRegionCode] || REGION_META.US;
+    const authState = window.StarkAuth?.state || {};
+    const authUser = authState.user || {};
+    const displayName = String(authUser.user_metadata?.display_name || authUser.email?.split("@")[0] || "Account").trim();
+    const initials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "SA";
+    const roleLabel = authState.role
+      ? String(authState.role).replace(/_/g, " ").replace(/\b\w/g, character => character.toUpperCase())
+      : "Secure user";
 
     topbar.innerHTML = `
       <div class="topbar-actions">
@@ -364,6 +375,23 @@
             </div>
           </div>
         </div>
+        <div class="topbar-dropdown-wrap topbar-account-wrap">
+          <button class="topbar-account-btn" id="topbar-account-btn" type="button" aria-label="Open account menu" aria-expanded="false">
+            <span class="topbar-account-avatar" aria-hidden="true">${escapeText(initials)}</span>
+            <span class="topbar-account-copy"><strong>${escapeText(displayName)}</strong><small>${escapeText(roleLabel)}</small></span>
+            <svg class="topbar-account-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+          </button>
+          <div class="topbar-dropdown topbar-account-menu" id="topbar-account-menu" hidden>
+            <div class="topbar-account-summary">
+              <strong>${escapeText(authState.organizationName || "Stark Supply Chain Intelligence")}</strong>
+              <span>${escapeText(authUser.email || "Authenticated workspace")}</span>
+            </div>
+            <button class="topbar-signout" id="topbar-signout" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg>
+              Sign out
+            </button>
+          </div>
+        </div>
       </div>`;
 
     const bellBtn = topbar.querySelector("#topbar-bell-btn");
@@ -383,14 +411,46 @@
       });
     }
 
+    const accountBtn = topbar.querySelector("#topbar-account-btn");
+    const accountMenu = topbar.querySelector("#topbar-account-menu");
+    if (accountBtn && accountMenu) {
+      accountBtn.addEventListener("click", event => {
+        event.stopPropagation();
+        const open = accountMenu.hidden || accountMenu.hasAttribute("hidden");
+        topbar.querySelectorAll(".topbar-dropdown").forEach(dropdown => {
+          dropdown.hidden = true;
+          dropdown.setAttribute("hidden", "");
+        });
+        if (open) {
+          accountMenu.hidden = false;
+          accountMenu.removeAttribute("hidden");
+        }
+        accountBtn.setAttribute("aria-expanded", String(open));
+      });
+    }
+    topbar.querySelector("#topbar-signout")?.addEventListener("click", async event => {
+      event.stopPropagation();
+      const button = event.currentTarget;
+      button.disabled = true;
+      button.textContent = "Signing out…";
+      try {
+        await window.StarkAuth?.signOut();
+      } catch (_) {
+        button.disabled = false;
+        button.textContent = "Sign out";
+      }
+    });
+
     document.addEventListener("click", () => {
       topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
         d.hidden = true;
         d.setAttribute("hidden", "");
       });
+      topbar.querySelector("#topbar-account-btn")?.setAttribute("aria-expanded", "false");
     });
   };
   renderTopbar(regionCode);
+  window.addEventListener("stark:auth-ready", () => renderTopbar(currentRegionCode));
 
   /* -------------------------------------------------------------
      3. PAGE TRANSITIONS & NAVIGATION
