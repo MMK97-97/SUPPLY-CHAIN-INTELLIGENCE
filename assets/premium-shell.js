@@ -25,7 +25,15 @@
 
   if (body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
 
-  const path = location.pathname.split("/").pop() || "index.html";
+ const requestedPath =
+  location.pathname.split("/").filter(Boolean).pop() || "index.html";
+
+const path =
+  requestedPath === "index"
+    ? "index.html"
+    : requestedPath.includes(".")
+      ? requestedPath
+      : `${requestedPath}.html`;
   if (path === "index.html") return;
   const suffixMatch = path.match(/-(us|eu|ca)\.html$/i);
   const queryRegion = new URLSearchParams(location.search).get("region") || new URLSearchParams(location.search).get("workspace");
