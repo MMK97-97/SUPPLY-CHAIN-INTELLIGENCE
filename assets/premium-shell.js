@@ -15,7 +15,7 @@
     }
     if (!document.querySelector('script[data-ai-copilot-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20261001-1";
+      script.src = "assets/mk-brain.js?v=20261001-2";
       script.defer = true;
       script.dataset.aiCopilotScript = "true";
       document.head.appendChild(script);

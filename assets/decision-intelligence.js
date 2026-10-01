@@ -6,6 +6,8 @@
   const REGION_NAME = { US: "United States", EU: "European Union", CA: "Canada" }[REGION];
   const HISTORY_DB = "stark-reorder-history-v1";
   const HISTORY_STORE = "reports";
+  const FEEDBACK_KEY = `stark-decision-feedback-v1-${REGION}`;
+  const SYNC_PULSE_KEY = "stark-analytics-sync-pulse";
   const MODEL_VERSION = "Explainable Brain 1.0";
   const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
@@ -24,12 +26,16 @@
   let filtered = [];
   let snapshots = [];
   let learning = { observations: 0, accuracy: null, methods: {}, snapshots: 0 };
+  let modelSettings = { critical: 3, coverage: 1, delay: 15 };
+  let plannerFeedback = loadPlannerFeedback();
+  let feedbackSaveTimer = 0;
 
   document.addEventListener("DOMContentLoaded", init);
 
   async function init() {
     SI = window.StarkInventory;
     dataset = await SI.loadDataset(REGION_KEY);
+    initProbabilityWorkspace();
     bind();
     renderRegulations();
     if (!dataset?.rows?.length) {
@@ -56,6 +62,7 @@
     const latest = await SI.loadDataset(REGION_KEY);
     if (!latest?.rows?.length || latest.importedAt === dataset?.importedAt) return;
     dataset = latest;
+    plannerFeedback = loadPlannerFeedback();
     snapshots = await loadSnapshots();
     buildModel();
     populateFilters();
@@ -169,6 +176,7 @@
     const seriesMap = signalsByItem();
     const learned = learnMethods(seriesMap);
     const settings = SI.loadSettings(REGION_KEY);
+    modelSettings = settings;
     const methodCounts = {};
     decisions = analyzed.map(item => {
       const series = seriesMap.get(keyOf(item)) || [{ avg3: item.avg3, last30: item.last30, vol3: item.vol3 }];
@@ -181,6 +189,7 @@
       const trend = historicalMean ? (forecast - historicalMean) / historicalMean : forecast > 0 ? 1 : 0;
       const variability = variation(series.map(row => row.avg3));
       const observations = series.length;
+      const seasonalDefault = observations >= 6 && variability >= .35 && Math.abs(trend) >= .15;
       const leadMonths = Math.max(0, finite(item.leadTimeMonths));
       const inbound = Math.max(0, finite(item.planningSupplierQty));
       const netAvailable = Math.max(0, finite(item.stockQty) + inbound - finite(item.openClient));
@@ -206,7 +215,7 @@
       const confidence = confidenceScore >= .75 ? "High" : confidenceScore >= .5 ? "Medium" : "Low";
       const priority = Math.round(clamp((riskClass === "urgent" ? 55 : riskClass === "reorder" ? 35 : riskClass === "monitor" ? 18 : 5) + Math.min(25, gap / Math.max(1, forecast) * 15) + (item.abc === "A" ? 12 : item.abc === "B" ? 6 : 2) + (delayedInbound ? 10 : 0), 0, 100));
       return {
-        ...item, forecast, historicalMean, trend, variability, observations, method, netAvailable, target, gap,
+        ...item, forecast, historicalMean, trend, variability, observations, seasonalDefault, method, netAvailable, target, gap,
         daysToStockout, leadDays, monthsCover, delayedInbound, risk, riskClass, action, demandWhy, stockoutWhy,
         businessReason, tradeoffAction: tradeoff.tradeoffAction, tradeoffDetail: tradeoff.tradeoffDetail,
         businessDetailHtml: tradeoff.detailHtml, confidence, confidenceScore, priority,
@@ -360,6 +369,7 @@
     renderStatus();
     renderKpis();
     renderLearning();
+    renderProbabilityTable();
     renderTable();
   }
 
@@ -386,6 +396,155 @@
       <div><small>Model version</small><strong>${MODEL_VERSION}</strong></div>`;
     const total = Object.values(learning.methods).reduce((sum, value) => sum + value, 0) || 1;
     $("method-bars").innerHTML = Object.entries(learning.methods).sort((a, b) => b[1] - a[1]).map(([method, count]) => `<div class="method-bar"><span>${esc(method)}</span><div><i style="width:${count / total * 100}%"></i></div><b>${number.format(count)}</b></div>`).join("");
+  }
+
+  function initProbabilityWorkspace() {
+    if ($("if-probability-workspace")) return;
+    const anchor = document.querySelector(".decision-workspace");
+    if (!anchor) return;
+    const section = document.createElement("section");
+    section.className = "decision-workspace probability-workspace";
+    section.id = "if-probability-workspace";
+    section.innerHTML = `
+      <div class="decision-heading probability-heading">
+        <div><p class="probability-eyebrow">Conditional order simulation</p><h2>IF Probability Model</h2><p>Adjust the proposed order quantity to see the projected Risk, Excess, or Confident outcome. Seasonal choices and planner reasons are retained for MK's future explanations.</p></div>
+        <span class="decision-count" id="if-probability-count">0 scenarios</span>
+      </div>
+      <div class="probability-guidance"><strong>Planner learning:</strong> Your reason is saved as human decision context. It informs future MK responses but never silently overrides the official reorder formula.</div>
+      <div class="decision-table-wrap probability-table-wrap">
+        <table class="decision-table probability-table">
+          <thead><tr><th>Brand</th><th>Model #</th><th class="num">Current Stock</th><th class="num">Avg/Month</th><th>Seasonal</th><th class="num">Reorder Qty</th><th>IF Ordered Qty</th><th>Reason: why I want to order this quantity</th><th>Status</th></tr></thead>
+          <tbody id="if-probability-rows"></tbody>
+        </table>
+      </div>`;
+    anchor.parentNode.insertBefore(section, anchor);
+    const body = $("if-probability-rows");
+    body.addEventListener("input", handleProbabilityInput);
+    body.addEventListener("change", handleProbabilityInput);
+  }
+
+  function loadPlannerFeedback() {
+    try {
+      const value = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || "{}");
+      return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function feedbackFor(row) {
+    const saved = plannerFeedback[keyOf(row)] || {};
+    return {
+      seasonal: saved.seasonal === "yes" || saved.seasonal === "no" ? saved.seasonal : row.seasonalDefault ? "yes" : "no",
+      orderedQty: Number.isFinite(Number(saved.orderedQty)) ? Math.max(0, Math.round(Number(saved.orderedQty))) : Math.max(0, Math.round(row.gap)),
+      reason: String(saved.reason || "").slice(0, 500)
+    };
+  }
+
+  function calculateIfScenario(row, feedback) {
+    const orderedQty = Math.max(0, Math.round(finite(feedback.orderedQty)));
+    const seasonal = feedback.seasonal === "yes";
+    const forecast = Math.max(0, finite(row.forecast));
+    const projectedSupply = Math.max(0, finite(row.netAvailable) + orderedQty);
+    const protectedTarget = Math.max(0, finite(row.target));
+    const tolerance = Math.max(3, forecast * (seasonal ? 1.5 : 1));
+    const excessTarget = protectedTarget + tolerance;
+    const evidence = clamp(finite(row.confidenceScore), 0, 1);
+    let status = "CONFIDENT";
+    let riskProbability = 0;
+    let excessProbability = 0;
+    let confidentProbability = 0;
+
+    if (forecast <= 0 && projectedSupply > 0) {
+      status = "EXCESS";
+      excessProbability = clamp(78 + Math.min(18, projectedSupply / Math.max(1, tolerance) * 8), 78, 96);
+      riskProbability = 2;
+      confidentProbability = 100 - excessProbability - riskProbability;
+    } else if (projectedSupply + 1e-9 < protectedTarget) {
+      status = "RISK";
+      const shortageRatio = clamp((protectedTarget - projectedSupply) / Math.max(1, protectedTarget), 0, 1);
+      const orderFill = row.gap > 0 ? clamp(orderedQty / row.gap, 0, 1) : 1;
+      riskProbability = clamp(62 + shortageRatio * 20 + (1 - orderFill) * 12 + (row.delayedInbound ? 4 : 0), 62, 96);
+      excessProbability = 2;
+      confidentProbability = 100 - riskProbability - excessProbability;
+    } else if (projectedSupply - 1e-9 > excessTarget) {
+      status = "EXCESS";
+      const overageRatio = clamp((projectedSupply - excessTarget) / Math.max(1, tolerance), 0, 1);
+      excessProbability = clamp(62 + overageRatio * 28 + (seasonal ? -4 : 2), 58, 94);
+      riskProbability = 2;
+      confidentProbability = 100 - excessProbability - riskProbability;
+    } else {
+      status = "CONFIDENT";
+      confidentProbability = clamp(68 + evidence * 24 - (seasonal ? Math.min(8, row.variability * 8) : 0), 62, 94);
+      const remaining = 100 - confidentProbability;
+      const position = tolerance ? clamp((projectedSupply - protectedTarget) / tolerance, 0, 1) : .5;
+      riskProbability = remaining * (1 - position);
+      excessProbability = remaining - riskProbability;
+    }
+
+    const risk = Math.round(riskProbability);
+    const excess = Math.round(excessProbability);
+    const confident = Math.max(0, 100 - risk - excess);
+    return { status, risk, excess, confident, projectedSupply, protectedTarget, excessTarget };
+  }
+
+  function probabilityStatusHtml(scenario) {
+    const label = scenario.status === "RISK" ? "Risk" : scenario.status === "EXCESS" ? "Excess" : "Confident";
+    const statusClass = scenario.status.toLowerCase();
+    return `<span class="scenario-badge ${statusClass}">${label}</span><div class="scenario-probabilities"><span>Risk ${scenario.risk}%</span><span>Confident ${scenario.confident}%</span><span>Excess ${scenario.excess}%</span></div><small>After order: ${number.format(scenario.projectedSupply)} projected units</small>`;
+  }
+
+  function renderProbabilityTable() {
+    const body = $("if-probability-rows");
+    if (!body) return;
+    $("if-probability-count").textContent = `${number.format(filtered.length)} of ${number.format(decisions.length)} scenarios`;
+    body.innerHTML = filtered.length ? filtered.map(row => {
+      const feedback = feedbackFor(row);
+      const scenario = calculateIfScenario(row, feedback);
+      return `<tr data-feedback-key="${esc(keyOf(row))}">
+        <td>${esc(row.brand)}</td><td><strong>${esc(row.model || row.itemid)}</strong></td>
+        <td class="num">${number.format(finite(row.stockQty))}</td><td class="num">${decimal.format(finite(row.avg3))}</td>
+        <td><select class="scenario-seasonal" data-feedback-field="seasonal" aria-label="Seasonal status for ${esc(row.model || row.itemid)}"><option value="no"${feedback.seasonal === "no" ? " selected" : ""}>No</option><option value="yes"${feedback.seasonal === "yes" ? " selected" : ""}>Yes</option></select></td>
+        <td class="num"><strong>${number.format(row.gap)}</strong></td>
+        <td><input class="scenario-quantity" data-feedback-field="orderedQty" type="number" min="0" step="1" value="${feedback.orderedQty}" aria-label="IF ordered quantity for ${esc(row.model || row.itemid)}"></td>
+        <td><textarea class="scenario-reason" data-feedback-field="reason" maxlength="500" rows="2" placeholder="Add the business reason, customer commitment, season, promotion, MOQ, or supplier context…" aria-label="Planner reason for ${esc(row.model || row.itemid)}">${esc(feedback.reason)}</textarea></td>
+        <td class="scenario-status">${probabilityStatusHtml(scenario)}</td>
+      </tr>`;
+    }).join("") : `<tr><td colspan="9"><div class="empty-brain"><strong>No scenarios match the filters</strong><span>Change the brand, risk, or search filter.</span></div></td></tr>`;
+  }
+
+  function handleProbabilityInput(event) {
+    const control = event.target.closest("[data-feedback-field]");
+    const tr = control?.closest("tr[data-feedback-key]");
+    if (!control || !tr) return;
+    const row = decisions.find(item => keyOf(item) === tr.dataset.feedbackKey);
+    if (!row) return;
+    const feedback = feedbackFor(row);
+    if (control.dataset.feedbackField === "seasonal") feedback.seasonal = control.value === "yes" ? "yes" : "no";
+    if (control.dataset.feedbackField === "orderedQty") feedback.orderedQty = clamp(Math.round(finite(control.value)), 0, 1_000_000_000);
+    if (control.dataset.feedbackField === "reason") feedback.reason = control.value.slice(0, 500);
+    const scenario = calculateIfScenario(row, feedback);
+    plannerFeedback[keyOf(row)] = {
+      model: String(row.model || row.itemid || ""), brand: String(row.brand || ""), seasonal: feedback.seasonal,
+      orderedQty: feedback.orderedQty, recommendedQty: Math.max(0, Math.round(row.gap)), reason: feedback.reason,
+      status: scenario.status, probabilities: { risk: scenario.risk, confident: scenario.confident, excess: scenario.excess },
+      currentStock: finite(row.stockQty), averageMonthly: finite(row.avg3), updatedAt: new Date().toISOString()
+    };
+    tr.querySelector(".scenario-status").innerHTML = probabilityStatusHtml(scenario);
+    scheduleFeedbackSave();
+  }
+
+  function scheduleFeedbackSave() {
+    window.clearTimeout(feedbackSaveTimer);
+    feedbackSaveTimer = window.setTimeout(() => {
+      try {
+        localStorage.setItem(FEEDBACK_KEY, JSON.stringify(plannerFeedback));
+        localStorage.setItem(SYNC_PULSE_KEY, JSON.stringify({ type: "decision-feedback", region: REGION, at: new Date().toISOString() }));
+      } catch (_) {}
+      window.StarkDecisionFeedback = { region: REGION, records: plannerFeedback };
+      window.dispatchEvent(new CustomEvent("stark-decision-feedback-change", { detail: { region: REGION } }));
+      exposeExport();
+    }, 350);
   }
 
   function renderTable() {
@@ -449,14 +608,19 @@
     $("brain-kpi-accuracy").textContent = "No model data";
     $("learning-metrics").innerHTML = `<div><small>Historical uploads</small><strong>0 / 30</strong></div><div><small>Backtest observations</small><strong>0</strong></div><div><small>Portfolio accuracy</small><strong>Learning</strong></div><div><small>Model version</small><strong>${MODEL_VERSION}</strong></div>`;
     $("method-bars").innerHTML = "";
+    if ($("if-probability-count")) $("if-probability-count").textContent = "0 scenarios";
+    if ($("if-probability-rows")) $("if-probability-rows").innerHTML = `<tr><td colspan="9"><div class="empty-brain"><strong>No inventory report available</strong><span>Upload the Raw Report first to activate IF probability scenarios.</span></div></td></tr>`;
     $("decision-count").textContent = "0 decisions";
     $("decision-rows").innerHTML = `<tr><td colspan="12"><div class="empty-brain"><strong>No inventory report available</strong><span>Upload the Raw Report first. Each future upload becomes another learning observation.</span></div></td></tr>`;
   }
 
   function reportData() {
     return {
-      headers: ["Model", "Brand", "Item", "Risk", "Priority", "Recommended next action", "Prescriptive Trade-Off Action", "Business reason", "Prescriptive Trade-Off Detail", "Why stockout", "Why demand", "Forecast/month", "Net available", "Days to stockout", "Recommended units", "Forecast method", "Confidence", "Calculation", "Regulatory control point"],
-      rows: filtered.map(row => [row.model, row.brand, row.product, row.risk, row.priority, row.action, row.tradeoffAction || row.action, row.businessReason, row.tradeoffDetail || "", row.stockoutWhy, row.demandWhy, row.forecast, row.netAvailable, row.daysToStockout == null ? "" : row.daysToStockout, row.gap, row.method, row.confidence, row.calculation, regulationDecision(row)])
+      headers: ["Model", "Brand", "Item", "Current Stock", "Average/Month", "Seasonal", "Recommended Reorder Qty", "IF Ordered Qty", "Planner Reason", "IF Status", "Risk Probability", "Confident Probability", "Excess Probability", "Risk", "Priority", "Recommended next action", "Prescriptive Trade-Off Action", "Business reason", "Prescriptive Trade-Off Detail", "Why stockout", "Why demand", "Forecast/month", "Net available", "Days to stockout", "Forecast method", "Confidence", "Calculation", "Regulatory control point"],
+      rows: filtered.map(row => {
+        const feedback = feedbackFor(row), scenario = calculateIfScenario(row, feedback);
+        return [row.model, row.brand, row.product, finite(row.stockQty), finite(row.avg3), feedback.seasonal === "yes" ? "Yes" : "No", row.gap, feedback.orderedQty, feedback.reason, scenario.status, scenario.risk, scenario.confident, scenario.excess, row.risk, row.priority, row.action, row.tradeoffAction || row.action, row.businessReason, row.tradeoffDetail || "", row.stockoutWhy, row.demandWhy, row.forecast, row.netAvailable, row.daysToStockout == null ? "" : row.daysToStockout, row.method, row.confidence, row.calculation, regulationDecision(row)];
+      })
     };
   }
 

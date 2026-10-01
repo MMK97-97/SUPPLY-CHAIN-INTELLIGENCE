@@ -611,7 +611,7 @@
             ? "Respond naturally and confirm only the exact action stated in the verified website result. Do not invent additional actions or outcomes."
             : localAnswer.category === "action started"
               ? "Respond naturally and briefly describe the exact verified action that is about to occur. Do not claim it is complete yet."
-              : "Give a complete, natural, standalone answer. Treat every non-null connected report in decisionContext as available website evidence. Never say you cannot access a report when its connected flag is true. If requestedScope exists, use its items as the authoritative requested brand/SKU dataset and address every included item individually when asked. Reconcile Raw Report, Active Brands, Reorder Report, Analysis Report and Sales Analysis, explain the business reason and next action when relevant, and state material uncertainty. Do not mention internal engines or claim an unverified action was executed.",
+              : "Give a complete, natural, standalone answer. Treat every non-null connected report in decisionContext as available website evidence. Never say you cannot access a report when its connected flag is true. If requestedScope exists, use its items as the authoritative requested brand/SKU dataset and address every included item individually when asked. Reconcile Raw Report, Active Brands, Reorder Report, Analysis Report and Sales Analysis, explain the business reason and next action when relevant, and state material uncertainty. Use plannerFeedback as durable human decision context and explicitly distinguish the planner's stated reason from calculated evidence; never let it silently override the official reorder formula. Do not mention internal engines or claim an unverified action was executed.",
         verifiedLocalAnswer: localAnswer.intent === "ai-direct" ? "" : clean(localAnswer.message).slice(0, 3_500),
         decisionContext: context
       }).slice(0, 100_000)
@@ -667,6 +667,7 @@
     const analysis = lastAnalysis || await getInventoryAnalysis();
     if (analysis) lastAnalysis = analysis;
     const brandSettings = loadBrands(code);
+    const decisionFeedback = Object.values(loadDecisionFeedback(code));
     const brandEntries = Object.entries(brandSettings || {});
     const activeEntries = brandEntries.filter(([, value]) => value?.active !== false);
     const query = clean(question).toLowerCase();
@@ -689,6 +690,9 @@
       ? analysis.items.filter(item => normalizeLookup(item.brand) === normalizeLookup(requestedBrand))
         .sort((a, b) => b.riskScore - a.riskScore || b.recommended - a.recommended || clean(a.model || a.itemid).localeCompare(clean(b.model || b.itemid)))
       : [];
+    const relevantDecisionFeedback = [...decisionFeedback.filter(queryMatches), ...decisionFeedback.slice().sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))]
+      .filter((item, index, rows) => rows.findIndex(candidate => normalizeLookup(candidate.model) === normalizeLookup(item.model) && normalizeLookup(candidate.brand) === normalizeLookup(item.brand)) === index)
+      .slice(0, 25);
     const activeBrandDetails = activeEntries
       .filter(([brand]) => query.includes(clean(brand).toLowerCase()))
       .concat(activeEntries.filter(([brand]) => !query.includes(clean(brand).toLowerCase())))
@@ -710,9 +714,20 @@
         reorderReport: Boolean(analysis?.scoped?.length),
         activeBrands: brandEntries.length > 0,
         salesAnalysis: salesItems.length > 0,
+        plannerFeedback: decisionFeedback.length > 0,
         rule: "All values belong to the same regional browser workspace. Raw Report is the inventory source; Active Brands controls eligibility and lead time; Reorder Report is recalculated from both; Analysis Report consumes the connected source and publishes its computed snapshot."
       },
       formula: "monthly demand × (lead time + coverage) + minimum carrying units + client orders − on hand − eligible inbound; positive quantities are rounded up",
+      plannerFeedback: decisionFeedback.length ? {
+        retainedDecisions: decisionFeedback.length,
+        instruction: "Planner reasons are durable human context. Cite them as planner rationale, compare them with calculated evidence, and do not silently replace the official reorder formula.",
+        relevant: relevantDecisionFeedback.map(item => ({
+          model: clean(item.model), brand: clean(item.brand), seasonal: clean(item.seasonal) === "yes",
+          recommendedQty: finite(item.recommendedQty), proposedOrderQty: finite(item.orderedQty),
+          plannerReason: clean(item.reason), ifStatus: clean(item.status), probabilities: item.probabilities || {},
+          updatedAt: item.updatedAt || ""
+        }))
+      } : null,
       rawReport: dataset?.rows?.length ? {
         fileName: clean(dataset.fileName), importedAt: dataset.importedAt || "", rows: dataset.rows.length,
         brands: new Set(dataset.rows.map(row => clean(row.brand)).filter(Boolean)).size
@@ -1085,11 +1100,12 @@
     const tasks = Object.entries(profile.taskCounts || {}).sort((a, b) => b[1] - a[1]).slice(0, 4);
     const taskText = tasks.length ? tasks.map(([name, count]) => `${name} (${count})`).join(", ") : "no repeated task pattern yet";
     const modelState = profile.modelState?.[regionCode()];
+    const plannerDecisions = Object.values(loadDecisionFeedback(regionCode())).filter(item => clean(item.reason) || Number.isFinite(Number(item.orderedQty))).length;
     const modelText = modelState ? ` Latest ${REGION_NAMES[regionCode()]} training state: ${modelState.historyFiles} retained reports, ${modelState.averageConfidence}/100 mean confidence, data grade ${modelState.dataGrade}, most-selected method ${modelState.primaryMethod}.` : "";
     return {
       intent: "learn",
       category: "learning",
-      message: `I have learned ${profile.notes?.length || 0} saved instruction${profile.notes?.length === 1 ? "" : "s"}, ${finite(profile.feedback?.useful)} useful responses and ${finite(profile.feedback?.correction)} requested corrections. Most-used task patterns: ${taskText}.${modelText} Forecast selection is re-backtested whenever report history changes; it does not alter the official reorder formula or invent unsupported demand.`
+      message: `I have learned ${profile.notes?.length || 0} saved instruction${profile.notes?.length === 1 ? "" : "s"}, ${number.format(plannerDecisions)} planner decision${plannerDecisions === 1 ? "" : "s"} from the IF Probability Model, ${finite(profile.feedback?.useful)} useful responses and ${finite(profile.feedback?.correction)} requested corrections. Most-used task patterns: ${taskText}.${modelText} Planner reasons inform future explanations but do not silently alter the official reorder formula. Forecast selection is re-backtested whenever report history changes and never invents unsupported demand.`
     };
   }
 
@@ -1429,6 +1445,7 @@
     }
     const scope = matchedItem ? [matchedItem] : analysis.scoped;
     const results = scope.map(item => simulateItem(item, analysis.settings, scenario));
+    const planner = matchedItem ? plannerFeedbackForItem(matchedItem, analysis.code) : null;
     const currentUnits = sum(scope, item => item.recommended);
     const scenarioUnits = sum(results, result => result.recommended);
     const currentRisks = scope.filter(item => item.stockoutRisk).length;
@@ -1443,7 +1460,7 @@
     </div>`;
     return {
       intent: "scenario", category: "what-if analysis", itemKey: matchedItem?.key || "",
-      message: `**Scenario result — ${scenario.description.join(", ")}**\nScope: ${matchedItem ? `${matchedItem.model || matchedItem.itemid} — ${matchedItem.brand}` : `${number.format(scope.length)} eligible items`}. Recommended units change from ${number.format(currentUnits)} to ${number.format(scenarioUnits)} (${signedNumber(delta)}). Lead-time stockout risks change from ${number.format(currentRisks)} to ${number.format(scenarioRisks)}.\nLargest effects:\n${lines || "No item-level change."}\nThis is a simulation only; stored settings and reports were not changed.`,
+      message: `**Scenario result — ${scenario.description.join(", ")}**\nScope: ${matchedItem ? `${matchedItem.model || matchedItem.itemid} — ${matchedItem.brand}` : `${number.format(scope.length)} eligible items`}. Recommended units change from ${number.format(currentUnits)} to ${number.format(scenarioUnits)} (${signedNumber(delta)}). Lead-time stockout risks change from ${number.format(currentRisks)} to ${number.format(scenarioRisks)}.\nLargest effects:\n${lines || "No item-level change."}${planner?.reason ? `\nPlanner context retained from the IF model: “${clean(planner.reason)}” (proposed order ${number.format(planner.orderedQty)} units; ${clean(planner.status).toLowerCase()} scenario).` : ""}\nThis is a simulation only; stored settings and reports were not changed.`,
       htmlExtra: html
     };
   }
@@ -1581,6 +1598,8 @@
     const supplierNote = item.openSupplier > item.planningSupplier ? `Inbound note: ${number.format(item.openSupplier - item.planningSupplier)} supplier units are outside the arrival window.` : item.openSupplier ? "Eligible inbound supply is counted." : "No supplier quantity offsets the requirement.";
     const protectedNeed = item.demand * (item.leadMonths + analysis.settings.coverage) + analysis.settings.critical + item.openClient;
     const limitations = item.confidence.limitations.length ? ` Limits: ${item.confidence.limitations.join("; ")}.` : "";
+    const planner = plannerFeedbackForItem(item, analysis.code);
+    const plannerLearning = planner ? `\n\n**Planner Learning:** The IF Probability Model retains a proposed order of ${number.format(planner.orderedQty)} units${planner.seasonal === "yes" ? " and marks this item seasonal" : ""}. ${planner.reason ? `Planner-stated reason: “${clean(planner.reason)}”. ` : ""}Current IF status is ${clean(planner.status || "not evaluated").toLowerCase()}${planner.probabilities ? ` (risk ${number.format(planner.probabilities.risk)}%, confident ${number.format(planner.probabilities.confident)}%, excess ${number.format(planner.probabilities.excess)}%)` : ""}. This context informs the explanation but does not override the calculated recommendation.` : "";
     return {
       intent: "item-analysis",
       category: "model decision",
@@ -1590,7 +1609,7 @@
         `**Business Reason & Trade-Off:**\n${tradeoff.tradeoffDetail}\n\n` +
         `**Calculation & Inventory Position:** Protected need is ${number.format(protectedNeed)} units [demand × (${decimal.format(item.leadMonths)} lead + ${decimal.format(analysis.settings.coverage)} coverage) + ${number.format(analysis.settings.critical)} min + ${number.format(item.openClient)} client]. On hand is ${number.format(item.onHand)} and counted inbound is ${number.format(item.planningSupplier)}. ${supplierNote}\n\n` +
         `**Stockout Risk Analysis:** ${item.stockoutRisk ? `Usable supply may last about ${decimal.format(item.daysToStockout)} days, while supplier lead time is ${decimal.format(item.leadMonths * 30.44)} days.` : "Usable supply is not projected to expire before the replenishment point."}\n\n` +
-        `**Demand Evidence:** Three-month rate is ${decimal.format(item.demand)} units/month and the last 30 days show ${number.format(item.last30)} units, indicating ${demandDirection} demand. MK forecasts ${decimal.format(item.forecast.value)} units/month (range ${decimal.format(item.forecast.low)}–${decimal.format(item.forecast.high)}) using ${item.forecast.method}, selected by ${item.forecast.selectedBy}.${limitations}`
+        `**Demand Evidence:** Three-month rate is ${decimal.format(item.demand)} units/month and the last 30 days show ${number.format(item.last30)} units, indicating ${demandDirection} demand. MK forecasts ${decimal.format(item.forecast.value)} units/month (range ${decimal.format(item.forecast.low)}–${decimal.format(item.forecast.high)}) using ${item.forecast.method}, selected by ${item.forecast.selectedBy}.${limitations}${plannerLearning}`
     };
   }
 
@@ -2129,6 +2148,21 @@ User Question: ${userQuestion}`;
   function loadBrands(code) {
     try { return JSON.parse(localStorage.getItem(`stark-active-brands-${regionKey(code)}`) || "{}"); }
     catch (_) { return {}; }
+  }
+
+  function loadDecisionFeedback(code) {
+    try {
+      const value = JSON.parse(localStorage.getItem(`stark-decision-feedback-v1-${normalizeRegion(code)}`) || "{}");
+      return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function plannerFeedbackForItem(item, code = regionCode()) {
+    const model = normalizeLookup(item?.model || item?.itemid);
+    const brand = normalizeLookup(item?.brand);
+    return Object.values(loadDecisionFeedback(code)).find(record => normalizeLookup(record?.model) === model && (!brand || !record?.brand || normalizeLookup(record.brand) === brand)) || null;
   }
 
   async function loadHistory(code) {
