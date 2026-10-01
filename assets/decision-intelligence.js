@@ -33,6 +33,7 @@
   document.addEventListener("DOMContentLoaded", init);
 
   async function init() {
+    removeLegacySummarySections();
     SI = window.StarkInventory;
     dataset = await SI.loadDataset(REGION_KEY);
     initProbabilityWorkspace();
@@ -48,6 +49,16 @@
     populateFilters();
     renderAll();
     exposeExport();
+  }
+
+  function removeLegacySummarySections() {
+    document.querySelector(".brain-kpis")?.remove();
+    const grid = document.querySelector(".brain-grid");
+    if (!grid) return;
+    grid.querySelectorAll(":scope > .brain-card").forEach(card => {
+      if (/concepts, controls and regulations/i.test(card.textContent || "")) card.remove();
+    });
+    grid.classList.add("brain-grid-single");
   }
 
   function bind() {
@@ -379,6 +390,7 @@
   }
 
   function renderKpis() {
+    if (!$("brain-kpi-1")) return;
     const risk = decisions.filter(row => row.risk === "STOCKOUT RISK").length;
     const reorder = decisions.filter(row => ["STOCKOUT RISK", "REORDER"].includes(row.risk)).reduce((sum, row) => sum + row.gap, 0);
     const excess = decisions.filter(row => row.risk === "EXCESS").length;
@@ -598,14 +610,19 @@
   }
 
   function renderRegulations() {
-    $("regulation-list").innerHTML = regulations().map(([title, description], index) => `<details ${index === 0 ? "open" : ""}><summary>${esc(title)}</summary><p>${esc(description)}</p></details>`).join("");
+    const list = $("regulation-list");
+    if (!list) return;
+    list.innerHTML = regulations().map(([title, description], index) => `<details ${index === 0 ? "open" : ""}><summary>${esc(title)}</summary><p>${esc(description)}</p></details>`).join("");
   }
 
   function renderEmpty() {
     $("brain-live-title").textContent = "Waiting for inventory history";
     $("brain-live-detail").textContent = "Upload a regional Raw Report to activate the decision brain";
-    for (let index = 1; index <= 6; index += 1) $(`brain-kpi-${index}`).textContent = "0";
-    $("brain-kpi-accuracy").textContent = "No model data";
+    for (let index = 1; index <= 6; index += 1) {
+      const metric = $(`brain-kpi-${index}`);
+      if (metric) metric.textContent = "0";
+    }
+    if ($("brain-kpi-accuracy")) $("brain-kpi-accuracy").textContent = "No model data";
     $("learning-metrics").innerHTML = `<div><small>Historical uploads</small><strong>0 / 30</strong></div><div><small>Backtest observations</small><strong>0</strong></div><div><small>Portfolio accuracy</small><strong>Learning</strong></div><div><small>Model version</small><strong>${MODEL_VERSION}</strong></div>`;
     $("method-bars").innerHTML = "";
     if ($("if-probability-count")) $("if-probability-count").textContent = "0 scenarios";
