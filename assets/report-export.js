@@ -3,7 +3,12 @@
 
   if (window.StarkReportExport) return;
 
-  const path = location.pathname.split("/").pop() || "index.html";
+  const requestedPath = location.pathname.split("/").filter(Boolean).pop() || "index.html";
+  const path = requestedPath === "index"
+    ? "index.html"
+    : requestedPath.includes(".")
+      ? requestedPath
+      : `${requestedPath}.html`;
   const reportPages = /^(inventory-dashboard|inventory-analysis-report|decision-intelligence|raw-report|reorder-report|active-brands|instructions)-(us|eu|ca)\.html$/i.test(path)
     || ["ats-eu.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"].includes(path);
   if (!reportPages || document.querySelector(".tv-app")) return;

@@ -138,7 +138,7 @@
   }
 
   function regionCode() {
-    const suffix = location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1];
+    const suffix = location.pathname.match(/-(us|eu|ca)(?:\.html)?\/?$/i)?.[1];
     const query = new URLSearchParams(location.search).get("region") || new URLSearchParams(location.search).get("workspace");
     const stored = localStorage.getItem("stark-selected-region");
     return normalizeRegion(suffix || query || stored || "US");
@@ -1053,7 +1053,7 @@
   }
 
   function executeTracking(trackingNumber) {
-    if (!/shipment-tracking\.html$/i.test(location.pathname)) {
+    if (!/shipment-tracking(?:\.html)?\/?$/i.test(location.pathname)) {
       try { sessionStorage.setItem("mk-pending-tracking", trackingNumber); } catch (_) {}
       return {
         intent: "tracking",
@@ -2196,7 +2196,7 @@ User Question: ${userQuestion}`;
 
   try {
     const pending = sessionStorage.getItem("mk-pending-tracking");
-    if (pending && /shipment-tracking\.html$/i.test(location.pathname)) {
+    if (pending && /shipment-tracking(?:\.html)?\/?$/i.test(location.pathname)) {
       sessionStorage.removeItem("mk-pending-tracking");
       window.setTimeout(() => {
         const field = document.getElementById("tracking-number"), form = document.getElementById("tracking-form");

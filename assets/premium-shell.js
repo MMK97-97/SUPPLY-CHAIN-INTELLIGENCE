@@ -25,11 +25,8 @@
 
   if (body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
 
- const requestedPath =
-  location.pathname.split("/").filter(Boolean).pop() || "index.html";
-
-const path =
-  requestedPath === "index"
+  const requestedPath = location.pathname.split("/").filter(Boolean).pop() || "index.html";
+  const path = requestedPath === "index"
     ? "index.html"
     : requestedPath.includes(".")
       ? requestedPath

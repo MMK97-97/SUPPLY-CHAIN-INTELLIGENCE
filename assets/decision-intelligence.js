@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const REGION = (location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1] || "US").toUpperCase();
+  const REGION = (location.pathname.match(/-(us|eu|ca)(?:\.html)?\/?$/i)?.[1] || "US").toUpperCase();
   const REGION_KEY = REGION === "CA" ? "Canada" : REGION;
   const REGION_NAME = { US: "United States", EU: "European Union", CA: "Canada" }[REGION];
   const HISTORY_DB = "stark-reorder-history-v1";
