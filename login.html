@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-auth-public="true">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Secure sign in for Stark Supply Chain Intelligence">
+  <title>Secure Sign In | Stark Supply Chain Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/auth.css?v=20261001-1">
+  <script src="assets/auth-bootstrap.js?v=20261001-1"></script>
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-brand-panel">
+      <div class="auth-brand"><img src="assets/supply-chain-logo.png" alt=""><div><small>STARK PREMIUM</small><strong>Supply Chain Intelligence</strong></div></div>
+      <div class="auth-brand-copy"><p>Protected operations workspace</p><h1>Decisions begin with trusted data.</h1><span>Secure access to regional inventory, demand analysis, reorder decisions, freight planning and MK intelligence.</span></div>
+      <div class="auth-trust"><span>Organization access</span><span>Row-level security</span><span>Encrypted transport</span></div>
+    </section>
+    <section class="auth-form-panel">
+      <div class="auth-form-wrap">
+        <p class="auth-eyebrow">Authorized users only</p>
+        <h2>Sign in</h2>
+        <p class="auth-description">Use the email address associated with your invitation.</p>
+        <form class="auth-form" id="login-form">
+          <label>Email address<input name="email" type="email" autocomplete="email" required></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="auth-primary" type="submit">Open secure workspace</button>
+          <button class="auth-secondary" id="forgot-password" type="button">Forgot password?</button>
+        </form>
+        <p class="auth-message" id="auth-message" role="status" hidden></p>
+        <p class="auth-security-note"><strong>Invite-only access.</strong> Accounts cannot be created from this page. Contact the organization owner if access is required.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
