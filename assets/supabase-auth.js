@@ -45,6 +45,22 @@
     node.hidden = !message;
   };
 
+  const wirePasswordToggles = scope => {
+    scope?.querySelectorAll?.("[data-password-toggle]").forEach(button => {
+      if (button.dataset.passwordToggleReady === "true") return;
+      const input = button.closest(".auth-input-wrap")?.querySelector("input");
+      if (!input) return;
+      button.dataset.passwordToggleReady = "true";
+      button.addEventListener("click", () => {
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        button.setAttribute("aria-label", show ? "Hide password" : "Show password");
+        button.setAttribute("aria-pressed", String(show));
+        input.focus({ preventScroll: true });
+      });
+    });
+  };
+
   async function loadMembership() {
     const { data, error } = await client
       .from("organization_members")
@@ -119,6 +135,7 @@
     reveal();
     const form = document.getElementById("login-form");
     const forgot = document.getElementById("forgot-password");
+    wirePasswordToggles(document);
     if (state.session) {
       location.replace(safeReturnTarget("index.html"));
       return;
