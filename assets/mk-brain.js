@@ -11,6 +11,7 @@
   const finite = value => Number.isFinite(Number(value)) ? Number(value) : 0;
   const clean = value => String(value == null ? "" : value).replace(/\s+/g, " ").trim();
   const normalize = value => clean(value).toUpperCase();
+  const normalizeLookup = value => normalize(value).replace(/[^A-Z0-9]/g, "");
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const mean = values => values.length ? values.reduce((total, value) => total + value, 0) / values.length : 0;
   const median = values => {
@@ -32,7 +33,7 @@
     CA: { name: "stark-regional-inventory-ca", key: "Canada" }
   };
   const DEFAULT_SETTINGS = { critical: 3, coverage: 1, delay: 15, a: 80, b: 95 };
-  const ENGINE_VERSION = "MK Hybrid Intelligence 3.2";
+  const ENGINE_VERSION = "MK Hybrid Intelligence 3.3";
   const SPACE_ID = "MMK97/supply-ai-chain-hub";
   const SPACE_ORIGIN = clean(window.MK_SUPPLY_AI_ORIGIN || "https://mmk97-supply-ai-chain-hub.hf.space").replace(/\/+$/, "");
   const SPACE_API_NAME = "website_chat";
@@ -146,6 +147,7 @@
   function regionKey(code = regionCode()) { return DB_CONFIG[code].key; }
 
   function buildInterface() {
+    document.querySelectorAll(".mk-brain-launcher, .mk-brain-panel").forEach(node => node.remove());
     launcher = document.createElement("button");
     launcher.className = "mk-brain-launcher";
     launcher.type = "button";
@@ -609,10 +611,10 @@
             ? "Respond naturally and confirm only the exact action stated in the verified website result. Do not invent additional actions or outcomes."
             : localAnswer.category === "action started"
               ? "Respond naturally and briefly describe the exact verified action that is about to occur. Do not claim it is complete yet."
-              : "Give a complete, natural, standalone answer. Treat every non-null connected report in decisionContext as available website evidence. Never say you cannot access a report when its connected flag is true. Reconcile Raw Report, Active Brands, Reorder Report, Analysis Report and Sales Analysis, explain the business reason and next action when relevant, and state material uncertainty. Do not mention internal engines or claim an unverified action was executed.",
+              : "Give a complete, natural, standalone answer. Treat every non-null connected report in decisionContext as available website evidence. Never say you cannot access a report when its connected flag is true. If requestedScope exists, use its items as the authoritative requested brand/SKU dataset and address every included item individually when asked. Reconcile Raw Report, Active Brands, Reorder Report, Analysis Report and Sales Analysis, explain the business reason and next action when relevant, and state material uncertainty. Do not mention internal engines or claim an unverified action was executed.",
         verifiedLocalAnswer: localAnswer.intent === "ai-direct" ? "" : clean(localAnswer.message).slice(0, 3_500),
         decisionContext: context
-      }).slice(0, 16_000)
+      }).slice(0, 100_000)
     };
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), SPACE_TIMEOUT);
@@ -668,10 +670,11 @@
     const brandEntries = Object.entries(brandSettings || {});
     const activeEntries = brandEntries.filter(([, value]) => value?.active !== false);
     const query = clean(question).toLowerCase();
+    const queryKey = normalizeLookup(query);
     const queryMatches = item => {
       const values = [item?.model, item?.itemid, item?.itemId, item?.brand, item?.product, item?.title]
         .map(value => clean(value).toLowerCase()).filter(value => value.length >= 2);
-      return values.some(value => query.includes(value));
+      return values.some(value => query.includes(value) || (normalizeLookup(value).length >= 2 && queryKey.includes(normalizeLookup(value))));
     };
     const prioritize = (items, score) => {
       const relevant = (items || []).filter(queryMatches);
@@ -681,6 +684,11 @@
     const salesItems = salesItemsFromSnapshot(sales);
     const inventoryTop = analysis ? prioritize(analysis.scoped, (a, b) => b.riskScore - a.riskScore || b.recommended - a.recommended) : [];
     const salesTop = prioritize(salesItems, (a, b) => finite(b.revenueAtRisk) - finite(a.revenueAtRisk) || finite(b.suggestedQty) - finite(a.suggestedQty));
+    const requestedBrand = analysis ? findBrandInQuestion(query, analysis.items) : null;
+    const requestedInventoryItems = requestedBrand && analysis
+      ? analysis.items.filter(item => normalizeLookup(item.brand) === normalizeLookup(requestedBrand))
+        .sort((a, b) => b.riskScore - a.riskScore || b.recommended - a.recommended || clean(a.model || a.itemid).localeCompare(clean(b.model || b.itemid)))
+      : [];
     const activeBrandDetails = activeEntries
       .filter(([brand]) => query.includes(clean(brand).toLowerCase()))
       .concat(activeEntries.filter(([brand]) => !query.includes(clean(brand).toLowerCase())))
@@ -744,6 +752,27 @@
         sourceMode: clean(reportSnapshot.sourceMode),
         kpis: reportSnapshot.kpis || {},
         exceptions: (reportSnapshot.rows || []).slice(0, 5)
+      } : null,
+      requestedScope: requestedBrand ? {
+        request: clean(question),
+        brand: requestedBrand,
+        totalItems: requestedInventoryItems.length,
+        includedItems: Math.min(requestedInventoryItems.length, 150),
+        complete: requestedInventoryItems.length <= 150,
+        instruction: "Analyze every included SKU individually. Do not claim the brand or SKU data is unavailable. Explain the calculation evidence, business reason, risk and next action for every requested item.",
+        items: requestedInventoryItems.slice(0, 150).map(item => ({
+          model: clean(item.model || item.itemid), itemId: clean(item.itemid), item: clean(item.product),
+          status: clean(item.status), activeBrand: item.activeBrand, eligible: item.eligible, excluded: item.excluded,
+          abc: item.abc, demandPerMonth: Number(item.demand.toFixed(2)), last30: item.last30,
+          onHand: item.onHand, openClient: item.openClient, openSupplier: item.openSupplier,
+          eligibleInbound: item.planningSupplier, leadTimeDays: Number((item.leadMonths * 30.44).toFixed(1)),
+          monthsCover: Number.isFinite(item.monthsCover) ? Number(item.monthsCover.toFixed(2)) : null,
+          daysToStockout: item.daysToStockout == null ? null : Number(item.daysToStockout.toFixed(1)),
+          forecast: Number(item.forecast.value.toFixed(2)), forecastLow: Number(item.forecast.low.toFixed(2)), forecastHigh: Number(item.forecast.high.toFixed(2)),
+          reorderQty: item.recommended, priority: item.priority, riskScore: item.riskScore,
+          confidence: Math.round(item.confidence.score), nextAction: item.nextAction,
+          businessReason: item.tradeoff?.reasonShort || shortReason(item)
+        }))
       } : null,
       salesAnalysis: salesItems.length ? {
         sourceFile: clean(sales?.sales?.fileName),
@@ -905,7 +934,7 @@
     if (/cfo|working capital|carrying cost|holding cost|burn rate|cash flow|tied[- ]up|salvage|turnover/i.test(q)) return cfoAnswer(analysis);
     if (/coo|operations|service level|98%|otif|fill rate|bottleneck|operational risk|runout horizon/i.test(q)) return cooAnswer(analysis);
     if (/procurement|sourcing|purchase order|draft po|generate po|create po|download po|po draft|vendor order|supplier order/i.test(q)) {
-      const brand = findBrandInQuestion(q, analysis.scoped);
+      const brand = findBrandInQuestion(q, analysis.items);
       return procurementAnswer(analysis, brand);
     }
 
@@ -920,7 +949,7 @@
     if (/data quality|audit (the )?data|validate data|missing data|bad data|anomal/.test(q)) return dataQualityAnswer(analysis);
     if (/action plan|prioriti[sz]e|what should (i|we) do|next actions?/.test(q)) return actionPlanAnswer(analysis);
     if (/confidence|how certain|accuracy|reliab/.test(q)) return confidenceAnswer(analysis, matched);
-    const brand = findBrandInQuestion(q, analysis.scoped);
+    const brand = findBrandInQuestion(q, analysis.items);
     if (brand && /brand|supplier|vendor|lead time|analy|performance|how is/.test(q)) return brandSupplierAnswer(brand, analysis);
     if (matched) return explainItem(matched, analysis);
     if (/^(why|explain|tell me more)/.test(q)) return followUpAnswer(analysis);
@@ -1973,15 +2002,19 @@ User Question: ${userQuestion}`;
   }
 
   function findItemInQuestion(q, items) {
+    const queryKey = normalizeLookup(q);
     const matches = items.filter(item => {
       const values = [item.model, item.itemid, item.product].map(value => clean(value).toLowerCase()).filter(value => value.length >= 3);
-      return values.some(value => q.includes(value));
+      return values.some(value => q.includes(value) || (normalizeLookup(value).length >= 3 && queryKey.includes(normalizeLookup(value))));
     });
     return matches.sort((a, b) => clean(b.model).length - clean(a.model).length)[0] || null;
   }
 
   function findBrandInQuestion(q, items) {
-    return [...new Set(items.map(item => item.brand))].filter(brand => clean(brand).length >= 2 && q.includes(clean(brand).toLowerCase())).sort((a, b) => b.length - a.length)[0] || null;
+    const queryKey = normalizeLookup(q);
+    return [...new Set(items.map(item => item.brand))]
+      .filter(brand => clean(brand).length >= 2 && (q.includes(clean(brand).toLowerCase()) || queryKey.includes(normalizeLookup(brand))))
+      .sort((a, b) => normalizeLookup(b).length - normalizeLookup(a).length)[0] || null;
   }
 
   async function inspectCurrentData(silentExisting) {

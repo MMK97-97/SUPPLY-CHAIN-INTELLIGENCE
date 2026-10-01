@@ -9,13 +9,13 @@
     if (!document.querySelector('link[data-ai-copilot-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20260930-10";
+      style.href = "assets/mk-brain.css?v=20261001-1";
       style.dataset.aiCopilotStyle = "true";
       document.head.appendChild(style);
     }
     if (!document.querySelector('script[data-ai-copilot-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20260930-10";
+      script.src = "assets/mk-brain.js?v=20261001-1";
       script.defer = true;
       script.dataset.aiCopilotScript = "true";
       document.head.appendChild(script);
@@ -372,8 +372,8 @@
               <div class="notif-item">
                 <span class="notif-badge notif-badge-teal">PO</span>
                 <div class="notif-text">
-                  <strong>AI Copilot Ready</strong>
-                  <p>STARK Copilot and Hugging Face Autonomous Agent active for this workspace.</p>
+                  <strong>MK Intelligence Ready</strong>
+                  <p>MK and the connected Supply AI engine are active for this workspace.</p>
                 </div>
               </div>
             </div>
@@ -381,8 +381,8 @@
         </div>
 
         <button class="topbar-pill topbar-ai-btn" id="topbar-ai-btn" type="button" aria-label="MK Supply Chain Intelligence" title="Open MK Intelligence">
-          <span class="topbar-ai-avatar">AI</span>
-          <span class="topbar-ai-label">STARK Copilot</span>
+          <span class="topbar-ai-avatar">MK</span>
+          <span class="topbar-ai-label">MK</span>
           <svg class="chevron-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
       </div>`;

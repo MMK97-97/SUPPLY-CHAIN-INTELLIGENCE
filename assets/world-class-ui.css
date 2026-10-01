@@ -784,9 +784,8 @@ body.sidebar-collapsed {
   }
 }
 
-/* Floating MK bot launcher and floating export button completely removed */
-.report-export-action,
-.mk-brain-launcher {
+/* Report export remains page-owned. MK is the universal floating control. */
+.report-export-action {
   display: none !important;
 }
 

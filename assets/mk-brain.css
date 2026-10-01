@@ -21,7 +21,7 @@
   z-index: 2147483001;
   min-width: 132px;
   height: 54px;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   gap: 10px;
@@ -35,6 +35,14 @@
   cursor: pointer;
   backdrop-filter: blur(14px);
   transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+/* Keep MK visible even when a page ships older shell-level button rules. */
+body .mk-brain-launcher[aria-label] {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .mk-brain-launcher:hover,
