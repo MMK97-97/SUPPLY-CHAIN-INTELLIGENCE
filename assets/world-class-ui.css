@@ -896,9 +896,11 @@ body.premium-shell-active.premium-content-leaving > main {
 .premium-rail-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  position: relative;
+  justify-content: flex-start;
   margin: 0 2px 14px;
-  padding-bottom: 12px;
+  min-height: 50px;
+  padding: 0 38px 12px 0;
   border-bottom: 1px solid rgba(147, 203, 215, 0.14);
 }
 
@@ -908,6 +910,11 @@ body.premium-shell-active.premium-content-leaving > main {
   gap: 10px;
   color: #fff;
   text-decoration: none;
+  min-width: 0;
+  width: 100%;
+}
+
+.premium-rail-brand-copy {
   min-width: 0;
 }
 
@@ -943,6 +950,9 @@ body.premium-shell-active.premium-content-leaving > main {
 }
 
 .sidebar-toggle-btn {
+  position: absolute;
+  top: 4px;
+  right: 0;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -1171,6 +1181,8 @@ body.sidebar-collapsed .premium-side-rail {
 body.sidebar-collapsed .premium-rail-head {
   justify-content: center;
   position: relative;
+  min-height: 50px;
+  padding-right: 0;
 }
 
 body.sidebar-collapsed .premium-rail-brand-copy,
@@ -1183,6 +1195,7 @@ body.sidebar-collapsed .sidebar-region-dropdown {
 
 body.sidebar-collapsed .sidebar-toggle-btn {
   position: absolute;
+  top: auto;
   bottom: -22px;
   right: 4px;
   z-index: 10;
@@ -1282,6 +1295,7 @@ body.sidebar-collapsed .premium-side-rail nav a {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: auto;
 }
 
 .topbar-dropdown-wrap {

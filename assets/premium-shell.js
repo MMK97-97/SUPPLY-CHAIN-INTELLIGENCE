@@ -323,27 +323,7 @@
     const meta = REGION_META[nextRegionCode] || REGION_META.US;
 
     topbar.innerHTML = `
-      <div class="topbar-search">
-        <svg class="topbar-search-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="search" id="topbar-global-search" placeholder="Search models, items, brands, reports..." aria-label="Global search across supply chain">
-      </div>
-
       <div class="topbar-actions">
-        <div class="topbar-dropdown-wrap">
-          <button class="topbar-pill topbar-region-btn" id="topbar-region-btn" type="button" aria-haspopup="true" aria-expanded="false" title="Switch Region">
-            <span class="topbar-flag">${meta.flag}</span>
-            <span class="topbar-region-text">${meta.name}</span>
-            <svg class="chevron-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-          <div class="topbar-dropdown topbar-region-menu" id="topbar-region-menu" hidden>
-            <a href="${resolveRegionalUrl("US")}" class="topbar-dropdown-item ${nextRegionCode === "US" ? "active" : ""}"><span>🇺🇸</span> <strong>United States (US)</strong></a>
-            <a href="${resolveRegionalUrl("EU")}" class="topbar-dropdown-item ${nextRegionCode === "EU" ? "active" : ""}"><span>🇪🇺</span> <strong>European Union (EU)</strong></a>
-            <a href="${resolveRegionalUrl("CA")}" class="topbar-dropdown-item ${nextRegionCode === "CA" ? "active" : ""}"><span>🇨🇦</span> <strong>Canada (CA)</strong></a>
-          </div>
-        </div>
-
         <div class="topbar-dropdown-wrap">
           <button class="topbar-icon-btn topbar-bell-btn" id="topbar-bell-btn" type="button" aria-label="Supply chain intelligence notifications" title="Supply Chain Alerts">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -379,34 +359,7 @@
             </div>
           </div>
         </div>
-
-        <button class="topbar-pill topbar-ai-btn" id="topbar-ai-btn" type="button" aria-label="MK Supply Chain Intelligence" title="Open MK Intelligence">
-          <span class="topbar-ai-avatar">MK</span>
-          <span class="topbar-ai-label">MK</span>
-          <svg class="chevron-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
       </div>`;
-
-    // Dropdown toggles
-    const regionBtn = topbar.querySelector("#topbar-region-btn");
-    const regionMenu = topbar.querySelector("#topbar-region-menu");
-    if (regionBtn && regionMenu) {
-      regionBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        const isCurrentlyOpen = !regionMenu.hidden && !regionMenu.hasAttribute("hidden");
-        topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
-          d.hidden = true;
-          d.setAttribute("hidden", "");
-        });
-        if (!isCurrentlyOpen) {
-          regionMenu.hidden = false;
-          regionMenu.removeAttribute("hidden");
-          regionBtn.setAttribute("aria-expanded", "true");
-        } else {
-          regionBtn.setAttribute("aria-expanded", "false");
-        }
-      });
-    }
 
     const bellBtn = topbar.querySelector("#topbar-bell-btn");
     const bellMenu = topbar.querySelector("#topbar-notifications-menu");
@@ -425,62 +378,12 @@
       });
     }
 
-    const aiBtn = topbar.querySelector("#topbar-ai-btn");
-    if (aiBtn) {
-      aiBtn.addEventListener("click", () => {
-        if (window.StarkCopilot || window.MKBrain) {
-          const copilot = window.StarkCopilot || window.MKBrain;
-          const panel = document.querySelector(".mk-brain-panel");
-          const isOpen = body.classList.contains("copilot-docked") || body.classList.contains("copilot-modal-open") || (panel && panel.classList.contains("open"));
-          if (isOpen) {
-            copilot.close();
-            aiBtn.classList.remove("active");
-          } else {
-            copilot.open();
-            aiBtn.classList.add("active");
-          }
-        }
-      });
-    }
-
     document.addEventListener("click", () => {
       topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
         d.hidden = true;
         d.setAttribute("hidden", "");
       });
-      regionBtn?.setAttribute("aria-expanded", "false");
     });
-
-    // Real-time table search forwarding
-    const searchInput = topbar.querySelector("#topbar-global-search");
-    if (searchInput) {
-      searchInput.addEventListener("input", e => {
-        const query = e.target.value;
-        const pageSearch =
-          document.getElementById("raw-search") ||
-          document.getElementById("reorder-search") ||
-          document.getElementById("brand-search") ||
-          document.getElementById("global-sales-search");
-
-        if (pageSearch) {
-          pageSearch.value = query;
-          pageSearch.dispatchEvent(new Event("input", { bubbles: true }));
-          pageSearch.dispatchEvent(new Event("change", { bubbles: true }));
-        }
-      });
-
-      searchInput.addEventListener("keydown", e => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          const query = searchInput.value.trim();
-          const copilot = window.StarkCopilot || window.MKBrain;
-          if (query && copilot) {
-            copilot.open();
-            copilot.ask(query);
-          }
-        }
-      });
-    }
   };
   renderTopbar(regionCode);
 
