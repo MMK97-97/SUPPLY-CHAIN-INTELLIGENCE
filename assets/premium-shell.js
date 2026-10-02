@@ -82,6 +82,10 @@
     consolidate: icon('<path d="M4 5h6v6H4zM14 5h6v6h-6zM9 16h6v4H9zM7 11v2.5h10V11M12 13.5V16"/>'),
     tracking: icon('<circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/>'),
     instructions: icon('<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>'),
+    crm: icon('<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2M17 8h4M19 6v4M17 14h4M17 18h4"/>'),
+    orders: icon('<path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/><path d="m15 17 2 2 4-5"/>'),
+    vendors: icon('<path d="M3 21h18M5 21V8l7-5 7 5v13M9 12h1M14 12h1M9 16h1M14 16h1"/>'),
+    purchase: icon('<path d="M4 5h16v14H4zM4 9h16M8 13h4M8 16h7"/><path d="m16 3 3 3"/>'),
     ai: icon('<path d="M12 2a2 2 0 0 1 2 2v1h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1v4a2 2 0 0 1-2 2h-4v1a2 2 0 0 1-4 0v-1H5a2 2 0 0 1-2-2v-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4V4a2 2 0 0 1 2-2zM9 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm6 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm-6 5a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2H9z"/>')
   };
 
@@ -96,7 +100,8 @@
   ]);
 
   const supported = inventoryPages.has(path) || [
-    "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html", "inventory-dashboard.html", "raw-report.html", "reorder-report.html", "active-brands.html", "instructions.html", "inventory.html"
+    "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html", "inventory-dashboard.html", "raw-report.html", "reorder-report.html", "active-brands.html", "instructions.html", "inventory.html",
+    "crm.html", "order-management.html", "vendor-management.html", "vendor-po-management.html"
   ].includes(path);
   if (!supported) return;
 
@@ -125,7 +130,11 @@
               : path === "events.html" ? "events"
                 : path === "freight-consolidate.html" ? "consolidate"
                   : path === "freight-estimator.html" ? "freight"
-                    : path === "shipment-tracking.html" ? "tracking"
+                : path === "shipment-tracking.html" ? "tracking"
+                  : path === "crm.html" ? "crm"
+                    : path === "order-management.html" ? "orders"
+                      : path === "vendor-management.html" ? "vendors"
+                        : path === "vendor-po-management.html" ? "vendor-pos"
                       : "";
 
   const navLink = ([key, label, href, glyph], submenu = false) =>
@@ -142,6 +151,9 @@
     }
     if (path === "events.html") {
       return `events.html?region=${targetCode}`;
+    }
+    if (["crm.html", "order-management.html", "vendor-management.html", "vendor-po-management.html"].includes(path)) {
+      return `${path}?region=${targetCode}`;
     }
     if (path.startsWith("inventory-dashboard")) {
       return `inventory-dashboard-${targetSlug}.html`;
@@ -201,6 +213,13 @@
       ["tracking", "Tracking", "shipment-tracking.html", icons.tracking]
     ];
 
+    const operationsItems = [
+      ["crm", "CRM", `crm.html?region=${nextRegionCode}`, icons.crm],
+      ["orders", "Order Management", `order-management.html?region=${nextRegionCode}`, icons.orders],
+      ["vendors", "Vendor Management", `vendor-management.html?region=${nextRegionCode}`, icons.vendors],
+      ["vendor-pos", "Vendor PO Management", `vendor-po-management.html?region=${nextRegionCode}`, icons.purchase]
+    ];
+
     rail.innerHTML = `
       <div class="premium-rail-head">
         <a class="premium-rail-brand" href="index.html" aria-label="Stark Premium home" title="Stark Premium Home">
@@ -243,7 +262,17 @@
           </div>
         </section>
         <div class="premium-nav-separator" aria-hidden="true"></div>
-        ${primaryItems.map(item => navLink(item)).join("")}
+        ${primaryItems.slice(0, 2).map(item => navLink(item)).join("")}
+        <section class="premium-nav-group premium-operations-group" aria-label="Operations management">
+          <div class="premium-nav-parent" title="Operations Management">
+            ${icons.orders}
+            <span>Operations</span>
+          </div>
+          <div class="premium-nav-submenu">
+            ${operationsItems.map(item => navLink(item, true)).join("")}
+          </div>
+        </section>
+        ${primaryItems.slice(2).map(item => navLink(item)).join("")}
       </nav>`;
 
     currentRegionCode = nextRegionCode;

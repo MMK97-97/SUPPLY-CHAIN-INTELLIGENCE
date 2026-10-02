@@ -16,33 +16,41 @@
   };
 
   const enhanceNestedNavigation = rail => {
-    if (!rail || rail.dataset.mobileNestedReady === "true") return;
-    const group = rail.querySelector(".premium-nav-group");
-    const parent = group?.querySelector(".premium-nav-parent");
-    const submenu = group?.querySelector(".premium-nav-submenu");
-    if (!group || !parent || !submenu) return;
+    if (!rail) return;
+    const groups = Array.from(rail.querySelectorAll(".premium-nav-group"));
+    groups.forEach((group, index) => {
+      if (group.dataset.mobileNestedReady === "true") return;
+      const parent = group.querySelector(".premium-nav-parent");
+      const submenu = group.querySelector(".premium-nav-submenu");
+      if (!parent || !submenu) return;
 
-    rail.dataset.mobileNestedReady = "true";
-    submenu.id ||= "mobile-inventory-submenu";
-    parent.setAttribute("role", "button");
-    parent.setAttribute("tabindex", "0");
-    parent.setAttribute("aria-controls", submenu.id);
-    const hasActiveChild = Boolean(submenu.querySelector("a.active, a[aria-current='page']"));
-    setExpanded(group, parent, hasActiveChild);
+      group.dataset.mobileNestedReady = "true";
+      submenu.id ||= `mobile-nav-submenu-${index + 1}`;
+      parent.setAttribute("role", "button");
+      parent.setAttribute("tabindex", "0");
+      parent.setAttribute("aria-controls", submenu.id);
+      const hasActiveChild = Boolean(submenu.querySelector("a.active, a[aria-current='page']"));
+      setExpanded(group, parent, hasActiveChild);
 
-    if (!parent.querySelector(".mobile-nest-chevron")) {
-      parent.insertAdjacentHTML("beforeend", '<svg class="mobile-nest-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');
-    }
+      if (!parent.querySelector(".mobile-nest-chevron")) {
+        parent.insertAdjacentHTML("beforeend", '<svg class="mobile-nest-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>');
+      }
 
-    const toggle = event => {
-      if (!mobile.matches) return;
-      if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
-      event.preventDefault();
-      setExpanded(group, parent, !group.classList.contains("mobile-open"));
-    };
-    parent.addEventListener("click", toggle);
-    parent.addEventListener("keydown", toggle);
+      if (group.dataset.mobileNestedBound !== "true") {
+        group.dataset.mobileNestedBound = "true";
+        const toggle = event => {
+          if (!mobile.matches) return;
+          if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+          event.preventDefault();
+          setExpanded(group, parent, !group.classList.contains("mobile-open"));
+        };
+        parent.addEventListener("click", toggle);
+        parent.addEventListener("keydown", toggle);
+      }
+    });
 
+    if (rail.dataset.mobileSwipeReady === "true") return;
+    rail.dataset.mobileSwipeReady = "true";
     rail.addEventListener("touchstart", event => {
       if (!mobile.matches || event.touches.length !== 1) return;
       touchStartX = event.touches[0].clientX;
@@ -62,15 +70,16 @@
   };
 
   const restoreDesktopNavigation = rail => {
-    const group = rail?.querySelector(".premium-nav-group");
-    const parent = group?.querySelector(".premium-nav-parent");
-    group?.classList.remove("mobile-open");
-    parent?.removeAttribute("role");
-    parent?.removeAttribute("tabindex");
-    parent?.removeAttribute("aria-controls");
-    parent?.removeAttribute("aria-expanded");
-    parent?.querySelector(".mobile-nest-chevron")?.remove();
-    if (rail) delete rail.dataset.mobileNestedReady;
+    rail?.querySelectorAll(".premium-nav-group").forEach(group => {
+      const parent = group.querySelector(".premium-nav-parent");
+      group.classList.remove("mobile-open");
+      delete group.dataset.mobileNestedReady;
+      parent?.removeAttribute("role");
+      parent?.removeAttribute("tabindex");
+      parent?.removeAttribute("aria-controls");
+      parent?.removeAttribute("aria-expanded");
+      parent?.querySelector(".mobile-nest-chevron")?.remove();
+    });
   };
 
   const syncMode = () => {
@@ -83,10 +92,10 @@
       railObserver?.disconnect();
       return;
     }
-    const nestedParent = rail?.querySelector(".premium-nav-parent");
-    if (rail && (rail !== observedRail || !nestedParent?.querySelector(".mobile-nest-chevron"))) {
+    const groups = rail ? Array.from(rail.querySelectorAll(".premium-nav-group")) : [];
+    const enhancedGroups = groups.filter(group => group.querySelector(".mobile-nest-chevron")).length;
+    if (rail && (rail !== observedRail || enhancedGroups !== groups.length)) {
       observedRail = rail;
-      delete rail.dataset.mobileNestedReady;
       enhanceNestedNavigation(rail);
       railObserver?.disconnect();
     }
