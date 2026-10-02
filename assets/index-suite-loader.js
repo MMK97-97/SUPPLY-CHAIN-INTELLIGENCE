@@ -10,7 +10,9 @@
     var mods=[
       ['CRM','◈','CRM','Accounts, programs, credit, contract pricing and partner integrations','crm.html','#46d7ff'],
       ['ORD','⇢','Order Management','Hold, redemption, bulk and firm PO execution','order-management.html','#a77cff'],
-      ['VEN','⎔','Vendor Management','Vendor master, procurement, digital vault and SLA','vendor-management.html','#35d07f']
+      ['VEN','⎔','Vendor Management','Vendor master, procurement, digital vault and SLA','vendor-management.html','#35d07f'],
+      ['WMS','▦','Warehouse Management','Bin inventory, receiving, wave picking, packing and dispatch','warehouse-management.html','#46d7ff'],
+      ['3PL','◎','3PL Management','Regional routing, external stock, shipments and SLA reconciliation','3pl-management.html','#ffb45f']
     ];
     mods.forEach(function(m){
       var b=document.createElement('button');b.type='button';b.className='module-button';b.setAttribute('data-enterprise-suite','true');
