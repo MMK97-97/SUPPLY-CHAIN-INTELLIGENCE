@@ -4,68 +4,45 @@
   const body = document.body;
   if (!body) return;
 
-  const requestedPath = location.pathname.split("/").filter(Boolean).pop() || "index.html";
-  const path = requestedPath === "index"
-    ? "index.html"
-    : requestedPath.includes(".")
-      ? requestedPath
-      : `${requestedPath}.html`;
-
-  /* Load STARK Copilot AI Agent early so it is available across all pages */
-  const loadAiCopilot = () => {
-    if (!document.querySelector('link[data-ai-copilot-style]')) {
+  /* MK is intentionally loaded before the workspace-shell guard so the
+     decision brain is available on every page, including legacy redirects
+     and the full-screen events view. */
+  const loadMkBrain = () => {
+    if (!document.querySelector('link[data-mk-brain-style]')) {
       const style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = "assets/mk-brain.css?v=20261001-3";
-      style.dataset.aiCopilotStyle = "true";
+      style.href = "assets/mk-brain.css?v=20260929-5";
+      style.dataset.mkBrainStyle = "true";
       document.head.appendChild(style);
     }
-    if (!document.querySelector('script[data-ai-copilot-script]')) {
+    if (!document.querySelector('script[data-mk-brain-script]')) {
       const script = document.createElement("script");
-      script.src = "assets/mk-brain.js?v=20261001-3";
+      script.src = "assets/mk-brain.js?v=20260929-5";
       script.defer = true;
-      script.dataset.aiCopilotScript = "true";
+      script.dataset.mkBrainScript = "true";
       document.head.appendChild(script);
     }
   };
-  if (path !== "index.html") loadAiCopilot();
+  loadMkBrain();
 
   if (body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
-  if (path === "index.html") return;
+
+  const path = location.pathname.split("/").pop() || "index.html";
   const suffixMatch = path.match(/-(us|eu|ca)\.html$/i);
   const queryRegion = new URLSearchParams(location.search).get("region") || new URLSearchParams(location.search).get("workspace");
   const storedRegion = localStorage.getItem("stark-selected-region");
   const region = suffixMatch
     ? suffixMatch[1].toLowerCase()
     : String(queryRegion || storedRegion || "US").toLowerCase().replace("canada", "ca");
-
   const normalizeRegionCode = value => {
     const normalized = String(value || "").trim().toUpperCase();
     return normalized === "EU" ? "EU" : normalized === "CA" || normalized === "CANADA" ? "CA" : "US";
   };
   const regionCode = normalizeRegionCode(region);
 
-  const REGION_META = {
-    US: { name: "United States", flag: "🇺🇸", slug: "us" },
-    EU: { name: "European Union", flag: "🇪🇺", slug: "eu" },
-    CA: { name: "Canada", flag: "🇨🇦", slug: "ca" }
-  };
-
   if (suffixMatch || queryRegion) {
     try { localStorage.setItem("stark-selected-region", regionCode); } catch (_) {}
   }
-
-  /* Restore sidebar collapse preference immediately */
-  const storedSidebar = localStorage.getItem("stark-sidebar-collapsed");
-  const isSidebarCollapsed = storedSidebar === "true";
-  if (isSidebarCollapsed) {
-    body.classList.add("sidebar-collapsed");
-    document.documentElement.classList.add("sidebar-collapsed");
-  }
-
-  /* Copilot always starts closed and opens as an overlay so page width stays stable. */
-  body.classList.remove("copilot-docked", "copilot-modal-open");
-  try { localStorage.removeItem("stark-copilot-docked"); } catch (_) {}
 
   const icon = paths => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg>`;
   const icons = {
@@ -81,12 +58,7 @@
     freight: icon('<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>'),
     consolidate: icon('<path d="M4 5h6v6H4zM14 5h6v6h-6zM9 16h6v4H9zM7 11v2.5h10V11M12 13.5V16"/>'),
     tracking: icon('<circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/>'),
-    instructions: icon('<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>'),
-    crm: icon('<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2M17 8h4M19 6v4M17 14h4M17 18h4"/>'),
-    orders: icon('<path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/><path d="m15 17 2 2 4-5"/>'),
-    vendors: icon('<path d="M3 21h18M5 21V8l7-5 7 5v13M9 12h1M14 12h1M9 16h1M14 16h1"/>'),
-    purchase: icon('<path d="M4 5h16v14H4zM4 9h16M8 13h4M8 16h7"/><path d="m16 3 3 3"/>'),
-    ai: icon('<path d="M12 2a2 2 0 0 1 2 2v1h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1v4a2 2 0 0 1-2 2h-4v1a2 2 0 0 1-4 0v-1H5a2 2 0 0 1-2-2v-4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4V4a2 2 0 0 1 2-2zM9 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm6 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm-6 5a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2H9z"/>')
+    instructions: icon('<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>')
   };
 
   const inventoryPages = new Set([
@@ -98,19 +70,15 @@
     "active-brands-us.html", "active-brands-eu.html", "active-brands-ca.html",
     "instructions-us.html", "instructions-eu.html", "instructions-ca.html", "ats-eu.html"
   ]);
-
   const supported = inventoryPages.has(path) || [
-    "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html", "inventory-dashboard.html", "raw-report.html", "reorder-report.html", "active-brands.html", "instructions.html", "inventory.html",
-    "crm.html", "order-management.html", "vendor-management.html", "vendor-po-management.html"
+    "index.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"
   ].includes(path);
   if (!supported) return;
-
-  /* Note: Floating export excel button completely removed per user request */
 
   const loadSharedAsset = file => {
     if (document.querySelector(`script[data-shared-asset="${file}"]`)) return;
     const script = document.createElement("script");
-    script.src = `assets/${file}?v=20260930-3`;
+    script.src = `assets/${file}?v=20260929-3`;
     script.async = false;
     script.dataset.sharedAsset = file;
     document.head.appendChild(script);
@@ -130,70 +98,19 @@
               : path === "events.html" ? "events"
                 : path === "freight-consolidate.html" ? "consolidate"
                   : path === "freight-estimator.html" ? "freight"
-                : path === "shipment-tracking.html" ? "tracking"
-                  : path === "crm.html" ? "crm"
-                    : path === "order-management.html" ? "orders"
-                      : path === "vendor-management.html" ? "vendors"
-                        : path === "vendor-po-management.html" ? "vendor-pos"
+                    : path === "shipment-tracking.html" ? "tracking"
                       : "";
 
-  const navLink = ([key, label, href, glyph], submenu = false) =>
-    `<a href="${href}" data-premium-nav="${key}" title="${label}" class="${submenu ? "premium-nav-subitem " : ""}${key === activeKey ? "active" : ""}" ${key === activeKey ? 'aria-current="page"' : ""}>${glyph}<span>${label}</span></a>`;
+  const navLink = ([key, label, href, glyph], submenu = false) => `<a href="${href}" data-premium-nav="${key}" class="${submenu ? "premium-nav-subitem " : ""}${key === activeKey ? "active" : ""}" ${key === activeKey ? 'aria-current="page"' : ""}>${glyph}<span>${label}</span></a>`;
 
-  /* Helper to convert current page to target region */
-  const resolveRegionalUrl = targetCode => {
-    const targetSlug = targetCode.toLowerCase();
-    if (suffixMatch) {
-      return path.replace(/-(us|eu|ca)\.html$/i, `-${targetSlug}.html`);
-    }
-    if (path === "sales-analysis.html") {
-      return `sales-analysis.html?region=${targetCode}`;
-    }
-    if (path === "events.html") {
-      return `events.html?region=${targetCode}`;
-    }
-    if (["crm.html", "order-management.html", "vendor-management.html", "vendor-po-management.html"].includes(path)) {
-      return `${path}?region=${targetCode}`;
-    }
-    if (path.startsWith("inventory-dashboard")) {
-      return `inventory-dashboard-${targetSlug}.html`;
-    }
-    if (path.startsWith("raw-report")) {
-      return `raw-report-${targetSlug}.html`;
-    }
-    if (path.startsWith("reorder-report")) {
-      return `reorder-report-${targetSlug}.html`;
-    }
-    if (path.startsWith("active-brands")) {
-      return `active-brands-${targetSlug}.html`;
-    }
-    if (path.startsWith("decision-intelligence")) {
-      return `decision-intelligence-${targetSlug}.html`;
-    }
-    if (path.startsWith("inventory-analysis-report")) {
-      return `inventory-analysis-report-${targetSlug}.html`;
-    }
-    if (path.startsWith("instructions")) {
-      return `instructions-${targetSlug}.html`;
-    }
-    return `inventory-dashboard-${targetSlug}.html`;
-  };
-
-  /* -------------------------------------------------------------
-     1. LEFT SIDEBAR (TOGGLE BAR)
-     ------------------------------------------------------------- */
   const rail = document.createElement("aside");
   rail.className = "premium-side-rail";
-  rail.id = "app-sidebar";
   rail.setAttribute("aria-label", "Primary workspace navigation");
-
   let currentRegionCode = "";
   const renderRail = value => {
     const nextRegionCode = normalizeRegionCode(value);
-    const meta = REGION_META[nextRegionCode] || REGION_META.US;
-    const regionSlug = meta.slug;
+    const regionSlug = nextRegionCode.toLowerCase();
     const regional = name => `${name}-${regionSlug}.html`;
-
     const inventoryItems = [
       ["dashboard", "Inventory Dashboard", regional("inventory-dashboard"), icons.dashboard],
       ["analysis", "Analysis Report", regional("inventory-analysis-report"), icons.analysis],
@@ -204,7 +121,6 @@
       ...(nextRegionCode === "EU" ? [["ats", "ATS", "ats-eu.html", icons.ats]] : []),
       ["instructions", "Instructions", regional("instructions"), icons.instructions]
     ];
-
     const primaryItems = [
       ["sales", "Sales Analysis", `sales-analysis.html?region=${nextRegionCode}`, icons.sales],
       ["events", "Events", `events.html?region=${nextRegionCode}`, icons.events],
@@ -212,113 +128,25 @@
       ["consolidate", "Freight Consolidate", "freight-consolidate.html", icons.consolidate],
       ["tracking", "Tracking", "shipment-tracking.html", icons.tracking]
     ];
-
-    const operationsItems = [
-      ["crm", "CRM", `crm.html?region=${nextRegionCode}`, icons.crm],
-      ["orders", "Order Management", `order-management.html?region=${nextRegionCode}`, icons.orders],
-      ["vendors", "Vendor Management", `vendor-management.html?region=${nextRegionCode}`, icons.vendors],
-      ["vendor-pos", "Vendor PO Management", `vendor-po-management.html?region=${nextRegionCode}`, icons.purchase]
-    ];
-
     rail.innerHTML = `
-      <div class="premium-rail-head">
-        <a class="premium-rail-brand" href="index.html" aria-label="Stark Premium home" title="Stark Premium Home">
-          <img src="assets/supply-chain-logo.png?v=20260918-2" alt="Stark Premium">
-          <div class="premium-rail-brand-copy">
-            <small>STARK PREMIUM</small>
-            <strong>Supply Chain Intelligence</strong>
-          </div>
-        </a>
-        <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" aria-label="Toggle sidebar collapse" title="Toggle sidebar">
-          <svg viewBox="0 0 24 24" class="toggle-icon-svg" aria-hidden="true">
-            <path d="m11 17 5-5-5-5M18 17l5-5-5-5"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="premium-rail-region-wrapper">
-        <div class="premium-rail-region" id="sidebar-region-trigger" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" title="Switch regional workspace">
-          <span class="region-badge-pill">${nextRegionCode}</span>
-          <div class="region-copy">
-            <small>REGIONAL WORKSPACE</small>
-            <strong>${meta.name} <svg class="chevron-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></strong>
-          </div>
-        </div>
-        <div class="sidebar-region-dropdown" id="sidebar-region-dropdown" hidden>
-          <a href="${resolveRegionalUrl("US")}" class="sidebar-region-opt ${nextRegionCode === "US" ? "active" : ""}"><span>🇺🇸</span> <strong>United States (US)</strong></a>
-          <a href="${resolveRegionalUrl("EU")}" class="sidebar-region-opt ${nextRegionCode === "EU" ? "active" : ""}"><span>🇪🇺</span> <strong>European Union (EU)</strong></a>
-          <a href="${resolveRegionalUrl("CA")}" class="sidebar-region-opt ${nextRegionCode === "CA" ? "active" : ""}"><span>🇨🇦</span> <strong>Canada (CA)</strong></a>
-        </div>
-      </div>
-
+      <a class="premium-rail-brand" href="index.html" aria-label="Stark Premium home"><img src="assets/supply-chain-logo.png?v=20260918-2" alt=""><div><small>Stark Premium</small><strong>Supply Chain Intelligence</strong></div></a>
+      <div class="premium-rail-region"><span>${nextRegionCode}</span><div><small>Regional workspace</small><strong>${nextRegionCode === "US" ? "United States" : nextRegionCode === "EU" ? "European Union" : "Canada"}</strong></div></div>
       <nav>
         <section class="premium-nav-group" aria-label="Inventory analysis">
-          <div class="premium-nav-parent" title="Inventory Analysis">
-            ${icons.dashboard}
-            <span>Inventory Analysis</span>
-          </div>
-          <div class="premium-nav-submenu">
-            ${inventoryItems.map(item => navLink(item, true)).join("")}
-          </div>
+          <div class="premium-nav-parent">${icons.dashboard}<span>Inventory Analysis</span></div>
+          <div class="premium-nav-submenu">${inventoryItems.map(item => navLink(item, true)).join("")}</div>
         </section>
         <div class="premium-nav-separator" aria-hidden="true"></div>
-        ${primaryItems.slice(0, 2).map(item => navLink(item)).join("")}
-        <section class="premium-nav-group premium-operations-group" aria-label="Operations management">
-          <div class="premium-nav-parent" title="Operations Management">
-            ${icons.orders}
-            <span>Operations</span>
-          </div>
-          <div class="premium-nav-submenu">
-            ${operationsItems.map(item => navLink(item, true)).join("")}
-          </div>
-        </section>
-        ${primaryItems.slice(2).map(item => navLink(item)).join("")}
+        ${primaryItems.map(item => navLink(item)).join("")}
       </nav>`;
-
     currentRegionCode = nextRegionCode;
-
-    // Toggle button event
-    rail.querySelector("#sidebar-toggle-btn")?.addEventListener("click", () => {
-      const isCollapsedNow = body.classList.toggle("sidebar-collapsed");
-      document.documentElement.classList.toggle("sidebar-collapsed", isCollapsedNow);
-      try { localStorage.setItem("stark-sidebar-collapsed", String(isCollapsedNow)); } catch (_) {}
-    });
-
-    // Region dropdown trigger
-    const regionTrigger = rail.querySelector("#sidebar-region-trigger");
-    const regionDropdown = rail.querySelector("#sidebar-region-dropdown");
-    if (regionTrigger && regionDropdown) {
-      regionTrigger.addEventListener("click", e => {
-        e.stopPropagation();
-        const isCurrentlyOpen = !regionDropdown.hidden && !regionDropdown.hasAttribute("hidden");
-        if (isCurrentlyOpen) {
-          regionDropdown.hidden = true;
-          regionDropdown.setAttribute("hidden", "");
-          regionTrigger.setAttribute("aria-expanded", "false");
-        } else {
-          regionDropdown.hidden = false;
-          regionDropdown.removeAttribute("hidden");
-          regionTrigger.setAttribute("aria-expanded", "true");
-        }
-      });
-      document.addEventListener("click", () => {
-        regionDropdown.hidden = true;
-        regionDropdown.setAttribute("hidden", "");
-        regionTrigger.setAttribute("aria-expanded", "false");
-      });
-    }
   };
   renderRail(regionCode);
-
   window.addEventListener("stark:region-change", event => {
     const nextRegionCode = normalizeRegionCode(event.detail?.region);
-    if (nextRegionCode !== currentRegionCode) {
-      renderRail(nextRegionCode);
-      renderTopbar(nextRegionCode);
-    }
+    if (nextRegionCode !== currentRegionCode) renderRail(nextRegionCode);
   });
 
-  /* Mobile menu button */
   const toggle = document.createElement("button");
   toggle.className = "premium-rail-toggle";
   toggle.type = "button";
@@ -340,150 +168,12 @@
   rail.addEventListener("click", event => {
     if (event.target.closest("a")) closeRail();
   });
-
-  /* -------------------------------------------------------------
-     2. TOP APPLICATION BAR
-     ------------------------------------------------------------- */
-  let topbar = document.getElementById("app-topbar");
-  if (!topbar) {
-    topbar = document.createElement("header");
-    topbar.className = "app-topbar";
-    topbar.id = "app-topbar";
-    body.prepend(topbar);
-  }
-
-  const escapeText = value => String(value == null ? "" : value).replace(/[&<>\"]/g, character => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
-  }[character]));
-
-  const renderTopbar = value => {
-    const nextRegionCode = normalizeRegionCode(value);
-    const meta = REGION_META[nextRegionCode] || REGION_META.US;
-    const authState = window.StarkAuth?.state || {};
-    const authUser = authState.user || {};
-    const displayName = String(authUser.user_metadata?.display_name || authUser.email?.split("@")[0] || "Account").trim();
-    const initials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "SA";
-    const roleLabel = authState.role
-      ? String(authState.role).replace(/_/g, " ").replace(/\b\w/g, character => character.toUpperCase())
-      : "Secure user";
-
-    topbar.innerHTML = `
-      <div class="topbar-actions">
-        <div class="topbar-dropdown-wrap">
-          <button class="topbar-icon-btn topbar-bell-btn" id="topbar-bell-btn" type="button" aria-label="Supply chain intelligence notifications" title="Supply Chain Alerts">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="topbar-badge-dot"></span>
-          </button>
-          <div class="topbar-dropdown topbar-notifications-menu" id="topbar-notifications-menu" hidden>
-            <div class="notif-header">
-              <strong>Intelligence Alerts</strong>
-              <small>Live Signals • ${nextRegionCode}</small>
-            </div>
-            <div class="notif-list">
-              <div class="notif-item notif-alert">
-                <span class="notif-badge">STOCK</span>
-                <div class="notif-text">
-                  <strong>Critical Stock Warning</strong>
-                  <p>Models reaching low thresholds in ${meta.name}. Review recommended reorders.</p>
-                </div>
-              </div>
-              <div class="notif-item">
-                <span class="notif-badge notif-badge-blue">TRADE</span>
-                <div class="notif-text">
-                  <strong>USTR &amp; WTO Regulatory Notice</strong>
-                  <p>Import compliance and customs reporting rules updated for active trade corridors.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="topbar-dropdown-wrap topbar-account-wrap">
-          <button class="topbar-account-btn" id="topbar-account-btn" type="button" aria-label="Open account menu" aria-expanded="false">
-            <span class="topbar-account-avatar" aria-hidden="true">${escapeText(initials)}</span>
-            <span class="topbar-account-copy"><strong>${escapeText(displayName)}</strong><small>${escapeText(roleLabel)}</small></span>
-            <svg class="topbar-account-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
-          </button>
-          <div class="topbar-dropdown topbar-account-menu" id="topbar-account-menu" hidden>
-            <div class="topbar-account-summary">
-              <strong>${escapeText(authState.organizationName || "Stark Supply Chain Intelligence")}</strong>
-              <span>${escapeText(authUser.email || "Authenticated workspace")}</span>
-            </div>
-            <button class="topbar-signout" id="topbar-signout" type="button">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg>
-              Sign out
-            </button>
-          </div>
-        </div>
-      </div>`;
-
-    const bellBtn = topbar.querySelector("#topbar-bell-btn");
-    const bellMenu = topbar.querySelector("#topbar-notifications-menu");
-    if (bellBtn && bellMenu) {
-      bellBtn.addEventListener("click", e => {
-        e.stopPropagation();
-        const isCurrentlyOpen = !bellMenu.hidden && !bellMenu.hasAttribute("hidden");
-        topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
-          d.hidden = true;
-          d.setAttribute("hidden", "");
-        });
-        if (!isCurrentlyOpen) {
-          bellMenu.hidden = false;
-          bellMenu.removeAttribute("hidden");
-        }
-      });
-    }
-
-    const accountBtn = topbar.querySelector("#topbar-account-btn");
-    const accountMenu = topbar.querySelector("#topbar-account-menu");
-    if (accountBtn && accountMenu) {
-      accountBtn.addEventListener("click", event => {
-        event.stopPropagation();
-        const open = accountMenu.hidden || accountMenu.hasAttribute("hidden");
-        topbar.querySelectorAll(".topbar-dropdown").forEach(dropdown => {
-          dropdown.hidden = true;
-          dropdown.setAttribute("hidden", "");
-        });
-        if (open) {
-          accountMenu.hidden = false;
-          accountMenu.removeAttribute("hidden");
-        }
-        accountBtn.setAttribute("aria-expanded", String(open));
-      });
-    }
-    topbar.querySelector("#topbar-signout")?.addEventListener("click", async event => {
-      event.stopPropagation();
-      const button = event.currentTarget;
-      button.disabled = true;
-      button.textContent = "Signing out…";
-      try {
-        await window.StarkAuth?.signOut();
-      } catch (_) {
-        button.disabled = false;
-        button.textContent = "Sign out";
-      }
-    });
-
-    document.addEventListener("click", () => {
-      topbar.querySelectorAll(".topbar-dropdown").forEach(d => {
-        d.hidden = true;
-        d.setAttribute("hidden", "");
-      });
-      topbar.querySelector("#topbar-account-btn")?.setAttribute("aria-expanded", "false");
-    });
-  };
-  renderTopbar(regionCode);
-  window.addEventListener("stark:auth-ready", () => renderTopbar(currentRegionCode));
-
-  /* -------------------------------------------------------------
-     3. PAGE TRANSITIONS & NAVIGATION
-     ------------------------------------------------------------- */
   let navigationInProgress = false;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const resetTransitionState = () => {
     navigationInProgress = false;
     body.classList.remove("premium-content-leaving", "page-leaving", "inventory-fallback-leaving");
   };
-
   document.addEventListener("click", event => {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     const link = target?.closest("a[href]");
@@ -507,7 +197,6 @@
     body.classList.add("premium-content-leaving");
     window.setTimeout(() => location.assign(destination.href), 135);
   }, true);
-
   window.addEventListener("pageshow", resetTransitionState);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") resetTransitionState();
@@ -517,26 +206,26 @@
   });
 
   const syncIndexMode = () => {
-    body.classList.add("premium-shell-active");
-    if (path !== "index.html") return;
-
+    if (path !== "index.html") {
+      body.classList.add("premium-shell-active");
+      return;
+    }
     const visibleRegion = document.documentElement.dataset.region
       || document.getElementById("module-region-pill")?.textContent
       || localStorage.getItem("stark-selected-region")
       || regionCode;
     const nextRegionCode = normalizeRegionCode(visibleRegion);
-    if (nextRegionCode !== currentRegionCode) {
-      renderRail(nextRegionCode);
-      renderTopbar(nextRegionCode);
-    }
+    if (nextRegionCode !== currentRegionCode) renderRail(nextRegionCode);
+    const moduleScreen = document.getElementById("module-screen");
+    const regionalApp = document.getElementById("regional-app");
+    const active = (moduleScreen && !moduleScreen.classList.contains("hidden")) || (regionalApp && !regionalApp.classList.contains("hidden"));
+    body.classList.toggle("premium-shell-active", Boolean(active));
+    if (!active) closeRail();
   };
   syncIndexMode();
-
   if (path === "index.html") {
     const observer = new MutationObserver(syncIndexMode);
-    [document.getElementById("module-screen"), document.getElementById("regional-app")].filter(Boolean).forEach(node =>
-      observer.observe(node, { attributes: true, attributeFilter: ["class"] })
-    );
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-region"] });
+    [document.getElementById("module-screen"), document.getElementById("regional-app")].filter(Boolean).forEach(node => observer.observe(node, {attributes: true, attributeFilter: ["class"]}));
+    observer.observe(document.documentElement, {attributes: true, attributeFilter: ["data-region"]});
   }
 })();

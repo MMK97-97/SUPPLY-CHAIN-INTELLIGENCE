@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const REGION = (location.pathname.match(/-(us|eu|ca)(?:\.html)?\/?$/i)?.[1] || "US").toUpperCase();
+  const REGION = (location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1] || "US").toUpperCase();
   const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   const el = id => document.getElementById(id);
   let SI;

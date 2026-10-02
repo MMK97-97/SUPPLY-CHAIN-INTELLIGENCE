@@ -3,12 +3,7 @@
 
   if (window.StarkReportExport) return;
 
-  const requestedPath = location.pathname.split("/").filter(Boolean).pop() || "index.html";
-  const path = requestedPath === "index"
-    ? "index.html"
-    : requestedPath.includes(".")
-      ? requestedPath
-      : `${requestedPath}.html`;
+  const path = location.pathname.split("/").pop() || "index.html";
   const reportPages = /^(inventory-dashboard|inventory-analysis-report|decision-intelligence|raw-report|reorder-report|active-brands|instructions)-(us|eu|ca)\.html$/i.test(path)
     || ["ats-eu.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"].includes(path);
   if (!reportPages || document.querySelector(".tv-app")) return;
@@ -377,12 +372,13 @@
     const readiness = exportReadiness();
     if (!readiness.ready) {
       notifyUnavailable(readiness.message);
-      updateButtonState();
       return;
     }
-    const original = trigger.innerHTML;
-    trigger.disabled = true;
-    trigger.innerHTML = '<span class="report-export-spinner" aria-hidden="true"></span><span>Preparing Excel…</span>';
+    const original = trigger?.innerHTML || "";
+    if (trigger) {
+      trigger.disabled = true;
+      trigger.innerHTML = '<span class="report-export-spinner" aria-hidden="true"></span><span>Preparing Excel…</span>';
+    }
     try {
       if (/^reorder-report-/.test(path) && document.getElementById("export-reorder-xlsx")) {
         document.getElementById("export-reorder-xlsx").click();
@@ -397,9 +393,10 @@
       console.error("Excel report export failed", error);
       alert(`The Excel report could not be exported: ${error.message}`);
     } finally {
-      trigger.disabled = false;
-      trigger.innerHTML = original;
-      updateButtonState();
+      if (trigger) {
+        trigger.disabled = false;
+        trigger.innerHTML = original;
+      }
     }
   }
 
@@ -459,35 +456,5 @@
     notifyUnavailable.timer = setTimeout(() => notice.remove(), 6500);
   }
 
-  function updateButtonState() {
-    if (!button) return;
-    const readiness = exportReadiness();
-    const disabled = !readiness.ready;
-    if (button.disabled !== disabled) button.disabled = disabled;
-    button.classList.toggle("report-export-unavailable", !readiness.ready);
-    button.setAttribute("aria-disabled", String(!readiness.ready));
-    button.title = readiness.ready
-      ? "Export the current report to Excel with KPIs, charts and visible tables"
-      : readiness.message;
-  }
-
-  // Floating export button completely removed per user request
-  const button = document.querySelector(".report-export-action");
-  if (button) button.remove();
-
-  let stateFrame = 0;
-  const scheduleStateUpdate = () => {
-    cancelAnimationFrame(stateFrame);
-    stateFrame = requestAnimationFrame(updateButtonState);
-  };
-  new MutationObserver(scheduleStateUpdate).observe(document.body, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ["class", "hidden", "disabled"]
-  });
-  window.addEventListener("stark-report-state-change", scheduleStateUpdate);
-  updateButtonState();
-
-  window.StarkReportExport = { exportReport: () => exportReport(button), captureChartImages, embedCharts };
+  window.StarkReportExport = { exportReport: () => exportReport(null), captureChartImages, embedCharts };
 })();

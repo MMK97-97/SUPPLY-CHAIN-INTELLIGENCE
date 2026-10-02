@@ -13,7 +13,7 @@
     if (!document.referrer) return "";
     try {
       const source = new URL(document.referrer);
-      const match = source.pathname.match(/-(us|eu|ca)(?:\.html)?\/?$/i);
+      const match = source.pathname.match(/-(us|eu|ca)\.html$/i);
       return normalizeRegion(match?.[1] || source.searchParams.get("region") || source.searchParams.get("workspace"));
     } catch (_) {
       return "";
