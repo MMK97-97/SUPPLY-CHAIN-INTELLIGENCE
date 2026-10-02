@@ -1,6 +1,7 @@
 // Deploy extensionless-route correction
 {
   "name": "supply-chain-intelligence",
+  "main": "worker.js",
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "preview_urls": true,
@@ -9,6 +10,7 @@
   },
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "html_handling": "none"
   }
 }

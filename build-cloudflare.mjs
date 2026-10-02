@@ -30,6 +30,7 @@ const excludedFiles = new Set([
   "build-cloudflare.mjs",
   "build-inventory-pages.mjs",
   "tracking-worker.js",
+  "worker.js",
   "wrangler.jsonc",
   "package.json",
   "package-lock.json",
