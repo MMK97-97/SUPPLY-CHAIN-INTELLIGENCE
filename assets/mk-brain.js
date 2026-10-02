@@ -38,6 +38,8 @@
   const SPACE_ORIGIN = clean(window.MK_SUPPLY_AI_ORIGIN || "https://mmk97-supply-ai-chain-hub.hf.space").replace(/\/+$/, "");
   const SPACE_API_NAME = "website_chat";
   const SPACE_TIMEOUT = 65000;
+  const SPACE_PROXY_STATUS = "/api/supply-ai/status";
+  const SPACE_PROXY_CHAT = "/api/supply-ai/chat";
   const ROUTES = {
     "inventory dashboard": "inventory-dashboard", dashboard: "inventory-dashboard",
     "analysis report": "inventory-analysis-report", "inventory analysis": "inventory-analysis-report",
@@ -183,7 +185,7 @@
           <strong>MK + Supply AI</strong>
           <small>Connecting to ${esc(SPACE_ID)}…</small>
         </div>
-        <button type="button" class="mk-space-toggle" aria-label="Disable Supply AI link" aria-pressed="true">On</button>
+        <button type="button" class="mk-space-toggle" aria-label="Checking Supply AI connection" aria-pressed="false" aria-busy="true">Checking</button>
       </div>
 
       <div class="mk-brain-feed" role="log" aria-live="polite"></div>
@@ -266,7 +268,11 @@
       event.stopPropagation();
       togglePanel(!panel.classList.contains("open"));
     });
-    spaceButton?.addEventListener("click", () => setSpaceEnabled(profile.spaceEnabled === false, true));
+    spaceButton?.addEventListener("click", () => {
+      if (profile.spaceEnabled === false) return setSpaceEnabled(true, true);
+      if (spaceConnection.state === "offline") return retrySpaceConnection(true);
+      return setSpaceEnabled(false, true);
+    });
 
     panel.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
@@ -488,7 +494,11 @@
 
   function spaceStatusMessage() {
     const state = profile.spaceEnabled === false ? "disabled" : spaceConnection.state;
-    const mode = spaceConnection.type === "gradio" ? `Space reasoning through ${spaceConnection.endpoint}` : "native specialist reasoning";
+    const mode = spaceConnection.type === "proxy"
+      ? `secure Cloudflare gateway through ${spaceConnection.endpoint}`
+      : spaceConnection.type === "gradio"
+        ? `direct Space reasoning through ${spaceConnection.endpoint}`
+        : "verified local reasoning";
     return `Supply AI is **${state}** for ${SPACE_ID}${spaceConnection.endpoint ? ` using ${mode}` : ""}.${spaceConnection.lastError ? ` Last issue: ${spaceConnection.lastError}.` : ""} MK’s verified local analysis remains available.`;
   }
 
@@ -498,18 +508,38 @@
     const state = enabled ? spaceConnection.state : "disabled";
     const messages = {
       checking: `Connecting to ${SPACE_ID}…`,
-      ready: spaceConnection.type === "gradio" ? `Supply AI connected — ${spaceConnection.endpoint}` : "Native specialist logic active",
+      ready: `Supply AI connected — ${spaceConnection.endpoint || SPACE_API_NAME}`,
       offline: "Supply AI unavailable — verified local engine active",
       disabled: "Supply AI disabled — verified local engine only"
     };
     spaceStatus.dataset.state = state;
     const detail = spaceStatus.querySelector("small");
     if (detail) detail.textContent = messages[state] || messages.checking;
-    spaceButton.textContent = enabled ? "On" : "Off";
+    const buttonText = { checking: "Checking", ready: "Connected", offline: "Retry", disabled: "Off" };
+    spaceButton.textContent = buttonText[state] || "Checking";
     spaceButton.dataset.state = state;
-    spaceButton.setAttribute("aria-pressed", String(enabled));
-    spaceButton.setAttribute("aria-label", enabled ? "Disable Supply AI link" : "Enable Supply AI link");
+    spaceButton.setAttribute("aria-pressed", String(state === "ready"));
+    spaceButton.setAttribute("aria-busy", String(state === "checking"));
+    spaceButton.setAttribute("aria-label", state === "offline" ? "Retry Supply AI connection" : enabled ? "Disable Supply AI link" : "Enable Supply AI link");
     spaceButton.title = messages[state] || messages.checking;
+  }
+
+  async function retrySpaceConnection(announce = false) {
+    profile.spaceEnabled = true;
+    saveProfile();
+    spaceConnection.state = "checking";
+    spaceConnection.lastError = "";
+    spaceDiscoveryPromise = null;
+    syncSpaceUi();
+    if (announce) addEntry("Retrying the secure Supply AI connection…", "brain", false, "AI connection");
+    try {
+      const connection = await discoverSpace(true);
+      if (announce) addEntry(`Supply AI is connected through ${connection.endpoint}.`, "brain", false, "AI connection");
+      return connection;
+    } catch (error) {
+      if (announce) addEntry(`Supply AI is still unavailable: ${clean(error?.message || "connection failed")}. MK’s verified local analysis remains available.`, "brain", false, "AI connection");
+      return null;
+    }
   }
 
   async function warmSpaceConnection() {
@@ -529,17 +559,19 @@
     spaceConnection.state = "checking";
     syncSpaceUi();
     spaceDiscoveryPromise = (async () => {
-      const configText = await fetchText(`${SPACE_ORIGIN}/config`, 18000);
-      let config;
-      try { config = JSON.parse(configText); }
-      catch (_) { throw new Error("Supply AI returned an invalid service description"); }
-      const dependency = Array.isArray(config?.dependencies)
-        ? config.dependencies.find(item => item?.api_name === SPACE_API_NAME)
-        : null;
-      if (!dependency) throw new Error(`Supply AI endpoint '${SPACE_API_NAME}' is not published yet`);
+      const proxy = await discoverSpaceProxy();
+      if (proxy) {
+        spaceConnection.state = "ready";
+        spaceConnection.type = "proxy";
+        spaceConnection.endpoint = clean(proxy.endpoint || SPACE_API_NAME);
+        spaceConnection.lastError = "";
+        syncSpaceUi();
+        return spaceConnection;
+      }
+      const direct = await discoverDirectSpace();
       spaceConnection.state = "ready";
       spaceConnection.type = "gradio";
-      spaceConnection.endpoint = SPACE_API_NAME;
+      spaceConnection.endpoint = direct.endpoint;
       spaceConnection.lastError = "";
       syncSpaceUi();
       return spaceConnection;
@@ -555,6 +587,59 @@
     }
   }
 
+  async function discoverSpaceProxy() {
+    if (!/^https?:$/.test(location.protocol)) return null;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 22000);
+    try {
+      const response = await fetch(SPACE_PROXY_STATUS, {
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+        signal: controller.signal
+      });
+      if (response.status === 404) return null;
+      let result = null;
+      try { result = await response.json(); } catch (_) {}
+      if (!response.ok || !result?.ok) throw new Error(clean(result?.error || `Supply AI gateway returned HTTP ${response.status}`));
+      return result;
+    } catch (error) {
+      if (error?.name === "AbortError") throw new Error("Supply AI gateway timed out");
+      throw error;
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
+  function selectDirectEndpoint(entries) {
+    const names = entries.map(value => clean(value).replace(/^\/+/, "")).filter(Boolean);
+    return names.find(name => name === SPACE_API_NAME)
+      || names.find(name => /(?:website.*chat|chat.*website)/i.test(name))
+      || names.find(name => /chat/i.test(name))
+      || "";
+  }
+
+  async function discoverDirectSpace() {
+    const issues = [];
+    try {
+      const info = JSON.parse(await fetchText(`${SPACE_ORIGIN}/gradio_api/info`, 18000));
+      const endpoint = selectDirectEndpoint(Object.keys(info?.named_endpoints || {}));
+      if (endpoint) return { endpoint };
+      issues.push("No published chat endpoint was found in the Gradio API description");
+    } catch (error) {
+      issues.push(clean(error?.message || "Gradio API description unavailable"));
+    }
+    try {
+      const config = JSON.parse(await fetchText(`${SPACE_ORIGIN}/config`, 18000));
+      const endpoint = selectDirectEndpoint(Array.isArray(config?.dependencies) ? config.dependencies.map(item => item?.api_name) : []);
+      if (endpoint) return { endpoint };
+      issues.push("The Space does not publish a chat API");
+    } catch (error) {
+      issues.push(clean(error?.message || "Space configuration unavailable"));
+    }
+    throw new Error(issues.filter(Boolean).join("; ") || "Supply AI is unavailable");
+  }
+
   async function fetchText(url, timeout = SPACE_TIMEOUT, options = {}) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), timeout);
@@ -562,6 +647,9 @@
       const response = await fetch(url, { credentials: "omit", cache: "no-store", ...options, signal: controller.signal });
       if (!response.ok) throw new Error(`Supply AI returned HTTP ${response.status}`);
       return await response.text();
+    } catch (error) {
+      if (error?.name === "AbortError") throw new Error("Supply AI connection timed out");
+      throw error;
     } finally { window.clearTimeout(timer); }
   }
 
@@ -570,7 +658,7 @@
     setState("Combining verified calculations with Supply AI reasoning…", true);
     try {
       const connection = await discoverSpace(spaceConnection.state === "offline");
-      if (connection.type !== "gradio") return localAnswer;
+      if (!["proxy", "gradio"].includes(connection.type)) return localAnswer;
       const reasoning = await invokeSupplyAI(question, localAnswer, connection);
       if (!reasoning) throw new Error("The Space returned an empty response");
       profile.spaceSuccesses = finite(profile.spaceSuccesses) + 1;
@@ -595,7 +683,6 @@
 
   async function invokeSupplyAI(question, localAnswer, connection) {
     const context = await buildUnifiedDecisionContext(question, localAnswer);
-    if (connection.type !== "gradio") return "";
     const payload = {
       version: 1,
       message: clean(question).slice(0, 12_000),
@@ -616,10 +703,34 @@
         decisionContext: context
       }).slice(0, 100_000)
     };
+    if (connection.type === "proxy") {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), SPACE_TIMEOUT);
+      try {
+        const response = await fetch(SPACE_PROXY_CHAT, {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ payload })
+        });
+        let result = null;
+        try { result = await response.json(); } catch (_) {}
+        if (!response.ok || !result?.ok) throw new Error(clean(result?.error || `Supply AI gateway returned HTTP ${response.status}`));
+        return clean(result.answer).slice(0, 8_000);
+      } catch (error) {
+        if (error?.name === "AbortError") throw new Error("Supply AI response timed out");
+        throw error;
+      } finally {
+        window.clearTimeout(timer);
+      }
+    }
+    if (connection.type !== "gradio") return "";
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), SPACE_TIMEOUT);
     try {
-      const callUrl = `${SPACE_ORIGIN}/gradio_api/call/${SPACE_API_NAME}`;
+      const callUrl = `${SPACE_ORIGIN}/gradio_api/call/${encodeURIComponent(connection.endpoint || SPACE_API_NAME)}`;
       const queued = await fetch(callUrl, {
         method: "POST",
         credentials: "omit",
@@ -652,6 +763,7 @@
         const decoded = JSON.parse(dataLines[index]);
         const value = Array.isArray(decoded) ? decoded[0] : decoded;
         if (value && typeof value === "object") return value;
+        if (typeof value === "string" && value.trim()) return { ok: true, answer: value.trim() };
       } catch (_) {}
     }
     throw new Error("Supply AI returned an unreadable response");
