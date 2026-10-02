@@ -1,0 +1,7 @@
+{
+  "name": "Stark Supply Chain Intelligence + Enterprise Operations",
+  "version": "2026.10.02-crm-oms-vms",
+  "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
+  "modules": ["CRM", "Order Management", "Vendor Management", "Vendor PO Management"],
+  "deployment": "GitHub Pages static frontend + optional Supabase/PostgreSQL backend"
+}
