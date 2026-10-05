@@ -13,24 +13,22 @@
   const state = { ready: false, session: null, user: null, organizationId: "", organizationName: "", role: "" };
   const esc = value => String(value == null ? "" : value).replace(/[&<>\"]/g, character => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[character]));
 
-  const appRoot = () => {
-    const path = location.pathname;
-    return path.slice(0, path.lastIndexOf("/") + 1);
-  };
+  const authRootURL = new URL("../", document.currentScript.src);
+  const appRoot = () => authRootURL.pathname;
 
   const safeReturnTarget = fallback => {
     const entered = new URLSearchParams(location.search).get("return") || fallback || "index.html";
     try {
       const target = new URL(entered, location.href);
       if (target.origin !== location.origin || !target.pathname.startsWith(appRoot())) return "index.html";
-      return `${target.pathname.split("/").pop() || "index.html"}${target.search}${target.hash}`;
+      return `${target.pathname.slice(appRoot().length) || "index.html"}${target.search}${target.hash}`;
     } catch (_) {
       return "index.html";
     }
   };
 
-  const currentReturnTarget = () => `${page}${location.search}${location.hash}`;
-  const loginUrl = () => `login.html?return=${encodeURIComponent(currentReturnTarget())}`;
+  const currentReturnTarget = () => `${location.pathname.slice(appRoot().length)}${location.search}${location.hash}`;
+  const loginUrl = () => new URL(`login.html?return=${encodeURIComponent(currentReturnTarget())}`,authRootURL).href;
   const callbackUrl = type => `${location.origin}${appRoot()}auth-callback.html?flow=${encodeURIComponent(type || "account")}`;
   const reveal = () => {
     root.classList.remove("stark-auth-pending", "stark-auth-failed");

@@ -54,7 +54,7 @@
   Promise.resolve()
     .then(() => loadScript(assetUrl("supabase-config.js"), () => Boolean(window.STARK_SUPABASE_CONFIG)))
     .then(() => loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2", () => Boolean(window.supabase?.createClient)))
-    .then(() => loadScript(assetUrl("supabase-auth.js"), () => Boolean(window.StarkAuth)))
+    .then(() => loadScript(assetUrl("supabase-auth.js?v=20261005-1"), () => Boolean(window.StarkAuth)))
     .catch(error => showFailure(error.message));
 
   window.setTimeout(() => {

@@ -39,7 +39,8 @@
     restorePageVisibility();
     bindEvents();
     const query = new URLSearchParams(location.search);
-    const requestedWorkspace = query.get("workspace");
+    const requestedWorkspaceRaw = query.get("workspace");
+    const requestedWorkspace = requestedWorkspaceRaw === "CA" ? "Canada" : requestedWorkspaceRaw;
     const requestedModule = query.get("module");
     if (["US", "EU", "Canada"].includes(requestedWorkspace)) {
       state.region = requestedWorkspace;
@@ -167,7 +168,7 @@
     el("module-screen").classList.add("hidden");
     el("home-screen").classList.remove("hidden");
     setHeaderWorkspaceActions(false);
-    history.replaceState(null, "", "index.html");
+    history.replaceState(null, "", "regional-workspace.html");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
