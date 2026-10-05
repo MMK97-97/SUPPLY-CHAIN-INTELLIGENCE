@@ -1,30 +1,33 @@
-# Supply Chain Intelligence — Complete CRM / Order / Vendor Build
+# Supply Chain Intelligence — Unified Enterprise System
 
-This package combines the existing Supply Chain Intelligence static website with the enterprise operations suite requested for CRM, Order Management and Vendor Management.
+The two former entry points now open the same enterprise control tower. All working modules use one nested sidebar and a shared customer, supplier, SKU, order, warehouse and 3PL data layer.
 
-## Main entry points
+Start with `index.html`. `business-operations.html` is a compatible entry point to the same workspace. The original market analysis interface is preserved at `regional-workspace.html`; existing US/EU/Canada report routes remain available.
 
-- `index.html` — existing Supply Chain Intelligence home. A lightweight loader adds Business Operations plus CRM, Order Management and Vendor Management links without changing the existing analysis engine.
-- `business-operations.html` — enterprise operations landing page.
-- `crm.html` — CRM dashboard.
-- `order-management.html` — Order Management Engine dashboard.
-- `vendor-management.html` — Vendor Management System dashboard.
-- `vendor-po-management.html` — vendor PO / receiving pipeline.
+See **INTEGRATION_GUIDE.md** for deployment, workflow connections, data migration and cloud setup. See **docs/VERIFICATION.md** for checks and remaining verification limits.
 
-The full nested workspaces are under `crm/`, `order-management/`, and `vendor-management/`.
+## Run locally
 
-## Frontend persistence
+```bash
+python3 -m http.server 8000
+```
 
-The included operations UI is immediately usable as a GitHub Pages static application and stores demo/working records in browser `localStorage`. Production persistence belongs behind an authenticated API. `database/schema.sql`, `database/api-contract.md`, and `supabase/migrations/20261002_enterprise_operations.sql` provide the database starting point.
-
-## Important security boundary
-
-Do not place vendor credentials, WMS secrets, private API keys, encryption keys, or plaintext voucher codes in GitHub Pages JavaScript. The digital-voucher UI intentionally stores masked sample references only. Production voucher decryption and vendor/API credentials must remain server-side.
+Open `http://localhost:8000/index.html`. Use a local HTTP server rather than opening HTML files directly so storage and imports use a consistent origin.
 
 ## Deploy
 
-The included `.github/workflows/deploy.yml` deploys the repository root to GitHub Pages when `main` is pushed. In GitHub repository settings, set **Pages → Source** to **GitHub Actions**.
+Copy the contents of the extracted project folder into the existing repository root. Keep the `assets/` folder and all nested module folders. The included GitHub Actions workflow deploys `main` to GitHub Pages. Cloudflare deployment remains supported through `node build-cloudflare.mjs` and the existing worker configuration.
 
-## Existing auth / Supabase configuration
+## Shared data
 
-If your current live repository already contains `login.html`, `auth-callback.html`, or an `assets/supabase-config.js` with your project configuration, keep those existing files when merging this package. This archive does not contain credentials.
+The static application saves work in the current browser. Existing operations and logistics records are migrated on first use; existing regional report databases remain in place. Sample records are labeled. Data Center can export backups, restore them, import regional inventory, or start an empty operations workspace.
+
+An optional authenticated cloud adapter and SQL migration are included. Apply `supabase/migrations/20261005_unified_system.sql` to your existing Supabase project, then sign in and connect through Data Center. This step has not been performed on your live database.
+
+## Workflow checks
+
+```bash
+node scripts/check-workflows.cjs
+```
+
+These checks exercise allocation, receiving, picking, dispatch, holds, 3PL, dropship, regional data separation, backup validation and cloud conflict handling. Cloud tests use a mock service and do not validate a deployed database.

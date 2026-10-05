@@ -1,7 +1,25 @@
 {
-  "name": "Stark Supply Chain Intelligence + Enterprise Operations",
-  "version": "2026.10.02-crm-oms-vms",
+  "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
+  "version": "2026.10.05-unified-enterprise",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
-  "modules": ["CRM", "Order Management", "Vendor Management", "Vendor PO Management"],
-  "deployment": "GitHub Pages static frontend + optional Supabase/PostgreSQL backend"
+  "modules": [
+    "Enterprise Control Tower",
+    "Regional Inventory & Planning",
+    "Sales Analysis",
+    "CRM",
+    "Order Management",
+    "Event Planning",
+    "Vendor Management",
+    "Vendor Purchase Orders",
+    "Warehouse Management",
+    "3PL Management",
+    "Freight & Tracking",
+    "System Data & Audit"
+  ],
+  "deployment": "GitHub Pages static frontend + optional Supabase/PostgreSQL backend",
+  "entry_points": [
+    "index.html",
+    "business-operations.html"
+  ],
+  "data_layer": "Shared browser workspace with optional organization-scoped Supabase synchronization"
 }
