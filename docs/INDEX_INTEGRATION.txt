@@ -1,10 +1,1 @@
-ADD THIS ONE LINE TO THE EXISTING ROOT index.html BEFORE </body>:
-
-<script src="assets/index-suite-loader.js?v=20261002-1"></script>
-
-What it does:
-- Adds a “Business Operations” link to the existing header.
-- Adds CRM, Order Management, and Vendor Management buttons to the existing regional module grid.
-- Does not modify or replace the existing Supply Chain Intelligence JavaScript or page logic.
-
-The new pages are global enterprise modules, so they are not tied to US/EU/Canada regional storage.
+Integration is complete in this package. index.html and business-operations.html open the same enterprise control tower. All module pages load the shared system bootstrap, navigation and data layer. Follow INTEGRATION_GUIDE.md for deployment.

@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-05",
+  "publishing_source": {
+    "source": "Deploy from a branch",
+    "branch": "main",
+    "folder": "/ (root)"
+  },
+  "root_entry_point": "index.html",
+  "nojekyll": "present, empty",
+  "custom_workflows": "absent",
+  "root_pages_yml": "absent",
+  "html_pages": 76,
+  "internal_references_checked": 873,
+  "missing_references": [],
+  "JavaScript_syntax_checks": 56,
+  "JavaScript_syntax_errors": [],
+  "static_checks_passed": true,
+  "live_publication_verified": false,
+  "browser_visual_verification": false,
+  "system_workflow_checks": 23,
+  "system_workflow_checks_passed": true
+}
