@@ -41,11 +41,13 @@
     ];
   }
   const currentPath = location.pathname;
-  const active = path => new URL(path,S.rootURL).pathname === currentPath;
+  const navigationPath = currentPath.replace(/\/warehouse-management\/cycle-count\.html$/, '/warehouse-management/cycle-counts.html');
+  const active = path => new URL(path,S.rootURL).pathname === navigationPath;
   function links(items) { return items.map(([path,label])=>`<a href="${S.url(path)}" ${active(path)?'class="active" aria-current="page"':''}>${escape(label)}</a>`).join(''); }
   function renderNavigation() {
     const nav = document.querySelector('#system-navigation'); if (!nav) return;
-    nav.innerHTML = `<a class="system-home ${/\/(index|business-operations)\.html$/.test(currentPath)?'active':''}" href="${S.url('index.html')}">${glyph('home')}<span>Enterprise control tower</span></a>` + groups().map(([id,label,items])=>`<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${links(items)}</div></details>`).join('');
+    const homeActive = active('index.html') || active('business-operations.html');
+    nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('index.html')}">${glyph('home')}<span>Enterprise control tower</span></a>` + groups().map(([id,label,items])=>`<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${links(items)}</div></details>`).join('');
   }
   function notice(message,error=false) {
     const node = document.createElement('div'); node.className='system-toast'+(error?' error':''); node.setAttribute('role',error?'alert':'status'); node.textContent=message; document.body.append(node); setTimeout(()=>node.remove(),5000);
@@ -64,13 +66,15 @@
   }
   function start() {
     if (document.body.classList.contains('tv-view') || document.querySelector('.tv-app') || /\/(login|auth-callback|cloud-agent)\.html$/.test(currentPath)) return;
-    document.body.classList.add('stark-system');
+    if (document.querySelector('#system-sidebar')) return;
     const sidebar = document.createElement('aside'); sidebar.className='system-sidebar'; sidebar.id='system-sidebar'; sidebar.setAttribute('aria-label','Enterprise navigation');
     sidebar.innerHTML=`<a class="system-brand" href="${S.url('index.html')}"><img src="${S.url('assets/supply-chain-logo.png')}" alt=""><span><small>STARK PREMIUM</small><strong>Supply Chain<br>Intelligence</strong></span></a><div class="system-workspace-label">ENTERPRISE WORKSPACE</div><nav id="system-navigation"></nav><div class="system-sidebar-footer"><span id="system-data-status"></span><a href="${S.url('data-center.html')}">Manage workspace</a></div>`;
     const header = document.createElement('header'); header.className='system-header';
     header.innerHTML=`<button class="system-menu" aria-label="Open navigation" aria-controls="system-sidebar" aria-expanded="false">☰</button><div class="system-breadcrumb"><b>${escape(document.title.split(/[·|]/)[0].trim())}</b></div><div class="system-search"><label class="visually-hidden" for="system-search-input">Search pages and records</label>${glyph('search')}<input id="system-search-input" placeholder="Search customers, orders, SKUs…" autocomplete="off"><div class="system-search-results" hidden></div></div><label class="system-region"><span>Analysis region</span><select id="system-region-select" aria-label="Analysis region"><option value="US">US</option><option value="EU">EU</option><option value="CA">Canada</option></select></label><a class="system-account" href="${S.url('login.html?return='+encodeURIComponent(currentPath.slice(S.rootURL.pathname.length)+location.search))}" aria-label="Sign in to workspace">S</a>`;
     const scrim = document.createElement('button'); scrim.className='system-scrim'; scrim.setAttribute('aria-label','Close navigation');
-    document.body.prepend(scrim, sidebar, header); renderNavigation();
+    document.body.prepend(scrim, sidebar, header);
+    document.body.classList.add('stark-system');
+    renderNavigation();
     const select = header.querySelector('select'); select.value=S.getRegion();
     select.addEventListener('change',()=>{
       localStorage.setItem('stark-selected-region',select.value); renderNavigation(); window.dispatchEvent(new CustomEvent('stark:region-change',{detail:{region:select.value}}));
@@ -95,5 +99,8 @@
     if(wanted){localStorage.setItem('stark-selected-region',S.regionCode(wanted));select.value=S.getRegion();renderNavigation();}
   }
   window.StarkSystemUI={notice,escape,glyph};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+  // Deferred scripts run at "interactive" before DOMContentLoaded. Module listeners
+  // build their page body at that event, so mount the shared chrome after them.
+  if(document.readyState==='complete')start();
+  else document.addEventListener('DOMContentLoaded',start,{once:true});
 })();
