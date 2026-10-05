@@ -37,12 +37,27 @@ Missing warehouse inventory, receiving, wave-picking, packing and cycle-count ro
 
 ## Deployment to your existing website
 
-1. Extract the ZIP. Copy everything **inside** `SUPPLY-CHAIN-INTELLIGENCE-main/` to the existing repository root; avoid nesting another copy of that folder inside the repository.
-2. Commit and push to `main`. The included Pages workflow publishes the repository root.
-3. In repository Settings → Pages, use GitHub Actions if it is not already selected.
-4. After deployment, reload the site to fetch the updated versioned scripts. Open Data Center and export a backup before clearing sample records or restoring a different workspace.
+Publish this static system using **Deploy from a branch**. No custom workflow is included.
 
-The build preserves the supplied login page, Supabase public project configuration, AI worker, existing reports, freight tools and current hosting files. No change has been pushed to the live GitHub repository or database by this build.
+1. Extract the ZIP. Copy everything **inside** `SUPPLY-CHAIN-INTELLIGENCE-main/` to the existing repository root, including `.nojekyll`, every file in `assets/` and all nested module folders. Avoid nesting another project folder inside the repository. Verify that `index.html` is directly in the repository root.
+2. Keep the removed `.github/workflows` directory absent. Remove the obsolete root `pages.yml` if it remains in your repository.
+3. In repository Settings → Pages → Build and deployment, set the following and click Save:
+
+| Setting | Value |
+|---|---|
+| Source | Deploy from a branch |
+| Branch | main |
+| Folder | / (root) |
+
+4. Commit the complete files to `main`. GitHub automatically publishes changes to the selected branch. The files are already static; do not select `/docs` or use `dist/` as the publishing folder for this package.
+5. Verify that `.nojekyll` exists at the same level as `index.html`. It is an empty marker file that bypasses Jekyll processing. If the upload picker omits it, create it through GitHub's Add file → Create new file.
+6. After publication, reload the site to fetch the versioned scripts. The existing URL remains `https://mmk97-97.github.io/SUPPLY-CHAIN-INTELLIGENCE/index.html`. Open Data Center and export a backup before clearing sample records or restoring a different workspace.
+
+GitHub may display its built-in **pages build and deployment** job in Actions even when Source is Deploy from a branch. This is GitHub's automatic publisher; no repository workflow files are required. Do not rerun the deleted custom deployment workflow from an older commit. A new commit to `main` triggers publication using the selected branch source.
+
+This package also repairs an incomplete source upload: its new landing pages referenced missing shared system scripts, and several nested module pages/scripts still matched the original pre-integration version. The matching integration files and missing warehouse routes have been restored. Existing uploaded files that already matched the integrated system were retained.
+
+The supplied login, Supabase public configuration, AI worker, regional reports, freight tools and optional Cloudflare configuration remain included. No change has been pushed to the live repository, Pages settings or database in this session.
 
 ## Optional shared cloud workspace
 

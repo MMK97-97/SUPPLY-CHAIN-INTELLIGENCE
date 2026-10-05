@@ -1,6 +1,6 @@
 {
   "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
-  "version": "2026.10.05-unified-enterprise",
+  "version": "2026.10.05-unified-enterprise-branch",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -16,10 +16,17 @@
     "Freight & Tracking",
     "System Data & Audit"
   ],
-  "deployment": "GitHub Pages static frontend + optional Supabase/PostgreSQL backend",
+  "deployment": "GitHub Pages: Deploy from a branch (main / root) + optional Supabase/PostgreSQL backend",
   "entry_points": [
     "index.html",
     "business-operations.html"
   ],
-  "data_layer": "Shared browser workspace with optional organization-scoped Supabase synchronization"
+  "data_layer": "Shared browser workspace with optional organization-scoped Supabase synchronization",
+  "publishing_source": {
+    "type": "branch",
+    "branch": "main",
+    "folder": "/",
+    "jekyll": false,
+    "custom_workflows": false
+  }
 }
