@@ -6,6 +6,8 @@ Start with `index.html`. `business-operations.html` is a compatible entry point 
 
 See **INTEGRATION_GUIDE.md** for deployment, workflow connections, data migration and cloud setup. See **docs/VERIFICATION.md** for checks and remaining verification limits.
 
+This revision fixes disappearing navigation on nested modules and completes their light theme. Shared scripts and styles use asset version `20261005-2`; upload the full package so every page loads the same revision.
+
 ## Run locally
 
 ```bash
@@ -39,3 +41,12 @@ node scripts/check-workflows.cjs
 ```
 
 These checks exercise allocation, receiving, picking, dispatch, holds, 3PL, dropship, regional data separation, backup validation and cloud conflict handling. Cloud tests use a mock service and do not validate a deployed database.
+
+## Interface regression checks
+
+```bash
+npm install --no-save --package-lock=false jsdom@26
+node scripts/check-interface.cjs
+```
+
+These checks load local source into a Node.js DOM simulation. They check module startup, navigation, menu/search/region behavior, dialog controls and selected text colors without opening a browser or contacting live services. The test dependency is separate from the deployed static website. Results are recorded in `docs/verification-interface.json`.
