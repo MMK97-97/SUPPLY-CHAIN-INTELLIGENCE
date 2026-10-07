@@ -1,99 +1,29 @@
 {
-  "date": "2026-10-05",
-  "passed": true,
+  "passed": 23,
   "checks": [
-    {
-      "scenario": "one SKU balance shared across catalog and warehouse",
-      "passed": true
-    },
-    {
-      "scenario": "order entry reserves stock without reducing on hand",
-      "passed": true
-    },
-    {
-      "scenario": "overselling, decimal quantity, duplicate PO and wrong programs reject atomically",
-      "passed": true
-    },
-    {
-      "scenario": "credit guardrails apply to firm and bulk orders",
-      "passed": true
-    },
-    {
-      "scenario": "hold-to-redemption transfers allocation without deducting stock",
-      "passed": true
-    },
-    {
-      "scenario": "pick generates packing and dispatch reduces stock exactly once",
-      "passed": true
-    },
-    {
-      "scenario": "vendor receipt is idempotent across vendor and warehouse modules",
-      "passed": true
-    },
-    {
-      "scenario": "WMS putaway updates the linked supplier PO",
-      "passed": true
-    },
-    {
-      "scenario": "partial bin transfers preserve totals and reject reserved stock",
-      "passed": true
-    },
-    {
-      "scenario": "3PL routes link customer orders, reserve remote stock and dispatch once",
-      "passed": true
-    },
-    {
-      "scenario": "dropship procurement and dispatch never increase warehouse stock",
-      "passed": true
-    },
-    {
-      "scenario": "US, EU and Canada report imports preserve regional SKU identity",
-      "passed": true
-    },
-    {
-      "scenario": "stale page writes reject rather than overwrite newer records",
-      "passed": true
-    },
-    {
-      "scenario": "existing browser records migrate without changing IDs",
-      "passed": true
-    },
-    {
-      "scenario": "multiline picking and packing preserve each SKU and partial order status",
-      "passed": true
-    },
-    {
-      "scenario": "partial receipt creates follow-up receiving for the remaining quantity",
-      "passed": true
-    },
-    {
-      "scenario": "damaged receiving posts physical stock while excluding damaged units from availability",
-      "passed": true
-    },
-    {
-      "scenario": "event planning is saved in the shared workspace",
-      "passed": true
-    },
-    {
-      "scenario": "malformed backups reject before replacing the workspace",
-      "passed": true
-    },
-    {
-      "scenario": "cancelled 3PL orders release partner allocations and block further dispatch",
-      "passed": true
-    },
-    {
-      "scenario": "digital orders dispatch linked masked references and release allocations",
-      "passed": true
-    },
-    {
-      "scenario": "cloud adapter saves with optimistic revisions",
-      "passed": true
-    },
-    {
-      "scenario": "cloud conflict pauses synchronization and preserves local records",
-      "passed": true
-    }
+    "one SKU balance shared across catalog and warehouse",
+    "order entry reserves stock without reducing on hand",
+    "overselling, decimal quantity, duplicate PO and wrong programs reject atomically",
+    "credit guardrails apply to firm and bulk orders",
+    "hold-to-redemption transfers allocation without deducting stock",
+    "pick generates packing and dispatch reduces stock exactly once",
+    "vendor receipt is idempotent across vendor and warehouse modules",
+    "WMS putaway updates the linked supplier PO",
+    "partial bin transfers preserve totals and reject reserved stock",
+    "3PL routes link customer orders, reserve remote stock and dispatch once",
+    "dropship procurement and dispatch never increase warehouse stock",
+    "US, EU and Canada report imports preserve regional SKU identity",
+    "stale page writes reject rather than overwrite newer records",
+    "existing browser records migrate without changing IDs",
+    "multiline picking and packing preserve each SKU and partial order status",
+    "partial receipt creates follow-up receiving for the remaining quantity",
+    "damaged receiving posts physical stock while excluding damaged units from availability",
+    "event planning is saved in the shared workspace",
+    "malformed backups reject before replacing the workspace",
+    "cancelled 3PL orders release partner allocations and block further dispatch",
+    "digital orders dispatch linked masked references and release allocations",
+    "cloud adapter saves with optimistic revisions",
+    "cloud conflict pauses synchronization and preserves local records"
   ],
-  "cloud_service": "mock"
+  "failed": false
 }

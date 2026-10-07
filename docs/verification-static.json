@@ -1,8 +1,20 @@
 {
-  "date": "2026-10-05",
-  "passed": true,
-  "html_pages": 76,
-  "JavaScript_syntax_checks": 56,
-  "internal_references_checked": 873,
-  "errors": []
+  "html_pages": 77,
+  "local_references_checked": 1250,
+  "missing_references": [],
+  "script_syntax_checks": 66,
+  "syntax_errors": [],
+  "shared_mk_pages": 73,
+  "space_connector_load_order": "before MKAI on every shared page",
+  "unchanged_business_engines": [
+    "assets/system-core.js",
+    "assets/inventory-core-us.js",
+    "assets/inventory-core-eu.js",
+    "assets/inventory-core-ca.js",
+    "assets/enterprise-suite.js",
+    "assets/operations-suite.js",
+    "assets/logistics-suite.js",
+    "assets/system-cloud.js"
+  ],
+  "method": "Local source syntax/path/deployment checks; no browser rendering."
 }

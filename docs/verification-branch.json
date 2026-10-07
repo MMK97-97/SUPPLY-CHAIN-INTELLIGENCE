@@ -9,14 +9,11 @@
   "nojekyll": "present, empty",
   "custom_workflows": "absent",
   "root_pages_yml": "absent",
-  "html_pages": 76,
-  "internal_references_checked": 873,
+  "html_pages": 77,
+  "internal_references_checked": 1250,
   "missing_references": [],
-  "JavaScript_syntax_checks": 56,
-  "JavaScript_syntax_errors": [],
-  "static_checks_passed": true,
-  "live_publication_verified": false,
-  "browser_visual_verification": false,
-  "system_workflow_checks": 23,
-  "system_workflow_checks_passed": true
+  "syntax_checks": 66,
+  "syntax_errors": [],
+  "cache_version": "20261005-5",
+  "live_deployment": "not performed"
 }

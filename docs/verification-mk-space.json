@@ -1,0 +1,22 @@
+{
+  "passed": 14,
+  "checks": [
+    "the explicit website_chat API receives one JSON payload without credentials or UI events",
+    "verified context preserves model identifiers and omits customer contact records",
+    "large multi-region context stays valid JSON below 16000 characters with full totals and excerpt limits",
+    "website scenario results reach the Space without changing regional planning records",
+    "conversation history contains complete recent user/assistant pairs only",
+    "SSE parsing handles heartbeat, CRLF, Unicode and split response frames",
+    "interface text, empty answers, incompatible shapes and explicit provider errors are rejected",
+    "error events, malformed SSE and premature stream completion cannot become AI answers",
+    "fabricated report references cause a clear local-fallback error",
+    "access restrictions, sleeping Space and rate limits return useful connection messages",
+    "connection testing checks the actual JSON contract without consuming model inference",
+    "stopped and timed-out requests cancel transport without submitting another analysis",
+    "MK uses the Space through the chat UI and includes regional facts plus follow-up history",
+    "Space failure falls back to actual local data and AI output is escaped"
+  ],
+  "failed": 0,
+  "failures": [],
+  "method": "Offline Node.js transport tests and jsdom DOM simulations; no browser or live inference in this script."
+}

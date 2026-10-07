@@ -1,0 +1,32 @@
+{
+  "passed": 24,
+  "checks": [
+    "tools isolate inventory regions and exclude restricted items from scenarios",
+    "large report limits are explicit and invalid numeric data is rejected",
+    "brand evidence IDs cover lower-ranked brands and model searches preserve identifiers",
+    "sales reports keep currencies separate and explain valuation estimates",
+    "agent selects read-only tools, preserves reasoning items and returns traceable evidence",
+    "invented or unread evidence references reject the AI answer",
+    "unknown model tools cannot mutate the workspace and incomplete output is rejected",
+    "authorization, origin checks and missing configuration prevent provider calls",
+    "authenticated status check is free and duplicate/quota requests do not reach AI",
+    "successful authenticated request records usage without storing report content",
+    "analyst workspace mounts one docked brain and shared navigation",
+    "existing nested modules retain a usable floating analyst",
+    "local report analysis finds the requested brand and produces evidence",
+    "region selection cannot reuse another region’s answer",
+    "cross-region comparison and scenario preserve report and operational records",
+    "AI failure yields clearly labeled verified local results",
+    "follow-up conversation is passed to AI and an in-flight question cannot duplicate",
+    "cancelled AI analysis is stopped without saving an answer or changing records",
+    "monitoring deduplicates unchanged reports and detects changed reorder needs",
+    "report content and AI output render as text rather than executable markup",
+    "CSV upload uses the correct regional parser and rejects unrelated files before replacing reports",
+    "XLSX upload reads local workbook bytes and preserves model leading zeros",
+    "scenario language cannot change live planning settings",
+    "AI transport uses the signed-in token and allows read-only members without cloud sync"
+  ],
+  "failed": 0,
+  "failures": [],
+  "method": "Node.js pure-function and jsdom DOM simulations; no browser or live AI/database requests."
+}

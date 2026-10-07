@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-05T20:15:34.321Z",
+  "space": "MMK97/supply-ai-chain-hub",
+  "host": "https://mmk97-supply-ai-chain-hub.hf.space",
+  "source_revision": "3f70e78ebd76723813e904840b3d60fb47d15029",
+  "method": "Actual shipped JavaScript connector using Node HTTP fetch; live public Space API and synthetic report context only. No browser, repository write or business data.",
+  "connection": {
+    "configured": true,
+    "provider": "huggingface",
+    "model": "Supply AI Chain Hub",
+    "message": "Space endpoint ready. Ask a question to check model access."
+  },
+  "result": {
+    "answer": "Model TEST-00001 needs review, with a verified reorder quantity of 21 units. This is based on the synthetic data observation where on-hand inventory is 2, demand is 10, and stockout risk is present [US:item:0]. The recommendation aligns with replenishment logic to cover forecasted needs during lead time. Data is from a test file; no real inventory actions were taken.",
+    "mode": "ai",
+    "provider": "huggingface",
+    "model": "Supply AI Chain Hub",
+    "depth": "Fast",
+    "evidence_ids": [
+      "workspace:summary",
+      "US:summary",
+      "US:item:0"
+    ],
+    "tools": [
+      {
+        "name": "report_overview",
+        "arguments": {
+          "region": "US"
+        },
+        "status": "complete",
+        "origin": "Website"
+      },
+      {
+        "name": "search_report_items",
+        "arguments": {
+          "region": "US",
+          "query": "TEST-00001",
+          "risk": "all",
+          "limit": 5
+        },
+        "status": "complete",
+        "origin": "Website"
+      }
+    ]
+  },
+  "elapsed_seconds": 12.4,
+  "assertions": [
+    "JSON endpoint contract available",
+    "Actual website_chat queued POST and completed SSE parsed",
+    "Correct synthetic model and 21-unit recommendation preserved",
+    "Source citation present and checked against context"
+  ],
+  "cross_origin_check": {
+    "origin": "https://mmk97-97.github.io",
+    "preflight_status": 200,
+    "allow_origin": "https://mmk97-97.github.io",
+    "allow_methods": "POST",
+    "allow_headers": "content-type",
+    "queued_post_status": 200,
+    "completed_sse_status": 200,
+    "method": "Separate public HTTP OPTIONS, queued POST and SSE check with synthetic TEST-SKU-001 facts; no browser."
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-10-07T15:36:56.217301+00:00",
+  "repository": "MMK97-97/SUPPLY-CHAIN-INTELLIGENCE",
+  "branch": "main",
+  "folder": "/ (root)",
+  "baseline_commit": "7a8f86f3cd034e0e8f12e534995aa4c13e3369da",
+  "live_website_version": "2026.10.05-unified-enterprise-branch-ui2",
+  "prepared_website_version": "2026.10.05-unified-enterprise-mk-hf41",
+  "publish_method": "Manual source upload; GitHub plugin declined",
+  "publishing_settings": "Not independently readable without repository access; use the requested Deploy from a branch / main / root configuration",
+  "missing_root_marker_on_main": true,
+  "legacy_root_pages_yml_on_main": true,
+  "remote_custom_workflows": [],
+  "core_engine_matches_main": {
+    "assets/system-core.js": true,
+    "assets/inventory-core-us.js": true,
+    "assets/inventory-core-eu.js": true,
+    "assets/inventory-core-ca.js": true,
+    "assets/enterprise-suite.js": true,
+    "assets/operations-suite.js": true,
+    "assets/logistics-suite.js": true
+  },
+  "unrelated_repository_files_preserved": [
+    "download",
+    "download (1)"
+  ],
+  "required_repository_cleanup": [
+    "Delete the existing root pages.yml after the upload."
+  ],
+  "space_runtime": "RUNNING",
+  "space_revision": "3f70e78ebd76723813e904840b3d60fb47d15029",
+  "space_api_matches_saved_contract": true,
+  "github_pages_cors": {
+    "preflight_status": 200,
+    "allow_origin": "https://mmk97-97.github.io",
+    "allow_methods": "POST",
+    "allow_headers": "content-type"
+  },
+  "fresh_live_inference": {
+    "checkedAt": "2026-10-07T15:31:05.056Z",
+    "space": "MMK97/supply-ai-chain-hub",
+    "endpoint": "https://mmk97-supply-ai-chain-hub.hf.space/gradio_api/call/website_chat",
+    "connection": {
+      "configured": true,
+      "provider": "huggingface",
+      "model": "Supply AI Chain Hub",
+      "message": "Space endpoint ready. Ask a question to check model access."
+    },
+    "liveInference": {
+      "passed": true,
+      "synthetic": true,
+      "answer": "The model needing review is TEST-00001 [US:item:0], with a verified recommended reorder quantity of 21 units. This is based on synthetic data indicating 2 units on hand and a demand of 10 units, with stockout risk identified [US:item:0]. No real business data was used.",
+      "model": "Supply AI Chain Hub",
+      "depth": "Fast",
+      "sourceIds": [
+        "workspace:summary",
+        "US:summary",
+        "US:item:0"
+      ]
+    },
+    "elapsed_seconds": 14.2,
+    "method": "Actual shipped JavaScript connector, public Space HTTP API, synthetic report facts. No browser or production writes."
+  },
+  "application_source_matches_saved_version_4": true,
+  "application_files_verified": 151,
+  "prior_unchanged_source_checks": {
+    "workflow_interface_ai": 99,
+    "script_syntax": 66,
+    "local_references": 1250,
+    "browser_rendering": "not performed"
+  },
+  "guide": "DEPLOY_FROM_BRANCH.md",
+  "live_repository_changed": false,
+  "live_website_published": false
+}
