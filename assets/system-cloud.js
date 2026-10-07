@@ -5,7 +5,7 @@
   let client,organization,remoteRevision=0,active=false,suppress=false,pending=false,timer,status='Local browser workspace',remoteDatasets=[];
   const update=message=>{status=message;window.dispatchEvent(new CustomEvent('stark:cloud-status',{detail:{status,active}}));};
   function loadScript(path,test){return new Promise((resolve,reject)=>{if(test())return resolve();const script=document.createElement('script');script.src=path;script.onload=resolve;script.onerror=()=>reject(new Error('Cloud connection could not load. Check your network.'));document.head.append(script);});}
-  async function session(){
+  async function session(requireEditor = true){
     await loadScript(S.url('assets/supabase-config.js'),()=>!!window.STARK_SUPABASE_CONFIG);
     await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',()=>!!window.supabase?.createClient);
     const config=window.STARK_SUPABASE_CONFIG;
@@ -15,7 +15,7 @@
     const membership=await client.from('organization_members').select('organization_id,role').eq('user_id',data.session.user.id).order('created_at',{ascending:true}).limit(1).maybeSingle();
     if(membership.error)throw membership.error;if(!membership.data)throw new Error('An organization membership is required.');
     organization=membership.data.organization_id;
-    if(!['owner','admin','editor','manager'].includes(String(membership.data.role).toLowerCase()))throw new Error('Cloud editing requires an owner, admin, manager or editor role.');
+    if(requireEditor && !['owner','admin','editor','manager'].includes(String(membership.data.role).toLowerCase()))throw new Error('Cloud editing requires an owner, admin, manager or editor role.');
     return organization;
   }
   async function fetchRemote(){await session();const {data,error}=await client.from('stark_unified_workspaces').select('revision,document,updated_at').eq('organization_id',organization).maybeSingle();if(error)throw new Error('Shared data is not configured: '+error.message+'. Apply the included 20261005_unified_system.sql migration.');return data;}
@@ -43,5 +43,20 @@
   }
   window.addEventListener('stark:system-change',()=>{if(!active||suppress)return;clearTimeout(timer);timer=setTimeout(()=>sync().catch(e=>window.StarkSystemUI?.notice(e.message,true)),700);});
   document.addEventListener('DOMContentLoaded',()=>{resume();});
-  window.StarkSystemCloud={inspect,connect,sync,disconnect,getStatus:()=>({status,active})};
+  async function analyzeWithAI(payload, signal) {
+    if (signal?.aborted) throw new DOMException('Analysis cancelled.', 'AbortError');
+    await session(false);
+    if (signal?.aborted) throw new DOMException('Analysis cancelled.', 'AbortError');
+    const current = await client.auth.getSession();
+    if (current.error || !current.data?.session?.access_token) throw new Error('Sign in to use AI analysis.');
+    const config = window.STARK_SUPABASE_CONFIG;
+    const response = await fetch(config.url.replace(/\/$/, '') + '/functions/v1/mk-brain', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + current.data.session.access_token, apikey: config.publishableKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, organization_id: organization }), signal
+    });
+    let result; try { result = await response.json(); } catch (_) { throw new Error('AI service is not deployed or returned an invalid response.'); }
+    if (!response.ok) throw new Error(result.error || 'The AI service is unavailable (' + response.status + ').');
+    return result;
+  }
+  window.StarkSystemCloud={inspect,connect,sync,disconnect,analyzeWithAI,getStatus:()=>({status,active})};
 })();

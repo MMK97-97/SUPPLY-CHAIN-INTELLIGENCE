@@ -20,6 +20,7 @@
   function groups() {
     const region = S.getRegion(), suffix = region.toLowerCase();
     return [
+      ['data','MK AI analyst',[['mk-brain.html','Analyst workspace']]],
       ['planning','Inventory & planning',[
         ['regional-workspace.html?workspace='+region,'Regional workspace'],
         [`inventory-dashboard-${suffix}.html`,'Inventory dashboard'],
