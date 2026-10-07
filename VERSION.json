@@ -1,9 +1,10 @@
 {
   "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
-  "version": "2026.10.05-unified-enterprise-branch-ui2",
+  "version": "2026.10.05-unified-enterprise-mk-hf41",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
+    "MK AI Analyst",
     "Regional Inventory & Planning",
     "Sales Analysis",
     "CRM",
@@ -29,9 +30,39 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261005-2",
+  "asset_version": "20261005-5",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
     "Consistent readable light theme across operations and logistics"
-  ]
+  ],
+  "ai": {
+    "version": "MK Intelligence 4.1",
+    "provider": "Hugging Face Supply AI Chain Hub",
+    "space": "MMK97/supply-ai-chain-hub",
+    "endpoint": "https://mmk97-supply-ai-chain-hub.hf.space/gradio_api/call/website_chat",
+    "modes": [
+      "Fast",
+      "Auto",
+      "Deep"
+    ],
+    "credentials": "Public website API; inference credentials stay in Space secrets",
+    "deployment_status": "Website source integrated; public Space live-tested with synthetic facts; website changes not published",
+    "capabilities": [
+      "conversational report analysis",
+      "read-only autonomous tool selection",
+      "report evidence and assumptions",
+      "regional and brand comparisons",
+      "scenario simulation",
+      "local report-change monitoring",
+      "optional automatic AI briefings"
+    ]
+  },
+  "deployment_readiness": {
+    "checked_at": "2026-10-07T15:36:56.217301+00:00",
+    "guide": "DEPLOY_FROM_BRANCH.md",
+    "source_commit_reviewed": "7a8f86f3cd034e0e8f12e534995aa4c13e3369da",
+    "live_website_version": "2026.10.05-unified-enterprise-branch-ui2",
+    "live_inference_rechecked": true,
+    "publishing_status": "Ready for manual upload; not published"
+  }
 }

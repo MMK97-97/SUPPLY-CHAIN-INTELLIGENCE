@@ -4,6 +4,7 @@
 
 | Workspace | Connected behavior |
 |---|---|
+| MK AI analyst | Conversational report explanations from your Hugging Face Supply AI Chain Hub, verified website facts, scenarios, regional comparisons and local monitoring. Fast/Auto/Deep modes use its dedicated website_chat endpoint; see docs/MK_AI_SETUP.md. |
 | Enterprise control tower | Customer commitments, inbound POs, warehouse availability, 3PL activity, exceptions, events and audit changes are read from shared records. |
 | Inventory & planning | US, EU and Canada retain separate upload, active-brand, forecast and reorder calculations. Normalized results appear in the control tower and can be imported into the shared catalog. |
 | CRM | Customers, parent/child accounts, programs, catalog SKUs and contractual prices are shared with order entry. |
@@ -55,7 +56,7 @@ Publish this static system using **Deploy from a branch**. No custom workflow is
 
 4. Commit the complete files to `main`. GitHub automatically publishes changes to the selected branch. The files are already static; do not select `/docs` or use `dist/` as the publishing folder for this package.
 5. Verify that `.nojekyll` exists at the same level as `index.html`. It is an empty marker file that bypasses Jekyll processing. If the upload picker omits it, create it through GitHub's Add file → Create new file.
-6. After publication, hard-refresh the site to fetch the corrected scripts and styles, versioned `20261005-2` across all working pages. Upload the full package together, including every nested HTML page and the complete `assets/` folder. The existing URL remains `https://mmk97-97.github.io/SUPPLY-CHAIN-INTELLIGENCE/index.html`. Open Data Center and export a backup before clearing sample records or restoring a different workspace.
+6. After publication, hard-refresh the site to fetch the corrected scripts and styles, versioned `20261005-5` across all working pages. Upload the full package together, including every nested HTML page and the complete `assets/` folder. The existing URL remains `https://mmk97-97.github.io/SUPPLY-CHAIN-INTELLIGENCE/index.html`. Open Data Center and export a backup before clearing sample records or restoring a different workspace.
 
 GitHub may display its built-in **pages build and deployment** job in Actions even when Source is Deploy from a branch. This is GitHub's automatic publisher; no repository workflow files are required. Do not rerun the deleted custom deployment workflow from an older commit. A new commit to `main` triggers publication using the selected branch source.
 
@@ -80,3 +81,7 @@ The cloud adapter is optional until the migration is installed. Actual login, da
 The original browser operations/logistics keys remain intact after initial migration. The shared state uses `stark.unifiedSystem.v1`; the regional IndexedDB stores and active-brand settings retain their established names. Backups contain shared operations and regional inventory datasets/settings. Sales uploads and separate event warehouse source workbooks retain their existing browser databases and should also be retained/exported through their original tools when needed.
 
 If a saved workspace cannot be read, the app preserves it and offers a raw-record export. Recover using a valid backup after repairing storage. Local browser saves have browser quota limits; a failed save reports the error without acknowledging an unpersisted transaction.
+
+## MK AI service
+
+Open `mk-brain.html` or the MK launcher from any shared enterprise page. Existing regional inventory and saved sales analysis feed the analyst. When AI is enabled, the site sends a bounded JSON context, recent conversation and remembered notes to `MMK97/supply-ai-chain-hub` through `/gradio_api/call/website_chat`, then reads its completed SSE result. New workspaces use AI by default; an existing saved AI preference is preserved. Select Fast, Auto or Deep in the connection card. Local calculations and monitoring work independently of cloud synchronization. The public Space is already available; no OpenAI key or Supabase AI deployment is needed for this connection. The retained private-service code is not called by MK's current chat. Setup, limits and examples are in `docs/MK_AI_SETUP.md`. No live repository, database or Space source was modified during this revision.

@@ -6,7 +6,11 @@ Start with `index.html`. `business-operations.html` is a compatible entry point 
 
 See **INTEGRATION_GUIDE.md** for deployment, workflow connections, data migration and cloud setup. See **docs/VERIFICATION.md** for checks and remaining verification limits.
 
-This revision fixes disappearing navigation on nested modules and completes their light theme. Shared scripts and styles use asset version `20261005-2`; upload the full package so every page loads the same revision.
+For the current manual upload, follow [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). The October 7 check confirmed that the live site still uses UI2, the repository is missing root `.nojekyll`, and the old root `pages.yml` remains. The package includes the root marker and the full AI integration; the guide explains the upload and cleanup. The shipped Hugging Face connector passed a fresh synthetic inference test.
+
+This revision connects **MK Intelligence 4.1** to your [Supply AI Chain Hub](https://huggingface.co/spaces/MMK97/supply-ai-chain-hub). Open **MK AI analyst → Analyst workspace** for conversational inventory/sales analysis, regional comparisons, scenarios, report evidence and proactive findings. MK calls the Space's dedicated `website_chat` JSON endpoint. Shared scripts and styles use asset version `20261005-5`; upload the full package together.
+
+The public Space provides model-powered answers without a website OpenAI key or AI Edge Function deployment. A live synthetic report check confirmed inference and cross-origin access from your GitHub Pages domain. Local analysis remains available if the Space cannot answer. The website changes have not been published to your live repository. See [docs/MK_AI_SETUP.md](docs/MK_AI_SETUP.md) for Fast/Auto/Deep modes, connection tests and limits. The cancelled order-management/3PL revision is excluded from this package.
 
 ## Run locally
 
@@ -50,3 +54,12 @@ node scripts/check-interface.cjs
 ```
 
 These checks load local source into a Node.js DOM simulation. They check module startup, navigation, menu/search/region behavior, dialog controls and selected text colors without opening a browser or contacting live services. The test dependency is separate from the deployed static website. Results are recorded in `docs/verification-interface.json`.
+
+## MK analyst checks
+
+```bash
+node scripts/check-mk-ai.cjs
+node scripts/check-mk-space.cjs
+```
+
+Use the same separate jsdom dependency as the interface checks. These scripts cover local tools, the retained private-service code, scenario isolation, import validation, the actual Space payload/SSE contract, conversation history, response validation and fallback/cancellation with mocked services. They make no live AI request or browser preview. Separate live synthetic checks are recorded in `docs/verification-mk-space-live.json`.

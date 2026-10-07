@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MK AI Analyst · Supply Chain Intelligence</title>
+  <script src="assets/system-seed.js?v=20261005-5"></script><script src="assets/system-core.js?v=20261005-5"></script>
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261005-5"><link rel="stylesheet" href="assets/mk-brain.css?v=20261005-5">
+  <script src="assets/jszip.min.js" defer></script>
+  <script src="assets/inventory-core-us.js?v=20261005-5" defer></script><script src="assets/inventory-core-eu.js?v=20261005-5" defer></script><script src="assets/inventory-core-ca.js?v=20261005-5" defer></script>
+  <script src="assets/system-shell.js?v=20261005-5" defer></script><script src="assets/system-cloud.js?v=20261005-5" defer></script>
+  <script src="assets/mk-analysis-tools.js?v=20261005-5" defer></script><script src="assets/mk-space.js?v=20261005-5" defer></script><script src="assets/mk-ai.js?v=20261005-5" defer></script><script src="assets/mk-brain.js?v=20261005-5" defer></script><script src="assets/mk-workspace.js?v=20261005-5" defer></script>
+</head><body data-mk-workspace="true"><main class="system-page mk-workspace" id="system-page-content">
+  <div class="system-page-heading"><div><p class="mk-eyebrow">REPORT INTELLIGENCE</p><h1>MK AI Analyst</h1><p>Ask, investigate, compare and plan with evidence from your reports.</p></div><span id="mk-service-status" class="mk-service-status" role="status">Local analyst ready</span></div>
+  <div class="mk-workspace-toolbar">
+    <label>Analysis scope <select id="mk-scope"><option value="US">United States</option><option value="EU">European Union</option><option value="CA">Canada</option><option value="ALL">All regions</option></select></label>
+    <label class="mk-upload-label">Upload inventory report <input type="file" id="mk-report-file" accept=".csv,.tsv,.xlsx"></label>
+    <button type="button" id="mk-upload">Analyze upload</button><button type="button" id="mk-new-chat">New conversation</button><button type="button" id="mk-export-chat">Export analysis</button>
+    <a id="mk-sales-link" href="sales-analysis.html">Sales report upload</a>
+  </div>
+  <p id="mk-upload-status" class="mk-upload-status" role="status">CSV, TSV or XLSX Raw Report. Select its region before uploading.</p>
+  <div class="mk-workspace-grid"><section id="mk-chat-anchor" aria-label="Conversation with MK"></section><aside class="mk-inspector">
+    <section class="mk-inspector-card"><h2>Connected reports</h2><div id="mk-report-sources">Checking regional reports…</div></section>
+    <section class="mk-inspector-card"><div class="mk-section-heading"><h2>Proactive findings</h2><button type="button" id="mk-read-alerts">Mark reviewed</button></div><label class="mk-switch"><input type="checkbox" id="mk-monitor"> Monitor report changes</label><p class="mk-help">Checks reports while this website is open.</p><div id="mk-alerts"></div><button type="button" id="mk-monitor-now">Check reports now</button><div id="mk-auto-briefing"></div></section>
+    <section class="mk-inspector-card" id="connection"><h2>Supply AI Chain Hub</h2><a href="https://huggingface.co/spaces/MMK97/supply-ai-chain-hub" target="_blank" rel="noopener noreferrer">Open your Hugging Face AI</a><label class="mk-switch"><input type="checkbox" id="mk-enable-ai"> Use the AI analyst</label><label class="mk-depth-control">Analysis depth <select id="mk-analysis-depth"><option value="Fast">Fast</option><option value="Auto">Auto</option><option value="Deep">Deep</option></select></label><label class="mk-switch"><input type="checkbox" id="mk-auto-ai"> AI briefings when reports change</label><p class="mk-help">Enabled AI sends your question, recent conversation, remembered notes and selected report facts to your Hugging Face Space and its inference provider. Report files and customer contact records are excluded. Fast, Auto and Deep adjust the available tool budget.</p><button type="button" id="mk-test-connection">Test connection</button><p id="mk-connection-status" role="status">MK uses your public Space through its website API. Test availability, then ask a question to check model access.</p><a href="docs/MK_AI_SETUP.md">AI connection guide</a></section>
+  </aside></div>
+</main><noscript>Enable JavaScript to use the MK analyst workspace.</noscript></body></html>
