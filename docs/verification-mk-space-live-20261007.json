@@ -1,0 +1,53 @@
+{
+  "checkedAt": "2026-10-07T19:19:21.639Z",
+  "method": "Shipped website connector, actual public Space inference, synthetic business facts only. No browser rendering or live business records.",
+  "spaceRevision": "3f70e78ebd76723813e904840b3d60fb47d15029",
+  "durationMs": 58524,
+  "contextContract": "MK verified website facts v2",
+  "expected": {
+    "eligibleOnHand": 304,
+    "demandPerMonth": 20,
+    "recommendedUnits": 26,
+    "stockoutRiskModels": 1,
+    "eligibleModels": 2,
+    "excludedModels": 1
+  },
+  "checks": {
+    "brand": true,
+    "stock": true,
+    "reorder": true,
+    "validCitations": true,
+    "noUnavailableWebsiteTool": true
+  },
+  "answer": "**Cozy Earth Brand Summary – US Region** [US:brand:0]\n\n- **Eligible models**: 2 (TEST-COZY-001 and TEST-COZY-002)  \n- **Excluded model**: 1 (TEST-COZY-EXCLUDED, status: DISCONTINUED)  \n- **Total on-hand inventory (eligible only)**: 304 units  \n  - TEST-COZY-001: 4 units  \n  - TEST-COZY-002: 300 units  \n- **Monthly demand (eligible models)**: 20 units  \n  - Split evenly: 10 units/month per model  \n- **Forecast confidence**: 80/100 – moderate reliability  \n- **Recommended replenishment (total eligible)**: 26 units  \n  - Entirely driven by TEST-COZY-001 (recommended: 26 units)  \n  - TEST-COZY-002: 0 units recommended  \n\n---\n\n**Stockout Risk Analysis** [US:item:0]\n\n- **Model with stockout risk**: 1 (TEST-COZY-001)  \n- **Stockout flag reason**: Low on-hand (4 units) vs. monthly demand (10 units)  \n  - At current demand, inventory covers less than half a month  \n  - Lead time: 1 month – insufficient to cover demand during replenishment  \n- **No inbound supply**: 0 open supplier units, 0 eligible inbound  \n- **Risk score**: 85 (high)  \n- **TEST-COZY-002**: No stockout risk (300 units on hand, 10 units/month demand)  \n\n---\n\n**Key Risk Drivers**\n\n- **Low on-hand inventory** for TEST-COZY-001 relative to demand and lead time  \n- **No confirmed inbound supply** – open supplier and eligible inbound both zero  \n- **No safety stock indication** – not reported; cannot assess buffer adequacy  \n- **Supplier timing uncertainty** – no data on order availability or delays  \n\n---\n\n**Next Steps & Considerations**\n\n- **Prioritize review for TEST-COZY-001 replenishment** [US:item:0]  \n  - Confirm supplier availability and lead time feasibility for 26 units  \n  - Investigate why no open supplier orders exist despite high stockout risk  \n- **Verify forecast stability**  \n  - Confidence score of 80 suggests moderate forecast reliability – consider demand volatility review  \n- **Assess safety stock policy**  \n  - Current data does not include safety stock; evaluate whether 26-unit recommendation accounts for variability  \n- **Monitor discontinued model**  \n  - TEST-COZY-EXCLUDED has 500 units on hand but zero demand – consider liquidation or write-off  \n\n---\n\n**Data Limitations**\n\n- **No daily demand or standard deviation** – limits safety stock or service level analysis  \n- **No cost, price, or holding data** – EOQ or financial impact cannot be assessed  \n- **No supplier performance metrics** – on-time delivery, quality, or responsiveness not available  \n- **Report based on synthetic data** – labeled as sample data; real-world behavior may differ [workspace:summary]  \n\nNo actions executed. Analysis based solely on verified website facts.",
+  "tools": [
+    {
+      "name": "report_overview",
+      "arguments": {
+        "region": "ALL"
+      },
+      "status": "complete",
+      "origin": "Website"
+    },
+    {
+      "name": "compare_brands",
+      "arguments": {
+        "region": "ALL",
+        "query": "Cozy Earth"
+      },
+      "status": "complete",
+      "origin": "Website"
+    },
+    {
+      "name": "search_report_items",
+      "arguments": {
+        "region": "ALL",
+        "query": "Cozy Earth",
+        "risk": "all",
+        "limit": 8
+      },
+      "status": "complete",
+      "origin": "Website"
+    }
+  ]
+}

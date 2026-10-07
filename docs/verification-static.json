@@ -1,20 +1,24 @@
 {
+  "checked_at": "2026-10-07T19:42:36.680586+00:00",
+  "method": "Node syntax checks, HTML local-reference inspection and prior-package checksum comparison; no browser rendering. Unchanged TypeScript backend sources retain prior verification.",
+  "release": "2026.10.07-unified-enterprise-production42",
+  "asset_version": "20261007-1",
+  "javascript_and_inline_syntax_checks": 149,
   "html_pages": 77,
-  "local_references_checked": 1250,
+  "local_references": 1350,
+  "shared_pages": 73,
+  "syntax_failures": [],
   "missing_references": [],
-  "script_syntax_checks": 66,
-  "syntax_errors": [],
-  "shared_mk_pages": 73,
-  "space_connector_load_order": "before MKAI on every shared page",
-  "unchanged_business_engines": [
-    "assets/system-core.js",
-    "assets/inventory-core-us.js",
-    "assets/inventory-core-eu.js",
-    "assets/inventory-core-ca.js",
-    "assets/enterprise-suite.js",
-    "assets/operations-suite.js",
-    "assets/logistics-suite.js",
-    "assets/system-cloud.js"
-  ],
-  "method": "Local source syntax/path/deployment checks; no browser rendering."
+  "unchanged_business_engines": {
+    "assets/inventory-core-us.js": true,
+    "assets/inventory-core-eu.js": true,
+    "assets/inventory-core-ca.js": true,
+    "assets/system-core.js": true,
+    "assets/system-seed.js": true,
+    "assets/enterprise-suite.js": true,
+    "assets/logistics-suite.js": true,
+    "assets/sales-analysis.js": true,
+    "assets/mk-workspace.js": true,
+    "assets/mk-analysis-tools.js": true
+  }
 }

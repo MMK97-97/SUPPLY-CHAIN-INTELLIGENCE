@@ -1,0 +1,47 @@
+{
+  "captured_at": "2026-10-07T19:37:17.559463+00:00",
+  "dependencies": [
+    {
+      "name": "supabase",
+      "version": "2.117.3",
+      "file": "assets/vendor/supabase-2.117.3.min.js",
+      "license": "assets/vendor/supabase-LICENSE.txt",
+      "source_url": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js",
+      "sha256": "d6a5c4414a5d4ce646d9c1de223aa7067d3ff664c15394ffeb7fcffc763354a3"
+    },
+    {
+      "name": "d3",
+      "version": "7.9.0",
+      "file": "assets/vendor/d3-7.9.0.min.js",
+      "license": "assets/vendor/d3-LICENSE.txt",
+      "source_url": "https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js",
+      "sha256": "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539"
+    },
+    {
+      "name": "SheetJS",
+      "version": "0.20.3",
+      "file": "assets/vendor/sheetjs-0.20.3.min.js",
+      "license": "assets/vendor/sheetjs-LICENSE.txt",
+      "source_url": "https://git.sheetjs.com/sheetjs/sheetjs/raw/branch/master/dist/xlsx.full.min.js",
+      "sha256": "cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41",
+      "official_git_blob": "21471af69ef0e4cda1613c2702c54101b92f48d2",
+      "verification": "Official repository raw file matched its API base64 content and Git blob hash; exported version 0.20.3 was verified."
+    },
+    {
+      "name": "marked",
+      "version": "12.0.1",
+      "file": "assets/vendor/marked-12.0.1.min.js",
+      "license": "assets/vendor/marked-LICENSE.txt",
+      "source_url": "https://cdn.jsdelivr.net/npm/marked@12.0.1/marked.min.js",
+      "sha256": "cb4cf2efefd2b1f602bf2f27d594fc0a26340d2661b60cddfcaac7a7b9261886"
+    },
+    {
+      "name": "DOMPurify",
+      "version": "3.4.16",
+      "file": "assets/vendor/purify-3.4.16.min.js",
+      "license": "assets/vendor/DOMPurify-LICENSE.txt",
+      "source_url": "https://cdn.jsdelivr.net/npm/dompurify@3.4.16/dist/purify.min.js",
+      "sha256": "2c90a9b46d6463f26038a29b686e82bc91de01fdac9d5229e7cfe3b360134ea2"
+    }
+  ]
+}
