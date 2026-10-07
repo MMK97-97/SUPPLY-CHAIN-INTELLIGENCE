@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en" data-auth-public="true">
-<head>
-  <meta charset="utf-8">
+<head><meta charset="utf-8"><style id="stark-navigation-critical">html{background:#f4f7fc;min-height:100%}@view-transition{navigation:auto}html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}@keyframes stark-navigation-progress{to{background-position:-200% 0}}@media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}</style><script data-stark-navigation-boot>document.documentElement.classList.add('stark-page-loading');window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);</script><script src="assets/page-navigation.js?v=20261007-1" defer></script>
+  
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Secure sign in for Stark Supply Chain Intelligence">
   <title>Secure Sign In | Stark Supply Chain Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="assets/auth.css?v=20261001-2">
-  <script src="assets/auth-bootstrap.js?v=20261001-1"></script>
+  <script src="assets/auth-bootstrap.js?v=20261007-1"></script>
   <link rel="stylesheet" href="assets/mobile-app.css?v=20261001-1">
   <script src="assets/mobile-shell.js?v=20261002-1" defer></script>
 </head>
@@ -29,13 +29,13 @@
         <p class="auth-eyebrow">Authorized users only</p>
         <h2>Sign in</h2>
         <p class="auth-description">Use the email address associated with your invitation.</p>
-        <form class="auth-form" id="login-form">
+        <form class="auth-form" id="login-form" method="post">
           <div class="auth-field"><label for="auth-email">Email address</label><span class="auth-input-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="name@company.com" required></span></div>
           <div class="auth-field"><label for="auth-password">Password</label><span class="auth-input-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button class="auth-password-toggle" type="button" data-password-toggle aria-label="Show password"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></span></div>
-          <button class="auth-primary" type="submit"><span>Open secure workspace</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg></button>
-          <button class="auth-secondary" id="forgot-password" type="button">Forgot password?</button>
+          <button class="auth-primary" type="submit" disabled><span>Open secure workspace</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M14 7l5 5-5 5"/></svg></button>
+          <button class="auth-secondary" id="forgot-password" type="button" disabled>Forgot password?</button>
         </form>
-        <p class="auth-message" id="auth-message" role="status" hidden></p>
+        <p class="auth-message" id="auth-message" role="status">Preparing secure sign in…</p>
         <p class="auth-security-note"><strong>Invite-only access.</strong> Accounts cannot be created from this page. Contact the organization owner if access is required.</p>
       </div>
     </section>

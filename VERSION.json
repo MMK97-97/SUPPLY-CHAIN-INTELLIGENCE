@@ -1,6 +1,6 @@
 {
   "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
-  "version": "2026.10.05-unified-enterprise-mk-hf41",
+  "version": "2026.10.07-unified-enterprise-production42",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -17,7 +17,7 @@
     "Freight & Tracking",
     "System Data & Audit"
   ],
-  "deployment": "GitHub Pages: Deploy from a branch (main / root) + optional Supabase/PostgreSQL backend",
+  "deployment": "Cloudflare Workers static assets; GitHub Pages Deploy from a branch (main / root) also supported",
   "entry_points": [
     "index.html",
     "business-operations.html"
@@ -30,13 +30,19 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261005-5",
+  "asset_version": "20261007-1",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
-    "Consistent readable light theme across operations and logistics"
+    "Consistent readable light theme across operations and logistics",
+    "Immediate native navigation keeps current content visible",
+    "Branded loading surface and reduced-motion document transitions",
+    "Bounded intent prefetch and non-blocking fonts",
+    "Pinned local chart, workbook, auth and formatting dependencies",
+    "Cloudflare fingerprinted assets and release metadata",
+    "Sign-in readiness guard and explicit failures"
   ],
   "ai": {
-    "version": "MK Intelligence 4.1",
+    "version": "MK Intelligence 4.2",
     "provider": "Hugging Face Supply AI Chain Hub",
     "space": "MMK97/supply-ai-chain-hub",
     "endpoint": "https://mmk97-supply-ai-chain-hub.hf.space/gradio_api/call/website_chat",
@@ -46,7 +52,7 @@
       "Deep"
     ],
     "credentials": "Public website API; inference credentials stay in Space secrets",
-    "deployment_status": "Website source integrated; public Space live-tested with synthetic facts; website changes not published",
+    "deployment_status": "Integrated and live-tested with synthetic brand facts; this revised website package is not published",
     "capabilities": [
       "conversational report analysis",
       "read-only autonomous tool selection",
@@ -55,14 +61,16 @@
       "scenario simulation",
       "local report-change monitoring",
       "optional automatic AI briefings"
-    ]
+    ],
+    "context_contract": "MK verified website facts v2"
   },
   "deployment_readiness": {
-    "checked_at": "2026-10-07T15:36:56.217301+00:00",
-    "guide": "DEPLOY_FROM_BRANCH.md",
-    "source_commit_reviewed": "7a8f86f3cd034e0e8f12e534995aa4c13e3369da",
-    "live_website_version": "2026.10.05-unified-enterprise-branch-ui2",
+    "checked_at": "2026-10-07T19:37:17.559463+00:00",
+    "guide": "DEPLOY_TO_WORKERS.md",
+    "target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
+    "live_source_matches_previous_package": true,
+    "live_version_endpoint_before_update": "404: previous build omitted VERSION.json",
     "live_inference_rechecked": true,
-    "publishing_status": "Ready for manual upload; not published"
+    "publishing_status": "Build verified; not published"
   }
 }
