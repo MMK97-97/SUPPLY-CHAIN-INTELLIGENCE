@@ -32,7 +32,7 @@
     CA: { name: "stark-regional-inventory-ca", key: "Canada" }
   };
   const DEFAULT_SETTINGS = { critical: 3, coverage: 1, delay: 15, a: 80, b: 95 };
-  const ENGINE_VERSION = "MK Intelligence 4.1";
+  const ENGINE_VERSION = "MK Intelligence 4.2";
   const LOCAL_ONLY_INTENTS = new Set(["voice", "space", "settings", "navigation", "export", "tracking", "learn", "help"]);
   const ROUTES = {
     "inventory dashboard": "inventory-dashboard", dashboard: "inventory-dashboard",

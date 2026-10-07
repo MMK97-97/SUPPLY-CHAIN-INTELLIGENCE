@@ -7,7 +7,7 @@
   function loadScript(path,test){return new Promise((resolve,reject)=>{if(test())return resolve();const script=document.createElement('script');script.src=path;script.onload=resolve;script.onerror=()=>reject(new Error('Cloud connection could not load. Check your network.'));document.head.append(script);});}
   async function session(requireEditor = true){
     await loadScript(S.url('assets/supabase-config.js'),()=>!!window.STARK_SUPABASE_CONFIG);
-    await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',()=>!!window.supabase?.createClient);
+    await loadScript(S.url('assets/vendor/supabase-2.117.3.min.js'),()=>!!window.supabase?.createClient);
     const config=window.STARK_SUPABASE_CONFIG;
     client ||= window.supabase.createClient(config.url,config.publishableKey);
     const {data,error}=await client.auth.getSession();if(error)throw error;

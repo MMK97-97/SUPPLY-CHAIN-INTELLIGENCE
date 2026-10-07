@@ -162,19 +162,7 @@
   }
 
   function initPageTransitions() {
-    document.querySelectorAll(".inventory-nav a, .inventory-brand").forEach(link => link.addEventListener("click", event => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const destination = new URL(link.href, location.href);
-      if (destination.origin !== location.origin) return;
-      event.preventDefault();
-      link.classList.add("tab-pressed");
-      const supportsNavigationTransition = typeof document.startViewTransition === "function" && CSS.supports("view-transition-name: inventory-active-tab");
-      if (supportsNavigationTransition) {
-        location.href = destination.href;
-        return;
-      }
-      document.body.classList.add("page-leaving");
-      window.setTimeout(() => { location.href = destination.href; }, 120);
-    }));
+    // Shared full-document navigation keeps this page visible until the next is ready.
   }
+
 })();

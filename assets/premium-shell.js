@@ -152,39 +152,6 @@
   rail.addEventListener("click", event => {
     if (event.target.closest("a")) closeRail();
   });
-  let navigationInProgress = false;
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const resetTransitionState = () => {
-    navigationInProgress = false;
-    body.classList.remove("premium-content-leaving", "page-leaving", "inventory-fallback-leaving");
-  };
-  document.addEventListener("click", event => {
-    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
-    const link = target?.closest("a[href]");
-    if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    if (link.target === "_blank" || link.hasAttribute("download")) return;
-    const destination = new URL(link.href, location.href);
-    if (destination.origin !== location.origin || destination.protocol !== location.protocol) return;
-    const sameDocument = destination.pathname === location.pathname && destination.search === location.search;
-    if (sameDocument && destination.hash !== location.hash) return;
-    if (destination.href === location.href || navigationInProgress) {
-      if (destination.href === location.href) event.preventDefault();
-      return;
-    }
-    event.preventDefault();
-    navigationInProgress = true;
-    closeRail();
-    if (reducedMotion.matches) {
-      location.assign(destination.href);
-      return;
-    }
-    body.classList.add("premium-content-leaving");
-    window.setTimeout(() => location.assign(destination.href), 135);
-  }, true);
-  window.addEventListener("pageshow", resetTransitionState);
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") resetTransitionState();
-  });
   document.addEventListener("keydown", event => {
     if (event.key === "Escape") closeRail();
   });

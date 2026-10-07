@@ -212,3 +212,21 @@ body.stark-system { padding-left:var(--system-sidebar)!important; padding-top:70
 
 @media(max-width:700px){.stark-system .flow-lane{grid-template-columns:repeat(2,minmax(0,1fr));}.stark-system .flow-node:not(:last-child):after{display:none;}}
 @media(max-width:560px){.system-extra-line{grid-template-columns:1fr 1fr!important;}.system-extra-line label:first-child{grid-column:1/-1;}}
+
+/* Navigation animates captured documents only; live page content never fades out. */
+@view-transition { navigation: auto; }
+html { background: #f4f7fc; }
+body.stark-system,
+body.stark-system.page-leaving,
+body.stark-system.premium-content-leaving,
+body.stark-system.inventory-fallback-leaving { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
+body.stark-system > main { animation: none !important; }
+body.stark-system.premium-content-leaving > main,
+body.stark-system.inventory-fallback-leaving .inventory-main > * { opacity: 1 !important; transform: none !important; }
+::view-transition-group(root) { animation-duration: 160ms; }
+::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { animation: stark-document-reveal 160ms ease-out both; mix-blend-mode: normal; }
+@keyframes stark-document-reveal { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}

@@ -173,8 +173,8 @@
   }
 
   function navigateWithTransition(url) {
-    document.body.classList.add("page-leaving");
-    window.setTimeout(() => { window.location.href = url; }, 145);
+    if (window.StarkNavigation) window.StarkNavigation.navigate(url);
+    else window.location.assign(url);
   }
 
   function setHeaderWorkspaceActions(show) {

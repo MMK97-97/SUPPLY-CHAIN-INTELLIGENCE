@@ -32,6 +32,7 @@
   const callbackUrl = type => `${location.origin}${appRoot()}auth-callback.html?flow=${encodeURIComponent(type || "account")}`;
   const reveal = () => {
     root.classList.remove("stark-auth-pending", "stark-auth-failed");
+    document.querySelector(".stark-auth-fatal")?.remove();
     root.dataset.authReady = "true";
   };
 
@@ -138,6 +139,10 @@
       location.replace(safeReturnTarget("index.html"));
       return;
     }
+    setMessage("");
+    const submit = form?.querySelector("button[type=submit]");
+    if (submit) submit.disabled = false;
+    if (forgot) forgot.disabled = false;
     form?.addEventListener("submit", async event => {
       event.preventDefault();
       const submit = form.querySelector("button[type=submit]");
@@ -187,6 +192,9 @@
       return;
     }
     if (description) description.textContent = "Your secure link is verified. Create a password to finish activating the workspace.";
+    setMessage("");
+    const submit = form?.querySelector("button[type=submit]");
+    if (submit) submit.disabled = false;
     form?.addEventListener("submit", async event => {
       event.preventDefault();
       const password = form.elements.password.value;

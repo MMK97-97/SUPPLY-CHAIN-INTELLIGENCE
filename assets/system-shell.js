@@ -80,9 +80,10 @@
     select.addEventListener('change',()=>{
       localStorage.setItem('stark-selected-region',select.value); renderNavigation(); window.dispatchEvent(new CustomEvent('stark:region-change',{detail:{region:select.value}}));
       const relative = currentPath.slice(S.rootURL.pathname.length);
-      if (/-((us)|(eu)|(ca))\.html$/.test(relative)) location.href=S.url(relative.replace(/-(us|eu|ca)\.html$/,`-${select.value.toLowerCase()}.html`));
-      else if (relative==='events.html') location.href=S.url('events.html?region='+select.value);
-      else if (relative==='sales-analysis.html' || relative==='regional-workspace.html') location.href=S.url(relative+'?'+(relative==='sales-analysis.html'?'region=':'workspace=')+select.value);
+      const navigate = url => window.StarkNavigation ? window.StarkNavigation.navigate(url) : location.assign(url);
+      if (/-((us)|(eu)|(ca))\.html$/.test(relative)) navigate(S.url(relative.replace(/-(us|eu|ca)\.html$/,`-${select.value.toLowerCase()}.html`)));
+      else if (relative==='events.html') navigate(S.url('events.html?region='+select.value));
+      else if (relative==='sales-analysis.html' || relative==='regional-workspace.html') navigate(S.url(relative+'?'+(relative==='sales-analysis.html'?'region=':'workspace=')+select.value));
     });
     window.addEventListener('stark:region-change',()=>{select.value=S.getRegion();renderNavigation();});
     const toggle = header.querySelector('.system-menu');
@@ -92,7 +93,7 @@
     const input=header.querySelector('input'), results=header.querySelector('.system-search-results');
     input.addEventListener('input',()=>{const rows=search(input.value);results.hidden=!input.value.trim();results.innerHTML=rows.length?rows.map(x=>`<a href="${S.url(x.path)}"><b>${escape(x.label)}</b><small>${escape(x.kind)}</small></a>`).join(''):'<p>No matching pages or records</p>';});
     document.addEventListener('click',e=>{if(!e.target.closest('.system-search'))results.hidden=true;});
-    input.addEventListener('keydown',e=>{if(e.key==='Enter'&&results.querySelector('a'))location.href=results.querySelector('a').href;});
+    input.addEventListener('keydown',e=>{if(e.key==='Enter'&&results.querySelector('a')){const url=results.querySelector('a').href;if(window.StarkNavigation)window.StarkNavigation.navigate(url);else location.assign(url);}});
     const status=()=>{const s=S.getState();document.querySelector('#system-data-status').textContent=s.mode==='sample'?'Sample workspace · saved in this browser':'Working workspace · saved in this browser';};status();window.addEventListener('stark:system-change',status);
     window.addEventListener('error',e=>{if(/storage|newer changes/i.test(e.message||''))notice(e.message,true);});
     // Query-region links select the matching analysis region without changing operations.

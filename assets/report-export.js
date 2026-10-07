@@ -297,7 +297,7 @@
 
   async function buildWorkbook() {
     await Promise.all([
-      ensureDependency("XLSX", "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"),
+      ensureDependency("XLSX", "assets/vendor/sheetjs-0.20.3.min.js"),
       ensureDependency("JSZip", "assets/jszip.min.js")
     ]);
     const exportedAt = new Date();

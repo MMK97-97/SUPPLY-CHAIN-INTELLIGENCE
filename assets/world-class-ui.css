@@ -782,22 +782,7 @@ body.premium-shell-active {
 }
 
 body.premium-shell-active > main {
-  animation: premium-content-enter .24s cubic-bezier(.22, 1, .36, 1) both;
-  transition: opacity .13s ease, transform .13s ease;
-}
-
-body.premium-shell-active.premium-content-leaving {
-  pointer-events: none;
-}
-
-body.premium-shell-active.premium-content-leaving > main {
-  opacity: 0;
-  transform: translateY(3px);
-}
-
-@keyframes premium-content-enter {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
+  animation: none;
 }
 
 .premium-rail-brand {
