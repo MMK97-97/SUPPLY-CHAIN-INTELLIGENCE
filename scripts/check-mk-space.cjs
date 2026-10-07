@@ -37,8 +37,8 @@ async function main() {
   });
   await test('verified context preserves model identifiers and omits customer contact records', () => {
     const context = H.buildContext(source(), local(), ['Remembered note']);
-    const facts = JSON.parse(context.text); assert.equal(facts.tool_results[0].result.items[0].model, '00001');
-    assert.equal(facts.tool_results[0].result.items[0].recommended, 21); assert.equal(facts.workspace.sampleData, true);
+    const facts = JSON.parse(context.text); assert.equal(facts.completed_calculations[0].facts.items[0].model, '00001');
+    assert.equal(facts.completed_calculations[0].facts.items[0].recommended, 21); assert.equal(facts.workspace.sampleData, true);
     assert.ok(!context.text.includes('private@example.test')); assert.ok(!context.text.includes('Private address')); assert.ok(context.ids.has('US:item:0'));
     assert.equal(facts.explicitly_remembered_notes[0], 'Remembered note');
   });
@@ -55,7 +55,7 @@ async function main() {
   await test('website scenario results reach the Space without changing regional planning records', () => {
     const snapshot = source(), before = JSON.stringify(snapshot), result = local();
     result.tools = [{ name: 'simulate_scenario', arguments: { region: 'US', query: '00001', demand_change_pct: 20, lead_delay_days: 0, lead_months: null, coverage_months: null, on_hand: null, inbound_units: null, exclude_inbound: false } }];
-    const context = JSON.parse(H.buildContext(snapshot, result).text), scenario = context.tool_results[0].result;
+    const context = JSON.parse(H.buildContext(snapshot, result).text), scenario = context.completed_calculations[0].facts;
     assert.equal(scenario.baselineUnits, 21); assert.equal(scenario.simulatedUnits, 25); assert.equal(scenario.dataChanged, false); assert.equal(JSON.stringify(snapshot), before);
   });
   await test('conversation history contains complete recent user/assistant pairs only', () => {
