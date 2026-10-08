@@ -10,6 +10,96 @@
   const final = order => ['SHIPPED','DELIVERED','CANCELLED','EXPIRED'].includes(order.status);
   const pending = order => order.validation && order.validation.state !== 'VALIDATED';
   const WAREHOUSES = [{id:'SARASOTA',name:'Sarasota'},{id:'FARMERS_BRANCH',name:'Farmers Branch'}];
+  // Service choices record order instructions; eligibility and rates come from the carrier.
+  const SHIPPING_SERVICES = {
+    FedEx: ['FedEx Ground','FedEx Home Delivery','FedEx Ground Economy','FedEx Ground Economy Returns','FedEx First Overnight','FedEx Priority Overnight','FedEx Standard Overnight','FedEx 2Day','FedEx 2Day A.M.','FedEx Express Saver','FedEx International First','FedEx International Priority Express','FedEx International Priority','FedEx International Economy','FedEx International Connect Plus','FedEx International Ground','FedEx First','FedEx Priority Express','FedEx Priority','FedEx Priority Express Freight','FedEx Priority Freight','FedEx Economy'],
+    UPS: ['UPS Ground','UPS Next Day Air Early','UPS Next Day Air','UPS Next Day Air Saver','UPS 2nd Day Air A.M.','UPS 2nd Day Air','UPS 3 Day Select','UPS Standard','UPS Worldwide Express Plus','UPS Worldwide Express','UPS Worldwide Saver','UPS Worldwide Expedited','UPS Worldwide Economy','UPS Worldwide Express Freight','UPS Worldwide Express Freight Midday','UPS Express Critical'],
+    USPS: ['USPS Ground Advantage','USPS Priority Mail Express','USPS Priority Mail','USPS First-Class Mail','USPS Media Mail','USPS Library Mail','USPS Priority Mail Express International','USPS Priority Mail International','USPS First-Class Package International Service','USPS First-Class Mail International','USPS Airmail M-Bags'],
+    LTL: ['Rome Transportation','TQL','C.H. Robinson'],
+    OTHER: ['Customer pickup','FTL']
+  };
+  const ADDRESS_KEYS = ['name','line1','line2','line3','city','state','zip','country'];
+  function cleanAddress(value = {}) {
+    if (!value || typeof value !== 'object') value = {};
+    return Object.fromEntries(ADDRESS_KEYS.map(key => [key,text(value[key]).slice(0,250)]));
+  }
+  function customerAddresses(state, accountId) {
+    const account = state.enterprise.accounts.find(a => a.id === accountId);
+    const customer = cleanAddress(account?.customerAddress || account?.billingAddress || account?.address);
+    const raw = Array.isArray(account?.shippingAddresses) ? account.shippingAddresses : account?.shippingAddress ? [account.shippingAddress] : [];
+    const shipping = raw.map((entry,index) => ({id:text(entry.id || 'ship-'+index),label:text(entry.label || 'Ship-to '+(index+1)),address:cleanAddress(entry.address || entry)}));
+    return {customer,shipping};
+  }
+  function saveCustomerAddresses(accountId, input, expectedRevision) {
+    return S.transaction('CRM_ADDRESSES_UPDATED',accountId,state => {
+      if (state.revision !== expectedRevision) throw new Error('This workspace changed in another tab. Reload before saving addresses.');
+      const account = state.enterprise.accounts.find(a => a.id === accountId);
+      if (!account) throw new Error('Choose an existing CRM customer.');
+      const customer = cleanAddress(input.customer), shipping = cleanAddress(input.shipping);
+      for (const address of [customer,shipping]) if (Object.values(address).some(Boolean) && (!address.line1 || !address.city || !address.zip)) throw new Error('Complete address line 1, city and ZIP / postal code, or leave the address empty.');
+      account.customerAddress = customer;
+      const saved = customerAddresses(state,accountId).shipping;
+      account.shippingAddresses = [{id:saved[0]?.id || 'default',label:saved[0]?.label || 'Default ship-to',address:shipping},...saved.slice(1)];
+      account.addressUpdatedAt = now();
+    });
+  }
+  function shippingCarrier(method) {
+    for (const [carrier,services] of Object.entries(SHIPPING_SERVICES)) if (services.includes(method)) return carrier;
+    if (/^FedEx\b/i.test(method)) return 'FedEx';
+    if (/^UPS\b/i.test(method)) return 'UPS';
+    if (/^USPS\b/i.test(method)) return 'USPS';
+    if (/^LTL\b/i.test(method)) return 'LTL';
+    return 'OTHER';
+  }
+  function shippingInput(input) {
+    const carrier = text(input.shippingCarrier || shippingCarrier(text(input.shippingMethod)));
+    const service = text(input.shippingService || input.shippingMethod).slice(0,100);
+    const method = text(input.shippingCarrier && service !== 'CUSTOM' ? service : input.shippingMethod).slice(0,100);
+    if (input.shippingCarrier && (!SHIPPING_SERVICES[carrier] || !SHIPPING_SERVICES[carrier].includes(service) && service !== 'CUSTOM')) throw new Error('Choose a valid carrier service or enter a custom service.');
+    if (service === 'CUSTOM' && !method) throw new Error('Enter the custom shipping method.');
+    const billingType = input.shippingBillingType || (text(input.thirdPartyAccount) || text(input.thirdPartyZip) ? 'THIRD_PARTY' : 'SHIPPER');
+    if (!['SHIPPER','THIRD_PARTY'].includes(billingType)) throw new Error('Choose shipper or third-party billing.');
+    if (billingType === 'THIRD_PARTY' && input.shippingCarrier && !['FedEx','UPS','USPS'].includes(carrier)) throw new Error('Third-party parcel billing requires FedEx, UPS or USPS.');
+    return {carrier,service,method:carrier === 'LTL' && SHIPPING_SERVICES.LTL.includes(service) ? 'LTL · '+service : method,
+      ltlProvider:carrier === 'LTL' ? service : '',billingType,
+      thirdPartyAccount:billingType === 'THIRD_PARTY' ? text(input.thirdPartyAccount).slice(0,100) : '',thirdPartyZip:billingType === 'THIRD_PARTY' ? text(input.thirdPartyZip).slice(0,30) : ''};
+  }
+  function inventoryLevels(state, model, region) {
+    const item = resolveItem(state,model,region);
+    if (!item || S.regionCode(item.region) !== S.regionCode(region)) return null;
+    const locations = WAREHOUSES.map(w => ({...w,recorded:false,onHand:0,reserved:0,damaged:0,available:0}));
+    for (const row of state.logistics.inventory.filter(row => row.sku === item.sku)) {
+      const bin = state.logistics.bins.find(b => b.id === row.binId);
+      const warehouse = state.logistics.warehouses.find(w => w.id === (row.warehouseId || bin?.warehouseId));
+      const id = warehouseId({warehouseId:warehouse?.fulfillmentWarehouseId || row.warehouseId || bin?.warehouseId}) || warehouseId({warehouseId:warehouse?.name});
+      const level = locations.find(w => w.id === id);
+      if (level) { level.recorded=true;level.onHand+=num(row.onHand);level.reserved+=num(row.reserved);level.damaged+=num(row.damaged); }
+    }
+    locations.forEach(level => level.available=Math.max(0,level.onHand-level.reserved-level.damaged));
+    return {sku:item.sku,description:item.description || item.title || '',onHand:num(item.onHand),reserved:num(item.reserved),damaged:num(item.damaged),available:S.available(item),locations};
+  }
+  function suggestWarehouse(state, lines, region, accountId) {
+    const account = state.enterprise.accounts.find(a => a.id === accountId);
+    const preferred = warehouseId({warehouseId:account?.fulfillmentWarehouseId || account?.preferredWarehouseId}) || 'SARASOTA';
+    const levels = lines.map(line => ({qty:Number(line.qty),stock:inventoryLevels(state,line.model || line.sku,region)}));
+    if (!levels.length || levels.some(l => !l.stock || !Number.isInteger(l.qty) || l.qty < 1 || l.qty > l.stock.available)) return {id:'',reason:'Choose valid models and quantities with enough available inventory.'};
+    const ordered = [...WAREHOUSES].sort((a,b) => Number(b.id===preferred)-Number(a.id===preferred));
+    const candidate = ordered.find(w => levels.every(l => l.stock.locations.some(location => location.id===w.id && location.recorded && location.available>=l.qty)));
+    if (candidate) return {id:candidate.id,reason:'Recorded warehouse balances cover every order line.'};
+    if (levels.some(l => l.stock.locations.some(location => location.recorded))) return {id:'',reason:'No recorded warehouse balance covers all lines. Review inventory and choose a warehouse.'};
+    return {id:preferred,reason:'Customer preference / default warehouse. Warehouse balances are not recorded; verify local stock before dispatch.'};
+  }
+  function salesOrderNumber(state, mode, po, current) {
+    let number = mode === 'CUSTOMER_PO' ? po : current?.orderNumberMode !== 'CUSTOMER_PO' ? current?.orderNumber : '';
+    if (!number) {
+      for (let attempt=0;attempt<20;attempt++) {
+        number='SO-'+now().slice(0,10).replaceAll('-','')+'-'+S.uid('so').slice(-8).toUpperCase();
+        if (!state.enterprise.orders.some(order => order.id!==current?.id && text(order.orderNumber || order.po).toLowerCase()===number.toLowerCase())) break;
+      }
+    }
+    if (state.enterprise.orders.some(order => order.id!==current?.id && text(order.orderNumber || order.po).toLowerCase()===number.toLowerCase())) throw new Error('This sales order number already exists. Use an internally generated number.');
+    return number;
+  }
   const ISSUES = {NO_INVENTORY:'No inventory',DISCONTINUED:'Discontinued',FEEDS_ONLY:'Feeds only',INTERNAL_USE:'Internal use',OUT_OF_STOCK:'Out of stock',CUSTOMER:'Customer account',ADDRESS:'Delivery address',IN_HANDS:'In-hands date',SHIPPING:'Shipping method',THIRD_PARTY:'Third-party billing',WAREHOUSE:'Warehouse',HOLD_EXPIRY:'Hold expiry',CREDIT:'Credit limit',DIGITAL:'Digital fulfillment',REGION:'Region'};
   const total = order => order.lines.reduce((sum, line) => sum + Math.round(line.price * 100) * line.qty, 0) / 100;
   function warehouseId(order) {
@@ -39,22 +129,27 @@
       seen.add(sku.toLowerCase());
       const qty = Number(line.qty), price = Number(line.price);
       if (!Number.isInteger(qty) || qty < 1 || qty > 1000000 || !Number.isFinite(price) || price <= 0 || price > 1000000 || Math.abs(price * 100 - Math.round(price * 100)) > 0.00001) throw new Error('Use positive whole quantities and unit prices with at most two decimals.');
-      return {sku,model:item?.model || model,title:item?.title || '',qty,price,allocated:0,redeemed:0,shipped:0};
+      return {sku,model:item?.model || model,title:item?.title || '',description:item?.description || item?.title || '',qty,price,allocated:0,redeemed:0,shipped:0};
     });
-    const address = Object.fromEntries(['line1','line2','line3','city','state','zip'].map(k => [k,text(input.address?.[k]).slice(0,250)]));
-    return {po:text(input.po),accountId:input.accountId,region,type:input.type,purpose:input.purpose === 'EVENT' ? 'EVENT' : 'REGULAR',eventId:input.eventId || null,programId:input.programId || null,
+    const book = customerAddresses(state,input.accountId), source=text(input.shipToSource || 'CUSTOM');
+    const address = source === 'CUSTOMER' ? clone(book.customer) : source === 'CUSTOM' ? cleanAddress(input.address) : clone(book.shipping.find(a=>a.id===source)?.address || {});
+    const orderNumberMode = input.orderNumberMode || 'AUTO';
+    if (!['AUTO','CUSTOMER_PO'].includes(orderNumberMode)) throw new Error('Choose a sales order numbering option.');
+    const assignedWarehouse = input.fulfillmentMode === 'AUTO' ? suggestWarehouse(state,lines,region,input.accountId).id : text(input.warehouseId);
+    const shipping = shippingInput(input);
+    return {po:text(input.po),orderNumberMode,accountId:input.accountId,customerName:state.enterprise.accounts.find(a=>a.id===input.accountId).name,customerAddress:clone(book.customer),shipToSource:source,region,type:input.type,purpose:input.purpose === 'EVENT' ? 'EVENT' : 'REGULAR',eventId:input.eventId || null,programId:input.programId || null,
       address,inHandsDate:text(input.inHandsDate),holdUntil:input.type === 'HOLD_PO' && input.holdUntil ? new Date(input.holdUntil + 'T23:59:59Z').toISOString() : null,
-      instructions:text(input.instructions).slice(0,5000),warehouseId:text(input.warehouseId),
-      shipping:{warehouseId:text(input.warehouseId),warehouse:WAREHOUSES.find(w => w.id === input.warehouseId)?.name || '',destination:Object.values(address).filter(Boolean).join(', '),city:address.city,state:address.state,zip:address.zip,method:text(input.shippingMethod).slice(0,100),thirdPartyAccount:text(input.thirdPartyAccount).slice(0,100),thirdPartyZip:text(input.thirdPartyZip).slice(0,30)},lines};
+      instructions:text(input.instructions).slice(0,5000),warehouseId:assignedWarehouse,fulfillmentMode:input.fulfillmentMode === 'AUTO' ? 'AUTO' : 'MANUAL',
+      shipping:{...shipping,warehouseId:assignedWarehouse,warehouse:WAREHOUSES.find(w => w.id === assignedWarehouse)?.name || '',destination:Object.values(address).filter(Boolean).join(', '),city:address.city,state:address.state,zip:address.zip,country:address.country},lines};
   }
   function assess(state, order, partnerId) {
     const issues = [], e = state.enterprise, account = e.accounts.find(a => a.id === order.accountId);
     const add = (code, detail, model = '') => issues.push({code,label:ISSUES[code],detail,model});
     if (!account || account.status !== 'ACTIVE') add('CUSTOMER','Select an active customer account.');
-    if (!order.address?.line1 || !order.address?.city || !order.address?.state || !order.address?.zip) add('ADDRESS','Line 1, city, state and ZIP are required.');
+    if (!order.address?.line1 || !order.address?.city || !order.address?.zip || ['US','CA'].includes(S.regionCode(order.region)) && !order.address?.state) add('ADDRESS','Address line 1, city and ZIP / postal code are required; US and Canada also require a state / province.');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(order.inHandsDate || '') || !Number.isFinite(new Date(order.inHandsDate).getTime())) add('IN_HANDS','Enter a valid in-hands date.');
     if (!text(order.shipping?.method)) add('SHIPPING','Choose a shipping method.');
-    if (!!text(order.shipping?.thirdPartyAccount) !== !!text(order.shipping?.thirdPartyZip)) add('THIRD_PARTY','Provide both the third-party account and its billing ZIP.');
+    if (order.shipping?.billingType === 'THIRD_PARTY' && (!text(order.shipping.thirdPartyAccount) || !text(order.shipping.thirdPartyZip)) || !!text(order.shipping?.thirdPartyAccount) !== !!text(order.shipping?.thirdPartyZip)) add('THIRD_PARTY','Provide both the third-party account and its billing ZIP.');
     if (!WAREHOUSES.some(w => w.id === warehouseId(order))) add('WAREHOUSE','Assign Sarasota or Farmers Branch.');
     if (order.type === 'HOLD_PO' && (!order.holdUntil || new Date(order.holdUntil).getTime() <= Date.now())) add('HOLD_EXPIRY','Choose a future hold expiry date.');
     if (order.programId && !e.programs.some(p => p.id === order.programId && p.accountId === order.accountId && p.status === 'LIVE')) add('CUSTOMER','The selected program must be live and belong to this customer.');
@@ -83,7 +178,7 @@
       const clean = cleanInput(input,state);
       if (state.enterprise.orders.some(o => o.po.toLowerCase() === clean.po.toLowerCase())) throw new Error('This customer PO already exists.');
       const id = S.uid('ord'), timestamp = now();
-      const order = {...clean,id,orderNumber:'SO-' + timestamp.slice(0,10).replaceAll('-','') + '-' + id.slice(-8).toUpperCase(),status:'UNVALIDATED',recordRevision:0,validation:{state:'UNVALIDATED',issues:[],checkedAt:null},createdAt:timestamp,updatedAt:timestamp};
+      const order = {...clean,id,orderNumber:salesOrderNumber(state,clean.orderNumberMode,clean.po),status:'UNVALIDATED',recordRevision:0,validation:{state:'UNVALIDATED',issues:[],checkedAt:null},createdAt:timestamp,updatedAt:timestamp};
       state.enterprise.orders.push(order); return id;
     });
   }
@@ -95,7 +190,7 @@
       if (expectedUpdatedAt && order.updatedAt !== expectedUpdatedAt) throw new Error('This order changed in another tab. Reload before editing.');
       const clean = cleanInput(input,state);
       if (state.enterprise.orders.some(o => o.id !== id && o.po.toLowerCase() === clean.po.toLowerCase())) throw new Error('This customer PO already exists.');
-      Object.assign(order,clean,{recordRevision:num(order.recordRevision)+1,status:'UNVALIDATED',validation:{state:'UNVALIDATED',issues:[],checkedAt:null},updatedAt:now()}); return id;
+      Object.assign(order,clean,{orderNumber:salesOrderNumber(state,clean.orderNumberMode,clean.po,order),recordRevision:num(order.recordRevision)+1,status:'UNVALIDATED',validation:{state:'UNVALIDATED',issues:[],checkedAt:null},updatedAt:now()}); return id;
     });
   }
   function validateDraft(id) {
@@ -122,8 +217,8 @@
       const order=state.enterprise.orders.find(o=>o.id===id);
       if(!order || final(order) || pending(order) || ['3PL','DROPSHIP'].includes(order.fulfillment?.kind))throw new Error('Update delivery details before external fulfillment or dispatch.');
       if(expectedVersion!==undefined && num(order.recordRevision)!==expectedVersion)throw new Error('This order changed in another tab. Reload before saving.');
-      const candidate={...order,address:Object.fromEntries(['line1','line2','line3','city','state','zip'].map(k=>[k,text(input.address?.[k]).slice(0,250)])),inHandsDate:text(input.inHandsDate),instructions:text(input.instructions).slice(0,5000),warehouseId:input.warehouseId,
-        shipping:{...order.shipping,warehouseId:input.warehouseId,warehouse:WAREHOUSES.find(w=>w.id===input.warehouseId)?.name || '',method:text(input.shippingMethod),thirdPartyAccount:text(input.thirdPartyAccount),thirdPartyZip:text(input.thirdPartyZip)},validation:{state:'VALIDATED',checkedAt:now(),issues:[]}};
+      const candidate={...order,address:cleanAddress({...order.address,...input.address}),shipToSource:'CUSTOM',inHandsDate:text(input.inHandsDate),instructions:text(input.instructions).slice(0,5000),warehouseId:input.warehouseId,
+        shipping:{...order.shipping,...shippingInput(input),warehouseId:input.warehouseId,warehouse:WAREHOUSES.find(w=>w.id===input.warehouseId)?.name || ''},validation:{state:'VALIDATED',checkedAt:now(),issues:[]}};
       candidate.shipping.destination=Object.values(candidate.address).filter(Boolean).join(', ');
       const issues=assess(state,candidate);if(issues.length)throw new Error(issues[0].label+': '+issues[0].detail);
       Object.assign(order,candidate,{recordRevision:num(order.recordRevision)+1,updatedAt:now()});
@@ -285,5 +380,5 @@
       return result;
     }catch(error){if(!statusOnly)markTransmission(id,error.deliveryState || 'UNKNOWN',{error:error.message});throw error;}
   }
-  window.StarkFulfillment={WAREHOUSES,ISSUES,final,pending,total,warehouseId,warehouseName,resolveItem,cleanInput,assess,createDraft,editDraft,validateDraft,orderSearch,updateDelivery,shipWarehouse,request3PL,ship3PL,importPlan,applyImport,dailyShipments,createPO,updatePO,attachmentFromFile,attachPO,removeAttachment,sendForProcessing};
+  window.StarkFulfillment={WAREHOUSES,SHIPPING_SERVICES,ADDRESS_KEYS,cleanAddress,customerAddresses,saveCustomerAddresses,shippingCarrier,shippingInput,inventoryLevels,suggestWarehouse,ISSUES,final,pending,total,warehouseId,warehouseName,resolveItem,cleanInput,assess,createDraft,editDraft,validateDraft,orderSearch,updateDelivery,shipWarehouse,request3PL,ship3PL,importPlan,applyImport,dailyShipments,createPO,updatePO,attachmentFromFile,attachPO,removeAttachment,sendForProcessing};
 })();

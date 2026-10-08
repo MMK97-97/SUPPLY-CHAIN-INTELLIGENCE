@@ -60,12 +60,13 @@
   let syncChannel = null;
   let busy = false;
   let activeController = null;
-  const conversation = { lastIntent: "", lastItemKey: "", lastQuestion: "", lastAnswer: "", turns: [] };
+  const conversation = { scope: "", lastIntent: "", lastItemKey: "", lastQuestion: "", lastAnswer: "", turns: [] };
 
   if (document.readyState !== "complete") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 
   function init() {
+    conversation.scope = window.MKAI?.getStatus().scope || regionCode();
     buildInterface();
     selectVoice();
     window.MKAI?.startMonitoring();
@@ -111,6 +112,8 @@
   }
 
   function regionCode() {
+    const selected = window.MKAI?.getStatus().scope;
+    if (["US", "EU", "CA"].includes(selected)) return selected;
     const suffix = location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1];
     const query = new URLSearchParams(location.search).get("region") || new URLSearchParams(location.search).get("workspace");
     const stored = localStorage.getItem("stark-selected-region");
@@ -187,8 +190,15 @@
     voiceButton.addEventListener("click", toggleVoice);
     spaceButton.addEventListener("click", () => setSpaceEnabled(!window.MKAI?.getStatus().aiEnabled, true));
     panel.querySelector(".mk-stop").addEventListener("click", () => activeController?.abort());
-    window.addEventListener("mk:analyst-change", syncSpaceUi);
-    window.addEventListener("mk:conversation-clear", () => { feed.innerHTML = ""; addEntry("New conversation started. Ask MK about your reports.", "brain", false); });
+    window.addEventListener("mk:analyst-change", () => {
+      syncSpaceUi();
+      const selected = window.MKAI?.getStatus().scope || regionCode();
+      if (selected === conversation.scope) return;
+      activeController?.abort();
+      resetConversation(selected); feed.innerHTML = ""; restoreConversation();
+      if (!feed.children.length) addEntry(`${selected === "ALL" ? "All regions" : REGION_NAMES[selected]} conversation ready. Ask MK about your reports.`, "brain", false);
+    });
+    window.addEventListener("mk:conversation-clear", () => { resetConversation(window.MKAI?.getStatus().scope || regionCode()); feed.innerHTML = ""; addEntry("New conversation started. Ask MK about your reports.", "brain", false); });
     panel.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
       const question = input.value.trim();
@@ -345,14 +355,20 @@
   function restoreConversation() {
     if (!feed) return;
     feed.querySelectorAll('.mk-restored').forEach(entry => entry.remove());
-    for (const item of window.MKAI?.getMessages() || []) {
+    for (const item of window.MKAI?.getMessages(window.MKAI.getStatus().scope) || []) {
       const entry = addEntry(item.role === 'user' ? item.content : item.result.answer, item.role === 'user' ? 'user' : 'brain', false, item.role === 'user' ? 'question' : `${item.scope} · saved analysis`, item.result);
       entry.classList.add('mk-restored');
     }
   }
 
+  function resetConversation(scope) {
+    Object.assign(conversation, { scope, lastIntent: "", lastItemKey: "", lastQuestion: "", lastAnswer: "", turns: [] });
+    lastAnalysis = null;
+  }
+
   async function execute(question) {
     if (busy || !clean(question)) return;
+    const initialScope = window.MKAI?.getStatus().scope || regionCode();
     addEntry(question, "user", false);
     conversation.lastQuestion = clean(question);
     busy = true;
@@ -363,6 +379,7 @@
     try {
       const localAnswer = await routeQuestion(question);
       const answer = await enhanceWithSupplyAI(question, localAnswer);
+      if (activeController?.signal.aborted) throw new DOMException('Analysis stopped.', 'AbortError');
       addEntry(answer.message, "brain", true, answer.category || "decision", answer.result);
       learnTask(answer.intent || "question");
       conversation.lastIntent = answer.intent || "question";
@@ -371,7 +388,7 @@
       conversation.turns.push({ question: clean(question), intent: conversation.lastIntent, itemKey: answer.itemKey || "", at: Date.now() });
       conversation.turns = conversation.turns.slice(-12);
     } catch (error) {
-      addEntry(error.name === "AbortError" ? "Analysis stopped." : `I couldn’t complete that task: ${error.message || "unknown error"}.`, "brain", false, "status");
+      if (initialScope === (window.MKAI?.getStatus().scope || regionCode())) addEntry(error.name === "AbortError" ? "Analysis stopped." : `I couldn’t complete that task: ${error.message || "unknown error"}.`, "brain", false, "status");
     } finally {
       busy = false;
       activeController = null;

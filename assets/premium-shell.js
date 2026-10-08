@@ -53,7 +53,7 @@
     "instructions-us.html", "instructions-eu.html", "instructions-ca.html", "ats-eu.html"
   ]);
   const supported = inventoryPages.has(path) || [
-    "index.html", "regional-workspace.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"
+    "index.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"
   ].includes(path);
   if (!supported) return;
 

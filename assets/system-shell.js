@@ -22,7 +22,6 @@
     return [
       ['data','MK AI analyst',[['mk-brain.html','Analyst workspace']]],
       ['planning','Inventory & planning',[
-        ['regional-workspace.html?workspace='+region,'Regional workspace'],
         [`inventory-dashboard-${suffix}.html`,'Inventory dashboard'],
         [`inventory-analysis-report-${suffix}.html`,'Analysis report'],
         [`decision-intelligence-${suffix}.html`,'Decision intelligence'],
@@ -45,6 +44,8 @@
     ];
   }
   const currentPath = location.pathname;
+  const relativePath = currentPath.slice(S.rootURL.pathname.length);
+  const searchEnabled = /^(order-management|vendor-management|procurement)\//.test(relativePath) || ['order-management.html','vendor-management.html','vendor-po-management.html'].includes(relativePath);
   const navigationPath = currentPath.replace(/\/warehouse-management\/cycle-count\.html$/, '/warehouse-management/cycle-counts.html');
   const active = path => new URL(path,S.rootURL).pathname === navigationPath;
   function links(items) { return items.map(([path,label])=>`<a href="${S.url(path)}" ${active(path)?'class="active" aria-current="page"':''}>${escape(label)}</a>`).join(''); }
@@ -74,10 +75,18 @@
     const sidebar = document.createElement('aside'); sidebar.className='system-sidebar'; sidebar.id='system-sidebar'; sidebar.setAttribute('aria-label','Enterprise navigation');
     sidebar.innerHTML=`<a class="system-brand" href="${S.url('index.html')}"><img src="${S.url('assets/supply-chain-logo.png')}" alt=""><span><small>STARK PREMIUM</small><strong>Supply Chain<br>Intelligence</strong></span></a><div class="system-workspace-label">ENTERPRISE WORKSPACE</div><nav id="system-navigation"></nav><div class="system-sidebar-footer"><span id="system-data-status"></span><a href="${S.url('data-center.html')}">Manage workspace</a></div>`;
     const header = document.createElement('header'); header.className='system-header';
-    header.innerHTML=`<button class="system-menu" aria-label="Open navigation" aria-controls="system-sidebar" aria-expanded="false">☰</button><div class="system-breadcrumb"><b>${escape(document.title.split(/[·|]/)[0].trim())}</b></div><div class="system-search"><label class="visually-hidden" for="system-search-input">Search pages and records</label>${glyph('search')}<input id="system-search-input" placeholder="Search customers, orders, SKUs…" autocomplete="off"><div class="system-search-results" hidden></div></div><label class="system-region"><span>Analysis region</span><select id="system-region-select" aria-label="Analysis region"><option value="US">US</option><option value="EU">EU</option><option value="CA">Canada</option></select></label><a class="system-account" href="${S.url('login.html?return='+encodeURIComponent(currentPath.slice(S.rootURL.pathname.length)+location.search))}" aria-label="Sign in to workspace">S</a>`;
+    header.innerHTML=`<button class="system-menu" aria-label="Open navigation" aria-controls="system-sidebar" aria-expanded="false">☰</button><div class="system-breadcrumb"><b>${escape(document.title.split(/[·|]/)[0].trim())}</b></div>${searchEnabled?`<div class="system-search"><label class="visually-hidden" for="system-search-input">Search pages and records</label>${glyph('search')}<input id="system-search-input" placeholder="Search orders, vendors, models…" autocomplete="off"><div class="system-search-results" hidden></div></div>`:''}<label class="system-region"><span>Analysis region</span><select id="system-region-select" aria-label="Analysis region"><option value="US">US</option><option value="EU">EU</option><option value="CA">Canada</option></select></label><a class="system-account" href="${S.url('login.html?return='+encodeURIComponent(currentPath.slice(S.rootURL.pathname.length)+location.search))}" aria-label="Sign in to workspace">S</a>`;
     const scrim = document.createElement('button'); scrim.className='system-scrim'; scrim.setAttribute('aria-label','Close navigation');
     document.body.prepend(scrim, sidebar, header);
     document.body.classList.add('stark-system');
+    document.body.dataset.systemSearch=String(searchEnabled);
+    // Keep legacy filter elements for module listeners, but show searches only in orders/vendors.
+    if(!searchEnabled){
+      const restrictSearch=()=>document.querySelectorAll('input[type="search"],input[id*="search" i],input[placeholder^="Search" i]').forEach(input=>{
+        input.disabled=true;const wrapper=input.closest('label,.search,.search-field,.op-search');(wrapper || input).hidden=true;
+      });
+      restrictSearch();new MutationObserver(restrictSearch).observe(document.body,{childList:true,subtree:true});
+    }
     renderNavigation();
     const select = header.querySelector('select'); select.value=S.getRegion();
     select.addEventListener('change',()=>{
@@ -86,17 +95,19 @@
       const navigate = url => window.StarkNavigation ? window.StarkNavigation.navigate(url) : location.assign(url);
       if (/-((us)|(eu)|(ca))\.html$/.test(relative)) navigate(S.url(relative.replace(/-(us|eu|ca)\.html$/,`-${select.value.toLowerCase()}.html`)));
       else if (relative==='events.html') navigate(S.url('events.html?region='+select.value));
-      else if (relative==='sales-analysis.html' || relative==='regional-workspace.html') navigate(S.url(relative+'?'+(relative==='sales-analysis.html'?'region=':'workspace=')+select.value));
+      else if (relative==='sales-analysis.html') navigate(S.url(relative+'?region='+select.value));
     });
     window.addEventListener('stark:region-change',()=>{select.value=S.getRegion();renderNavigation();});
     const toggle = header.querySelector('.system-menu');
     const close = () => {document.body.classList.remove('system-nav-open'); toggle.setAttribute('aria-expanded','false');};
     toggle.onclick=()=>{const open=document.body.classList.toggle('system-nav-open');toggle.setAttribute('aria-expanded',String(open));}; scrim.onclick=close;
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();header.querySelector('.system-search-results').hidden=true;}});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();const results=header.querySelector('.system-search-results');if(results)results.hidden=true;}});
     const input=header.querySelector('input'), results=header.querySelector('.system-search-results');
-    input.addEventListener('input',()=>{const rows=search(input.value);results.hidden=!input.value.trim();results.innerHTML=rows.length?rows.map(x=>`<a href="${S.url(x.path)}"><b>${escape(x.label)}</b><small>${escape(x.kind)}</small></a>`).join(''):'<p>No matching pages or records</p>';});
-    document.addEventListener('click',e=>{if(!e.target.closest('.system-search'))results.hidden=true;});
-    input.addEventListener('keydown',e=>{if(e.key==='Enter'&&results.querySelector('a')){const url=results.querySelector('a').href;if(window.StarkNavigation)window.StarkNavigation.navigate(url);else location.assign(url);}});
+    if(input && results){
+      input.addEventListener('input',()=>{const rows=search(input.value);results.hidden=!input.value.trim();results.innerHTML=rows.length?rows.map(x=>`<a href="${S.url(x.path)}"><b>${escape(x.label)}</b><small>${escape(x.kind)}</small></a>`).join(''):'<p>No matching pages or records</p>';});
+      document.addEventListener('click',e=>{if(!e.target.closest('.system-search'))results.hidden=true;});
+      input.addEventListener('keydown',e=>{if(e.key==='Enter'&&results.querySelector('a')){const url=results.querySelector('a').href;if(window.StarkNavigation)window.StarkNavigation.navigate(url);else location.assign(url);}});
+    }
     const status=()=>{const s=S.getState();document.querySelector('#system-data-status').textContent=s.mode==='sample'?'Sample workspace · saved in this browser':'Working workspace · saved in this browser';};status();window.addEventListener('stark:system-change',status);
     window.addEventListener('error',e=>{if(/storage|newer changes/i.test(e.message||''))notice(e.message,true);});
     // Query-region links select the matching analysis region without changing operations.

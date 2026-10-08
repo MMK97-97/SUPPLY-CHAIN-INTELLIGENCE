@@ -10,11 +10,26 @@
   if (!['Fast', 'Auto', 'Deep'].includes(data.depth)) data.depth = 'Auto';
   if (!Array.isArray(data.messages)) data.messages = [];
   if (!Array.isArray(data.alerts)) data.alerts = [];
+  // A scope selected in the analyst workspace belongs to this page session.
+  // Older releases persisted it and let a US selection override an EU report.
+  data.scope = '';
+  let scopeRevision = 0;
   let status = { mode: data.aiEnabled ? 'ready' : 'local', message: data.aiEnabled ? 'Supply AI Chain Hub selected' : 'Local analyst ready', model: '' }, monitorFlight, monitorTimer, analysisFlight, queuedMonitor = false, lastAutoAI = 0;
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* current session remains usable */ } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ ...data, scope: '' })); } catch { /* current session remains usable */ } };
   const emit = type => window.dispatchEvent(new CustomEvent(type || 'mk:analyst-change', { detail: getStatus() }));
   const setStatus = (message, mode = 'local', model = '') => { status = { message, mode, model }; emit(); };
-  function scope() { return ['US', 'EU', 'CA', 'ALL'].includes(data.scope) ? data.scope : window.StarkSystem?.getRegion() || 'US'; }
+  function contextRegion() {
+    const normalize = value => { const code = String(value || '').trim().toUpperCase(); return code === 'CANADA' ? 'CA' : code === 'UNITED STATES' ? 'US' : ['US', 'EU', 'CA'].includes(code) ? code : ''; };
+    const query = new URLSearchParams(location.search);
+    return normalize(location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1]) || normalize(query.get('region')) || normalize(query.get('workspace')) || normalize(window.StarkSystem?.getRegion()) || 'US';
+  }
+  function scope() { return ['US', 'EU', 'CA', 'ALL'].includes(data.scope) ? data.scope : contextRegion(); }
+  let observedRegion = contextRegion();
+  function regionChanged() {
+    observedRegion = contextRegion(); data.scope = ''; scopeRevision++;
+    status = { mode: data.aiEnabled ? 'ready' : 'local', message: data.aiEnabled ? 'Supply AI Chain Hub selected' : 'Local analyst ready', model: '' };
+    save(); emit();
+  }
   function hash(value) { let n = 2166136261; for (const c of JSON.stringify(value)) n = Math.imul(n ^ c.charCodeAt(0), 16777619); return (n >>> 0).toString(16); }
   function workspace() {
     const state = window.StarkSystem?.getState(), e = state?.enterprise || {}, l = state?.logistics || {};
@@ -51,7 +66,7 @@
     const named = models.find(name => query.includes(name.toLowerCase())) || names.find(name => query.includes(name.toLowerCase())) || '';
     const call = (name, args) => { tools.push({ name, arguments: args, status: 'complete' }); return T.run(name, args, source); };
     call('report_overview', { region: 'ALL' });
-    let answer = source.scope === window.MKVerifiedEngine.currentRegion() ? localAnswer?.message || '' : reports.map(r => `${r.region}: ${r.summary.eligibleItems} eligible models, ${fmt(r.summary.recommendedUnits)} recommended units and ${r.summary.stockoutRisks} stockout risks.`).join('\n'), findings = [], actions = [], assumptions = [], questions = [];
+    let answer = (source.scope === window.MKVerifiedEngine.currentRegion() ? localAnswer?.message : '') || reports.map(r => `${r.region}: ${r.summary.eligibleItems} eligible models, ${fmt(r.summary.recommendedUnits)} recommended units and ${r.summary.stockoutRisks} stockout risks.`).join('\n'), findings = [], actions = [], assumptions = [], questions = [];
     if (!reports.length && !source.sales.length) { answer = 'No inventory report is available in this scope. Upload a CSV, TSV or XLSX Raw Report, or select a region with a report.'; questions.push('Which regional report should I analyze?'); }
     else if (/sales|revenue|margin|seller/.test(query)) {
       const result = call('sales_report', { region: 'ALL', query: named });
@@ -109,9 +124,13 @@
   }
   async function answer(question, localAnswer, options = {}) {
     if (analysisFlight) throw new Error('An analysis is already running.');
+    const revision = scopeRevision;
+    const checkScope = () => {
+      if (options.signal?.aborted || (!options.proactive && revision !== scopeRevision)) throw new DOMException('Analysis stopped because its region changed.', 'AbortError');
+    };
     const run = async () => {
       const selected = options.scope || inferredScope(question), source = await snapshot(selected, question), fallback = localResult(question, source, localAnswer);
-      if (options.signal?.aborted) throw new DOMException('Analysis cancelled.', 'AbortError');
+      checkScope();
       let result = fallback;
       if (data.aiEnabled) {
         setStatus('AI is investigating the report…', 'running');
@@ -119,15 +138,17 @@
           const history = data.messages.filter(item => item.scope === selected).slice(-8).map(item => ({ role: item.role, content: item.role === 'assistant' ? item.result.answer : item.content }));
           const notes = window.MKBrain?.getProfile()?.notes?.filter(note => selected === 'ALL' || note.region === selected).map(note => note.text) || [];
           result = await window.MKSpace.analyzeWithAI({ question, snapshot: source, localResult: fallback, history, notes, depth: data.depth }, options.signal);
+          checkScope();
           if (!result || result.mode !== 'ai' || typeof result.answer !== 'string' || !Array.isArray(result.evidence)) throw new Error('The AI service returned an invalid analysis.');
           setStatus('Hugging Face analysis complete', 'ai', result.model);
         } catch (error) {
+          checkScope();
           if (options.signal?.aborted || error.name === 'AbortError') throw error;
           result = { ...fallback, connectionIssue: error.message || 'The AI service is unavailable.' };
           setStatus('AI unavailable · local analysis ready', 'error');
         }
       } else setStatus('Local analysis complete', 'local');
-      if (options.signal?.aborted) throw new DOMException('Analysis cancelled.', 'AbortError');
+      checkScope();
       if (!options.proactive) {
         data.messages.push({ id: crypto.randomUUID(), role: 'user', content: question, scope: selected, at: new Date().toISOString() }, { id: crypto.randomUUID(), role: 'assistant', result, scope: selected, at: new Date().toISOString() });
         data.messages = data.messages.slice(-40);
@@ -179,8 +200,11 @@
   function startMonitoring() {
     if (window.__MK_MONITOR_STARTED__) return; window.__MK_MONITOR_STARTED__ = true;
     window.addEventListener('stark:system-change', scheduleMonitor);
-    window.addEventListener('storage', event => { if (event.key === 'stark-analytics-sync-pulse' || event.key?.startsWith('stark-active-brands') || event.key?.startsWith('stark-settings')) scheduleMonitor(); });
-    window.addEventListener('stark:system-region', () => { if (!data.scope) emit(); });
+    window.addEventListener('storage', event => {
+      if (event.key === 'stark-selected-region' && observedRegion !== contextRegion()) regionChanged();
+      if (event.key === 'stark-analytics-sync-pulse' || event.key?.startsWith('stark-active-brands') || event.key?.startsWith('stark-settings')) scheduleMonitor();
+    });
+    window.addEventListener('stark:region-change', regionChanged);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleMonitor(); });
     try { const channel = new BroadcastChannel('stark-analytics-sync-v1'); channel.onmessage = scheduleMonitor; } catch { /* same-tab system event is also supported */ }
     setInterval(() => { if (!document.hidden) scheduleMonitor(); }, 60000);
@@ -188,9 +212,14 @@
   }
   function getStatus() { return { ...status, provider: 'huggingface', depth: data.depth, aiEnabled: data.aiEnabled, monitor: data.monitor, autoAI: data.autoAI, scope: scope(), unread: data.alerts.filter(a => !a.read).length, running: !!analysisFlight }; }
   function configure(values) {
+    const priorScope = scope();
     for (const key of ['aiEnabled', 'monitor', 'autoAI']) if (typeof values[key] === 'boolean') data[key] = values[key];
     if (Object.hasOwn(values, 'scope')) data.scope = ['US', 'EU', 'CA', 'ALL'].includes(values.scope) ? values.scope : '';
     if (['Fast', 'Auto', 'Deep'].includes(values.depth)) data.depth = values.depth;
+    if (scope() !== priorScope) {
+      scopeRevision++;
+      status = { mode: data.aiEnabled ? 'ready' : 'local', message: data.aiEnabled ? 'Supply AI Chain Hub selected' : 'Local analyst ready', model: '' };
+    }
     if (!data.aiEnabled) setStatus('Local analyst ready', 'local');
     else if (values.aiEnabled === true && status.mode === 'local') setStatus('Supply AI Chain Hub selected', 'ready');
     save(); emit(); scheduleMonitor();
@@ -212,5 +241,5 @@
     detail.innerHTML = `<div class="mk-result-mode">${result.mode === 'ai' ? 'AI analysis · ' + enc(result.model || '') + (result.depth ? ' · ' + enc(result.depth) : '') : 'Verified local analysis'} · ${enc((result.capturedAt || '').slice(0, 16).replace('T',' '))} UTC</div>${result.connectionIssue ? `<p class="mk-connection-issue">${enc(result.connectionIssue)} <a href="${enc(window.StarkSystem.url('mk-brain.html#connection'))}">AI connection</a></p>` : ''}${findings}${actions}${assumptions}${questions}${evidence}${tools}`;
     container.append(detail);
   }
-  window.MKAI = { answer, snapshot, localResult, makeReport, configure, getStatus, testConnection, monitor, startMonitoring, renderResult, getMessages: () => data.messages.slice(), getAlerts: () => data.alerts.slice(), getBriefing: () => data.lastBriefing, acknowledge: id => { data.alerts = data.alerts.map(a => id === 'all' || a.id === id ? { ...a, read: true } : a); save(); emit(); }, clearConversation: () => { data.messages = []; save(); emit('mk:conversation-clear'); }, scheduleMonitor };
+  window.MKAI = { answer, snapshot, localResult, makeReport, configure, getStatus, testConnection, monitor, startMonitoring, renderResult, getMessages: selected => data.messages.filter(item => !selected || item.scope === selected), getAlerts: () => data.alerts.slice(), getBriefing: () => data.lastBriefing, acknowledge: id => { data.alerts = data.alerts.map(a => id === 'all' || a.id === id ? { ...a, read: true } : a); save(); emit(); }, clearConversation: () => { data.messages = []; save(); emit('mk:conversation-clear'); }, scheduleMonitor };
 })();

@@ -230,3 +230,7 @@ body.stark-system.inventory-fallback-leaving .inventory-main > * { opacity: 1 !i
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
+
+/* Search is available in customer orders and vendor purchasing screens. */
+body[data-system-search="false"] input[type="search"],body[data-system-search="false"] input[id*="search" i],body[data-system-search="false"] input[placeholder^="Search" i]{display:none!important}
+body.stark-system [hidden]{display:none!important}
