@@ -114,7 +114,57 @@
     const suffix=currentPath.match(/-(us|eu|ca)\.html$/), query=new URLSearchParams(location.search), wanted=suffix?.[1]||query.get('region')||query.get('workspace');
     if(wanted){localStorage.setItem('stark-selected-region',S.regionCode(wanted));select.value=S.getRegion();renderNavigation();}
   }
-  window.StarkSystemUI={notice,escape,glyph};
+  let dialogSequence=0;
+  function dialog(title,body,onSave,saveLabel='Save',options={}) {
+    const former=document.activeElement, wrap=document.createElement('div'), titleId='system-dialog-title-'+(++dialogSequence);
+    wrap.className='modal-backdrop';
+    wrap.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="${titleId}"><div class="modal-head"><h3 id="${titleId}">${escape(title)}</h3><button type="button" class="icon-btn" data-close aria-label="Close dialog">×</button></div><div class="modal-body">${body}<p data-dialog-error class="notice danger" role="alert" hidden></p></div><div class="modal-actions"><button type="button" class="btn" data-close>Cancel</button><button type="button" class="btn primary" data-save>${escape(saveLabel)}</button></div></div>`;
+    if(options.system){wrap.className='sys-modal-backdrop';wrap.querySelector('.modal').className='sys-modal';wrap.querySelector('.modal-actions').className='sys-modal-footer';wrap.querySelectorAll('button').forEach(button=>button.className=button.hasAttribute('data-save')?'sys-btn primary':'sys-btn');}
+    document.body.append(wrap);
+    const box=wrap.querySelector('[role="dialog"]'), saveButton=wrap.querySelector('[data-save]'), errorBox=wrap.querySelector('[data-dialog-error]');
+    let busy=false;
+    const focusables=()=>[...wrap.querySelectorAll('button,input:not([type="hidden"]),select,textarea,a[href],[tabindex]')].filter(node=>!node.disabled&&!node.hidden&&!node.closest('[hidden]')&&node.tabIndex>=0);
+    function close() {
+      if(busy)return;
+      wrap.remove();document.removeEventListener('keydown',keys);
+      const target=former?.isConnected?former:former?.id?document.getElementById(former.id):null;
+      target?.focus();
+    }
+    function keys(event) {
+      if(!wrap.isConnected){document.removeEventListener('keydown',keys);return;}
+      if([...document.querySelectorAll('.modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop')].at(-1)!==wrap)return;
+      if(event.key==='Escape'){event.preventDefault();close();}
+      if(event.key==='Tab'){
+        const nodes=focusables(), first=nodes[0], last=nodes.at(-1);
+        if(!first){event.preventDefault();box.focus();}
+        else if(event.shiftKey&&(document.activeElement===first||!wrap.contains(document.activeElement))){event.preventDefault();last.focus();}
+        else if(!event.shiftKey&&(document.activeElement===last||!wrap.contains(document.activeElement))){event.preventDefault();first.focus();}
+      }
+    }
+    const fail=error=>{errorBox.hidden=false;errorBox.textContent=error?.message||'The change could not be saved. Review the form and try again.';};
+    wrap.querySelectorAll('[data-close]').forEach(button=>button.onclick=close);
+    wrap.addEventListener('click',event=>{if(event.target===wrap)close();});
+    saveButton.onclick=()=>{
+      if(busy)return;
+      errorBox.hidden=true;errorBox.textContent='';
+      const invalid=[...wrap.querySelectorAll('input,select,textarea')].find(node=>!node.disabled&&node.type!=='hidden'&&!node.closest('[hidden]')&&!node.checkValidity());
+      if(invalid){invalid.reportValidity();invalid.focus();fail(new Error(invalid.validationMessage));return;}
+      try{
+        const result=onSave?.(wrap);
+        if(result&&typeof result.then==='function'){
+          busy=true;box.setAttribute('aria-busy','true');
+          const controls=[...wrap.querySelectorAll('button,input,select,textarea')], disabled=controls.map(node=>node.disabled);
+          controls.forEach(node=>node.disabled=true);
+          Promise.resolve(result).then(ok=>{busy=false;if(ok!==false)close();},fail).finally(()=>{busy=false;box.removeAttribute('aria-busy');controls.forEach((node,index)=>node.disabled=disabled[index]);});
+        }else if(result!==false)close();
+      }catch(error){fail(error);}
+    };
+    box.tabIndex=-1;document.addEventListener('keydown',keys);
+    (wrap.querySelector('input:not([type="hidden"]),select,textarea')||saveButton).focus();
+    return wrap;
+  }
+  window.addEventListener('stark:storage-error',event=>notice(event.detail.message,true));
+  window.StarkSystemUI={notice,escape,glyph,dialog};
   // Deferred scripts run at "interactive" before DOMContentLoaded. Module listeners
   // build their page body at that event, so mount the shared chrome after them.
   if(document.readyState==='complete')start();

@@ -52,6 +52,7 @@
     l.waves.forEach(w => { w.orderIds ||= w.orders.map(po => e.orders.find(o => o.po === po)?.id).filter(Boolean); });
     s.audit.push({ id: uid('audit'), time: stamp(), action: 'SYSTEM_CONNECTED', detail: oldE || oldL ? 'Existing operations and logistics records migrated.' : 'Sample workspace initialized. Use Data Center to start an empty workspace.' });
     reconcile(s);
+    validateState(s);
     persist(s);
     return s;
   }
@@ -59,15 +60,32 @@
     // The complete state is committed with one storage write; failed quota writes abort.
     localStorage.setItem(KEY, JSON.stringify(s));
   }
+  function readWorkspace() {
+    const raw=localStorage.getItem(KEY);
+    if(raw===null)return null;
+    const saved=JSON.parse(raw);validateState(saved);return saved;
+  }
   let state;
-  try { state = read(KEY) || initialize(); }
+  try { state = readWorkspace() || initialize(); }
   catch (error) {
     window.StarkSystemFailure = error;
-    document.addEventListener('DOMContentLoaded',()=>{
+    document.addEventListener('DOMContentLoaded',()=>queueMicrotask(()=>{
       delete document.body.dataset.systemPage;
-      document.body.innerHTML='<main style="max-width:640px;margin:10vh auto;padding:28px;font:16px/1.6 Arial,sans-serif"><h1>Workspace could not open</h1><p>The saved workspace could not be read. Your stored records have been preserved. Export them before clearing this site’s browser data, then restore your last valid backup.</p><button id="system-recovery-export" style="padding:12px 18px;font:inherit">Export stored records</button></main>';
-      document.querySelector('#system-recovery-export').onclick=()=>{const records={};for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key.startsWith('stark'))records[key]=localStorage.getItem(key);}const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({format:'stark-storage-recovery',records},null,2)],{type:'application/json'}));a.href=url;a.download='Supply-Chain-Intelligence-storage-recovery.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-    });
+      // Keep report DOM nodes alive for independent asynchronous import/render callbacks.
+      const recovery=document.createElement('main'),style=document.createElement('style');
+      recovery.id='system-recovery-panel';recovery.style.cssText='max-width:640px;margin:10vh auto;padding:28px;font:16px/1.6 Arial,sans-serif;background:#fff;color:#102c46;border-radius:12px';
+      recovery.innerHTML='<h1>Workspace could not open</h1><p>The saved workspace could not be read. Your stored records have been preserved. Export them before clearing this site’s browser data, then restore your last valid backup.</p><button id="system-recovery-export" style="padding:12px 18px;font:inherit">Export stored records</button><p id="system-recovery-error" role="alert" hidden></p>';
+      style.textContent='body.stark-storage-recovery > :not(#system-recovery-panel){display:none!important}';document.head.append(style);
+      [...document.body.children].forEach(node=>{node.hidden=true;node.setAttribute('inert','');});document.body.classList.add('stark-storage-recovery');document.body.prepend(recovery);
+      recovery.querySelector('#system-recovery-export').onclick=()=>{
+        const errorBox=recovery.querySelector('#system-recovery-error');errorBox.hidden=true;
+        try{
+          const records={};for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key.startsWith('stark'))records[key]=localStorage.getItem(key);}
+          const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify({format:'stark-storage-recovery',records},null,2)],{type:'application/json'}));
+          a.href=url;a.download='Supply-Chain-Intelligence-storage-recovery.json';recovery.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+        }catch(exportError){errorBox.hidden=false;errorBox.textContent='Stored records could not be exported: '+exportError.message;}
+      };
+    }));
     return;
   }
 
@@ -76,11 +94,15 @@
     channel?.postMessage({ revision: state.revision });
   }
   function refresh() {
-    const latest = read(KEY);
+    const latest = readWorkspace();
     if (latest && latest.revision !== state.revision) { state = latest; notify(); }
   }
-  window.addEventListener('storage', e => { if (e.key === KEY) refresh(); });
-  if (channel) channel.onmessage = () => refresh();
+  function refreshFromOtherTab() {
+    try { refresh(); }
+    catch (error) { window.dispatchEvent(new CustomEvent('stark:storage-error', { detail: { message: 'Saved workspace changes could not be read. Your current view is preserved. Export stored records before restoring a valid backup. ' + error.message } })); }
+  }
+  window.addEventListener('storage', e => { if (e.key === KEY) refreshFromOtherTab(); });
+  if (channel) channel.onmessage = refreshFromOtherTab;
 
   function reconcile(s) {
     const e = s.enterprise, l = s.logistics;
@@ -122,7 +144,8 @@
     }
   }
   function validateState(s) {
-    if (s.schemaVersion !== 1 || !s.enterprise || !s.logistics) throw new Error('Unsupported workspace format.');
+    if (!s || s.schemaVersion !== 1 || !s.enterprise || !s.logistics) throw new Error('Unsupported workspace format.');
+    if (!Number.isSafeInteger(s.revision) || s.revision < 0 || !Array.isArray(s.audit) || !s.regional || typeof s.regional !== 'object' || Array.isArray(s.regional) || !s.events || typeof s.events !== 'object' || Array.isArray(s.events)) throw new Error('Invalid workspace revision or record groups.');
     const e = s.enterprise, l = s.logistics;
     const arrays = ['accounts','programs','inventory','orders','vendors','purchaseOrders','priceOverrides','vendorPriceBooks','vaultTokens','apiKeys','webhookLogs','slaLogs','activity'];
     for (const k of arrays) if (!Array.isArray(e[k])) throw new Error(`Invalid ${k} records.`);
@@ -137,14 +160,25 @@
     }
     for (const k of ['accounts','programs','orders','vendors','purchaseOrders']) {
       const ids = new Set();
-      for (const x of e[k]) { if (!x.id || ids.has(x.id)) throw new Error(`Duplicate or missing ${k} identifier.`); ids.add(x.id); }
+      const label=['orders','purchaseOrders'].includes(k)?'po':'name';
+      for (const x of e[k]) {
+        if (!x || typeof x.id !== 'string' || !x.id || ids.has(x.id)) throw new Error(`Duplicate or missing ${k} identifier.`); ids.add(x.id);
+        if(typeof x[label]!=='string' || !x[label].trim() || typeof x.status!=='string' || !x.status)throw new Error(`Invalid ${k} reference or status.`);
+        if(x.currency!==undefined && (typeof x.currency!=='string' || !/^[a-z]{3}$/i.test(x.currency)))throw new Error(`Invalid ${k} currency.`);
+      }
+    }
+    for(const report of Object.values(s.regional))if(!report || !Array.isArray(report.items) || report.items.some(item=>!item || typeof item.model!=='string'))throw new Error('Invalid regional report records.');
+    for(const events of Object.values(s.events))if(!Array.isArray(events) || events.some(event=>!event || typeof event!=='object' || Array.isArray(event)))throw new Error('Invalid event records.');
+    for(const p of e.purchaseOrders){
+      if(!Array.isArray(p.lines) || p.lines.some(line=>!line || typeof line.sku!=='string' || !Number.isInteger(line.qty) || line.qty<=0 || !Number.isFinite(line.cost) || line.cost<0))throw new Error(`Purchase order ${p.po} has invalid lines.`);
     }
     const skus = new Set();
     for (const i of e.inventory) {
-      if (!i.sku || skus.has(i.sku)) throw new Error('Duplicate or missing inventory SKU.'); skus.add(i.sku);
+      if (!i || typeof i.sku!=='string' || !i.sku || skus.has(i.sku)) throw new Error('Duplicate or missing inventory SKU.'); skus.add(i.sku);
       for (const field of ['onHand','reserved','damaged']) if (!Number.isFinite(i[field]) || i[field] < 0) throw new Error(`Invalid ${field} for ${i.sku}.`);
     }
     for (const o of e.orders) {
+      if(typeof o.type!=='string')throw new Error(`Order ${o.po} has an invalid type.`);
       if (!e.accounts.some(a => a.id === o.accountId) || !Array.isArray(o.lines)) throw new Error(`Order ${o.po} has an invalid account or line list.`);
       if (o.validation && !['UNVALIDATED','ISSUES','VALIDATED'].includes(o.validation.state)) throw new Error(`Order ${o.po} has an invalid validation state.`);
       if (o.lines.some(x => (!skus.has(x.sku) && !(awaitingValidation(o) && typeof x.model === 'string' && x.model.trim() && typeof x.sku === 'string' && x.sku.startsWith('UNLISTED::'))) || !Number.isInteger(x.qty) || x.qty <= 0)) throw new Error(`Order ${o.po} has an invalid SKU or quantity.`);
@@ -152,7 +186,7 @@
     }
   }
   function transaction(action, detail, fn) {
-    const latest = read(KEY) || state;
+    const latest = readWorkspace() || state;
     const next = clone(latest);
     const result = fn(next);
     reconcile(next); validateState(next);

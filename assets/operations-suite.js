@@ -1,5 +1,6 @@
 (function(){
 'use strict';
+if(!window.StarkSystem)return;
 const APP_KEY='stark.enterpriseSuite.v1';
 const UI_KEY='stark.enterpriseSuite.ui.v1';
 const now=()=>new Date();
@@ -81,7 +82,7 @@ function seed(){
  };
 }
 function load(){return window.StarkSystem.getModule('enterprise')}
-function save(d){window.StarkSystem.saveModule('enterprise',d);Object.assign(d,window.StarkSystem.getModule('enterprise'))}
+function save(d){try{window.StarkSystem.saveModule('enterprise',d);Object.assign(d,window.StarkSystem.getModule('enterprise'))}catch(error){try{data=window.StarkSystem.getModule('enterprise')}catch(_){}throw error}}
 function uiLoad(){try{return JSON.parse(localStorage.getItem(UI_KEY))||{}}catch(e){return{}}}
 function uiSave(x){localStorage.setItem(UI_KEY,JSON.stringify(x))}
 let data=load();
@@ -100,7 +101,7 @@ function kpi(label,value,foot,icon='◇'){return `<article class="card kpi"><div
 function progress(v,cls=''){return `<div class="progress ${cls}"><span style="width:${Math.max(0,Math.min(100,v))}%"></span></div>`}
 function toast(title,msg='',kind='success'){let s=qs('.toast-stack');if(!s){s=document.createElement('div');s.className='toast-stack';document.body.appendChild(s)}const t=document.createElement('div');t.className=`toast ${kind}`;t.innerHTML=`<b>${esc(title)}</b>${msg?`<p>${esc(msg)}</p>`:''}`;s.appendChild(t);setTimeout(()=>t.remove(),3600)}
 function addActivity(text,kind){data.activity.unshift({time:iso(),text,kind});data.activity=data.activity.slice(0,40)}
-function modal(title,body,onSave,saveLabel='Save'){const wrap=document.createElement('div');wrap.className='modal-backdrop';wrap.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h3>${esc(title)}</h3><button class="icon-btn" data-close>×</button></div><div class="modal-body">${body}</div><div class="modal-actions"><button class="btn" data-close>Cancel</button><button class="btn primary" data-save>${esc(saveLabel)}</button></div></div>`;document.body.appendChild(wrap);qsa('[data-close]',wrap).forEach(b=>b.onclick=()=>wrap.remove());qs('[data-save]',wrap).onclick=()=>{const ok=onSave?.(wrap);if(ok!==false)wrap.remove()};wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove()});return wrap}
+function modal(title,body,onSave,saveLabel='Save'){return window.StarkSystemUI.dialog(title,body,onSave,saveLabel)}
 function download(name,text,type='text/plain'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 
 const NAV=[
@@ -150,15 +151,13 @@ function editCustomerAddresses(id){
  const S=window.StarkSystem,F=window.StarkFulfillment,state=S.getState(),a=state.enterprise.accounts.find(a=>a.id===id);if(!a||!F)return;
  const book=F.customerAddresses(state,id),labels=['Recipient / company','Address line 1','Address line 2','Address line 3','City','State / province','ZIP / postal code','Country'];
  const fields=(prefix,address)=>F.ADDRESS_KEYS.map((key,index)=>`<label><span class="field-label">${labels[index]}</span><input data-address="${prefix}-${key}" value="${esc(address[key]||'')}" maxlength="250"></label>`).join('');
- const former=document.activeElement;
  const wrap=modal('Customer addresses · '+a.name,`<p class="muted">These addresses fill customer orders. Existing orders retain their saved address details.</p><h4>Customer address</h4><div class="form-grid">${fields('customer',book.customer)}</div><h4>Default ship-to address</h4><button class="btn small" type="button" data-copy-address>Copy customer address</button><div class="form-grid" style="margin-top:14px">${fields('shipping',book.shipping[0]?.address||{})}</div><p data-address-error role="alert" class="notice danger" hidden></p>`,node=>{
   const input=prefix=>Object.fromEntries(F.ADDRESS_KEYS.map(key=>[key,qs('[data-address="'+prefix+'-'+key+'"]',node).value]));
   try{F.saveCustomerAddresses(id,{customer:input('customer'),shipping:input('shipping')},state.revision);data=S.getModule('enterprise');renderCrmAccounts();toast('Addresses saved',a.name);return true;}catch(error){const box=qs('[data-address-error]',node);box.hidden=false;box.textContent=error.message;return false;}
  });
  qs('[data-copy-address]',wrap).onclick=()=>F.ADDRESS_KEYS.forEach(key=>qs('[data-address="shipping-'+key+'"]',wrap).value=qs('[data-address="customer-'+key+'"]',wrap).value);
  const dialog=qs('[role="dialog"]',wrap);dialog.setAttribute('aria-label','Customer addresses · '+a.name);
- const keys=event=>{if(!wrap.isConnected){document.removeEventListener('keydown',keys);return;}if(event.key==='Escape'){wrap.remove();former?.focus();document.removeEventListener('keydown',keys);}if(event.key==='Tab'){const nodes=qsa('button,input',wrap).filter(node=>!node.disabled),first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}};
- document.addEventListener('keydown',keys);qs('input',wrap).focus();
+
 }
 function renderCrmAccounts(){
  const rows=()=>data.accounts.map(a=>{const par=a.parentId?account(a.parentId).name:'—';const util=a.creditLimit?100*a.creditUsed/a.creditLimit:0;return `<tr data-account-row="${a.id}"><td><b>${esc(a.name)}</b><span class="sub">${esc(a.email||'')}</span></td><td>${typeBadge(a.type)}</td><td>${esc(par)}</td><td>${statusBadge(a.status)}</td><td>${money(a.creditLimit,a.currency)}<span class="sub">Used ${money(a.creditUsed,a.currency)}</span></td><td><div class="credit-bar">${progress(util,util>85?'red':util>70?'yellow':'')}<small>${pct(util)}</small></div></td><td>${esc(a.terms)}</td></tr>`}).join('');
