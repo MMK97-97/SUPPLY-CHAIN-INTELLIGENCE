@@ -1,47 +1,48 @@
-# Verification — customer orders and navigation, 2026-10-08
+# Verification — production audit, v47
 
-Release: `2026.10.08-unified-enterprise-customer-orders45`. Source cache version: `20261008-3`. The v45 source update is complete and has not been published to the live Workers website or repository. GitHub Pages remains compatible with **Deploy from a branch → main → / (root)**.
+Release: `2026.10.08-unified-enterprise-production-audit47`. Changed shared-script cache version: `20261008-5`. This source release has not been deployed.
 
-## Results
+## Current automated evidence
 
-**246 automated checks passed with zero failures.**
+**288 regression checks passed with zero failures. All ten suites were rerun against v47.**
 
-| Suite | Passed | Scope |
-| --- | ---: | --- |
-| Existing business workflows | 23 | Existing orders, allocations, receiving and execution |
-| Interface | 51 | Shared navigation, module startup, search, styles and contrast |
-| MK AI | 24 | Local report analysis and retained service contract |
-| Hugging Face transport | 14 | Response, cancellation and failure handling |
-| Production/build | 27 | Startup, native navigation, Worker routes/caches, dependencies and fingerprints |
-| Fulfillment | 49 | Order, shipping, 3PL, import, vendor PO, attachment, server API and form workflows |
-| SQL migrations | 10 | Isolated PostgreSQL execution and tenant/write/idempotency protections |
-| Regional AI | 15 | Route/query regions, history, notes, payloads and late answers |
-| Customer orders and navigation | 33 | CRM address snapshots/editor, numbering, carriers/billing, inventory, fulfillment and search placement |
+| Suite | Passed |
+| --- | ---: |
+| workflows | 23 |
+| interface | 51 |
+| mk-ai | 24 |
+| mk-space | 14 |
+| production | 27 |
+| fulfillment | 49 |
+| fulfillment-sql | 10 |
+| mk-region | 15 |
+| customer-orders | 34 |
+| resilience | 41 |
 
-The static audit passed **171 JavaScript, TypeScript and inline script syntax checks**. All **1,459 local references across 90 HTML pages** resolve. There are 85 shared-core pages and 88 pages with early loading/navigation boot; the retired workspace now uses a small dependency-free redirect instead. Changed assets have the current cache version. The Cloudflare build contains **90 pages and 74 fingerprinted assets**, with VERSION.json and the asset manifest.
+Separate all-page audits inspected all 90 HTML pages: 79 startup simulations and 11 redirect/source inspections. Normal startup has no captured runtime errors, duplicate IDs, unlabeled active inputs or lingering navigation loading state. The recovery audit also passed all pages, including 76 application recovery screens. Three authentication pages were started with local dependencies; these checks do not sign in or verify a real account.
 
-## New checks
+Static verification passed 173 JavaScript/TypeScript/inline syntax checks and resolved all 1471 inspected local page, script, stylesheet, image, CSS-resource and explicit redirect references. Changed shared scripts have the new cache query. The Cloudflare build contains 90 pages, 74 fingerprinted assets and current VERSION.json/asset-manifest.json. Node syntax parsing is not a Deno semantic check of the optional backend.
 
-The customer-order tests verify customer PO and internally generated sales order numbers, case-insensitive collision rejection, stable internal numbers on draft edits and atomic invalid-input failures. CRM customer and ship-to addresses are independently snapshotted on orders. Later CRM edits leave saved orders unchanged; missing addresses are not invented. Incomplete and stale address-editor saves are rejected without replacing prior records.
+## Verified corrections
 
-Descriptions resolve from the regional catalog and remain read-only. Tests distinguish overall stock from recorded warehouse locations, choose Farmers Branch from an explicit WMS balance, leave known non-covering multi-line stock unassigned, label the default when warehouse balances are absent and retain a manual override. Automatic selection never creates a partner request or shipment. Existing global reservation/credit checks remain in place.
+Failed CRM/customer, vendor and warehouse saves show an inline error, retain input and reload the committed module before retry. Each retry creates one record. Stale edits preserve concurrent committed changes. Invalid required fields and email cannot commit. Shared dialogs have accessible titles, keyboard focus containment/restoration, inline errors and duplicate-submit/edit/dismissal protection while an asynchronous save is pending.
 
-Every listed carrier and LTL service is exercised through saved orders. Custom account methods remain possible; invalid carrier/service pairs and blank custom methods are rejected. Third-party billing needs account and ZIP together; shipper billing clears unused billing fields and LTL cannot accidentally retain parcel billing. Form tests cover CRM prefills, custom ship-to preservation, number preview, model descriptions/availability, changing carriers/services, manual fulfillment and a complete saved/validated order. New inventory and address text also passes 4.5:1 contrast checks.
+Malformed saved JSON, invalid record/status/currency fields and invalid workspace/report/event groups open a recovery screen without replacing stored records. Recovery retains the original DOM for independent asynchronous report callbacks. Its export contains the original raw stored strings, and export failures display an error. Malformed cross-tab changes are reported and rejected before a transaction callback can run.
 
-The 16 regional banners are absent. The Regional Workspace module is removed while old EU/Canada/US bookmarks redirect safely to their direct reports. Representative CRM, shipping, 3PL, sales, raw report and warehouse pages show no search controls; orders, vendors and procurement retain working search. The old regional workspace AI query case now tests the direct Canada sales route, matching the removed module.
+Record values are escaped in pricing/catalog, account/program, warehouse and procurement attributes. The synthetic product-code HTML payload no longer creates an injected element; exact SKU values remain available for actions and forms. Upload/vendor/AI controls have accessible labels, and missing decorative canvas context does not prevent agent startup. The actual 3PL routing and receiving buttons were exercised with synthetic records.
 
-## Retained behavior
+## Preserved behavior
 
-All **237 v44 source files remain present**. Sixteen selected calculation, data, logistics, AI and navigation assets retain their exact v44 hashes. In particular, the regional inventory engines, operational state/reservation core, sales calculation code, MK AI and MK Brain are unchanged. The EU AI correction remains covered by all 15 regional regressions. 3PL, Transportation, Shipping and Procurement remain separate modules with the existing shared records.
+All 243 v46 source files remain. 78 frontend assets retain their exact v46 hashes, including inventory engines, sales/reorder calculation assets and MK AI/brain code. Shared reservation calculations, inventory reconciliation and the remaining core business/region-import functions are byte-identical to v46. Existing schema version 1, storage keys, record IDs and SQL/backend sources remain. 3PL and transportation remain separate. v44 EU AI scope, v45 customer-order/CRM flows and v46 address labels pass their current regression suites.
 
-The existing suites verify draft/issue stock isolation, single allocation, cancellation credit/stock release, multi-line shipment atomicity, shipment import previews/duplicates/stale data, vendor PO receiving, packing-slip backup retention and failed quota writes. Server/provider tests use synthetic adapters and verify exact order payloads, authentication, organization access, bounded transport, durable idempotency and uncertain acknowledgments. Both migrations run in an isolated PGlite PostgreSQL database; this does not establish the state of the user's live database.
+## Scope and limits
 
-The unchanged public Space connector was live-tested October 7 with synthetic brand facts, as recorded in the historical live report. No live inference or business records were sent for v45. Historical v43/v44 release reports remain in the package and describe those earlier snapshots; the current release summary is `verification-release-20261008-v45.json`.
+The tests use Node.js/jsdom, standard API emulation, synthetic records, mocked transports and isolated PGlite SQL. They do not render pixels or measure desktop/mobile layout or navigation timing. The requested live GitHub Pages URL could not be retrieved by the web reader, so its deployed source/version is not confirmed. Earlier browser preview permission was denied; no browser workaround was used. Prior October 7 live synthetic AI evidence remains historical and was not rerun for this release.
 
-## Evidence and limits
+No remote website publishing, real sign-in, production database migration, carrier label/booking, real partner request, vendor dispatch or business message was performed. Shared multi-user operation depends on configuring and deploying the included authenticated backend in the user's environment.
 
-Current machine-readable evidence is in the nine regression reports listed above, `verification-static.json` and `verification-release-20261008-v45.json`. Source tests use Node.js/jsdom, mocked network adapters and an isolated SQL database. Browser preview was denied earlier in the session; desktop/mobile rendering and measured page-transition timing remain unverified. No browser workaround was used. TypeScript syntax checks do not establish Deno semantic compatibility.
+## Reproduce and deploy
 
-No live deployment, repository commit, sign-in, membership lookup, database migration, shipping-label purchase, booking, vendor dispatch, message or partner processing order was performed. Carrier selections record order instructions, not real-time eligibility or rates. Existing inventory/credit validation does not add a separate warehouse reservation ledger. Complete the carrier and local-stock checks before real dispatch using the existing fulfillment workflow.
+Install jsdom@26 and @electric-sql/pglite@0.3.14 separately from the static site. Run the ten `scripts/check-*.cjs` regression suites; run `node build-cloudflare.mjs` before `scripts/check-production.cjs`. Run `scripts/check-pages.cjs` normally and with the `recovery` argument for the page audits. Reports are included in `docs/verification-*.json`.
 
-Use `DEPLOY_TO_WORKERS.md` for the existing Workers target or `DEPLOY_FROM_BRANCH.md` for branch publishing. Root index.html and empty .nojekyll are present, without .github/workflows or root pages.yml. The ZIP includes the complete source, while generated dist, dependencies and verification scratch files are excluded.
+For GitHub Pages use **Deploy from a branch → main → / (root)**, retaining empty root `.nojekyll` and no custom `.github/workflows` or root `pages.yml`. `DEPLOY_FROM_BRANCH.md` contains current v47 upload and published-site checks. `DEPLOY_TO_WORKERS.md` covers the separate Workers build. The delivered ZIP contains complete source, without generated dist, dependencies or scratch QA files.

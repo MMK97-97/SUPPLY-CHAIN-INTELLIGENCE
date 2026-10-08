@@ -1,7 +1,8 @@
 {
-  "passed": 33,
+  "passed": 34,
   "failed": 0,
   "checks": [
+    "each ship-to field has its own correct accessible label",
     "sales order reference can match customer PO and internal numbering stays unique",
     "editing drafts follows PO numbering and preserves or changes internal numbers deliberately",
     "sales order collisions and invalid numbering options fail atomically",

@@ -28,6 +28,8 @@ async function boot(file, shellSource, options = {}) {
   w.TextDecoder = TextDecoder; w.TextEncoder = TextEncoder;
   w.addEventListener('error', event => errors.push(event.error?.stack || event.message));
   w.fetch = () => { throw new Error('Network is disabled in interface checks.'); };
+  // Optional standard-API emulation for wider audits; this does not render a browser.
+  if (options.beforeScripts) options.beforeScripts(w, d);
   let ready = 'loading', script = null;
   Object.defineProperty(d, 'readyState', { configurable: true, get: () => ready });
   Object.defineProperty(d, 'currentScript', { configurable: true, get: () => script });

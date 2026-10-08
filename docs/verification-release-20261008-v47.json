@@ -1,0 +1,103 @@
+{
+  "checked_at": "2026-10-08T20:58:53.170328+00:00",
+  "release": "2026.10.08-unified-enterprise-production-audit47",
+  "asset_version": "20261008-5",
+  "published": false,
+  "baseline_library_version": 10,
+  "baseline_release": "2026.10.08-unified-enterprise-address-labels46",
+  "current_regression_reports": {
+    "verification-workflows.json": {
+      "passed": 23,
+      "failed": 0
+    },
+    "verification-interface.json": {
+      "passed": 51,
+      "failed": 0
+    },
+    "verification-mk-ai.json": {
+      "passed": 24,
+      "failed": 0
+    },
+    "verification-mk-space.json": {
+      "passed": 14,
+      "failed": 0
+    },
+    "verification-production.json": {
+      "passed": 27,
+      "failed": 0
+    },
+    "verification-fulfillment.json": {
+      "passed": 49,
+      "failed": 0
+    },
+    "verification-fulfillment-sql.json": {
+      "passed": 10,
+      "failed": 0
+    },
+    "verification-mk-region.json": {
+      "passed": 15,
+      "failed": 0
+    },
+    "verification-customer-orders.json": {
+      "passed": 34,
+      "failed": 0
+    },
+    "verification-resilience.json": {
+      "passed": 41,
+      "failed": 0
+    }
+  },
+  "total_current_checks_passed": 288,
+  "all_suites_rerun": true,
+  "all_page_audits": {
+    "inspected": 90,
+    "startup_simulations": 79,
+    "redirect_source_inspections": 11,
+    "normal_failures": 0,
+    "recovery_failures": 0,
+    "recovery_screens": 76,
+    "reports": [
+      "verification-pages.json",
+      "verification-pages-recovery.json"
+    ]
+  },
+  "static_report": {
+    "file": "verification-static.json",
+    "syntax_checks": 173,
+    "local_references": 1471,
+    "failures": 0
+  },
+  "build": {
+    "html_pages": 90,
+    "fingerprinted_assets": 74,
+    "source_zip_contains_dist": false
+  },
+  "baseline_files_retained": 243,
+  "unchanged_assets_preserved": 78,
+  "preserved_calculations_and_workflows": {
+    "reservation_formula": true,
+    "inventory_reconciliation": true,
+    "business_workflows_and_region_imports": true
+  },
+  "changed_frontend_assets": [
+    "assets/enterprise-suite.js",
+    "assets/fulfillment-pages.js",
+    "assets/logistics-suite.js",
+    "assets/operations-suite.js",
+    "assets/system-connectors.js",
+    "assets/system-core.js",
+    "assets/system-pages.js",
+    "assets/system-shell.js"
+  ],
+  "branch_deployment": {
+    "root_index": true,
+    "empty_nojekyll": true,
+    "no_custom_workflows": true,
+    "no_root_pages_yml": true
+  },
+  "live_deployment": false,
+  "live_site_version_verified": false,
+  "browser_rendering_verified": false,
+  "live_ai_rechecked": false,
+  "guide": "PRODUCTION_AUDIT.md"
+}

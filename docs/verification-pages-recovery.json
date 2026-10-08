@@ -1,0 +1,1288 @@
+{
+  "pages": 90,
+  "passed": 90,
+  "failed": 0,
+  "method": "Source-driven jsdom startup, duplicate-ID, active control label and loading-state checks; standard matchMedia and unavailable decorative canvas emulated. Redirects inspected separately by the static audit. No graphical rendering, authentication or live network.",
+  "checks": [
+    {
+      "file": "3pl-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/integrations.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/network.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/order-history.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/orders.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/reconciliation.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/routing.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/ship-orders.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/shipment-requests.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/shipments.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/upload-shipments.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "active-brands-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Active Brands"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2530,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "active-brands-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Active Brands"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2557,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "active-brands-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Active Brands"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2551,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "active-brands.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "activity.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1142,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "ats-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "ATS"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2070,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "auth-callback.html",
+      "kind": "authentication",
+      "errors": [],
+      "headings": [
+        "Protect every supply-chain decision."
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 605,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "business-operations.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1142,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "cloud-agent.html",
+      "kind": "authentication",
+      "errors": [],
+      "headings": [
+        "MK Cloud Supply Chain AI Engine"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 21150,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "crm.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "crm/accounts.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "crm/catalog.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "crm/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "crm/partner-portal.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "data-center.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1142,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "decision-intelligence-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Supply Chain Decision Brain"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4700,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "decision-intelligence-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Supply Chain Decision Brain"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4726,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "decision-intelligence-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Supply Chain Decision Brain"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4727,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "events-tv.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "events.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Regional Events",
+        "Events Control Center"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 53077,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "freight-consolidate.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Freight Consolidator"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4438,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "freight-estimator.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Freight Estimator"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 66908,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1142,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "instructions-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Instructions"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2946,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "instructions-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Instructions"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2973,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "instructions-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Instructions"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2967,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "instructions.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-analysis-report-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Inventory Analysis Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7413,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "inventory-analysis-report-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Inventory Analysis Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7440,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "inventory-analysis-report-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Inventory Analysis Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7434,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "inventory-ca.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-dashboard-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Inventory Dashboard"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2824,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "inventory-dashboard-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Inventory Dashboard"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2851,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "inventory-dashboard-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Inventory Dashboard"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2845,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "inventory-dashboard.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-eu.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-us.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "login.html",
+      "kind": "authentication",
+      "errors": [],
+      "headings": [
+        "Decisionsbegin withtrusted data."
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 716,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "mk-brain.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "MK AI Analyst"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2223,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management/bulk-firm.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management/cancelled.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management/hold-redemption.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management/issues.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management/new-order.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "order-management/unvalidated.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "procurement-planning.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1142,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "procurement/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "procurement/new-po.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "raw-report-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Raw Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1864,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "raw-report-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Raw Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1891,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "raw-report-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Raw Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1885,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "raw-report.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "regional-workspace.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "reorder-report-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Reorder Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3416,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "reorder-report-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Reorder Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3443,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "reorder-report-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Reorder Report"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3437,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "reorder-report.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "sales-analysis.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "Sales and Demand Intelligence"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 8306,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "shipment-tracking.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open",
+        "UPS & FedEx Tracking"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 10433,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "shipping/daily-report.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "shipping/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "transportation/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "vendor-management.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/digital-vault.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/procurement.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/sla.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/vendors.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "vendor-po-management.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1142,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/cycle-count.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/cycle-counts.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/inventory-bins.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/packing-dispatch.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/receiving.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/wave-picking.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "shared_sidebar": 0,
+      "shared_header": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1072,
+      "recovery": true,
+      "loading": false
+    }
+  ]
+}

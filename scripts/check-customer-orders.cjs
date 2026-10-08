@@ -13,6 +13,16 @@ async function test(name,fn){try{await fn();passed.push(name);console.log('PASS'
 async function pageTest(name,file,fn){await test(name,async()=>{const page=await pageBoot(file);try{await fn(page);assert.deepEqual(page.errors,[]);}finally{page.w.close();}});}
 function change(w,node,value,event='change'){node.value=value;node.dispatchEvent(new w.Event(event,{bubbles:true}));}
 async function main(){
+  await pageTest('each ship-to field has its own correct accessible label','order-management/new-order.html',({d})=>{
+    const expected={name:'Recipient / company',line1:'Address line 1',line2:'Address line 2',line3:'Address line 3',city:'City',state:'State / province',zip:'ZIP / postal code',country:'Country'};
+    const labels=[];
+    for(const [key,text] of Object.entries(expected)){
+      const input=d.querySelector('[name="address-'+key+'"]');assert.ok(input,key);
+      const label=input.closest('label');assert.ok(label,key+' label association');
+      assert.equal(label.textContent.trim(),text,key+' label');labels.push(label);
+    }
+    assert.equal(new Set(labels).size,8,'eight separate address field labels');
+  });
   await test('sales order reference can match customer PO and internal numbering stays unique',()=>{const {S,F}=boot(),a=F.createDraft(input('PO-SAME',{orderNumberMode:'CUSTOMER_PO'})),b=F.createDraft(input('PO-AUTO')),c=F.createDraft(input('PO-AUTO-2'));assert.equal(order(S,a).orderNumber,'PO-SAME');assert.match(order(S,b).orderNumber,/^SO-\d{8}-[A-Z0-9]+$/);assert.notEqual(order(S,b).orderNumber,order(S,c).orderNumber);assert.equal(F.orderSearch(S.getState(),order(S,b),order(S,b).orderNumber),true);});
   await test('editing drafts follows PO numbering and preserves or changes internal numbers deliberately',()=>{const {S,F}=boot(),id=F.createDraft(input('EDIT-NUM',{orderNumberMode:'CUSTOMER_PO'}));F.editDraft(id,input('EDIT-NUM-NEW',{orderNumberMode:'CUSTOMER_PO'}));assert.equal(order(S,id).orderNumber,'EDIT-NUM-NEW');F.editDraft(id,input('EDIT-NUM-NEW',{orderNumberMode:'AUTO'}));const number=order(S,id).orderNumber;F.editDraft(id,input('EDIT-NUM-AGAIN',{orderNumberMode:'AUTO'}));assert.equal(order(S,id).orderNumber,number);});
   await test('sales order collisions and invalid numbering options fail atomically',()=>{const {S,F}=boot(),id=F.createDraft(input('FIRST')),before=S.getState();assert.throws(()=>F.createDraft(input(order(S,id).orderNumber,{orderNumberMode:'CUSTOMER_PO'})),/already exists/);assert.throws(()=>F.createDraft(input('BAD',{orderNumberMode:'FREE_TEXT'})),/numbering/);assert.deepEqual(plain(S.getState()),plain(before));});
