@@ -58,5 +58,29 @@
     if (!response.ok) throw new Error(result.error || 'The AI service is unavailable (' + response.status + ').');
     return result;
   }
-  window.StarkSystemCloud={inspect,connect,sync,disconnect,analyzeWithAI,getStatus:()=>({status,active})};
+  async function send3PLRequest(requestId,statusOnly=false) {
+    let transmitted=false;const controller=new AbortController();let deadline;
+    try {
+      if(!active)throw new Error('Connect the shared organization workspace before sending partner orders.');
+      await session(true);
+      if(!statusOnly){await sync();if(pending)throw new Error('A workspace save is still running. Wait for it to finish, then send again.');if(!active)throw new Error('Cloud synchronization is paused. Reconnect before sending.');}
+      const current=await client.auth.getSession();if(current.error || !current.data?.session?.access_token)throw new Error('Sign in before sending partner orders.');
+      const config=window.STARK_SUPABASE_CONFIG;
+      deadline=setTimeout(()=>controller.abort(),40000);transmitted=true;
+      const response=await fetch(config.url.replace(/\/$/,'')+'/functions/v1/threepl-orders',{
+        method:'POST',headers:{Authorization:'Bearer '+current.data.session.access_token,apikey:config.publishableKey,'Content-Type':'application/json'},
+        body:JSON.stringify({organization_id:organization,request_id:requestId,action:statusOnly?'status':'process'}),signal:controller.signal
+      });
+      const body=await response.text();if(body.length>65536)throw new Error('The 3PL connector returned an oversized response.');
+      let result;try{result=JSON.parse(body);}catch(_){throw new Error('The 3PL connector is unavailable or returned an invalid response.');}
+      if(!['QUEUED','SENDING','ACKNOWLEDGED','REJECTED','UNKNOWN'].includes(result.state))throw new Error('The 3PL connector returned an unsupported delivery status.');
+      if(!response.ok || result.ok!==true){const error=new Error(result.error || 'The 3PL connector rejected this request.');error.deliveryState=result.state;throw error;}
+      return result;
+    } catch(error) {
+      if(!error.deliveryState)error.deliveryState=transmitted?'UNKNOWN':'QUEUED';
+      if(controller.signal.aborted)error.message='The connector timed out. Delivery is unconfirmed; refresh API status before resending.';
+      throw error;
+    } finally {clearTimeout(deadline);}
+  }
+  window.StarkSystemCloud={inspect,connect,sync,disconnect,analyzeWithAI,send3PLRequest,getStatus:()=>({status,active})};
 })();

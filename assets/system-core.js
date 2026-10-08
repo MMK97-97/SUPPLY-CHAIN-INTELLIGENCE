@@ -9,6 +9,8 @@
   const stamp = () => new Date().toISOString();
   const uid = p => `${p}_${globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
   const final = status => ['SHIPPED', 'DELIVERED', 'CANCELLED', 'EXPIRED'].includes(status);
+  const awaitingValidation = o => o.validation && o.validation.state !== 'VALIDATED';
+  const requireValidated = o => { if (awaitingValidation(o)) throw new Error('Validate this customer order before fulfillment.'); };
   const number = n => Number.isFinite(Number(n)) ? Number(n) : 0;
   const read = key => { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; };
   const regionCode = r => /^(CA|CANADA)$/i.test(r) ? 'CA' : /^EU$/i.test(r) ? 'EU' : 'US';
@@ -18,7 +20,7 @@
   function activeReservations(e) {
     const totals = {};
     for (const o of e.orders) {
-      if (final(o.status) || ['3PL','DROPSHIP'].includes(o.fulfillment?.kind)) continue;
+      if (final(o.status) || awaitingValidation(o) || ['3PL','DROPSHIP'].includes(o.fulfillment?.kind)) continue;
       for (const l of o.lines) {
         const q = o.type === 'HOLD_PO' ? Math.max(0, l.allocated - number(l.redeemed)) : Math.max(0, l.qty - number(l.shipped));
         totals[l.sku] = (totals[l.sku] || 0) + q;
@@ -110,7 +112,7 @@
       if (!l.receipts.some(r => r.po === p.po && !['CLOSED','CANCELLED'].includes(r.status))) l.receipts.push({ id: uid('rcv'), po: p.po, vendor: e.vendors.find(v => v.id === p.vendorId)?.name || '', asn: `ASN-${p.po}`, appointment: p.eta, dock: 'D1', carrier: p.carrier || 'TBD', status: 'SCHEDULED', invoice: 'Pending', invoiceTotal: 0, poTotal: p.lines.reduce((a, x) => a + x.qty * x.cost, 0), lines: p.lines.map(x => ({ sku: x.sku, expected: x.qty - number(x.received), received: 0, damaged: 0, unitCost: x.cost })) });
     }
     for (const o of e.orders) {
-      if (final(o.status) || o.type === 'HOLD_PO' || ['3PL','DROPSHIP'].includes(o.fulfillment?.kind)) continue;
+      if (final(o.status) || awaitingValidation(o) || o.type === 'HOLD_PO' || ['3PL','DROPSHIP'].includes(o.fulfillment?.kind)) continue;
       for (const line of o.lines) {
         const i = e.inventory.find(x => x.sku === line.sku);
         if (!i || i.nature === 'DIGITAL' || !['ALLOCATED', 'PICKING'].includes(o.status)) continue;
@@ -125,6 +127,14 @@
     const arrays = ['accounts','programs','inventory','orders','vendors','purchaseOrders','priceOverrides','vendorPriceBooks','vaultTokens','apiKeys','webhookLogs','slaLogs','activity'];
     for (const k of arrays) if (!Array.isArray(e[k])) throw new Error(`Invalid ${k} records.`);
     for (const k of ['warehouses','bins','inventory','receipts','putaway','waves','packing','cycleCounts','movements','tplNodes','tplInventory','tplShipments','reconciliations','activity']) if (!Array.isArray(l[k])) throw new Error(`Invalid ${k} records.`);
+    if (l.tplRequests !== undefined) {
+      if (!Array.isArray(l.tplRequests)) throw new Error('Invalid 3PL processing requests.');
+      const requestIds = new Set();
+      for (const request of l.tplRequests) {
+        if (!request.id || requestIds.has(request.id) || !e.orders.some(o => o.id === request.customerOrderId) || !Array.isArray(request.shipmentIds) || !request.payload || !['QUEUED','SENDING','ACKNOWLEDGED','REJECTED','UNKNOWN'].includes(request.transmission?.state)) throw new Error('Invalid linked 3PL processing request.');
+        requestIds.add(request.id);
+      }
+    }
     for (const k of ['accounts','programs','orders','vendors','purchaseOrders']) {
       const ids = new Set();
       for (const x of e[k]) { if (!x.id || ids.has(x.id)) throw new Error(`Duplicate or missing ${k} identifier.`); ids.add(x.id); }
@@ -136,7 +146,9 @@
     }
     for (const o of e.orders) {
       if (!e.accounts.some(a => a.id === o.accountId) || !Array.isArray(o.lines)) throw new Error(`Order ${o.po} has an invalid account or line list.`);
-      if (o.lines.some(x => !skus.has(x.sku) || !Number.isInteger(x.qty) || x.qty <= 0)) throw new Error(`Order ${o.po} has an invalid SKU or quantity.`);
+      if (o.validation && !['UNVALIDATED','ISSUES','VALIDATED'].includes(o.validation.state)) throw new Error(`Order ${o.po} has an invalid validation state.`);
+      if (o.lines.some(x => (!skus.has(x.sku) && !(awaitingValidation(o) && typeof x.model === 'string' && x.model.trim() && typeof x.sku === 'string' && x.sku.startsWith('UNLISTED::'))) || !Number.isInteger(x.qty) || x.qty <= 0)) throw new Error(`Order ${o.po} has an invalid SKU or quantity.`);
+      if (awaitingValidation(o) && !['UNVALIDATED','ISSUES','CANCELLED','EXPIRED'].includes(o.status)) throw new Error(`Order ${o.po} cannot execute before validation.`);
     }
   }
   function transaction(action, detail, fn) {
@@ -198,6 +210,7 @@
       const order = { ...clone(o), id: uid('ord'), createdAt: stamp(), updatedAt: stamp(), status: o.type === 'HOLD_PO' ? 'ALLOCATED' : 'PICKING', region: inventoryItem(s, o.lines[0].sku).region || 'US', lines: o.lines.map(x => ({ ...x, allocated: x.qty, redeemed: 0, shipped: 0 })) };
       if (o.type === 'REDEMPTION_PO') { const h = e.orders.find(x => x.id === o.parentHoldId); o.lines.forEach(x => { h.lines.find(y => y.sku === x.sku).redeemed += x.qty; }); }
       else e.accounts.find(x => x.id === o.accountId).creditUsed += value;
+      if (o.type === 'REDEMPTION_PO') { const parent = e.orders.find(x => x.id === o.parentHoldId); if (parent.warehouseId && !order.warehouseId) { order.warehouseId = parent.warehouseId; order.shipping = {...order.shipping,warehouseId:parent.warehouseId}; } }
       if (o.lines.every(x => inventoryItem(s, x.sku).nature === 'DIGITAL')) order.status = 'ALLOCATED';
       if(o.supplyMode==='DROPSHIP'){order.fulfillment={kind:'DROPSHIP'};order.status='ALLOCATED';}
       e.orders.push(order); e.activity.unshift({ time: stamp(), kind: 'order', text: `${o.po} allocated; stock remains on hand until dispatch.` });
@@ -206,9 +219,9 @@
   }
   function expireHolds() {
     let count = 0;
-    if(!state.enterprise.orders.some(o=>o.type==='HOLD_PO'&&!final(o.status)&&new Date(o.holdUntil).getTime()<=Date.now()))return 0;
+    if(!state.enterprise.orders.some(o=>o.type==='HOLD_PO'&&!awaitingValidation(o)&&!final(o.status)&&new Date(o.holdUntil).getTime()<=Date.now()))return 0;
     transaction('HOLDS_CHECKED', 'Expired holds released.', s => {
-      for (const h of s.enterprise.orders.filter(o => o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() <= Date.now())) {
+      for (const h of s.enterprise.orders.filter(o => o.type === 'HOLD_PO' && !awaitingValidation(o) && !final(o.status) && new Date(o.holdUntil).getTime() <= Date.now())) {
         const amount = h.lines.reduce((n, x) => n + Math.max(0, x.allocated - number(x.redeemed)) * x.price, 0);
         const a = s.enterprise.accounts.find(x => x.id === h.accountId); a.creditUsed = Math.max(0, a.creditUsed - amount); h.status = 'EXPIRED'; count++;
       }
@@ -217,11 +230,15 @@
   function cancelOrder(id) {
     transaction('ORDER_CANCELLED', id, s => {
       const o = s.enterprise.orders.find(x => x.id === id); if (!o || final(o.status)) throw new Error('Only open orders can be cancelled.');
+      if ((s.logistics.tplRequests || []).some(r => r.customerOrderId === id && ['SENDING','ACKNOWLEDGED','UNKNOWN'].includes(r.transmission?.state))) throw new Error('Reconcile or cancel this order with the 3PL before releasing its reservation.');
+      if (o.lines.some(x => number(x.shipped) > 0)) throw new Error('A partially shipped order requires a return or remaining-balance reconciliation.');
       if (s.logistics.packing.some(x => x.orderId === id && x.status === 'SHIPPED')) throw new Error('A dispatched order must be handled through a return.');
       if (o.type === 'HOLD_PO' && s.enterprise.orders.some(x => x.parentHoldId === id && !['CANCELLED','EXPIRED'].includes(x.status))) throw new Error('Cancel or fulfill linked redemptions before cancelling the hold.');
       if (o.type === 'REDEMPTION_PO') { const h = s.enterprise.orders.find(x => x.id === o.parentHoldId); o.lines.forEach(x => { const hl = h.lines.find(y => y.sku === x.sku); hl.redeemed = Math.max(0, hl.redeemed - x.qty); }); }
-      else { const a = s.enterprise.accounts.find(x => x.id === o.accountId); a.creditUsed = Math.max(0, a.creditUsed - o.lines.reduce((n, x) => n + x.qty * x.price, 0)); }
-      o.status = 'CANCELLED'; s.logistics.waves.filter(w => w.orderIds?.includes(id)).forEach(w => w.status = 'COMPLETE');
+      else if (!awaitingValidation(o)) { const a = s.enterprise.accounts.find(x => x.id === o.accountId); a.creditUsed = Math.max(0, a.creditUsed - o.lines.reduce((n, x) => n + x.qty * x.price, 0)); }
+      o.status = 'CANCELLED'; o.updatedAt = stamp();
+      for (const r of (s.logistics.tplRequests || []).filter(r => r.customerOrderId === id)) { r.status = 'CANCELLED'; r.updatedAt = stamp(); }
+      s.logistics.waves.filter(w => w.orderIds?.includes(id)).forEach(w => w.status = 'COMPLETE');
       s.logistics.packing.filter(x=>x.orderId===id).forEach(x=>x.status='CANCELLED');
       for(const sh of s.logistics.tplShipments.filter(x=>x.customerOrderId===id&&!['DELIVERED','DISPATCHED','CANCELLED'].includes(x.status))){const stock=s.logistics.tplInventory.find(x=>x.nodeId===sh.nodeId&&x.sku===sh.sku);if(stock)stock.reserved=Math.max(0,stock.reserved-sh.qty);sh.status='CANCELLED';}
     });
@@ -289,7 +306,7 @@
   function finishWave(id) {
     transaction('WAVE_PICKED', id, s => {
       const w = s.logistics.waves.find(x => x.id === id); if (!w || w.status !== 'PICKING') throw new Error('Start the wave before completing it.');
-      const orders = s.enterprise.orders.filter(o => w.orderIds?.includes(o.id)); if (!orders.length) throw new Error('Link the wave to a valid allocated customer order.');
+      const orders = s.enterprise.orders.filter(o => w.orderIds?.includes(o.id)); orders.forEach(requireValidated); if (!orders.length) throw new Error('Link the wave to a valid allocated customer order.');
       w.status = 'COMPLETE'; w.picked = w.qty;
       for (const o of orders) {
         const line = o.lines.find(x => x.sku === w.sku); if (!line || final(o.status)) continue;
@@ -306,6 +323,8 @@
       const p = s.logistics.packing.find(x => x.id === id); if (!p || p.status === 'SHIPPED') return;
       const o = s.enterprise.orders.find(x => x.id === p.orderId || x.po === p.order);
       if (!o || final(o.status) || o.type === 'HOLD_PO' || o.fulfillment?.kind === '3PL') throw new Error('Link this packing job to an open warehouse order.');
+      requireValidated(o);
+      if (o.fulfillment?.kind === 'DROPSHIP') throw new Error('Use supplier dispatch for a dropship order.');
       const line = o.lines.find(x => x.sku === p.sku); if (!line || p.qty > line.qty - number(line.shipped)) throw new Error('Packing quantity exceeds the unshipped order balance.');
       const i = inventoryItem(s, p.sku); if (i.onHand - i.damaged < p.qty) throw new Error('Insufficient undamaged stock for dispatch.');
       if (!tracking?.trim()) throw new Error('Enter the carrier tracking number before dispatch.');
@@ -318,6 +337,7 @@
     transaction('ORDER_ROUTED', `${ref} to ${nodeId}`, s => {
       const o = s.enterprise.orders.find(x => x.id === ref || x.po === ref);
       if (!o || final(o.status) || o.type === 'HOLD_PO' || !['ALLOCATED','PICKING'].includes(o.status)) throw new Error('Use an open allocated customer order reference.');
+      requireValidated(o);
       if (o.fulfillment || s.logistics.packing.some(x => x.orderId === o.id)) throw new Error('This order already has an execution route.');
       if (o.lines.length !== 1 || o.lines[0].sku !== sku || o.lines[0].qty !== qty) throw new Error('Route the exact SKU and whole quantity from the selected order.');
       if (s.logistics.warehouses.some(x => x.id === nodeId)) { o.fulfillment = { kind: 'LOCAL', nodeId }; return; }
@@ -330,16 +350,36 @@
   }
   function advanceShipment(id, tracking) {
     transaction('3PL_STATUS_UPDATED', id, s => {
-      const sh = s.logistics.tplShipments.find(x => x.id === id); if (!sh || sh.status === 'DELIVERED') return;
-      if(sh.status==='CANCELLED')throw new Error('This shipment was cancelled.');
-      const seq = ['REQUESTED','ACCEPTED','PICKING','DISPATCHED','DELIVERED']; const next = seq[Math.max(0, seq.indexOf(sh.status === 'DELAYED' ? 'ACCEPTED' : sh.status)) + 1];
+      const sh = s.logistics.tplShipments.find(x => x.id === id);
+      if (!sh || sh.status === 'DELIVERED') return;
+      if (sh.status === 'CANCELLED') throw new Error('This shipment was cancelled.');
+      const o = s.enterprise.orders.find(x => x.id === sh.customerOrderId);
+      if (o) { requireValidated(o); if (o.status === 'CANCELLED') throw new Error('This customer order was cancelled.'); }
+      const seq = ['REQUESTED','ACCEPTED','PICKING','DISPATCHED','DELIVERED'];
+      const next = seq[Math.max(0, seq.indexOf(sh.status === 'DELAYED' ? 'ACCEPTED' : sh.status)) + 1];
+      if (!next) throw new Error('This shipment has an unsupported status.');
       if (next === 'DISPATCHED') {
         if (!tracking?.trim()) throw new Error('Enter the partner tracking number to dispatch.');
-        const i = s.logistics.tplInventory.find(x => x.nodeId === sh.nodeId && x.sku === sh.sku); if (!i || i.qty < sh.qty) throw new Error('Partner inventory is insufficient.');
-        i.qty -= sh.qty; i.reserved = Math.max(0, i.reserved - sh.qty); sh.dispatchedAt = stamp(); sh.tracking = tracking.trim();
+        const i = s.logistics.tplInventory.find(x => x.nodeId === sh.nodeId && x.sku === sh.sku);
+        if (!i || i.qty < sh.qty) throw new Error('Partner inventory is insufficient.');
+        if (o) {
+          const line = o.lines.find(x => x.sku === sh.sku);
+          if (!line || sh.qty > line.qty - number(line.shipped)) throw new Error('Partner shipment exceeds the remaining customer order.');
+          line.shipped = number(line.shipped) + sh.qty;
+        }
+        i.qty -= sh.qty; i.reserved = Math.max(0, i.reserved - sh.qty);
+        sh.dispatchedAt = stamp(); sh.tracking = tracking.trim();
       }
       sh.status = next; if (next === 'ACCEPTED') sh.acceptedAt = stamp();
-      const o = s.enterprise.orders.find(x => x.id === sh.customerOrderId); if (o) { o.status = next === 'DELIVERED' ? 'DELIVERED' : next === 'DISPATCHED' ? 'SHIPPED' : 'PICKING'; o.tracking = sh.tracking; o.updatedAt = stamp(); }
+      if (o) {
+        const complete = o.lines.every(x => number(x.shipped) >= x.qty);
+        const linked = s.logistics.tplShipments.filter(x => x.customerOrderId === o.id && x.status !== 'CANCELLED');
+        o.status = complete && linked.every(x => x.status === 'DELIVERED') ? 'DELIVERED' : complete ? 'SHIPPED' : 'PICKING';
+        if (sh.tracking) o.tracking = sh.tracking;
+        o.updatedAt = stamp();
+        const request = (s.logistics.tplRequests || []).find(x => x.id === sh.requestId);
+        if (request) { request.status = o.status === 'DELIVERED' ? 'DELIVERED' : complete ? 'DISPATCHED' : linked.some(x => x.status === 'DISPATCHED') ? 'PARTIALLY_DISPATCHED' : next; request.updatedAt = stamp(); }
+      }
     });
   }
   function regionalItems(rows) {
@@ -376,12 +416,12 @@
       const report = s.regional[code]; if (!report?.items.length) throw new Error('Upload a regional Raw Report first.');
       for (const x of report.items) {
         const sku = `${code}::${x.model}`; const existing = s.enterprise.inventory.find(i => i.sku === sku);
-        if (existing) { existing.title = x.title; existing.brand = x.brand; existing.avgMonthly = x.avgMonthly; continue; }
-        s.enterprise.inventory.push({ sku, model: x.model, brand: x.brand, title: x.title, nature: 'PHYSICAL', region: code, onHand: x.onHand, reserved: Math.max(0,x.onHand - x.available), externalReserved: Math.max(0,x.onHand - x.available), damaged: 0, safety: 3, cost: x.cost, standardPrice: x.price, avgMonthly: x.avgMonthly, source: report.fileName });
+        if (existing) { existing.title = x.title; existing.brand = x.brand; existing.avgMonthly = x.avgMonthly; existing.status = x.status; continue; }
+        s.enterprise.inventory.push({ sku, model: x.model, brand: x.brand, title: x.title, nature: 'PHYSICAL', region: code, onHand: x.onHand, reserved: Math.max(0,x.onHand - x.available), externalReserved: Math.max(0,x.onHand - x.available), damaged: 0, safety: 3, cost: x.cost, standardPrice: x.price, avgMonthly: x.avgMonthly, source: report.fileName, status: x.status });
       }
     });
   }
-  function fulfillDigitalOrder(id){transaction('DIGITAL_ORDER_DISPATCHED',id,s=>{const o=s.enterprise.orders.find(x=>x.id===id);if(!o||final(o.status)||o.type==='HOLD_PO'||o.lines.some(x=>inventoryItem(s,x.sku).nature!=='DIGITAL'))throw new Error('Choose an open digital customer order.');for(const line of o.lines){const tokens=s.enterprise.vaultTokens.filter(t=>t.sku===line.sku&&t.state==='AVAILABLE');if(tokens.length<line.qty)throw new Error('The masked demonstration vault does not contain enough token records. Replenish its demo capacity first.');tokens.slice(0,line.qty).forEach(t=>{t.state='DISPATCHED';t.orderId=o.id;t.dispatchedAt=stamp();});inventoryItem(s,line.sku).onHand-=line.qty;line.shipped=line.qty;}o.status='SHIPPED';o.updatedAt=stamp();o.digitalDispatch={mode:'MASKED_DEMO',time:stamp()};});}
+  function fulfillDigitalOrder(id){transaction('DIGITAL_ORDER_DISPATCHED',id,s=>{const o=s.enterprise.orders.find(x=>x.id===id);if(!o||final(o.status)||awaitingValidation(o)||o.type==='HOLD_PO'||o.lines.some(x=>inventoryItem(s,x.sku).nature!=='DIGITAL'))throw new Error('Choose an open digital customer order.');for(const line of o.lines){const tokens=s.enterprise.vaultTokens.filter(t=>t.sku===line.sku&&t.state==='AVAILABLE');if(tokens.length<line.qty)throw new Error('The masked demonstration vault does not contain enough token records. Replenish its demo capacity first.');tokens.slice(0,line.qty).forEach(t=>{t.state='DISPATCHED';t.orderId=o.id;t.dispatchedAt=stamp();});inventoryItem(s,line.sku).onHand-=line.qty;line.shipped=line.qty;}o.status='SHIPPED';o.updatedAt=stamp();o.digitalDispatch={mode:'MASKED_DEMO',time:stamp()};});}
   function setEvents(region,events){const code=regionCode(region);if(!Array.isArray(events))throw new Error('Invalid event records.');if(JSON.stringify(state.events?.[code]||[])===JSON.stringify(events))return;transaction('EVENTS_UPDATED',`${code}: ${events.length} event POs saved.`,s=>{s.events||={};s.events[code]=clone(events);});}
   function clearRegional(region){transaction('REPORT_DISCONNECTED',regionCode(region),s=>{delete s.regional[regionCode(region)];});}
   function adoptSharedState(document){validateState(document);transaction('CLOUD_STATE_LOADED','The shared organization workspace was loaded.',s=>{const revision=s.revision;Object.assign(s,clone(document));s.revision=revision;});}
@@ -429,11 +469,12 @@
     }
   }
   function clearWorkspace() {
-    transaction('WORKSPACE_EMPTIED','A new empty operations workspace was created.',s => { Object.values(s.enterprise).forEach(v => { if (Array.isArray(v)) v.length = 0; }); for (const k of ['inventory','receipts','putaway','waves','packing','cycleCounts','movements','tplNodes','tplInventory','tplShipments','reconciliations','activity']) s.logistics[k] = []; s.mode = 'working'; });
+    transaction('WORKSPACE_EMPTIED','A new empty operations workspace was created.',s => { Object.values(s.enterprise).forEach(v => { if (Array.isArray(v)) v.length = 0; }); for (const k of ['inventory','receipts','putaway','waves','packing','cycleCounts','movements','tplNodes','tplInventory','tplShipments','tplRequests','reconciliations','activity']) s.logistics[k] = []; s.mode = 'working'; });
   }
   function issues() {
     const e = state.enterprise, l = state.logistics, rows = [];
     for (const i of e.inventory) if (i.reserved + i.damaged > i.onHand) rows.push({ level:'critical', title:`${i.sku}: commitments exceed usable stock`, detail:`${i.reserved} reserved / ${i.onHand-i.damaged} usable`, path:'warehouse-management/inventory-bins.html' });
+    for (const o of e.orders) if (!final(o.status) && o.validation?.state === 'ISSUES') rows.push({level:'warning',title:`${o.po}: order validation issues`,detail:[...new Set((o.validation.issues || []).map(i => i.label))].join(', '),path:'order-management/issues.html?search='+encodeURIComponent(o.po)});
     for (const p of e.purchaseOrders) if (!['RECEIVED','CANCELLED'].includes(p.status) && new Date(p.eta).getTime() < Date.now()) rows.push({ level:'warning', title:`${p.po}: inbound is overdue`, detail:'Review the supplier ETA.', path:'vendor-management/procurement.html' });
     for (const r of l.reconciliations) if (r.status !== 'RESOLVED') rows.push({ level:'warning', title:`${r.sku}: 3PL stock variance`, detail:`${r.variance} units at ${l.tplNodes.find(x=>x.id===r.nodeId)?.name || r.nodeId}`, path:'3pl-management/reconciliation.html' });
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});

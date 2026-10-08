@@ -15,7 +15,7 @@
       data:'M20 6c0 2-4 3-8 3S4 8 4 6s4-3 8-3 8 1 8 3 M4 6v12c0 2 4 3 8 3s8-1 8-3V6 M4 12c0 2 4 3 8 3s8-1 8-3',
       search:'M21 21l-6-6 M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0'
     };
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.data}"/></svg>`;
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[({tpl:'warehouse',shipping:'logistics',transportation:'logistics',procurement:'vendor'})[name] || name] || paths.data}"/></svg>`;
   };
   function groups() {
     const region = S.getRegion(), suffix = region.toLowerCase();
@@ -34,10 +34,13 @@
         ['procurement-planning.html','Reorder to purchase order']
       ]],
       ['crm','Customers & CRM', [['crm/index.html','CRM dashboard'],['crm/accounts.html','Accounts & programs'],['crm/catalog.html','Catalog & pricing'],['crm/partner-portal.html','Partner portal']]],
-      ['orders','Order management',[['order-management/index.html','Order control tower'],['order-management/new-order.html','Create customer order'],['order-management/hold-redemption.html','Hold & redemption'],['order-management/bulk-firm.html','Bulk & firm orders'],['events.html?region='+region,'Event planning'],['events-tv.html?region='+region,'Events display']]],
-      ['vendor','Vendors & purchasing',[['vendor-management/index.html','Vendor dashboard'],['vendor-management/vendors.html','Vendor master'],['vendor-po-management.html','Vendor purchase orders'],['vendor-management/procurement.html','Procurement & receiving'],['vendor-management/sla.html','Supplier performance'],['vendor-management/digital-vault.html','Digital rewards']]],
+      ['orders','Order management',[['order-management/index.html','All open orders'],['order-management/new-order.html','Create customer order'],['order-management/issues.html','Order issues'],['order-management/unvalidated.html','Unvalidated orders'],['order-management/cancelled.html','Cancelled orders'],['order-management/hold-redemption.html','Hold & redemption'],['order-management/bulk-firm.html','Bulk & firm orders'],['events.html?region='+region,'Event planning'],['events-tv.html?region='+region,'Events display']]],
+      ['vendor','Vendor management',[['vendor-management/index.html','Vendor dashboard'],['vendor-management/vendors.html','Vendor master'],['vendor-management/sla.html','Supplier performance'],['vendor-management/digital-vault.html','Digital rewards']]],
+      ['procurement','Procurement',[['procurement/index.html','Open vendor PO management'],['procurement/new-po.html','Create vendor PO'],['vendor-po-management.html','Event / dropship POs'],['vendor-management/procurement.html','Procurement & receiving']]],
+      ['shipping','Shipping',[['shipping/index.html','Ship orders · Sarasota'],['shipping/daily-report.html','Daily shipment report']]],
       ['warehouse','Warehouse management',[['warehouse-management/index.html','Warehouse control tower'],['warehouse-management/inventory-bins.html','Stock & locations'],['warehouse-management/receiving.html','Receiving & putaway'],['warehouse-management/wave-picking.html','Wave picking'],['warehouse-management/packing-dispatch.html','Packing & dispatch'],['warehouse-management/cycle-counts.html','Cycle counts']]],
-      ['logistics','3PL & transportation',[['3pl-management/index.html','3PL control tower'],['3pl-management/network.html','Partner network & stock'],['3pl-management/routing.html','Order routing'],['3pl-management/shipments.html','Partner shipments'],['3pl-management/reconciliation.html','Reconciliation & SLA'],['3pl-management/integrations.html','Integration contracts'],['freight-estimator.html','Freight estimator'],['freight-consolidate.html','Freight consolidation'],['shipment-tracking.html','Shipment tracking']]],
+      ['tpl','3PL management',[['3pl-management/index.html','3PL overview'],['3pl-management/order-history.html','Order history & processing API'],['3pl-management/shipment-requests.html','Shipment requests'],['3pl-management/orders.html','Manage 3PL orders'],['3pl-management/ship-orders.html','Ship 3PL orders'],['3pl-management/upload-shipments.html','Upload 3PL shipments'],['3pl-management/network.html','Partner network & stock'],['3pl-management/routing.html','Routing workbench'],['3pl-management/shipments.html','Partner shipment register'],['3pl-management/reconciliation.html','Reconciliation & SLA'],['3pl-management/integrations.html','API connection']]],
+      ['transportation','Transportation',[['transportation/index.html','Transportation overview'],['freight-estimator.html','Freight estimator'],['freight-consolidate.html','Freight consolidation'],['shipment-tracking.html','Shipment tracking']]],
       ['data','System & data',[['data-center.html','Data center & backups'],['activity.html','Audit activity'],[`instructions-${suffix}.html`,'Regional instructions']]]
     ];
   }
@@ -59,7 +62,7 @@
     const records = [
       ...s.enterprise.accounts.map(x=>({label:x.name,kind:'Customer',path:'crm/accounts.html',hay:x.name+' '+x.email})),
       ...s.enterprise.vendors.map(x=>({label:x.name,kind:'Vendor',path:'vendor-management/vendors.html',hay:x.name+' '+x.email})),
-      ...s.enterprise.orders.map(x=>({label:x.po,kind:'Customer order · '+x.status.replaceAll('_',' '),path:'order-management/index.html?search='+encodeURIComponent(x.po),hay:x.po})),
+      ...s.enterprise.orders.map(x=>({label:x.po,kind:'Customer order · '+x.status.replaceAll('_',' '),path:'order-management/index.html?search='+encodeURIComponent(x.po),hay:[x.po,x.id,x.orderNumber,x.tracking,x.createdAt,x.inHandsDate,...x.lines.flatMap(l=>[l.model,l.sku]),...s.logistics.tplShipments.filter(p=>p.customerOrderId===x.id).map(p=>p.tracking),...s.logistics.packing.filter(p=>p.orderId===x.id).map(p=>p.tracking)].filter(Boolean).join(' ')})),
       ...s.enterprise.purchaseOrders.map(x=>({label:x.po,kind:'Vendor PO · '+x.status,path:'vendor-management/procurement.html',hay:x.po})),
       ...s.enterprise.inventory.map(x=>({label:x.model+' · '+x.brand,kind:'SKU · '+x.region,path:'crm/catalog.html',hay:x.sku+' '+x.model+' '+x.brand+' '+x.title}))
     ].filter(x=>String(x.hay).toLowerCase().includes(q));
