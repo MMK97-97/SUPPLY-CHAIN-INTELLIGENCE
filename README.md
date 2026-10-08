@@ -1,6 +1,10 @@
 # Supply Chain Intelligence — Unified Enterprise System
 
-**Latest: v45 customer orders and navigation (October 8).** Removed the regional Dashboard / Raw Report / Reorder Report / Active Brands / Instructions banner and Regional Workspace. Search appears only in Order Management and Vendor Management, including vendor procurement. Customer orders now use CRM addresses, configurable sales order numbering, carrier/LTL methods and automatic descriptions, inventory levels and warehouse suggestions. See [CUSTOMER_ORDER_UPDATE.md](docs/CUSTOMER_ORDER_UPDATE.md). The v44 EU AI correction is retained.
+**Current release: v47 production audit.** Failed-save retries, corrupt workspace recovery, unsafe record attributes and shared dialog behavior are corrected. All 90 pages were inspected; see [PRODUCTION_AUDIT.md](docs/PRODUCTION_AUDIT.md) for current evidence and live verification limits.
+
+**Retained: v46 ship-to label correction (October 8).** Each address field now has its own label, fixing the repeated comma-separated label list. See [SHIP_TO_LABEL_FIX.md](docs/SHIP_TO_LABEL_FIX.md).
+
+**Retained: v45 customer orders and navigation.** Removed the regional Dashboard / Raw Report / Reorder Report / Active Brands / Instructions banner and Regional Workspace. Search appears only in Order Management and Vendor Management, including vendor procurement. Customer orders now use CRM addresses, configurable sales order numbering, carrier/LTL methods and automatic descriptions, inventory levels and warehouse suggestions. See [CUSTOMER_ORDER_UPDATE.md](docs/CUSTOMER_ORDER_UPDATE.md). The v44 EU AI correction is retained.
 
 
 The two former entry points now open the same enterprise control tower. All working modules use one nested sidebar and a shared customer, supplier, SKU, order, warehouse and 3PL data layer.
@@ -15,7 +19,7 @@ For the Workers website, follow [DEPLOY_TO_WORKERS.md](DEPLOY_TO_WORKERS.md). Th
 
 MK receives completed website calculations as verified facts rather than tools it should invoke. Brand analysis includes eligible-model totals, monthly demand, recommended units and model-level stockout risks. The public Space passed an October 7 synthetic Cozy Earth test through the shipped connector. Local report calculations remain available when AI cannot answer. This revised package has not been published to your Workers account or GitHub repository. See [docs/MK_AI_SETUP.md](docs/MK_AI_SETUP.md).
 
-GitHub Pages branch publishing remains supported; see [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). Shared assets use version `20261008-3`. Upload the complete source package together. Existing storage keys and schema version 1 are retained; new workflow fields extend the records without replacing existing IDs.
+GitHub Pages branch publishing remains supported; see [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). The eight changed shared scripts use cache version `20261008-5`; unchanged assets retain their existing cache versions. Upload the complete source package together. Existing storage keys and schema version 1 are retained; new workflow fields extend the records without replacing existing IDs.
 
 ## Customer orders, shipping, 3PL and procurement
 
@@ -107,3 +111,11 @@ node scripts/check-fulfillment-sql.cjs
 ```
 
 These execute the migrations, RLS and RPC behavior with synthetic principals in an in-process database. They do not deploy or modify Supabase. Test dependencies are not required by the website or Cloudflare build.
+
+## Production failure-path checks
+
+```sh
+node scripts/check-resilience.cjs
+```
+
+Use the same separate jsdom dependency as the interface checks. This suite exercises storage failures/retries, stale edits, malformed workspace recovery/export, escaped record attributes, keyboard and asynchronous dialog behavior, and the actual 3PL routing and receiving buttons with synthetic local records. Results are in `docs/verification-resilience.json`.

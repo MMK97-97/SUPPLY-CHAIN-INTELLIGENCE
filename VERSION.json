@@ -1,6 +1,6 @@
 {
   "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
-  "version": "2026.10.08-unified-enterprise-customer-orders45",
+  "version": "2026.10.08-unified-enterprise-production-audit47",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -32,7 +32,7 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261008-3",
+  "asset_version": "20261008-5",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
     "Consistent readable light theme across operations and logistics",
@@ -45,7 +45,13 @@
     "AI follows the current report region; saved chat and pending answers cannot cross regions",
     "Removed duplicate regional report banners and Regional Workspace module",
     "Search fields limited to Order Management and Vendor Management, including vendor procurement",
-    "CRM address book, sales order numbering, carrier services and live inventory-aware order entry"
+    "CRM address book, sales order numbering, carrier services and live inventory-aware order entry",
+    "Correct individual ship-to field labels and native label/input associations",
+    "Transactional failure recovery prevents duplicate CRM/vendor/warehouse records on retry",
+    "Validated workspace startup and cross-tab updates; original records remain available for recovery export",
+    "Escaped record attributes across operations, procurement, warehouse and pricing controls",
+    "Shared dialog errors, native field validation, keyboard focus, async save protection and focus restoration",
+    "Labeled upload/vendor/AI controls and graceful decorative canvas fallback"
   ],
   "ai": {
     "version": "MK Intelligence 4.2",
@@ -58,7 +64,7 @@
       "Deep"
     ],
     "credentials": "Public website API; inference credentials stay in Space secrets",
-    "deployment_status": "Integrated and live-tested with synthetic brand facts; this revised website package is not published",
+    "deployment_status": "Integrated; prior synthetic live checks retained. AI source is unchanged in v47; this source release is not published.",
     "capabilities": [
       "conversational report analysis",
       "read-only autonomous tool selection",
@@ -72,14 +78,16 @@
     "regional_scope": "Report route/query or shared Analysis region by default; explicit analyst selection applies only for the current page session"
   },
   "deployment_readiness": {
-    "checked_at": "2026-10-08T18:07:22.011449+00:00",
+    "checked_at": "2026-10-08T20:46:40.682683+00:00",
     "guide": "DEPLOY_TO_WORKERS.md",
     "target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
     "live_source_matches_previous_package": false,
     "live_version_endpoint_before_update": "404: previous build omitted VERSION.json",
     "live_inference_rechecked": false,
-    "publishing_status": "Customer order and navigation revision prepared; source not published",
-    "prior_live_ai_check": "2026-10-07: unchanged MK 4.2 connector, synthetic facts only"
+    "publishing_status": "v47 production audit and fixes prepared; source not published",
+    "prior_live_ai_check": "2026-10-07: unchanged MK 4.2 connector, synthetic facts only",
+    "current_live_release_verified": false,
+    "current_live_access": "The GitHub Pages URL could not be retrieved by the web reader for this request; source was audited independently."
   },
   "workflow_revision": {
     "customer_orders": "Hold/Bulk/Firm order entry; customer PO or generated sales order number; CRM customer/ship-to address snapshots; FedEx/UPS/USPS and custom services; Rome Transportation/TQL/C.H. Robinson LTL; third-party billing; catalog descriptions and inventory; automatic or manual Sarasota/Farmers Branch fulfillment",
