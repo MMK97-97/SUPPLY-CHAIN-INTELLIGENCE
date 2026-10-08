@@ -6,7 +6,7 @@ The public Space was running during verification. Its website API, inference and
 
 ## Publish and use MK
 
-1. For the Workers site, follow [DEPLOY_TO_WORKERS.md](../DEPLOY_TO_WORKERS.md): build with `node build-cloudflare.mjs`, then deploy the Worker with its `dist/` assets. For GitHub Pages, upload to the repository root and publish with **Deploy from a branch → main → / (root)**. Keep root `index.html`, empty `.nojekyll` and the complete `assets/` folder. No custom workflow is needed. Shared assets use version `20261007-1`.
+1. For the Workers site, follow [DEPLOY_TO_WORKERS.md](../DEPLOY_TO_WORKERS.md): build with `node build-cloudflare.mjs`, then deploy the Worker with its `dist/` assets. For GitHub Pages, upload to the repository root and publish with **Deploy from a branch → main → / (root)**. Keep root `index.html`, empty `.nojekyll` and the complete `assets/` folder. No custom workflow is needed. Shared assets use version `20261008-2`.
 2. Open **MK AI analyst → Analyst workspace**. **Use the AI analyst** is enabled for new workspaces. A previously saved choice is preserved. Turning it off keeps analysis local.
 3. Click **Test connection** to check that the Space exposes the expected one-JSON-input, one-JSON-output API. This test does not make an inference request. Ask a question to check actual model access.
 4. Select **Fast**, **Auto** or **Deep**. The Space currently uses tool budgets of 4, 12 and 20 calls respectively, with up to 2, 6 and 10 tool-selection rounds. These modes adjust the tool budget; they do not expose a model's private reasoning.
@@ -61,3 +61,7 @@ Implementation reference: [Hugging Face Spaces as API endpoints](https://hugging
 The website sends `MK verified website facts v2`. `completed_calculations` contains already calculated business facts with readable labels and a completed status; it does not advertise callable website tools to the Space. Brand summaries cover eligible models only and include monthly demand, reorder units, model risk counts and confidence scores. Relevant model rows explain the brand total and excluded items remain outside that total. The website calculation names remain in the local audit trace.
 
 The October 7 live synthetic Cozy Earth check returned 304 eligible on-hand units, 20 monthly demand units, a 26-unit recommendation and one at-risk model, with valid report references and no unavailable-tool warning. These are test values, not your inventory figures. AI explanations remain subject to review; reference checks do not prove every sentence is correct.
+
+## Regional scope (v44)
+
+MK follows the active report route/query or shared Analysis region. The analyst workspace permits an explicit scope for the current page session; it is reset by a header region change and is not restored as a pin on later pages. Regional chat history, notes and report context stay scoped, and late responses from a previous region are discarded. See [REGIONAL_AI_FIX.md](REGIONAL_AI_FIX.md).

@@ -1,0 +1,104 @@
+{
+  "checked_at": "2026-10-08T14:53:03.477653+00:00",
+  "release": "2026.10.08-unified-enterprise-fulfillment43",
+  "asset_version": "20261008-1",
+  "primary_target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
+  "published": false,
+  "regression_reports": {
+    "verification-workflows.json": {
+      "passed": 23,
+      "failed": 0
+    },
+    "verification-interface.json": {
+      "passed": 51,
+      "failed": 0
+    },
+    "verification-mk-ai.json": {
+      "passed": 24,
+      "failed": 0
+    },
+    "verification-mk-space.json": {
+      "passed": 14,
+      "failed": 0
+    },
+    "verification-production.json": {
+      "passed": 27,
+      "failed": 0
+    },
+    "verification-fulfillment.json": {
+      "passed": 49,
+      "failed": 0
+    },
+    "verification-fulfillment-sql.json": {
+      "passed": 10,
+      "failed": 0
+    }
+  },
+  "total_automated_checks_passed": 198,
+  "static_report": {
+    "file": "verification-static.json",
+    "syntax_checks": 169,
+    "html_pages": 90,
+    "local_references": 1566,
+    "shared_pages": 86,
+    "early_navigation_boot_pages": 89,
+    "failures": 0
+  },
+  "build": {
+    "html_pages": 90,
+    "fingerprinted_assets": 74,
+    "generated_directory": "dist",
+    "source_zip_contains_dist": false
+  },
+  "preserved_engines": {
+    "assets/inventory-core-us.js": true,
+    "assets/inventory-core-eu.js": true,
+    "assets/inventory-core-ca.js": true,
+    "assets/system-seed.js": true,
+    "assets/enterprise-suite.js": true,
+    "assets/logistics-suite.js": true,
+    "assets/sales-analysis.js": true,
+    "assets/mk-workspace.js": true,
+    "assets/mk-analysis-tools.js": true,
+    "assets/mk-ai.js": true,
+    "assets/mk-space.js": true,
+    "assets/mk-brain.js": true,
+    "assets/page-navigation.js": true,
+    "assets/safe-output.js": true
+  },
+  "baseline_files_retained": 207,
+  "operational_core_changed": true,
+  "workflow_mapping": "FULFILLMENT_WORKFLOWS.md",
+  "threepl_api": {
+    "server_function": "threepl-orders",
+    "migration": "20261008_fulfillment_workflows.sql",
+    "setup_guide": "3PL_API_SETUP.md",
+    "partner_configured": false,
+    "live_send_performed": false,
+    "server_deployed": false,
+    "sql_verification": "Isolated PGlite PostgreSQL with synthetic principals; no live Supabase migration"
+  },
+  "ai": {
+    "unchanged_version": "MK Intelligence 4.2",
+    "unchanged_context_contract": "MK verified website facts v2",
+    "live_rechecked_this_revision": false,
+    "prior_synthetic_check": "verification-mk-space-live-20261007.json"
+  },
+  "pending_verification": [
+    "Graphical desktop/mobile rendering and page-transition timing",
+    "Deno semantic/runtime execution",
+    "Live authentication and organization membership",
+    "Deployed database migration/RLS",
+    "Actual partner sandbox and end-to-end processing"
+  ],
+  "deployment_guides": [
+    "DEPLOY_TO_WORKERS.md",
+    "DEPLOY_FROM_BRANCH.md"
+  ],
+  "branch_deployment": {
+    "root_index": true,
+    "empty_nojekyll": true,
+    "no_custom_workflows": true,
+    "no_root_pages_yml": true
+  }
+}

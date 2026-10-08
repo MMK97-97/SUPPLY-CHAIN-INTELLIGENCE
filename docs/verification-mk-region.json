@@ -1,0 +1,23 @@
+{
+  "passed": 15,
+  "failed": 0,
+  "checks": [
+    "EU report route overrides a persisted US AI scope",
+    "CA report route overrides a persisted EU AI scope",
+    "US report route overrides a persisted CA AI scope",
+    "sales-analysis.html query selects EU before analyst startup",
+    "sales-analysis.html query selects CA before analyst startup",
+    "nested generic modules inherit the shared EU selection",
+    "header region change clears an explicit scope and switches visible conversation",
+    "explicit analyst scope affects local calculations and remembered notes without becoming a saved pin",
+    "EU transport sends only EU facts, history and notes through the real Space connector",
+    "Space failure retains EU local analysis without substituting US reports",
+    "missing EU data produces an EU missing-report result even when US data exists",
+    "cross-region analysis requires an explicit request and does not replace the EU default",
+    "a region switch discards an in-flight response even if a provider ignores cancellation",
+    "cross-tab shared-region changes update generic pages but cannot override an explicit EU route",
+    "an explicit EU route stays EU when another tab selects US"
+  ],
+  "failures": [],
+  "method": "Node.js/jsdom startup with pre-existing local storage, synthetic regional reports and mocked real Space POST/SSE transport. No graphical browser, real reports or live inference."
+}

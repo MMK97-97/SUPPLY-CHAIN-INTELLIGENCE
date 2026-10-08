@@ -1,5 +1,6 @@
 {
-  "date": "2026-10-05",
+  "date": "2026-10-08",
+  "release": "2026.10.08-unified-enterprise-regional-ai44",
   "publishing_source": {
     "source": "Deploy from a branch",
     "branch": "main",
@@ -9,11 +10,11 @@
   "nojekyll": "present, empty",
   "custom_workflows": "absent",
   "root_pages_yml": "absent",
-  "html_pages": 77,
-  "internal_references_checked": 1250,
+  "html_pages": 90,
+  "internal_references_checked": 1566,
   "missing_references": [],
-  "syntax_checks": 66,
+  "syntax_checks": 170,
   "syntax_errors": [],
-  "cache_version": "20261005-5",
+  "cache_version": "20261008-2",
   "live_deployment": "not performed"
 }

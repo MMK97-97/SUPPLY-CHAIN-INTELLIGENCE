@@ -158,7 +158,7 @@ async function main() {
         dom.window.close();
       }
     }
-    visit(root); assert.equal(count, 76);
+    visit(root); assert.equal(count, 88); // Former Regional Workspace is now a dependency-free redirect.
   });
   await test('legacy regional handlers cannot hide a page or delay its native navigation', () => {
     for (const file of ['assets/app.js', 'assets/premium-shell.js', 'assets/inventory-transitions.js', 'assets/inventory-pages-us.js', 'assets/inventory-pages-eu.js', 'assets/inventory-pages-ca.js', 'assets/inventory-ats-eu.js', 'events.html']) {
@@ -198,7 +198,7 @@ async function main() {
   const worker = (await import(pathToFileURL(path.join(root, 'worker.js')).href)).default;
   await test('Worker caches fingerprinted assets immutably while pages and mutable assets revalidate', async () => {
     const env = { ASSETS: { fetch: async request => new Response(request.method === 'HEAD' ? null : 'asset', { headers: { 'content-type': new URL(request.url).pathname.endsWith('.html') ? 'text/html' : 'text/javascript', etag: '"stable"', 'cache-control': 'public, max-age=0, must-revalidate' } }) } };
-    for (const [url, expected] of [['/assets/system-core.012345abcdef.js', 'immutable'], ['/assets/system-core.js?v=20261007-1', 'must-revalidate'], ['/assets/supply-chain-logo.png', 'max-age=86400'], ['/index.html', 'must-revalidate'], ['/VERSION.json', 'must-revalidate']]) {
+    for (const [url, expected] of [['/assets/system-core.012345abcdef.js', 'immutable'], ['/assets/system-core.js?v=20261008-3', 'must-revalidate'], ['/assets/supply-chain-logo.png', 'max-age=86400'], ['/index.html', 'must-revalidate'], ['/VERSION.json', 'must-revalidate']]) {
       const response = await worker.fetch(new Request('https://example.test' + url), env);
       assert.ok(response.headers.get('cache-control').includes(expected)); assert.equal(response.headers.get('etag'), '"stable"');
       assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
@@ -387,7 +387,7 @@ async function main() {
     } finally { s.w.close(); }
   });
   await test('regional pages and built nested pages retain their full module startup lifecycle', async () => {
-    for (const file of ['regional-workspace.html', 'inventory-dashboard-us.html', 'inventory-analysis-report-eu.html', 'decision-intelligence-ca.html', 'raw-report-us.html', 'reorder-report-eu.html', 'active-brands-us.html', 'instructions-ca.html', 'ats-eu.html', 'sales-analysis.html', 'events.html', 'shipment-tracking.html', 'dist/index.html', 'dist/crm/index.html']) {
+    for (const file of ['inventory-dashboard-us.html', 'inventory-analysis-report-eu.html', 'decision-intelligence-ca.html', 'raw-report-us.html', 'reorder-report-eu.html', 'active-brands-us.html', 'instructions-ca.html', 'ats-eu.html', 'sales-analysis.html', 'events.html', 'shipment-tracking.html', 'dist/index.html', 'dist/crm/index.html']) {
       const page = await boot(file);
       try {
         await tick();

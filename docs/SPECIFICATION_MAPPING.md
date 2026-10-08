@@ -1,5 +1,9 @@
 # Specification-to-Implementation Mapping
 
+## October 8 fulfillment revision
+
+The current customer-entry page uses Hold PO, Bulk PO and Firm PO. Redemption remains on its linked lifecycle page. The new order queues, Sarasota shipping, vendor PO fields and separate 3PL/Transportation modules are mapped in [FULFILLMENT_WORKFLOWS.md](FULFILLMENT_WORKFLOWS.md). Optional authenticated processing API setup is in [3PL_API_SETUP.md](3PL_API_SETUP.md). The sections below describe the retained system and earlier design.
+
 ## Wholesale Incentive CRM
 - Parent / child account topology → `crm/accounts.html`
 - Contract price book → `crm/catalog.html`
@@ -9,7 +13,7 @@
 - High-density operations UI → shared `enterprise-suite.css`
 
 ## Order Management Engine
-- Exact-entry order classification → four-type gatekeeper in `order-management/new-order.html`
+- Exact-entry order classification → Hold/Bulk/Firm in `order-management/new-order.html`; Redemption on its linked page
 - Hold PO soft reservation → Hold creation logic
 - Redemption parent reference / reserved drawdown → Redemption validation + linked lifecycle page
 - Bulk hard allocation + warehouse/shipping marks → Bulk form + execution register

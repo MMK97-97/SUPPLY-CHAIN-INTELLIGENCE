@@ -1,24 +1,40 @@
 {
-  "checked_at": "2026-10-07T19:42:36.680586+00:00",
-  "method": "Node syntax checks, HTML local-reference inspection and prior-package checksum comparison; no browser rendering. Unchanged TypeScript backend sources retain prior verification.",
-  "release": "2026.10.07-unified-enterprise-production42",
-  "asset_version": "20261007-1",
-  "javascript_and_inline_syntax_checks": 149,
-  "html_pages": 77,
-  "local_references": 1350,
-  "shared_pages": 73,
-  "syntax_failures": [],
+  "checked_at": "2026-10-08T18:12:48.778261+00:00",
+  "method": "Node.js syntax checks, HTML local-reference/cache inspection and exact v44 source hash comparison. No browser rendering or Deno semantic check.",
+  "release": "2026.10.08-unified-enterprise-customer-orders45",
+  "asset_version": "20261008-3",
+  "javascript_typescript_and_inline_syntax_checks": 171,
+  "html_pages": 90,
+  "local_references": 1459,
+  "shared_pages": 85,
+  "early_navigation_boot_pages": 88,
+  "syntax_and_asset_failures": [],
   "missing_references": [],
-  "unchanged_business_engines": {
+  "unchanged_existing_assets": {
     "assets/inventory-core-us.js": true,
     "assets/inventory-core-eu.js": true,
     "assets/inventory-core-ca.js": true,
-    "assets/system-core.js": true,
     "assets/system-seed.js": true,
-    "assets/enterprise-suite.js": true,
     "assets/logistics-suite.js": true,
     "assets/sales-analysis.js": true,
     "assets/mk-workspace.js": true,
-    "assets/mk-analysis-tools.js": true
+    "assets/mk-analysis-tools.js": true,
+    "assets/mk-space.js": true,
+    "assets/page-navigation.js": true,
+    "assets/production-runtime.js": true,
+    "assets/safe-output.js": true,
+    "assets/system-core.js": true,
+    "assets/system-cloud.js": true,
+    "assets/mk-ai.js": true,
+    "assets/mk-brain.js": true
+  },
+  "mk_brain_calculation_section_unchanged": true,
+  "baseline_file_count": 237,
+  "all_baseline_files_retained": true,
+  "branch_deployment": {
+    "root_index": true,
+    "empty_nojekyll": true,
+    "no_custom_workflows": true,
+    "no_root_pages_yml": true
   }
 }

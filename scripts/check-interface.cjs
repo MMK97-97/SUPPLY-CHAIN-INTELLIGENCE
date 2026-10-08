@@ -10,14 +10,18 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const root = path.resolve(__dirname, '..');
 const site = 'https://example.test/SUPPLY-CHAIN-INTELLIGENCE/';
 
-async function boot(file, shellSource) {
+async function boot(file, shellSource, options = {}) {
   const errors = [];
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', error => errors.push(error.message));
+  const pageURL = new URL(file, site);
+  if (options.search) pageURL.search = options.search;
   const dom = new JSDOM(fs.readFileSync(path.join(root, file), 'utf8'), {
-    url: new URL(file, site).href, runScripts: 'outside-only', virtualConsole
+    url: pageURL.href, runScripts: 'outside-only', virtualConsole
   });
   const w = dom.window, d = w.document;
+  for (const [key, value] of Object.entries(options.localStorage || {})) w.localStorage.setItem(key, value);
+  for (const [key, value] of Object.entries(options.sessionStorage || {})) w.sessionStorage.setItem(key, value);
   // Browser postMessage scheduling is not emulated by jsdom's isolated VM.
   // Supply Node scheduling for the local ZIP parser, plus standard file decoding.
   w.setImmediate = setImmediate; w.clearImmediate = clearImmediate;
@@ -66,7 +70,7 @@ function checkNavigation(page, file) {
   assert.equal(d.querySelectorAll('.system-header').length, 1, file + ': shared header');
   assert.ok(d.body.classList.contains('stark-system'));
   assert.equal(page.mountedBeforeModules, false, file + ': wait for module initialization');
-  assert.ok(d.querySelector('#page-content h1, #system-page-content h1'), file + ': rendered page');
+  assert.ok(d.querySelector('#page-content h1, #system-page-content h1, #fulfillment-content h1'), file + ': rendered page');
   const links = [...d.querySelectorAll('#system-navigation a')];
   assert.ok(links.length > 35);
   for (const link of links) {
@@ -137,7 +141,7 @@ async function main() {
     catch (error) { console.error('FAIL', name, error); process.exitCode = 1; }
   }
   const files = ['index.html', 'business-operations.html', 'mk-brain.html', 'data-center.html', 'activity.html', 'procurement-planning.html', 'vendor-po-management.html'];
-  for (const dir of ['crm', 'order-management', 'vendor-management', 'warehouse-management', '3pl-management']) {
+  for (const dir of ['crm', 'order-management', 'vendor-management', 'warehouse-management', '3pl-management', 'shipping', 'procurement', 'transportation']) {
     files.push(...fs.readdirSync(path.join(root, dir)).filter(file => file.endsWith('.html')).map(file => dir + '/' + file));
   }
   for (const file of files) await test(file + ' retains shared navigation after module startup', async () => {
@@ -237,5 +241,5 @@ async function main() {
     module_pages: files.length, passed: passed.length, checks: passed, failed: !!process.exitCode
   }, null, 2) + '\n');
 }
-module.exports = { boot, checkNavigation };
+module.exports = { boot, checkNavigation, textContrast };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });

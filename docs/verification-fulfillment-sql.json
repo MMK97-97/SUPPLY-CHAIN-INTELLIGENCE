@@ -1,0 +1,18 @@
+{
+  "passed": 10,
+  "failed": 0,
+  "checks": [
+    "both migrations execute without changing existing table identities",
+    "shared draft orders can include unlisted models without allocating stock",
+    "unvalidated execution and validated unknown models reject atomically",
+    "viewer and unrelated user cannot save the organization workspace",
+    "authenticated and anonymous roles cannot claim outbound deliveries",
+    "server claim creates one durable in-flight record and blocks duplicate claims",
+    "same request ID cannot be rebound to a different payload hash",
+    "acknowledged and uncertain deliveries never claim another send",
+    "known rejected requests allow bounded retries with the same payload",
+    "delivery reads are organization-scoped and client writes are denied"
+  ],
+  "failures": [],
+  "method": "Migrations and role/RLS/RPC behavior executed in isolated PGlite 0.3.14 PostgreSQL. Synthetic auth schema and principals. No live Supabase or partner service."
+}

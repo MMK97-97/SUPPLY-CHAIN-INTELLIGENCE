@@ -103,7 +103,7 @@ async function main() {
   });
   await domTest('region selection cannot reuse another region’s answer', async ({w,d}) => {
     installReport(w,'US',2);installReport(w,'EU',100);w.MKAI.configure({scope:'EU'});await w.MKBrain.ask('Analyze my current data');
-    const result=w.MKAI.getMessages().at(-1).result;assert.match(result.answer,/EU:/);assert.ok(!result.answer.includes('United States'));assert.match(d.querySelector('.mk-brain-state b').textContent,/European/);
+    const result=w.MKAI.getMessages().at(-1).result;assert.match(result.answer,/European Union/);assert.ok(result.evidence.every(e=>e.id.startsWith('EU:')));assert.ok(!result.answer.includes('United States'));assert.match(d.querySelector('.mk-brain-state b').textContent,/European/);
   });
   await domTest('cross-region comparison and scenario preserve report and operational records', async ({w}) => {
     installReport(w,'US');installReport(w,'EU',100);const before=JSON.stringify(w.StarkSystem.getState());
