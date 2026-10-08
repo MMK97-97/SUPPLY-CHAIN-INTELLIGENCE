@@ -1,6 +1,6 @@
 {
   "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
-  "version": "2026.10.08-unified-enterprise-fulfillment43",
+  "version": "2026.10.08-unified-enterprise-customer-orders45",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -32,7 +32,7 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261008-1",
+  "asset_version": "20261008-3",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
     "Consistent readable light theme across operations and logistics",
@@ -41,7 +41,11 @@
     "Bounded intent prefetch and non-blocking fonts",
     "Pinned local chart, workbook, auth and formatting dependencies",
     "Cloudflare fingerprinted assets and release metadata",
-    "Sign-in readiness guard and explicit failures"
+    "Sign-in readiness guard and explicit failures",
+    "AI follows the current report region; saved chat and pending answers cannot cross regions",
+    "Removed duplicate regional report banners and Regional Workspace module",
+    "Search fields limited to Order Management and Vendor Management, including vendor procurement",
+    "CRM address book, sales order numbering, carrier services and live inventory-aware order entry"
   ],
   "ai": {
     "version": "MK Intelligence 4.2",
@@ -64,20 +68,21 @@
       "local report-change monitoring",
       "optional automatic AI briefings"
     ],
-    "context_contract": "MK verified website facts v2"
+    "context_contract": "MK verified website facts v2",
+    "regional_scope": "Report route/query or shared Analysis region by default; explicit analyst selection applies only for the current page session"
   },
   "deployment_readiness": {
-    "checked_at": "2026-10-08T14:51:11.669396+00:00",
+    "checked_at": "2026-10-08T18:07:22.011449+00:00",
     "guide": "DEPLOY_TO_WORKERS.md",
     "target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
     "live_source_matches_previous_package": false,
     "live_version_endpoint_before_update": "404: previous build omitted VERSION.json",
     "live_inference_rechecked": false,
-    "publishing_status": "Build and workflows verified; not published",
+    "publishing_status": "Customer order and navigation revision prepared; source not published",
     "prior_live_ai_check": "2026-10-07: unchanged MK 4.2 connector, synthetic facts only"
   },
   "workflow_revision": {
-    "customer_orders": "Hold/Bulk/Firm entry, structured addresses, third-party shipping billing, Sarasota/Farmers Branch assignment, issue and validation queues",
+    "customer_orders": "Hold/Bulk/Firm order entry; customer PO or generated sales order number; CRM customer/ship-to address snapshots; FedEx/UPS/USPS and custom services; Rome Transportation/TQL/C.H. Robinson LTL; third-party billing; catalog descriptions and inventory; automatic or manual Sarasota/Farmers Branch fulfillment",
     "shipping": "Sarasota dispatch and daily CSV/Excel shipment report",
     "procurement": "Vendor item/title/description lines, tracking, notes and packing-slip attachments",
     "3pl": "Separate order history/API outbox, shipment requests, manage/ship queues and previewed CSV/Excel imports",

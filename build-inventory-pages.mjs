@@ -18,8 +18,8 @@ function header() {
   return `<header class="inventory-header"><a class="inventory-brand" href="index.html"><span>S</span><div><small>Stark Premium</small><strong>Regional Inventory</strong></div></a><div class="inventory-header-actions"><label>Region<select id="region-select"><option value="US">US</option><option value="EU">EU</option><option value="Canada">Canada</option></select></label><span class="region-pill" data-region-code>US</span><a class="button button-secondary" data-region-link href="index.html">All regions</a></div></header>`;
 }
 
-function inventoryNav(active) {
-  return `<nav class="inventory-nav" aria-label="Inventory analysis pages"><a class="inventory-overview-link" data-region-link href="inventory.html">Inventory Analysis</a>${navItems.map(([key, label, href]) => `<a data-inventory-page="${key}" data-region-link href="${href}" class="${key === active ? "active" : ""}">${label}</a>`).join("")}</nav>`;
+function inventoryNav() {
+  return ""; // Regional report navigation is provided by the shared sidebar.
 }
 
 function pageShell(page, title, kicker, content) {

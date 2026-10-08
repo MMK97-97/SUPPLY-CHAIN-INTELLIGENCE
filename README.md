@@ -1,8 +1,11 @@
 # Supply Chain Intelligence — Unified Enterprise System
 
+**Latest: v45 customer orders and navigation (October 8).** Removed the regional Dashboard / Raw Report / Reorder Report / Active Brands / Instructions banner and Regional Workspace. Search appears only in Order Management and Vendor Management, including vendor procurement. Customer orders now use CRM addresses, configurable sales order numbering, carrier/LTL methods and automatic descriptions, inventory levels and warehouse suggestions. See [CUSTOMER_ORDER_UPDATE.md](docs/CUSTOMER_ORDER_UPDATE.md). The v44 EU AI correction is retained.
+
+
 The two former entry points now open the same enterprise control tower. All working modules use one nested sidebar and a shared customer, supplier, SKU, order, warehouse and 3PL data layer.
 
-Start with `index.html`. `business-operations.html` is a compatible entry point to the same workspace. The original market analysis interface is preserved at `regional-workspace.html`; existing US/EU/Canada report routes remain available.
+Start with `index.html`. `business-operations.html` is a compatible entry point to the same workspace. US/EU/Canada reports open directly from Inventory & planning. Old `regional-workspace.html` bookmarks redirect to the matching regional inventory dashboard.
 
 See **INTEGRATION_GUIDE.md** for deployment, workflow connections, data migration and cloud setup. See **docs/VERIFICATION.md** for checks and remaining verification limits.
 
@@ -12,7 +15,7 @@ For the Workers website, follow [DEPLOY_TO_WORKERS.md](DEPLOY_TO_WORKERS.md). Th
 
 MK receives completed website calculations as verified facts rather than tools it should invoke. Brand analysis includes eligible-model totals, monthly demand, recommended units and model-level stockout risks. The public Space passed an October 7 synthetic Cozy Earth test through the shipped connector. Local report calculations remain available when AI cannot answer. This revised package has not been published to your Workers account or GitHub repository. See [docs/MK_AI_SETUP.md](docs/MK_AI_SETUP.md).
 
-GitHub Pages branch publishing remains supported; see [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). Shared assets use version `20261008-1`. Upload the complete source package together. Existing storage keys and schema version 1 are retained; new workflow fields extend the records without replacing existing IDs.
+GitHub Pages branch publishing remains supported; see [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). Shared assets use version `20261008-3`. Upload the complete source package together. Existing storage keys and schema version 1 are retained; new workflow fields extend the records without replacing existing IDs.
 
 ## Customer orders, shipping, 3PL and procurement
 
@@ -71,6 +74,7 @@ These checks load local source into a Node.js DOM simulation. They check module 
 
 ```bash
 node scripts/check-mk-ai.cjs
+node scripts/check-mk-region.cjs
 node scripts/check-mk-space.cjs
 ```
 
