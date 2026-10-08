@@ -27,7 +27,7 @@ Keep assets.html_handling set to none. Keep assets.run_worker_first set to ["/as
 - MK Intelligence 4.2 sends completed website calculations to the existing website_chat Space endpoint. No Hugging Face token belongs in the website. The legacy Worker proxy accepts only that JSON contract and completed SSE results.
 - Existing browser workspace keys and business-record schemas are preserved. If you change the hosting origin, use Data Center backup/export and restore to move browser-only records; browser storage is scoped to the origin.
 
-After deployment, check VERSION.json for 2026.10.07-unified-enterprise-production42 and asset_version 20261007-1. Check asset-manifest.json and the fingerprinted script URLs in the page source. Open index.html, mk-brain.html, a regional report and a nested module; verify navigation and a report-backed brand question using your own report.
+After deployment, check VERSION.json for 2026.10.08-unified-enterprise-fulfillment43 and asset_version 20261008-1. Check asset-manifest.json and the fingerprinted script URLs in the page source. Open index.html, mk-brain.html, a regional report and a nested module; verify navigation and a report-backed brand question using your own report.
 
 ## Validation and limits
 
@@ -36,3 +36,7 @@ The package passed workflow, DOM, transport, build, startup and syntax checks, p
 No graphical browser preview or rendered page-transition timing was performed. Live Cloudflare deployment, real sign-in/membership, database migrations/RLS and live business transactions remain unverified. These checks do not certify the optional cloud backend as a deployed enterprise service.
 
 GitHub Pages remains supported through Deploy from a branch, main, / (root). Use DEPLOY_FROM_BRANCH.md for that target. Keep root .nojekyll and continue without custom .github/workflows or root pages.yml.
+
+## Optional 3PL API deployment
+
+Deploying the static website does not deploy its optional Supabase functions or database migrations. Local order, shipping, procurement and shipment-import workflows run in the shared browser workspace. Real partner processing requires the authenticated threepl-orders function, the fulfillment migration and your partner connection, as described in docs/3PL_API_SETUP.md. No real partner request was sent during verification.

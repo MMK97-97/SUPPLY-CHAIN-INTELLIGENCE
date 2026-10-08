@@ -1,6 +1,6 @@
 {
   "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
-  "version": "2026.10.07-unified-enterprise-production42",
+  "version": "2026.10.08-unified-enterprise-fulfillment43",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -9,12 +9,14 @@
     "Sales Analysis",
     "CRM",
     "Order Management",
+    "Shipping",
+    "Procurement",
     "Event Planning",
     "Vendor Management",
     "Vendor Purchase Orders",
     "Warehouse Management",
     "3PL Management",
-    "Freight & Tracking",
+    "Transportation",
     "System Data & Audit"
   ],
   "deployment": "Cloudflare Workers static assets; GitHub Pages Deploy from a branch (main / root) also supported",
@@ -30,7 +32,7 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261007-1",
+  "asset_version": "20261008-1",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
     "Consistent readable light theme across operations and logistics",
@@ -65,12 +67,21 @@
     "context_contract": "MK verified website facts v2"
   },
   "deployment_readiness": {
-    "checked_at": "2026-10-07T19:37:17.559463+00:00",
+    "checked_at": "2026-10-08T14:51:11.669396+00:00",
     "guide": "DEPLOY_TO_WORKERS.md",
     "target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
-    "live_source_matches_previous_package": true,
+    "live_source_matches_previous_package": false,
     "live_version_endpoint_before_update": "404: previous build omitted VERSION.json",
-    "live_inference_rechecked": true,
-    "publishing_status": "Build verified; not published"
+    "live_inference_rechecked": false,
+    "publishing_status": "Build and workflows verified; not published",
+    "prior_live_ai_check": "2026-10-07: unchanged MK 4.2 connector, synthetic facts only"
+  },
+  "workflow_revision": {
+    "customer_orders": "Hold/Bulk/Firm entry, structured addresses, third-party shipping billing, Sarasota/Farmers Branch assignment, issue and validation queues",
+    "shipping": "Sarasota dispatch and daily CSV/Excel shipment report",
+    "procurement": "Vendor item/title/description lines, tracking, notes and packing-slip attachments",
+    "3pl": "Separate order history/API outbox, shipment requests, manage/ship queues and previewed CSV/Excel imports",
+    "transportation": "Separate freight estimation, consolidation and tracking workspace",
+    "api_status": "Authenticated connector and migration included; partner setup and live deployment pending"
   }
 }

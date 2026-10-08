@@ -22,17 +22,17 @@
 2. Upload a regional Raw Report. Existing analysis and reorder formulas are retained.
 3. Open Data Center and import the selected regional inventory into operations. Imported SKU identifiers contain their region, so identical model numbers remain distinct across US/EU/Canada.
 4. Set missing sales prices or vendor costs before committing orders or purchase orders.
-5. Create a customer order. Stock remains on hand and is reserved until dispatch. Redemption moves allocation from its parent hold without reducing stock at entry.
+5. Create a customer order with delivery details and an assigned warehouse. Save unvalidated or validate into allocation. Issues remain visible without reserving stock. Stock remains on hand after validation and is reserved until dispatch. Redemption moves allocation from its parent hold without reducing stock at entry.
 6. Warehouse allocation creates SKU picking waves. Complete picking to generate packing jobs. Enter real tracking to dispatch; the stock deduction occurs once at dispatch.
 7. A vendor PO creates a receiving document. Check in, scan actual good/damaged units, create putaway tasks and complete them. Remaining quantities create follow-up receiving documents. Shortcut receiving from procurement is idempotent across the vendor and warehouse views.
-8. Route eligible single-SKU orders to a 3PL using the exact order quantity. Partner dispatch deducts partner stock; delivery does not deduct it again.
+8. Use 3PL shipment requests to route eligible single- or multi-model customer orders against partner stock. Partner dispatch deducts partner stock once per shipment; delivery does not deduct it again. The older single-SKU routing workbench remains available.
 9. Supplier dropship orders link to Dropship vendor POs. Supplier dispatch updates the customer order without passing stock through warehouse inventory.
 
 Repeat regional imports refresh catalog descriptions/demand but preserve existing operational stock quantities. Uploaded planning snapshots and operational balances remain separately traceable; an upload does not silently reset dispatched or allocated stock.
 
 ## Navigation
 
-`index.html` and `business-operations.html` open one enterprise control tower. The fixed desktop sidebar nests inventory/planning, CRM, orders/events, vendors/purchasing, warehouse, 3PL/transportation and system/data pages. At narrow viewport widths the same navigation opens as a drawer. Existing regional deep links and `index.html?workspace=...` remain compatible.
+`index.html` and `business-operations.html` open one enterprise control tower. The fixed desktop sidebar nests inventory/planning, CRM, orders/events, vendor management, procurement, shipping, warehouse, 3PL management, transportation and system/data pages. At narrow viewport widths the same navigation opens as a drawer. Existing regional deep links and `index.html?workspace=...` remain compatible.
 
 Missing warehouse inventory, receiving, wave-picking, packing and cycle-count routes have been restored. All nested paths resolve under the repository's deployment root.
 
@@ -42,7 +42,7 @@ Operations and logistics now share light cards, readable tables and status badge
 
 ## Deployment to your existing website
 
-Publish this static system using **Deploy from a branch**. No custom workflow is included.
+For the current Workers target, use **DEPLOY_TO_WORKERS.md**. GitHub Pages **Deploy from a branch** remains supported. No custom workflow is included.
 
 1. Extract the ZIP. Copy everything **inside** `SUPPLY-CHAIN-INTELLIGENCE-main/` to the existing repository root, including `.nojekyll`, every file in `assets/` and all nested module folders. Avoid nesting another project folder inside the repository. Verify that `index.html` is directly in the repository root.
 2. Keep the removed `.github/workflows` directory absent. Remove the obsolete root `pages.yml` if it remains in your repository.
@@ -85,3 +85,9 @@ If a saved workspace cannot be read, the app preserves it and offers a raw-recor
 ## MK AI service
 
 Open `mk-brain.html` or the MK launcher from any shared enterprise page. Existing regional inventory and saved sales analysis feed the analyst. When AI is enabled, the site sends a bounded JSON context, recent conversation and remembered notes to `MMK97/supply-ai-chain-hub` through `/gradio_api/call/website_chat`, then reads its completed SSE result. New workspaces use AI by default; an existing saved AI preference is preserved. Select Fast, Auto or Deep in the connection card. Local calculations and monitoring work independently of cloud synchronization. The public Space is already available; no OpenAI key or Supabase AI deployment is needed for this connection. The retained private-service code is not called by MK's current chat. Setup, limits and examples are in `docs/MK_AI_SETUP.md`. No live repository, database or Space source was modified during this revision.
+
+## October 8 fulfillment additions
+
+The new module routes and exact requested field mapping are documented in docs/FULFILLMENT_WORKFLOWS.md. Orders and vendor POs keep their existing IDs and storage location. New validation states prevent unresolved orders from reserving stock. Packing slips are bounded PDF/image attachments stored with the PO, so backup/restore and shared synchronization retain them.
+
+For optional cloud use, apply 20261008_fulfillment_workflows.sql after the existing unified-system migration. It admits unknown model references only in unvalidated/issue orders and adds an organization-scoped server outbox. Real 3PL sending requires the included threepl-orders function and a configured partner; see docs/3PL_API_SETUP.md. Static page deployment alone does not enable that endpoint.

@@ -12,7 +12,15 @@ For the Workers website, follow [DEPLOY_TO_WORKERS.md](DEPLOY_TO_WORKERS.md). Th
 
 MK receives completed website calculations as verified facts rather than tools it should invoke. Brand analysis includes eligible-model totals, monthly demand, recommended units and model-level stockout risks. The public Space passed an October 7 synthetic Cozy Earth test through the shipped connector. Local report calculations remain available when AI cannot answer. This revised package has not been published to your Workers account or GitHub repository. See [docs/MK_AI_SETUP.md](docs/MK_AI_SETUP.md).
 
-GitHub Pages branch publishing remains supported; see [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). Shared assets use version `20261007-1`. Upload the complete source package together. Business records and storage keys retain their existing schemas.
+GitHub Pages branch publishing remains supported; see [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). Shared assets use version `20261008-1`. Upload the complete source package together. Existing storage keys and schema version 1 are retained; new workflow fields extend the records without replacing existing IDs.
+
+## Customer orders, shipping, 3PL and procurement
+
+The October 8 revision adds dedicated order issue, unvalidated and cancelled queues; structured customer delivery and billing fields; Sarasota shipping and daily reports; vendor PO item details and packing-slip attachments; and a 3PL processing history, shipment request, order, dispatch and import workflow. **3PL and Transportation are separate modules.**
+
+See [docs/FULFILLMENT_WORKFLOWS.md](docs/FULFILLMENT_WORKFLOWS.md) for the requested field/page mapping and daily operation. Existing orders can complete delivery details without losing their allocations. Uploaded planning formulas remain unchanged.
+
+The optional 3PL processing API sends through an authenticated server connector, with server-only partner credentials, durable idempotency and explicit uncertain-delivery handling. It is included as source and is **not deployed or connected to a real partner**. See [docs/3PL_API_SETUP.md](docs/3PL_API_SETUP.md). The local forms and shipment records work without that connection.
 
 ## Run locally
 
@@ -40,7 +48,7 @@ GitHub's built-in **pages build and deployment** job may still appear in Actions
 
 The static application saves work in the current browser. Existing operations and logistics records are migrated on first use; existing regional report databases remain in place. Sample records are labeled. Data Center can export backups, restore them, import regional inventory, or start an empty operations workspace.
 
-An optional authenticated cloud adapter and SQL migration are included. Apply `supabase/migrations/20261005_unified_system.sql` to your existing Supabase project, then sign in and connect through Data Center. This step has not been performed on your live database.
+An optional authenticated cloud adapter and SQL migration are included. Apply `supabase/migrations/20261005_unified_system.sql` followed by `supabase/migrations/20261008_fulfillment_workflows.sql` to your existing Supabase project, then sign in and connect through Data Center. This step has not been performed on your live database.
 
 ## Workflow checks
 
@@ -78,3 +86,20 @@ node scripts/check-production.cjs
 ```
 
 These checks exercise normal/modified/cancelled links, prefetch limits, restoration, cached assets, deep links, auth startup and errors, safe formatted output, real local workbook parsing, 14 regional/built page startups and completed-fact AI payloads. They are Node.js DOM/transport checks and do not measure rendered browser navigation speed.
+
+## Fulfillment workflow checks
+
+```bash
+node scripts/check-fulfillment.cjs
+```
+
+Use the separate jsdom test dependency described above. Tests cover forms, validation, allocation, dispatch, imports, attachments, API transport, legacy records and uncertain delivery.
+
+Optional isolated PostgreSQL checks:
+
+```bash
+npm install --no-save --package-lock=false @electric-sql/pglite@0.3.14
+node scripts/check-fulfillment-sql.cjs
+```
+
+These execute the migrations, RLS and RPC behavior with synthetic principals in an in-process database. They do not deploy or modify Supabase. Test dependencies are not required by the website or Cloudflare build.
