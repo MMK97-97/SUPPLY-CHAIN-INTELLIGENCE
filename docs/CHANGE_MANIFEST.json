@@ -1274,5 +1274,23 @@
     },
     "published": false,
     "browser_rendering_verified": false
+  },
+  "metadata_revision_20261009": {
+    "metadata_revision": "2026.10.09-1",
+    "changed_files": [
+      "README.md",
+      "VERSION.json",
+      "docs/CHANGE_MANIFEST.json"
+    ],
+    "added_files": [
+      "docs/METADATA_FIX.md",
+      "docs/verification-metadata-20261009.json"
+    ],
+    "removed_files": [],
+    "application_version_unchanged": true,
+    "asset_version_unchanged": true,
+    "application_files_unchanged": true,
+    "verification": "verification-metadata-20261009.json",
+    "guide": "METADATA_FIX.md"
   }
 }

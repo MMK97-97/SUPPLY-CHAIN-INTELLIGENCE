@@ -1,0 +1,17 @@
+{
+  "release": "2026.10.08-unified-enterprise-production-audit47",
+  "metadata_revision": "2026.10.09-1",
+  "json_valid": true,
+  "standalone_and_source_and_build_metadata_match": true,
+  "application_files_compared": 189,
+  "application_files_changed": [],
+  "production_checks_passed": 27,
+  "production_checks_failed": 0,
+  "all_baseline_files_retained": true,
+  "build_html_pages": 90,
+  "build_fingerprinted_assets": 74,
+  "live_deployment_verified": false,
+  "live_functionality_verified": false,
+  "prior_source_regression_checks": 288,
+  "prior_source_regression_checks_rerun": false
+}
