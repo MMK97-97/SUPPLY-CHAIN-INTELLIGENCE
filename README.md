@@ -1,6 +1,6 @@
 # Supply Chain Intelligence — Unified Enterprise System
 
-**Current release: v47 production audit.** Failed-save retries, corrupt workspace recovery, unsafe record attributes and shared dialog behavior are corrected. All 90 pages were inspected; see [PRODUCTION_AUDIT.md](docs/PRODUCTION_AUDIT.md) for current evidence and live verification limits.
+**Current release: v47 production audit, metadata revision 2026.10.09-1.** Failed-save retries, corrupt workspace recovery, unsafe record attributes and shared dialog behavior are corrected. Release metadata now separates source verification from live deployment; see [METADATA_FIX.md](docs/METADATA_FIX.md). All 90 pages were inspected; see [PRODUCTION_AUDIT.md](docs/PRODUCTION_AUDIT.md) for current evidence and live verification limits.
 
 **Retained: v46 ship-to label correction (October 8).** Each address field now has its own label, fixing the repeated comma-separated label list. See [SHIP_TO_LABEL_FIX.md](docs/SHIP_TO_LABEL_FIX.md).
 

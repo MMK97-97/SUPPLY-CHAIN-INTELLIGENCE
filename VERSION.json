@@ -64,7 +64,7 @@
       "Deep"
     ],
     "credentials": "Public website API; inference credentials stay in Space secrets",
-    "deployment_status": "Integrated; prior synthetic live checks retained. AI source is unchanged in v47; this source release is not published.",
+    "deployment_status": "Connector included in v47; live service availability and inference are verified separately.",
     "capabilities": [
       "conversational report analysis",
       "read-only autonomous tool selection",
@@ -78,16 +78,30 @@
     "regional_scope": "Report route/query or shared Analysis region by default; explicit analyst selection applies only for the current page session"
   },
   "deployment_readiness": {
-    "checked_at": "2026-10-08T20:46:40.682683+00:00",
-    "guide": "DEPLOY_TO_WORKERS.md",
-    "target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
-    "live_source_matches_previous_package": false,
-    "live_version_endpoint_before_update": "404: previous build omitted VERSION.json",
+    "metadata_updated_at": "2026-10-09T18:49:30.996251+00:00",
+    "guide": "DEPLOY_FROM_BRANCH.md",
+    "target": "https://mmk97-97.github.io/SUPPLY-CHAIN-INTELLIGENCE/index.html",
+    "alternate_target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
+    "source_status": "validated",
+    "source_verification": {
+      "checked_at": "2026-10-08T20:58:53.170328+00:00",
+      "report": "docs/verification-release-20261008-v47.json",
+      "regression_checks_passed": 288,
+      "html_pages": 90
+    },
+    "publishing_status": "Use the declared branch publishing source; live deployment verification is recorded separately.",
+    "live_verification": {
+      "status": "unverified",
+      "verified_at": null,
+      "version_evidence": "The user-provided VERSION.json matches the audited v47 release and asset cache identifiers.",
+      "page_and_asset_contents": "unverified",
+      "navigation_and_forms": "unverified",
+      "sign_in": "unverified",
+      "ai_inference": "unverified"
+    },
     "live_inference_rechecked": false,
-    "publishing_status": "v47 production audit and fixes prepared; source not published",
-    "prior_live_ai_check": "2026-10-07: unchanged MK 4.2 connector, synthetic facts only",
     "current_live_release_verified": false,
-    "current_live_access": "The GitHub Pages URL could not be retrieved by the web reader for this request; source was audited independently."
+    "prior_live_ai_check": "2026-10-07: unchanged MK 4.2 connector, synthetic facts only"
   },
   "workflow_revision": {
     "customer_orders": "Hold/Bulk/Firm order entry; customer PO or generated sales order number; CRM customer/ship-to address snapshots; FedEx/UPS/USPS and custom services; Rome Transportation/TQL/C.H. Robinson LTL; third-party billing; catalog descriptions and inventory; automatic or manual Sarasota/Farmers Branch fulfillment",
@@ -95,6 +109,7 @@
     "procurement": "Vendor item/title/description lines, tracking, notes and packing-slip attachments",
     "3pl": "Separate order history/API outbox, shipment requests, manage/ship queues and previewed CSV/Excel imports",
     "transportation": "Separate freight estimation, consolidation and tracking workspace",
-    "api_status": "Authenticated connector and migration included; partner setup and live deployment pending"
-  }
+    "api_status": "Authenticated 3PL processing requires the supplied connector, database migration and partner configuration."
+  },
+  "metadata_revision": "2026.10.09-1"
 }
