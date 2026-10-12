@@ -1,5 +1,10 @@
 (() => {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const sessionStorage = window.StarkWorkspace?.sessionStorage || window.sessionStorage;
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+
 
   if (window.MKBrain) return;
 
@@ -32,7 +37,7 @@
     CA: { name: "stark-regional-inventory-ca", key: "Canada" }
   };
   const DEFAULT_SETTINGS = { critical: 3, coverage: 1, delay: 15, a: 80, b: 95 };
-  const ENGINE_VERSION = "MK Intelligence 4.2";
+  const ENGINE_VERSION = "MK Intelligence 5.0 · Decision Lab";
   const LOCAL_ONLY_INTENTS = new Set(["voice", "space", "settings", "navigation", "export", "tracking", "learn", "help"]);
   const ROUTES = {
     "inventory dashboard": "inventory-dashboard", dashboard: "inventory-dashboard",
@@ -212,7 +217,7 @@
     });
     panel.querySelectorAll("[data-mk-question]").forEach(button => button.addEventListener("click", () => execute(button.dataset.mkQuestion)));
     panel.querySelector(".mk-mic").addEventListener("click", toggleListening);
-    document.addEventListener("keydown", event => { if (event.key === "Escape" && panel.classList.contains("open")) togglePanel(false); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape" && panel.classList.contains("open") && !document.querySelector(".modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop")) togglePanel(false); });
   }
 
   function togglePanel(open) {
@@ -223,6 +228,7 @@
     launcher.classList.toggle("is-open", open);
     launcher.setAttribute("aria-expanded", String(open));
     document.body.classList.toggle("mk-brain-open", open);
+    window.dispatchEvent(new CustomEvent("mk:visibility-change",{detail:{open}}));
     if (open) {
       badge.hidden = true;
       window.setTimeout(() => input.focus(), 120);
@@ -1044,6 +1050,7 @@
   }
 
   function loadIndexedValue(databaseName, storeName, key) {
+    const demo=window.StarkWorkspace?.getDataset(databaseName,storeName,key);if(demo!==undefined)return Promise.resolve(demo);
     if (!window.indexedDB) return Promise.resolve(null);
     return new Promise(resolve => {
       const request = indexedDB.open(databaseName, 1);

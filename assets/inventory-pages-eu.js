@@ -1,5 +1,9 @@
 (function () {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+  const BroadcastChannel = window.StarkWorkspace?.BroadcastChannel || window.BroadcastChannel;
+
 
   const SI = window.StarkInventory;
   const page = document.body.dataset.page || "inventory";
@@ -280,7 +284,7 @@
       }
     } catch (_) {}
     window.addEventListener("storage", event => {
-      if (event.key !== SYNC_PULSE_KEY || !event.newValue) return;
+      if (event.key !== (window.StarkWorkspace?.storageKey(SYNC_PULSE_KEY)||SYNC_PULSE_KEY) || !event.newValue) return;
       try { receive(JSON.parse(event.newValue)); } catch (_) {}
     });
     document.addEventListener("visibilitychange", () => {

@@ -1,5 +1,8 @@
 (function(){
 'use strict';
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+
 if(!window.StarkSystem)return;
 const KEY='stark.logisticsSuite.v2';
 const ENTERPRISE_KEY='stark.enterpriseSuite.v1';

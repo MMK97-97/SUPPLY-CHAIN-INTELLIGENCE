@@ -1,5 +1,9 @@
 (() => {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+
 
   const body = document.body;
   if (!body || body.dataset.page !== "analysis-report") return;
@@ -342,7 +346,7 @@
     document.addEventListener("keydown",event=>{if((event.key==="Enter"||event.key===" ")&&event.target.matches("[data-period-filter]")){event.preventDefault();event.target.click();}});
     $("export-analysis").addEventListener("click",()=>exportWorkbook());
     $("clear-analysis").addEventListener("click",async()=>{if(!confirm(`Clear all Inventory Analysis Report uploads for ${regionName}? Existing Inventory Dashboard data will not be changed.`))return;await Promise.all(sourceTypes.map(deleteStored));state.data={};state.meta={};state.analysis=[];state.filtered=[];populateFilters();renderSourceStatus();renderAll();toast("Regional analysis sources cleared.");});
-    window.addEventListener("storage",event=>{if(event.key===`stark-active-brands-${region}`){computeAnalysis();populateFilters();renderSourceStatus();}});
+    window.addEventListener("storage",event=>{if(event.key===(window.StarkWorkspace?.storageKey(`stark-active-brands-${region}`)||`stark-active-brands-${region}`)){computeAnalysis();populateFilters();renderSourceStatus();}});
   }
 
   bind();

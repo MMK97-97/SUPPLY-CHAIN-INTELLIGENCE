@@ -136,7 +136,7 @@
     const forgot = document.getElementById("forgot-password");
     wirePasswordToggles(document);
     if (state.session) {
-      location.replace(safeReturnTarget("index.html"));
+      if(window.StarkWorkspace)window.StarkWorkspace.navigateMode("working",safeReturnTarget("index.html"));else location.replace(safeReturnTarget("index.html"));
       return;
     }
     setMessage("");
@@ -156,7 +156,7 @@
         state.session = data.session;
         state.user = data.user;
         await ensureWorkspace();
-        location.replace(safeReturnTarget("index.html"));
+        if(window.StarkWorkspace)window.StarkWorkspace.navigateMode("working",safeReturnTarget("index.html"));else location.replace(safeReturnTarget("index.html"));
       } catch (error) {
         setMessage(error.message || "Sign in failed.", true);
         submit.disabled = false;

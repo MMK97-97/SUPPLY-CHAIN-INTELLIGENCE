@@ -1,5 +1,8 @@
 (function (global) {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+
 
   const SI = global.StarkInventory;
   if (!SI || SI.__reorderHistoryEnabled) return;

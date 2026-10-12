@@ -1,6 +1,14 @@
 (function(){
   'use strict';
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+
   const S=window.StarkSystem;if(!S)return;
+  if(window.StarkWorkspace?.isDemo){
+    const blocked=async()=>{throw new Error('Live organization connections are disabled in the portfolio demo. Sign in to a working workspace to connect.');};
+    window.StarkSystemCloud={inspect:blocked,connect:blocked,sync:blocked,disconnect:()=>{},analyzeWithAI:blocked,send3PLRequest:blocked,getStatus:()=>({active:false,status:'Isolated portfolio demo · no live business requests'})};
+    return;
+  }
   const LINK='stark.unifiedCloudLink.v1';
   let client,organization,remoteRevision=0,active=false,suppress=false,pending=false,timer,status='Local browser workspace',remoteDatasets=[];
   const update=message=>{status=message;window.dispatchEvent(new CustomEvent('stark:cloud-status',{detail:{status,active}}));};

@@ -1,5 +1,10 @@
 (function () {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+  const BroadcastChannel = window.StarkWorkspace?.BroadcastChannel || window.BroadcastChannel;
+
 
   const REGION_NAMES = { US: "United States", EU: "European Union", CA: "Canada" };
   const REGION_CURRENCY = { US: "USD", EU: "EUR", CA: "CAD" };
@@ -35,6 +40,7 @@
   document.addEventListener("DOMContentLoaded", init);
 
   async function init() {
+    if(!$("sales-file"))return;
     bindEvents();
     await Promise.all(Object.keys(state.regions).map(loadRegion));
     updateRegionStatus();
@@ -1490,7 +1496,7 @@
       }
     } catch (_) {}
     window.addEventListener("storage", event => {
-      if (event.key !== SYNC_PULSE_KEY || !event.newValue) return;
+      if (event.key !== (window.StarkWorkspace?.storageKey(SYNC_PULSE_KEY)||SYNC_PULSE_KEY) || !event.newValue) return;
       try { receive(JSON.parse(event.newValue)); } catch (_) {}
     });
     document.addEventListener("visibilitychange", () => {
@@ -1525,6 +1531,7 @@
   }
 
   function loadInventorySnapshot(dbName, inventoryRegion) {
+    const demo=window.StarkWorkspace?.getDataset(dbName,"datasets",inventoryRegion);if(demo!==undefined)return Promise.resolve(demo);
     if (!window.indexedDB) return Promise.resolve(null);
     return new Promise(resolve => {
       const request = indexedDB.open(dbName, 1);
@@ -1549,7 +1556,8 @@
       request.onerror=()=>reject(request.error);
     });
   }
-  async function loadRegion(region) { try { const db=await openDatabase(); const value=await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readonly");const request=tx.objectStore(DB_STORE).get(region);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);}); db.close(); if(value)state.regions[region]=value; if(value?.sales)value.analysis=analyze(value.sales,value.prices,region); } catch(error) { console.warn("Sales data could not be restored.",error); } }
-  async function persistRegion(region) { try { const db=await openDatabase(); await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).put(state.regions[region],region);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);}); db.close(); publishSync("sales-data",region); } catch(error) { console.warn("Sales data could not be saved.",error); } }
-  async function deleteStoredRegion(region) { try { const db=await openDatabase(); await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).delete(region);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);}); db.close(); publishSync("sales-data",region); } catch(error) { console.warn("Sales data could not be cleared.",error); } }
+  async function loadRegion(region) { if(window.StarkWorkspace?.isDemo){const value=window.StarkWorkspace.getDataset(DB_NAME,DB_STORE,region);if(value){state.regions[region]=value;if(value.sales)value.analysis=analyze(value.sales,value.prices,region);}return;} try { const db=await openDatabase(); const value=await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readonly");const request=tx.objectStore(DB_STORE).get(region);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);}); db.close(); if(value)state.regions[region]=value; if(value?.sales)value.analysis=analyze(value.sales,value.prices,region); } catch(error) { console.warn("Sales data could not be restored.",error); } }
+  async function persistRegion(region) { if(window.StarkWorkspace?.isDemo){window.StarkWorkspace.setDataset(DB_NAME,DB_STORE,region,state.regions[region]);publishSync("sales-data",region);return;} try { const db=await openDatabase(); await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).put(state.regions[region],region);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);}); db.close(); publishSync("sales-data",region); } catch(error) { console.warn("Sales data could not be saved.",error); } }
+  async function deleteStoredRegion(region) { if(window.StarkWorkspace?.isDemo){window.StarkWorkspace.setDataset(DB_NAME,DB_STORE,region,null);publishSync("sales-data",region);return;} try { const db=await openDatabase(); await new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).delete(region);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);}); db.close(); publishSync("sales-data",region); } catch(error) { console.warn("Sales data could not be cleared.",error); } }
+  window.StarkSalesEngine=Object.freeze({normalizeSalesReport,normalizePriceList,analyze});
 })();

@@ -1,5 +1,11 @@
 (function (global) {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const sessionStorage = window.StarkWorkspace?.sessionStorage || window.sessionStorage;
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+  const BroadcastChannel = window.StarkWorkspace?.BroadcastChannel || window.BroadcastChannel;
+
 
   const FIXED_REGION = "Canada";
   const DB_NAME = "stark-regional-inventory-ca";
@@ -108,9 +114,9 @@
     try { localStorage.setItem(SYNC_PULSE_KEY, JSON.stringify(message)); } catch (_) {}
   }
 
-  async function saveDataset(region, dataset) { try { const result = await databaseAction("readwrite", store => store.put(dataset, region)); publishSync("inventory-data", region); if(global.StarkSystem){try{global.StarkSystem.recordRegional(region,dataset,analyze(dataset.rows,region))}catch(error){console.warn("Operations snapshot:",error.message)}} return result; } catch (_) { sessionStorage.setItem(`stark-inventory-${region}`, JSON.stringify(dataset)); publishSync("inventory-data", region); if(global.StarkSystem){try{global.StarkSystem.recordRegional(region,dataset,analyze(dataset.rows,region))}catch(error){console.warn("Operations snapshot:",error.message)}} return true; } }
-  async function loadDataset(region) { try { return (await databaseAction("readonly", store => store.get(region))) || null; } catch (_) { const raw = sessionStorage.getItem(`stark-inventory-${region}`); return raw ? JSON.parse(raw) : null; } }
-  async function clearDataset(region) { try { await databaseAction("readwrite", store => store.delete(region)); } catch (_) { sessionStorage.removeItem(`stark-inventory-${region}`); } publishSync("inventory-data", region); if(global.StarkSystem){try{global.StarkSystem.recordRegional(region,dataset,analyze(dataset.rows,region))}catch(error){console.warn("Operations snapshot:",error.message)}} }
+  async function saveDataset(region, dataset) { if(window.StarkWorkspace?.isDemo){window.StarkWorkspace.setDataset(DB_NAME,STORE_NAME,region,dataset);publishSync("inventory-data",region);if(global.StarkSystem)global.StarkSystem.recordRegional(region,dataset,analyze(dataset.rows,region));return true;} try { const result = await databaseAction("readwrite", store => store.put(dataset, region)); publishSync("inventory-data", region); if(global.StarkSystem){try{global.StarkSystem.recordRegional(region,dataset,analyze(dataset.rows,region))}catch(error){console.warn("Operations snapshot:",error.message)}} return result; } catch (_) { sessionStorage.setItem(`stark-inventory-${region}`, JSON.stringify(dataset)); publishSync("inventory-data", region); if(global.StarkSystem){try{global.StarkSystem.recordRegional(region,dataset,analyze(dataset.rows,region))}catch(error){console.warn("Operations snapshot:",error.message)}} return true; } }
+  async function loadDataset(region) { const demo=window.StarkWorkspace?.getDataset(DB_NAME,STORE_NAME,region);if(demo!==undefined)return demo; try { return (await databaseAction("readonly", store => store.get(region))) || null; } catch (_) { const raw = sessionStorage.getItem(`stark-inventory-${region}`); return raw ? JSON.parse(raw) : null; } }
+  async function clearDataset(region) { if(window.StarkWorkspace?.isDemo)window.StarkWorkspace.setDataset(DB_NAME,STORE_NAME,region,null); else { try { await databaseAction("readwrite", store => store.delete(region)); } catch (_) { sessionStorage.removeItem(`stark-inventory-${region}`); } } publishSync("inventory-data", region); global.StarkSystem?.clearRegional(region); }
 
   function settingsKey(region) { return `stark-inventory-settings-${region}`; }
   function brandKey(region) { return `stark-active-brands-${region}`; }

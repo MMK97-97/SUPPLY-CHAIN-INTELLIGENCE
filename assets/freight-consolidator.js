@@ -1,5 +1,8 @@
 (() => {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+
 
   const $ = id => document.getElementById(id);
   if (!$('consolidator')) return;

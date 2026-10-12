@@ -1,5 +1,8 @@
 (() => {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+
 
   const REGION = (location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1] || "US").toUpperCase();
   const REGION_KEY = REGION === "CA" ? "Canada" : REGION;

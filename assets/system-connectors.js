@@ -1,5 +1,9 @@
 (function(){
   'use strict';
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const BroadcastChannel = window.StarkWorkspace?.BroadcastChannel || window.BroadcastChannel;
+
   const S=window.StarkSystem;if(!S)return;
   const esc=v=>window.StarkSystemUI.escape(v);
   const notify=(m,error=false)=>window.StarkSystemUI.notice(m,error);

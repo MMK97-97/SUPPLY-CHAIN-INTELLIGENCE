@@ -1,5 +1,8 @@
 (function () {
   'use strict';
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+
   const S = window.StarkSystem;
   if (!S) return;
   const escape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,6 +47,9 @@
     ];
   }
   const currentPath = location.pathname;
+  // Resolve route-selected regions before any module's DOMContentLoaded renderer.
+  const initialQuery=new URLSearchParams(location.search),initialRegion=currentPath.match(/-(us|eu|ca)\.html$/)?.[1]||initialQuery.get('region')||initialQuery.get('workspace');
+  if(initialRegion)localStorage.setItem('stark-selected-region',S.regionCode(initialRegion));
   const relativePath = currentPath.slice(S.rootURL.pathname.length);
   const searchEnabled = /^(order-management|vendor-management|procurement)\//.test(relativePath) || ['order-management.html','vendor-management.html','vendor-po-management.html'].includes(relativePath);
   const navigationPath = currentPath.replace(/\/warehouse-management\/cycle-count\.html$/, '/warehouse-management/cycle-counts.html');
@@ -52,7 +58,9 @@
   function renderNavigation() {
     const nav = document.querySelector('#system-navigation'); if (!nav) return;
     const homeActive = active('index.html') || active('business-operations.html');
-    nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('index.html')}">${glyph('home')}<span>Enterprise control tower</span></a>` + groups().map(([id,label,items])=>`<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${links(items)}</div></details>`).join('');
+    nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('index.html')}">${glyph('home')}<span>Overview</span></a>` + groups().map(([id,label,items])=>`<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${links(items)}</div></details>`).join('');
+    const tabs=document.querySelector('#system-module-tabs');if(tabs){const group=groups().find(([,label,items])=>items.some(([path])=>active(path)));tabs.innerHTML=group?`<span class="system-module-name">${escape(group[1])}</span>`+links(group[2]):`<span class="system-module-name">Workspace</span>`+links([['index.html','Overview'],['order-management/index.html','Orders'],['crm/index.html','Customers'],['procurement/index.html','Procurement'],['warehouse-management/index.html','Warehouse'],['3pl-management/index.html','3PL'],['transportation/index.html','Transportation'],['mk-brain.html','AI analyst']]);}
+
   }
   function notice(message,error=false) {
     const node = document.createElement('div'); node.className='system-toast'+(error?' error':''); node.setAttribute('role',error?'alert':'status'); node.textContent=message; document.body.append(node); setTimeout(()=>node.remove(),5000);
@@ -71,49 +79,37 @@
   }
   function start() {
     if (document.body.classList.contains('tv-view') || document.querySelector('.tv-app') || /\/(login|auth-callback|cloud-agent)\.html$/.test(currentPath)) return;
-    if (document.querySelector('#system-sidebar')) return;
-    const sidebar = document.createElement('aside'); sidebar.className='system-sidebar'; sidebar.id='system-sidebar'; sidebar.setAttribute('aria-label','Enterprise navigation');
-    sidebar.innerHTML=`<a class="system-brand" href="${S.url('index.html')}"><img src="${S.url('assets/supply-chain-logo.png')}" alt=""><span><small>STARK PREMIUM</small><strong>Supply Chain<br>Intelligence</strong></span></a><div class="system-workspace-label">ENTERPRISE WORKSPACE</div><nav id="system-navigation"></nav><div class="system-sidebar-footer"><span id="system-data-status"></span><a href="${S.url('data-center.html')}">Manage workspace</a></div>`;
-    const header = document.createElement('header'); header.className='system-header';
-    header.innerHTML=`<button class="system-menu" aria-label="Open navigation" aria-controls="system-sidebar" aria-expanded="false">☰</button><div class="system-breadcrumb"><b>${escape(document.title.split(/[·|]/)[0].trim())}</b></div>${searchEnabled?`<div class="system-search"><label class="visually-hidden" for="system-search-input">Search pages and records</label>${glyph('search')}<input id="system-search-input" placeholder="Search orders, vendors, models…" autocomplete="off"><div class="system-search-results" hidden></div></div>`:''}<label class="system-region"><span>Analysis region</span><select id="system-region-select" aria-label="Analysis region"><option value="US">US</option><option value="EU">EU</option><option value="CA">Canada</option></select></label><a class="system-account" href="${S.url('login.html?return='+encodeURIComponent(currentPath.slice(S.rootURL.pathname.length)+location.search))}" aria-label="Sign in to workspace">S</a>`;
-    const scrim = document.createElement('button'); scrim.className='system-scrim'; scrim.setAttribute('aria-label','Close navigation');
-    document.body.prepend(scrim, sidebar, header);
-    document.body.classList.add('stark-system');
-    document.body.dataset.systemSearch=String(searchEnabled);
-    // Keep legacy filter elements for module listeners, but show searches only in orders/vendors.
-    if(!searchEnabled){
-      const restrictSearch=()=>document.querySelectorAll('input[type="search"],input[id*="search" i],input[placeholder^="Search" i]').forEach(input=>{
-        input.disabled=true;const wrapper=input.closest('label,.search,.search-field,.op-search');(wrapper || input).hidden=true;
-      });
-      restrictSearch();new MutationObserver(restrictSearch).observe(document.body,{childList:true,subtree:true});
-    }
+    if (document.querySelector('.system-header')) return;
+    const W=window.StarkWorkspace;
+    const header=document.createElement('header');header.className='system-header';
+    header.innerHTML=`<a class="system-brand" href="${S.url('index.html')}" aria-label="Supply Chain Intelligence home"><span class="system-wordmark">MK<span>◆</span></span><span><b>Supply Chain</b><small>Intelligence</small></span></a><button class="system-menu" type="button" aria-label="Open module menu" aria-controls="system-modules" aria-expanded="false">${glyph('data')}<span>Modules</span><span>⌄</span></button><span class="system-header-spacer"></span>${searchEnabled?`<div class="system-search"><label class="visually-hidden" for="system-search-input">Search orders, purchase orders and vendors</label>${glyph('search')}<input id="system-search-input" placeholder="PO, order, tracking or model…" autocomplete="off"><div class="system-search-results" hidden></div></div>`:''}<label class="system-region"><span>Analysis region</span><select id="system-region-select" aria-label="Analysis region"><option value="US">US · USD</option><option value="EU">EU · EUR</option><option value="CA">CA · CAD</option></select></label><button id="system-workspace-button" class="system-mode-button" type="button">${W?.isDemo?'Demo workspace':'Browser workspace'}</button><a class="system-icon-action system-header-alert" href="${S.url('activity.html')}" aria-label="View workspace activity">${glyph('orders')}<span class="system-header-alert-count" id="system-alert-count" hidden></span></a><button type="button" id="system-ai-toggle" class="system-icon-action system-ai-button" aria-label="Open AI analyst" aria-controls="system-ai-panel" aria-expanded="false">✦</button><a class="system-account" href="${S.url('login.html?return='+encodeURIComponent(relativePath+location.search))}" aria-label="Sign in or explore the demo">${W?.isDemo?'D':'↗'}</a>`;
+    const modules=document.createElement('section');modules.id='system-modules';modules.className='system-modules';modules.hidden=true;modules.setAttribute('role','dialog');modules.setAttribute('aria-modal','true');modules.setAttribute('aria-label','Choose a module');
+    modules.innerHTML='<div class="system-modules-heading"><div><p>ONE CONNECTED WORKSPACE</p><h2>Choose a module</h2></div><button type="button" id="system-modules-close" aria-label="Close module menu">×</button></div><nav id="system-navigation" aria-label="All application modules"></nav>';
+    const rail=document.createElement('nav');rail.id='system-module-tabs';rail.className='system-module-tabs';rail.setAttribute('aria-label','Current module pages');
+    const scrim=document.createElement('button');scrim.className='system-scrim';scrim.setAttribute('aria-label','Close module menu');scrim.hidden=true;
+    const skip=document.createElement('a');skip.className='system-layout-skip';skip.textContent='Skip to workspace';
+    const main=document.querySelector('main');if(main){main.id||='workspace-main';main.setAttribute('tabindex','-1');skip.href='#'+main.id;}
+    document.body.prepend(skip,header,rail,scrim,modules);document.body.classList.add('stark-system');document.body.dataset.systemSearch=String(searchEnabled);
+    const footer=document.createElement('footer');footer.className='system-workspace-footer';footer.innerHTML='<span id="system-data-status"></span><span>Supply Chain Intelligence · Portfolio edition</span>';document.body.append(footer);
+    if(!searchEnabled){const restrictSearch=()=>document.querySelectorAll('input[type="search"],input[id*="search" i],input[placeholder^="Search" i]').forEach(input=>{input.disabled=true;const wrapper=input.closest('label,.search,.search-field,.op-search');(wrapper||input).hidden=true;});restrictSearch();new MutationObserver(restrictSearch).observe(document.body,{childList:true,subtree:true});}
     renderNavigation();
-    const select = header.querySelector('select'); select.value=S.getRegion();
-    select.addEventListener('change',()=>{
-      localStorage.setItem('stark-selected-region',select.value); renderNavigation(); window.dispatchEvent(new CustomEvent('stark:region-change',{detail:{region:select.value}}));
-      const relative = currentPath.slice(S.rootURL.pathname.length);
-      const navigate = url => window.StarkNavigation ? window.StarkNavigation.navigate(url) : location.assign(url);
-      if (/-((us)|(eu)|(ca))\.html$/.test(relative)) navigate(S.url(relative.replace(/-(us|eu|ca)\.html$/,`-${select.value.toLowerCase()}.html`)));
-      else if (relative==='events.html') navigate(S.url('events.html?region='+select.value));
-      else if (relative==='sales-analysis.html') navigate(S.url(relative+'?region='+select.value));
-    });
+    const select=header.querySelector('select');select.value=S.getRegion();
+    select.addEventListener('change',()=>{localStorage.setItem('stark-selected-region',select.value);renderNavigation();window.dispatchEvent(new CustomEvent('stark:region-change',{detail:{region:select.value}}));const relative=currentPath.slice(S.rootURL.pathname.length);const navigate=url=>window.StarkNavigation?window.StarkNavigation.navigate(url):location.assign(url);if(/-(us|eu|ca)\.html$/.test(relative))navigate(S.url(relative.replace(/-(us|eu|ca)\.html$/,`-${select.value.toLowerCase()}.html`)));else if(['events.html','sales-analysis.html'].includes(relative))navigate(S.url(relative+'?region='+select.value));});
     window.addEventListener('stark:region-change',()=>{select.value=S.getRegion();renderNavigation();});
-    const toggle = header.querySelector('.system-menu');
-    const close = () => {document.body.classList.remove('system-nav-open'); toggle.setAttribute('aria-expanded','false');};
-    toggle.onclick=()=>{const open=document.body.classList.toggle('system-nav-open');toggle.setAttribute('aria-expanded',String(open));}; scrim.onclick=close;
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){close();const results=header.querySelector('.system-search-results');if(results)results.hidden=true;}});
-    const input=header.querySelector('input'), results=header.querySelector('.system-search-results');
-    if(input && results){
-      input.addEventListener('input',()=>{const rows=search(input.value);results.hidden=!input.value.trim();results.innerHTML=rows.length?rows.map(x=>`<a href="${S.url(x.path)}"><b>${escape(x.label)}</b><small>${escape(x.kind)}</small></a>`).join(''):'<p>No matching pages or records</p>';});
-      document.addEventListener('click',e=>{if(!e.target.closest('.system-search'))results.hidden=true;});
-      input.addEventListener('keydown',e=>{if(e.key==='Enter'&&results.querySelector('a')){const url=results.querySelector('a').href;if(window.StarkNavigation)window.StarkNavigation.navigate(url);else location.assign(url);}});
-    }
-    const status=()=>{const s=S.getState();document.querySelector('#system-data-status').textContent=s.mode==='sample'?'Sample workspace · saved in this browser':'Working workspace · saved in this browser';};status();window.addEventListener('stark:system-change',status);
+    const toggle=header.querySelector('.system-menu');let menuOrigin=toggle;
+    const expanded=value=>document.querySelectorAll('[aria-controls="system-modules"]').forEach(button=>button.setAttribute('aria-expanded',String(value)));
+    const close=()=>{if(modules.hidden)return;modules.hidden=true;scrim.hidden=true;document.body.classList.remove('system-nav-open');expanded(false);(menuOrigin?.isConnected?menuOrigin:toggle).focus();};
+    const open=(origin=toggle)=>{menuOrigin=origin;modules.hidden=false;scrim.hidden=false;document.body.classList.add('system-nav-open');expanded(true);modules.querySelector('a,summary,button')?.focus();};
+    toggle.onclick=()=>modules.hidden?open():close();scrim.onclick=close;modules.querySelector('#system-modules-close').onclick=close;
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.querySelector('.modal-backdrop,.sys-modal-backdrop'))close();if(event.key==='Tab'&&!modules.hidden){const nodes=[...modules.querySelectorAll('button,a,summary')].filter(n=>!n.closest('details:not([open]) .system-subnav'));const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
+    const input=header.querySelector('input'),results=header.querySelector('.system-search-results');
+    if(input&&results){input.addEventListener('input',()=>{const rows=search(input.value);results.hidden=!input.value.trim();results.innerHTML=rows.length?rows.map(x=>`<a href="${S.url(x.path)}"><b>${escape(x.label)}</b><small>${escape(x.kind)}</small></a>`).join(''):'<p>No matching records</p>';});document.addEventListener('click',e=>{if(!e.target.closest('.system-search'))results.hidden=true;});input.addEventListener('keydown',e=>{if(e.key==='Escape')results.hidden=true;if(e.key==='Enter'&&results.querySelector('a'))window.StarkNavigation?window.StarkNavigation.navigate(results.querySelector('a').href):location.assign(results.querySelector('a').href);});}
+    const status=()=>{const state=S.getState(),cloud=window.StarkSystemCloud?.getStatus(),count=S.issues().length;document.querySelector('#system-data-status').textContent=W?.isDemo?'DEMO · Fictional records · Saved in this browser':cloud?.active?cloud.status:'Browser records · Connect organization data in Data Center';const badge=document.querySelector('#system-alert-count');badge.hidden=!count;badge.textContent=String(count);};status();window.addEventListener('stark:system-change',status);window.addEventListener('stark:region-change',status);window.addEventListener('stark:cloud-status',status);
+    header.querySelector('#system-workspace-button').onclick=()=>window.StarkPortfolio?.workspaceMenu();
+    window.StarkModuleNavigation={open,close,groups};
     window.addEventListener('error',e=>{if(/storage|newer changes/i.test(e.message||''))notice(e.message,true);});
-    // Query-region links select the matching analysis region without changing operations.
-    const suffix=currentPath.match(/-(us|eu|ca)\.html$/), query=new URLSearchParams(location.search), wanted=suffix?.[1]||query.get('region')||query.get('workspace');
-    if(wanted){localStorage.setItem('stark-selected-region',S.regionCode(wanted));select.value=S.getRegion();renderNavigation();}
   }
+
   let dialogSequence=0;
   function dialog(title,body,onSave,saveLabel='Save',options={}) {
     const former=document.activeElement, wrap=document.createElement('div'), titleId='system-dialog-title-'+(++dialogSequence);

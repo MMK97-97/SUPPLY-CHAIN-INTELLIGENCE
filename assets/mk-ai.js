@@ -1,5 +1,9 @@
 (function () {
   'use strict';
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const BroadcastChannel = window.StarkWorkspace?.BroadcastChannel || window.BroadcastChannel;
+
   if (window.MKAI) return;
   const T = window.MKAnalysisTools;
   const KEY = 'mk-analyst-v4', enc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -34,7 +38,7 @@
   function workspace() {
     const state = window.StarkSystem?.getState(), e = state?.enterprise || {}, l = state?.logistics || {};
     const open = item => !['SHIPPED', 'DELIVERED', 'CANCELLED', 'EXPIRED', 'RECEIVED', 'COMPLETE'].includes(item.status);
-    return { customerOrders: e.orders?.length || 0, openCustomerOrders: e.orders?.filter(open).length || 0, purchaseOrders: e.purchaseOrders?.length || 0, openPurchaseOrders: e.purchaseOrders?.filter(open).length || 0, latePurchaseOrders: e.purchaseOrders?.filter(item => open(item) && item.eta && new Date(item.eta) < new Date()).length || 0, pendingPickWaves: l.pickWaves?.filter(open).length || 0, pendingPacking: l.packing?.filter(open).length || 0, partnerShipments: l.tplShipments?.filter(open).length || 0, unresolvedIssues: window.StarkSystem?.issues().length || 0, sampleData: state?.mode === 'sample' || state?.sampleData === true || state?.demo === true || e.accounts?.some(item => String(item.email || '').endsWith('.example')) || false };
+    return { customerOrders: e.orders?.length || 0, openCustomerOrders: e.orders?.filter(open).length || 0, purchaseOrders: e.purchaseOrders?.length || 0, openPurchaseOrders: e.purchaseOrders?.filter(open).length || 0, latePurchaseOrders: e.purchaseOrders?.filter(item => open(item) && item.eta && new Date(item.eta) < new Date()).length || 0, pendingPickWaves: l.waves?.filter(open).length || 0, pendingPacking: l.packing?.filter(open).length || 0, partnerShipments: l.tplShipments?.filter(open).length || 0, unresolvedIssues: window.StarkSystem?.issues().length || 0, sampleData: window.StarkWorkspace?.isDemo || state?.mode === 'sample' || state?.sampleData === true || state?.demo === true || e.accounts?.some(item => String(item.email || '').endsWith('.example')) || false };
   }
   function makeReport(analysis) {
     const fields = analysis.items.map(item => ({ model: String(item.model || item.itemid || ''), brand: item.brand, title: item.product, status: item.status, eligible: item.activeBrand && item.eligible && !item.excluded, priority: item.priority, nextAction: item.nextAction, onHand: item.onHand, openClient: item.openClient, openSupplier: item.openSupplier, eligibleInbound: item.planningSupplier, demand: item.demand, last30: item.last30, leadMonths: item.leadMonths, recommended: item.recommended, riskScore: item.riskScore, confidence: item.confidence.score, forecast: item.forecast.value, forecastLow: item.forecast.low, forecastHigh: item.forecast.high, forecastMethod: item.forecast.method, stockoutRisk: item.stockoutRisk, daysToStockout: item.daysToStockout }));
@@ -60,6 +64,7 @@
     return T.validateSnapshot({ capturedAt: new Date().toISOString(), scope: selected, reports, sales, workspace: workspace() });
   }
   function localResult(question, source, localAnswer) {
+    if(window.StarkDecisionLab && /executive brief|operational brief|action plan|cash exposure|supplier risk/i.test(question))return window.StarkDecisionLab.briefResult(source);
     const reports = source.reports, ids = reports.map(report => report.evidence_id), tools = [];
     const query = question.toLowerCase(), names = [...new Set([...reports, ...source.sales].flatMap(r => r.items.map(i => i.brand)))].filter(Boolean).sort((a, b) => b.length - a.length);
     const models = [...reports, ...source.sales].flatMap(r => r.items.map(i => i.model)).filter(v => v.length > 2).sort((a, b) => b.length - a.length);
@@ -201,8 +206,8 @@
     if (window.__MK_MONITOR_STARTED__) return; window.__MK_MONITOR_STARTED__ = true;
     window.addEventListener('stark:system-change', scheduleMonitor);
     window.addEventListener('storage', event => {
-      if (event.key === 'stark-selected-region' && observedRegion !== contextRegion()) regionChanged();
-      if (event.key === 'stark-analytics-sync-pulse' || event.key?.startsWith('stark-active-brands') || event.key?.startsWith('stark-settings')) scheduleMonitor();
+      if (event.key === (window.StarkWorkspace?.storageKey('stark-selected-region')||'stark-selected-region') && observedRegion !== contextRegion()) regionChanged();
+      if (event.key === (window.StarkWorkspace?.storageKey('stark-analytics-sync-pulse')||'stark-analytics-sync-pulse') || event.key?.startsWith(window.StarkWorkspace?.storageKey('stark-active-brands')||'stark-active-brands') || event.key?.startsWith(window.StarkWorkspace?.storageKey('stark-settings')||'stark-settings')) scheduleMonitor();
     });
     window.addEventListener('stark:region-change', regionChanged);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleMonitor(); });

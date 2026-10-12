@@ -370,6 +370,7 @@
   async function sendForProcessing(id,statusOnly=false) {
     const request=(S.getState().logistics.tplRequests||[]).find(r=>r.id===id);
     if(!request || request.status==='CANCELLED')throw new Error('Choose an active shipment request.');
+    if(window.StarkWorkspace?.isDemo){if(!statusOnly && !['QUEUED','REJECTED','ACKNOWLEDGED'].includes(request.transmission.state))throw new Error('Refresh the demo request before retrying.');if(request.transmission.state!=='ACKNOWLEDGED')markTransmission(id,'ACKNOWLEDGED',{remoteOrderId:'DEMO-'+id,attempts:num(request.transmission.attempts)+1,sentAt:now(),error:'',simulated:true});return {ok:true,state:'ACKNOWLEDGED',simulated:true,remote_order_id:'DEMO-'+id};}
     if(!statusOnly && (!S.getState().mode || S.getState().mode==='sample'))throw new Error('Start a working workspace before sending real partner orders.');
     if(!window.StarkSystemCloud?.getStatus().active)throw new Error('Connect the shared organization workspace in Data Center before sending partner orders.');
     if(!statusOnly && !['QUEUED','REJECTED'].includes(request.transmission.state))throw new Error('Refresh API status before attempting another send.');

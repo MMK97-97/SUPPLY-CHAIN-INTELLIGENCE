@@ -6,6 +6,7 @@
 
   const root = document.documentElement;
   const isPublicPage = root.dataset.authPublic === "true";
+  if(window.StarkWorkspace?.isDemo && !isPublicPage){root.dataset.authReady='true';root.classList.remove('stark-auth-pending');return;}
   const scriptUrl = document.currentScript?.src || new URL("assets/auth-bootstrap.js", location.href).href;
   const assetUrl = file => new URL(file, scriptUrl).href;
   // Prevent native form navigation while the client is starting, including Enter.
@@ -80,7 +81,7 @@
       loadScript(assetUrl("supabase-config.js?v=20261007-1"), () => Boolean(window.STARK_SUPABASE_CONFIG)),
       loadScript(assetUrl("vendor/supabase-2.117.3.min.js"), () => Boolean(window.supabase?.createClient))
     ])
-    .then(() => loadScript(assetUrl("supabase-auth.js?v=20261007-1"), () => Boolean(window.StarkAuth)))
+    .then(() => loadScript(assetUrl("supabase-auth.js?v=20261012-2"), () => Boolean(window.StarkAuth)))
     .catch(error => showFailure(error.message));
 
   window.setTimeout(() => {

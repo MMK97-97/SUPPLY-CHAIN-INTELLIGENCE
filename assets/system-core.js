@@ -1,5 +1,10 @@
 (function () {
   'use strict';
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const indexedDB = window.StarkWorkspace?.indexedDB || window.indexedDB;
+  const BroadcastChannel = window.StarkWorkspace?.BroadcastChannel || window.BroadcastChannel;
+
   if (window.StarkSystem) return;
   const script = document.currentScript;
   const rootURL = new URL('../', script.src);
@@ -47,7 +52,7 @@
       i.damaged = number(i.damaged);
       i.externalReserved = Math.max(0, number(i.reserved) - (reservations[i.sku] || 0));
     }
-    if (!oldL) { l.waves = []; l.packing = []; l.bins.forEach(b => { const used=l.inventory.filter(i=>i.binId===b.id).reduce((n,i)=>n+i.onHand,0); b.capacity=Math.max(b.capacity,used*2); }); }
+    if (!oldL && !window.StarkWorkspace?.isDemo) { l.waves = []; l.packing = []; l.bins.forEach(b => { const used=l.inventory.filter(i=>i.binId===b.id).reduce((n,i)=>n+i.onHand,0); b.capacity=Math.max(b.capacity,used*2); }); }
     // Existing untouched seeds carry inconsistent demonstration wave/pack references.
     l.waves.forEach(w => { w.orderIds ||= w.orders.map(po => e.orders.find(o => o.po === po)?.id).filter(Boolean); });
     s.audit.push({ id: uid('audit'), time: stamp(), action: 'SYSTEM_CONNECTED', detail: oldE || oldL ? 'Existing operations and logistics records migrated.' : 'Sample workspace initialized. Use Data Center to start an empty workspace.' });
@@ -101,7 +106,7 @@
     try { refresh(); }
     catch (error) { window.dispatchEvent(new CustomEvent('stark:storage-error', { detail: { message: 'Saved workspace changes could not be read. Your current view is preserved. Export stored records before restoring a valid backup. ' + error.message } })); }
   }
-  window.addEventListener('storage', e => { if (e.key === KEY) refreshFromOtherTab(); });
+  window.addEventListener('storage', e => { if (e.key === (window.StarkWorkspace?.storageKey(KEY) || KEY)) refreshFromOtherTab(); });
   if (channel) channel.onmessage = refreshFromOtherTab;
 
   function reconcile(s) {
@@ -432,6 +437,7 @@
   }
   const REGIONAL_DBS = [['US','stark-regional-inventory','US'], ['EU','stark-regional-inventory-eu','EU'], ['CA','stark-regional-inventory-ca','Canada']];
   function getDataset(name, key) {
+    const demo=window.StarkWorkspace?.getDataset(name,'datasets',key);if(demo!==undefined)return Promise.resolve(demo);
     return new Promise(resolve => {
       const req = indexedDB.open(name, 1);
       req.onerror = () => resolve(null);
@@ -499,6 +505,7 @@
   async function restoreRegional(entries) {
     for (const [code, name, key] of REGIONAL_DBS) {
       const dataset = entries.find(x => x.region === code)?.dataset; if (!dataset?.rows || !Array.isArray(dataset.rows)) continue;
+      if(window.StarkWorkspace?.isDemo){window.StarkWorkspace.setDataset(name,'datasets',key,dataset);continue;}
       await new Promise((resolve, reject) => { const req = indexedDB.open(name, 1); req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains('datasets')) req.result.createObjectStore('datasets'); }; req.onerror = () => reject(req.error); req.onsuccess = () => { const db = req.result, tx = db.transaction('datasets','readwrite'); tx.objectStore('datasets').put(dataset,key); tx.oncomplete = () => { db.close(); resolve(); }; tx.onerror = () => { db.close(); reject(tx.error); }; }; });
     }
   }
@@ -510,7 +517,7 @@
     for (const i of e.inventory) if (i.reserved + i.damaged > i.onHand) rows.push({ level:'critical', title:`${i.sku}: commitments exceed usable stock`, detail:`${i.reserved} reserved / ${i.onHand-i.damaged} usable`, path:'warehouse-management/inventory-bins.html' });
     for (const o of e.orders) if (!final(o.status) && o.validation?.state === 'ISSUES') rows.push({level:'warning',title:`${o.po}: order validation issues`,detail:[...new Set((o.validation.issues || []).map(i => i.label))].join(', '),path:'order-management/issues.html?search='+encodeURIComponent(o.po)});
     for (const p of e.purchaseOrders) if (!['RECEIVED','CANCELLED'].includes(p.status) && new Date(p.eta).getTime() < Date.now()) rows.push({ level:'warning', title:`${p.po}: inbound is overdue`, detail:'Review the supplier ETA.', path:'vendor-management/procurement.html' });
-    for (const r of l.reconciliations) if (r.status !== 'RESOLVED') rows.push({ level:'warning', title:`${r.sku}: 3PL stock variance`, detail:`${r.variance} units at ${l.tplNodes.find(x=>x.id===r.nodeId)?.name || r.nodeId}`, path:'3pl-management/reconciliation.html' });
+    for (const r of l.reconciliations) if (!['RESOLVED','CLOSED'].includes(r.status)) rows.push({ level:'warning', title:`${r.sku}: 3PL stock variance`, detail:`${r.variance} units at ${l.tplNodes.find(x=>x.id===r.nodeId)?.name || r.nodeId}`, path:'3pl-management/reconciliation.html' });
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});
     return rows;
   }

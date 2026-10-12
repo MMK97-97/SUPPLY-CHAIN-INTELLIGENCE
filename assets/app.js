@@ -1,5 +1,8 @@
 (function () {
   "use strict";
+  // Application data stays inside the selected workspace; auth storage is separate.
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+
 
   const REGION_NAMES = { US: "United States", EU: "European Union", Canada: "Canada" };
   const DEFAULT_SETTINGS = { coverage: 1, safety: 0, critical: 3, delay: 15, a: 80, b: 95, abcMetric: "sales", forecastMethod: "weighted" };
