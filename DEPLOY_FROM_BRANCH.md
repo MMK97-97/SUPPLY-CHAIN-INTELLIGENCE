@@ -1,22 +1,20 @@
-# Publish v47 from a branch
+# Publish v49 from a branch
 
-This is the complete source release `2026.10.08-unified-enterprise-production-audit47`. It includes the production audit fixes, the v45 customer-order update, the v46 ship-to labels and the v44 regional AI correction. This release has not been published remotely.
+This complete source release is `2026.10.12-portfolio-upgrade49`. It has not been published remotely.
 
 Repository: [MMK97-97/SUPPLY-CHAIN-INTELLIGENCE](https://github.com/MMK97-97/SUPPLY-CHAIN-INTELLIGENCE)
 
-## Upload the complete source
+## Upload the source
 
-1. Extract `SUPPLY-CHAIN-INTELLIGENCE-2026-10-08-v47-production-audit.zip`.
-2. Upload everything **inside** `SUPPLY-CHAIN-INTELLIGENCE-main/` to the repository's `main` branch. The repository root must contain `index.html`, `business-operations.html`, `VERSION.json`, `assets/` and the nested module folders directly. Upload the source files, not the ZIP or an extra outer folder.
-3. Include every page and asset in the same commit. The eight changed shared scripts use cache version `20261008-5`; unchanged dependencies keep their existing versions.
-4. Keep the empty `.nojekyll` file at the repository root. If the file picker skips it, use **Add file → Create new file**, name it `.nojekyll` and commit it at the root.
-5. Keep custom `.github/workflows` files and root `pages.yml` removed, as requested. Uploading files does not remove files that already exist in the repository.
+1. Extract `SUPPLY-CHAIN-INTELLIGENCE-2026-10-12-v49-portfolio-upgrade.zip`.
+2. Upload everything **inside** `SUPPLY-CHAIN-INTELLIGENCE-main/` to the repository's `main` branch. The root must directly contain `index.html`, `login.html`, `business-operations.html`, `VERSION.json`, `assets/` and the nested module folders.
+3. Commit all changed pages and assets together. Changed application assets use cache version `20261012-2`.
+4. Include the empty root `.nojekyll`. If a file picker omits it, use **Add file → Create new file**, name it `.nojekyll`, and commit it at the root.
+5. Keep custom `.github/workflows` and root `pages.yml` removed. Uploading source does not remove old files already in the repository.
 
-Do not generate or upload `dist/` for this branch deployment. Existing browser storage keys, schema version 1, customer/order IDs and regional report databases are retained. Data Center can export a workspace backup before replacing the website source.
+Do not upload the ZIP, an extra outer folder, `dist/`, test dependencies or temporary verification folders. No npm build or custom Actions workflow is required for branch publishing. Working browser keys/schema/IDs are retained; demo data uses a separate namespace. Export a Data Center backup if you need a portable copy of working records.
 
-## Select branch publishing
-
-Open **Settings → Pages → Build and deployment**:
+## Pages settings
 
 | Setting | Value |
 | --- | --- |
@@ -24,15 +22,16 @@ Open **Settings → Pages → Build and deployment**:
 | Branch | main |
 | Folder | / (root) |
 
-Save if a setting changed. GitHub may show its own Pages build/deployment job. No custom Actions workflow or npm build is required for this static branch deployment.
+## Verify and share the portfolio
 
-## Verify the published release
+1. Confirm published `VERSION.json` reports `2026.10.12-portfolio-upgrade49` and asset version `20261012-2`.
+2. Open `index.html?demo=1` in a fresh browser session. It should display **Portfolio demo**, fictional regional reports and the guided order workflow. Existing working data must remain intact when you switch back.
+3. Create, validate and dispatch the guided order. Check inventory, shipment history and audit activity. Receive the example vendor PO. Try warehouse picking and digital reward dispatch in their modules.
+4. Open 3PL request history and process the demo request. Its acknowledgement must be clearly simulated. Try demo tracking; it must report no carrier request was sent. Keep 3PL and Transportation separate.
+5. In MK AI Analyst, test EU and Canada scope, demand/delay scenarios, action-plan chat and evidence export. Local analysis should work with external AI disabled. Test external AI only with synthetic facts before relying on model access.
+6. Check the top module menu, mobile bottom navigation, forms, table scrolling, focus/Escape behavior, portrait/landscape layout, reduced motion and transitions on actual desktop/mobile browsers.
+7. Test organization login/recovery, permissions, cloud synchronization and configured carriers/partners in your deployed environment. This update did not deploy or migrate those services.
 
-1. Open `VERSION.json` on the published site. Confirm `version` is `2026.10.08-unified-enterprise-production-audit47` and `asset_version` is `20261008-5`, then refresh the home page.
-2. Navigate between the home page, CRM, orders, procurement, shipping, warehouse, 3PL, transportation and each regional report. Check desktop/mobile layout and the transition while the next page loads.
-3. Use test records to create a CRM customer, save its addresses, create a customer order and validate it. Verify its sales order number, carrier method, inventory and selected warehouse.
-4. Check vendor PO creation, receiving/putaway, Sarasota dispatch and the daily shipment export. Keep 3PL orders and transportation in their separate modules.
-5. In MK AI Analyst, select EU and an EU report; verify that its facts and response stay in EU. Repeat for US and Canada. Test connection, then use synthetic report facts for inference.
-6. For shared multi-user operation, use your configured authenticated cloud workspace and apply the included database migrations in your existing environment. This request did not deploy or migrate that backend.
+Share the published `index.html?demo=1` or `login.html` with recruiters. The demo does not require an account.
 
-Read [docs/PRODUCTION_AUDIT.md](docs/PRODUCTION_AUDIT.md) and [docs/VERIFICATION.md](docs/VERIFICATION.md) for the fixes, local test evidence and remaining live checks. The Hugging Face integration guide remains [docs/MK_AI_SETUP.md](docs/MK_AI_SETUP.md).
+See [docs/PORTFOLIO_UPGRADE.md](docs/PORTFOLIO_UPGRADE.md), [docs/VERIFICATION.md](docs/VERIFICATION.md) and the current v49 JSON release report for implementation and test evidence.

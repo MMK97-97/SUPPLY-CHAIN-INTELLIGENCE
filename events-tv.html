@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><script src="assets/workspace-runtime.js?v=20261012-2"></script>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#04172a">
   <meta name="description" content="Premium live events operations board for Stark Premium.">
@@ -523,7 +523,7 @@
     }
   </style>
   <link rel="stylesheet" href="assets/world-class-ui.css?v=20260923-5">
-  <script src="assets/premium-shell.js?v=20261008-3" defer></script>
+  <script src="assets/premium-shell.js?v=20261012-2" defer></script>
 </head>
 
 <body>
@@ -679,7 +679,7 @@
         const keys = [`stark_events_v6_${region}`, `stark_events_v5_${region}`, `stark_events_v4_${region}`];
         for (const key of keys) {
           try {
-            const value = JSON.parse(localStorage.getItem(key) || "null");
+            const value = JSON.parse((globalThis.StarkWorkspace?.localStorage || localStorage).getItem(key) || "null");
             if (Array.isArray(value)) return value;
           } catch (error) { console.warn(`Unable to read ${key}.`, error); }
         }
@@ -806,7 +806,7 @@
       }
 
       function loadAudioPreference() {
-        audioEnabled = localStorage.getItem(`stark_events_tv_audio_${region}`) === "true" && "speechSynthesis" in window;
+        audioEnabled = (globalThis.StarkWorkspace?.localStorage || localStorage).getItem(`stark_events_tv_audio_${region}`) === "true" && "speechSynthesis" in window;
         if (!("speechSynthesis" in window)) $("audioButton").disabled = true;
         updateAudioButton();
       }
@@ -814,7 +814,7 @@
       function toggleAudio() {
         if (!("speechSynthesis" in window)) return;
         audioEnabled = !audioEnabled;
-        localStorage.setItem(`stark_events_tv_audio_${region}`,String(audioEnabled));
+        (globalThis.StarkWorkspace?.localStorage || localStorage).setItem(`stark_events_tv_audio_${region}`,String(audioEnabled));
         if (!audioEnabled) stopSpeaking();
         lastAnnouncementKey = "";
         updateAudioButton();
@@ -878,8 +878,8 @@
         if (!greeting || greetingActive) return;
         const dateKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
         const completionKey = `stark_tv_greeting_${dateKey}_${timeKey}`;
-        if (localStorage.getItem(completionKey) === "true") return;
-        localStorage.setItem(completionKey,"true");
+        if ((globalThis.StarkWorkspace?.localStorage || localStorage).getItem(completionKey) === "true") return;
+        (globalThis.StarkWorkspace?.localStorage || localStorage).setItem(completionKey,"true");
         showGreeting(greeting[0],greeting[1]);
       }
 

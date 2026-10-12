@@ -1,5 +1,8 @@
 # Integrated system guide
 
+> **Current v49 note:** The portfolio uses top module navigation and an isolated recruiter demo. Fresh demos use local analysis by default; optional external AI retains the existing Space connector. Working browser keys and server contracts remain compatible. See [Portfolio upgrade](docs/PORTFOLIO_UPGRADE.md) and the current verification report. This guide retains the earlier integration/deployment details below.
+
+
 ## What is connected
 
 | Workspace | Connected behavior |

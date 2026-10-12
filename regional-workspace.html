@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><script src="assets/workspace-runtime.js?v=20261012-2"></script>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Open regional inventory · Supply Chain Intelligence</title>
   <style>body{margin:0;background:#f4f7fc;color:#173252;font:16px/1.7 system-ui,sans-serif}main{max-width:600px;margin:12vh auto;padding:24px}a{color:#1558c7}</style>
@@ -10,7 +10,7 @@
   <main><h1>Open regional inventory</h1><p>The reports are available directly from Inventory &amp; planning.</p><p><a id="region-destination" href="inventory-dashboard-us.html">Open inventory</a></p></main>
   <script>
     (function(){
-      var saved='US';try{saved=localStorage.getItem('stark-selected-region')||'US';}catch(error){}
+      var saved='US';try{saved=(globalThis.StarkWorkspace?.localStorage || localStorage).getItem('stark-selected-region')||'US';}catch(error){}
       var query=new URLSearchParams(location.search),value=query.get('workspace')||query.get('region')||saved;
       var code=/^(EU|Europe)$/i.test(value)?'eu':/^(CA|Canada)$/i.test(value)?'ca':'us';
       var destination=new URL('inventory-dashboard-'+code+'.html',location.href);

@@ -1,5 +1,8 @@
 # Deploy this revision to Cloudflare Workers
 
+> **Current v49 note:** The portfolio uses top module navigation and an isolated recruiter demo. Fresh demos use local analysis by default; optional external AI retains the existing Space connector. Working browser keys and server contracts remain compatible. See [Portfolio upgrade](docs/PORTFOLIO_UPGRADE.md) and the current verification report. This guide retains the earlier integration/deployment details below.
+
+
 Target: https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html
 
 This package contains the complete source. Replace the corresponding repository files, including the entire assets folder and nested module folders. Keep the existing repository root layout; index.html, worker.js, wrangler.jsonc and build-cloudflare.mjs belong at that root. This revised package has not been published to your account.
@@ -27,11 +30,11 @@ Keep assets.html_handling set to none. Keep assets.run_worker_first set to ["/as
 - MK Intelligence 4.2 sends completed website calculations to the existing website_chat Space endpoint. No Hugging Face token belongs in the website. The legacy Worker proxy accepts only that JSON contract and completed SSE results.
 - Existing browser workspace keys and business-record schemas are preserved. If you change the hosting origin, use Data Center backup/export and restore to move browser-only records; browser storage is scoped to the origin.
 
-After deployment, check VERSION.json for 2026.10.08-unified-enterprise-production-audit47 and asset_version 20261008-5. Check asset-manifest.json and the fingerprinted script URLs in the page source. Open index.html, CRM accounts, Create customer order, and a regional report. Verify that every ship-to field has its own label, no duplicate regional banner, search only in orders/vendors, and an EU report-backed AI question with your own report.
+After deployment, check VERSION.json for 2026.10.12-unified-enterprise-layout48 and asset_version 20261012-1. Check asset-manifest.json and the fingerprinted script URLs in the page source. Open index.html, CRM accounts, Create customer order, and a regional report. Verify that every ship-to field has its own label, no duplicate regional banner, search only in orders/vendors, and an EU report-backed AI question with your own report.
 
 ## Validation and limits
 
-Current verification uses local workflow, DOM, mocked transport, build, startup and syntax checks. Previous October 7 public Space inference/CORS checks with synthetic facts are retained as historical evidence; live inference was not rerun for v47. Machine-readable reports are in docs.
+Current verification uses local workflow, DOM, mocked transport, build, startup and syntax checks. Previous October 7 public Space inference/CORS checks with synthetic facts are retained as historical evidence; live inference was not rerun for v48. Machine-readable reports are in docs.
 
 No graphical browser preview or rendered page-transition timing was performed. Live Cloudflare deployment, real sign-in/membership, database migrations/RLS and live business transactions remain unverified. These checks do not certify the optional cloud backend as a deployed enterprise service.
 

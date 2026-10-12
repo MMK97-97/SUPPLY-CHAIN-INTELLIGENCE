@@ -1,6 +1,6 @@
 {
-  "name": "Stark Premium Supply Chain Intelligence \u2014 Unified Enterprise System",
-  "version": "2026.10.08-unified-enterprise-production-audit47",
+  "name": "MK Supply Chain Intelligence \u2014 Portfolio Enterprise System",
+  "version": "2026.10.12-portfolio-upgrade49",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -22,9 +22,10 @@
   "deployment": "Cloudflare Workers static assets; GitHub Pages Deploy from a branch (main / root) also supported",
   "entry_points": [
     "index.html",
-    "business-operations.html"
+    "business-operations.html",
+    "login.html"
   ],
-  "data_layer": "Shared browser workspace with optional organization-scoped Supabase synchronization",
+  "data_layer": "Browser-local working records, isolated browser-local portfolio demo, and optional organization-scoped Supabase synchronization",
   "publishing_source": {
     "type": "branch",
     "branch": "main",
@@ -32,7 +33,7 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261008-5",
+  "asset_version": "20261012-2",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
     "Consistent readable light theme across operations and logistics",
@@ -51,10 +52,19 @@
     "Validated workspace startup and cross-tab updates; original records remain available for recovery export",
     "Escaped record attributes across operations, procurement, warehouse and pricing controls",
     "Shared dialog errors, native field validation, keyboard focus, async save protection and focus restoration",
-    "Labeled upload/vendor/AI controls and graceful decorative canvas fallback"
+    "Labeled upload/vendor/AI controls and graceful decorative canvas fallback",
+    "Workspace-backed KPI cards, dated activity chart, inventory health and supplier PO bars",
+    "Interactive record tabs, period filters and separate warehouse/3PL queue controls",
+    "Top module menu and horizontal page navigation replace the sidebar",
+    "Full-width analytical workspace and centered AI dialog replace the persistent right dock",
+    "Isolated recruiter demo with guided order, receiving, warehouse, digital, 3PL and tracking workflows",
+    "Redesigned sign-in with independent guest demo entry",
+    "Dedicated mobile navigation, safe areas, touch controls and accessible table scrolling",
+    "Optimized WebP hero background: 318596 bytes, original PNG retained",
+    "Report clearing, resolved discrepancies, pending wave counts and open inbound PO accuracy corrected"
   ],
   "ai": {
-    "version": "MK Intelligence 4.2",
+    "version": "MK Intelligence 5.0 \u00b7 Decision Lab",
     "provider": "Hugging Face Supply AI Chain Hub",
     "space": "MMK97/supply-ai-chain-hub",
     "endpoint": "https://mmk97-supply-ai-chain-hub.hf.space/gradio_api/call/website_chat",
@@ -64,7 +74,7 @@
       "Deep"
     ],
     "credentials": "Public website API; inference credentials stay in Space secrets",
-    "deployment_status": "Connector included in v47; live service availability and inference are verified separately.",
+    "deployment_status": "Existing Hugging Face connector retained; connected operational analysis and conservative scenarios added locally. Remote model/inference availability requires deployment verification.",
     "capabilities": [
       "conversational report analysis",
       "read-only autonomous tool selection",
@@ -72,28 +82,33 @@
       "regional and brand comparisons",
       "scenario simulation",
       "local report-change monitoring",
-      "optional automatic AI briefings"
+      "optional automatic AI briefings",
+      "connected stock and operational action plans",
+      "currency-separated supplier commitments",
+      "read-only demand and delay stress tests",
+      "data-quality flags and JSON evidence export"
     ],
     "context_contract": "MK verified website facts v2",
     "regional_scope": "Report route/query or shared Analysis region by default; explicit analyst selection applies only for the current page session"
   },
   "deployment_readiness": {
-    "metadata_updated_at": "2026-10-09T18:49:30.996251+00:00",
+    "metadata_updated_at": "2026-10-12T17:18:59.737868+00:00",
     "guide": "DEPLOY_FROM_BRANCH.md",
     "target": "https://mmk97-97.github.io/SUPPLY-CHAIN-INTELLIGENCE/index.html",
     "alternate_target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
     "source_status": "validated",
     "source_verification": {
-      "checked_at": "2026-10-08T20:58:53.170328+00:00",
-      "report": "docs/verification-release-20261008-v47.json",
-      "regression_checks_passed": 288,
-      "html_pages": 90
+      "checked_at": "2026-10-12T17:18:59.737868+00:00",
+      "report": "docs/verification-release-20261012-v49.json",
+      "regression_checks_passed": 355,
+      "html_pages": 90,
+      "method": "Node.js/jsdom, synthetic demo and working transactions, isolated storage, mocked transport, isolated SQL and static/build inspection; no graphical rendering or live deployment."
     },
     "publishing_status": "Use the declared branch publishing source; live deployment verification is recorded separately.",
     "live_verification": {
       "status": "unverified",
       "verified_at": null,
-      "version_evidence": "The user-provided VERSION.json matches the audited v47 release and asset cache identifiers.",
+      "version_evidence": "v49 is a source update; published page/asset contents have not been independently retrieved.",
       "page_and_asset_contents": "unverified",
       "navigation_and_forms": "unverified",
       "sign_in": "unverified",
@@ -111,5 +126,16 @@
     "transportation": "Separate freight estimation, consolidation and tracking workspace",
     "api_status": "Authenticated 3PL processing requires the supplied connector, database migration and partner configuration."
   },
-  "metadata_revision": "2026.10.09-1"
+  "metadata_revision": "2026.10.12-2",
+  "demo": {
+    "entry": "index.html?demo=1",
+    "login_entry": "login.html",
+    "first_visit": "Automatic demo if no existing working records",
+    "data": "Fictional US/EU/Canada reports, sales and linked operations",
+    "isolation": "Per-tab mode; separate application stores, report caches/databases, chat and channels; working/auth storage retained",
+    "cloud_sync": "Disabled in demo",
+    "partner_processing": "Explicitly simulated acknowledgement",
+    "tracking": "Recorded fictional shipment events; no carrier request",
+    "external_ai": "Disabled by default; optional existing Space connector"
+  }
 }

@@ -20,6 +20,7 @@ async function boot(file, shellSource, options = {}) {
     url: pageURL.href, runScripts: 'outside-only', virtualConsole
   });
   const w = dom.window, d = w.document;
+  if(!options.demo)w.sessionStorage.setItem('sci.workspace.mode.v1','working');
   for (const [key, value] of Object.entries(options.localStorage || {})) w.localStorage.setItem(key, value);
   for (const [key, value] of Object.entries(options.sessionStorage || {})) w.sessionStorage.setItem(key, value);
   // Browser postMessage scheduling is not emulated by jsdom's isolated VM.
@@ -68,7 +69,8 @@ async function boot(file, shellSource, options = {}) {
 function checkNavigation(page, file) {
   const { d, w, errors } = page;
   assert.deepEqual(errors, [], file + ': runtime errors');
-  assert.equal(d.querySelectorAll('#system-sidebar').length, 1, file + ': shared sidebar');
+  assert.equal(d.querySelectorAll('#system-sidebar').length, 0, file + ': no sidebar');
+  assert.equal(d.querySelectorAll('#system-modules').length,1,file+': shared module menu');
   assert.equal(d.querySelectorAll('.system-header').length, 1, file + ': shared header');
   assert.ok(d.body.classList.contains('stark-system'));
   assert.equal(page.mountedBeforeModules, false, file + ': wait for module initialization');
@@ -191,7 +193,7 @@ async function main() {
       assert.equal(style('.hero .btn:not(.primary)').color, 'rgb(48, 75, 110)');
       assert.equal(style('.hero .btn:not(.primary)').backgroundColor, 'rgb(255, 255, 255)');
       assert.equal(style('.suite-sidebar').display, 'none');
-      assert.equal(style('.system-sidebar').display, 'flex');
+      assert.equal(d.querySelector('.system-sidebar'), null);
       assert.equal(style('.system-header').display, 'flex');
     } finally { page.w.close(); }
   });
