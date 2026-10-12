@@ -11,11 +11,12 @@
       "headings": [
         "3PL management"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2848,
+      "body_text_length": 3200,
       "recovery": false,
       "loading": false
     },
@@ -26,11 +27,12 @@
       "headings": [
         "3PL processing API"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2972,
+      "body_text_length": 3320,
       "recovery": false,
       "loading": false
     },
@@ -41,11 +43,12 @@
       "headings": [
         "3PL network & inventory"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3991,
+      "body_text_length": 4346,
       "recovery": false,
       "loading": false
     },
@@ -56,11 +59,12 @@
       "headings": [
         "3PL order history & processing API"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2878,
+      "body_text_length": 3210,
       "recovery": false,
       "loading": false
     },
@@ -71,11 +75,12 @@
       "headings": [
         "Manage 3PL orders"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2896,
+      "body_text_length": 3245,
       "recovery": false,
       "loading": false
     },
@@ -86,11 +91,12 @@
       "headings": [
         "Reconciliation & SLA"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3733,
+      "body_text_length": 4076,
       "recovery": false,
       "loading": false
     },
@@ -101,11 +107,12 @@
       "headings": [
         "Dynamic routing workbench"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3306,
+      "body_text_length": 3651,
       "recovery": false,
       "loading": false
     },
@@ -116,11 +123,12 @@
       "headings": [
         "Ship orders · 3PL"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2783,
+      "body_text_length": 3138,
       "recovery": false,
       "loading": false
     },
@@ -131,11 +139,12 @@
       "headings": [
         "Shipment requests"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2726,
+      "body_text_length": 3071,
       "recovery": false,
       "loading": false
     },
@@ -146,11 +155,12 @@
       "headings": [
         "3PL shipments"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3468,
+      "body_text_length": 3821,
       "recovery": false,
       "loading": false
     },
@@ -161,11 +171,12 @@
       "headings": [
         "Upload 3PL shipments"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2759,
+      "body_text_length": 3105,
       "recovery": false,
       "loading": false
     },
@@ -176,11 +187,12 @@
       "headings": [
         "Active Brands"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3329,
+      "body_text_length": 3618,
       "recovery": false,
       "loading": false
     },
@@ -191,11 +203,12 @@
       "headings": [
         "Active Brands"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3362,
+      "body_text_length": 3668,
       "recovery": false,
       "loading": false
     },
@@ -206,11 +219,12 @@
       "headings": [
         "Active Brands"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3343,
+      "body_text_length": 3632,
       "recovery": false,
       "loading": false
     },
@@ -227,11 +241,12 @@
       "headings": [
         "System activity"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2554,
+      "body_text_length": 2780,
       "recovery": false,
       "loading": false
     },
@@ -242,11 +257,12 @@
       "headings": [
         "ATS"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2865,
+      "body_text_length": 3181,
       "recovery": false,
       "loading": false
     },
@@ -257,8 +273,9 @@
       "headings": [
         "Protect every supply-chain decision."
       ],
-      "shared_sidebar": 0,
+      "legacy_sidebar": 0,
       "shared_header": 0,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
       "body_text_length": 605,
@@ -270,14 +287,14 @@
       "kind": "application",
       "errors": [],
       "headings": [
-        "Enterprise control tower",
-        "Regional intelligence"
+        "Global supply chain.Total visibility. Smarter decisions."
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4074,
+      "body_text_length": 6872,
       "recovery": false,
       "loading": false
     },
@@ -288,11 +305,12 @@
       "headings": [
         "MK Cloud Supply Chain AI Engine"
       ],
-      "shared_sidebar": 0,
+      "legacy_sidebar": 0,
       "shared_header": 0,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 21150,
+      "body_text_length": 21525,
       "recovery": false,
       "loading": false
     },
@@ -303,11 +321,12 @@
       "headings": [
         "CRM operations dashboard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3892,
+      "body_text_length": 4100,
       "recovery": false,
       "loading": false
     },
@@ -318,11 +337,12 @@
       "headings": [
         "Agency accounts & programs"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3973,
+      "body_text_length": 4174,
       "recovery": false,
       "loading": false
     },
@@ -333,11 +353,12 @@
       "headings": [
         "Product catalog & contractual pricing"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4380,
+      "body_text_length": 4583,
       "recovery": false,
       "loading": false
     },
@@ -348,11 +369,12 @@
       "headings": [
         "CRM operations dashboard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3892,
+      "body_text_length": 4099,
       "recovery": false,
       "loading": false
     },
@@ -363,11 +385,12 @@
       "headings": [
         "Agency partner portal"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4178,
+      "body_text_length": 4385,
       "recovery": false,
       "loading": false
     },
@@ -378,11 +401,12 @@
       "headings": [
         "Data center"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3899,
+      "body_text_length": 4127,
       "recovery": false,
       "loading": false
     },
@@ -393,11 +417,12 @@
       "headings": [
         "Supply Chain Decision Brain"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5507,
+      "body_text_length": 5788,
       "recovery": false,
       "loading": false
     },
@@ -408,11 +433,12 @@
       "headings": [
         "Supply Chain Decision Brain"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5539,
+      "body_text_length": 5837,
       "recovery": false,
       "loading": false
     },
@@ -423,11 +449,12 @@
       "headings": [
         "Supply Chain Decision Brain"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5527,
+      "body_text_length": 5808,
       "recovery": false,
       "loading": false
     },
@@ -445,11 +472,12 @@
         "Regional Events",
         "Events Control Center"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 53877,
+      "body_text_length": 54294,
       "recovery": false,
       "loading": false
     },
@@ -460,11 +488,12 @@
       "headings": [
         "Freight Consolidator"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5237,
+      "body_text_length": 5451,
       "recovery": false,
       "loading": false
     },
@@ -475,11 +504,12 @@
       "headings": [
         "Freight Estimator"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 67707,
+      "body_text_length": 67921,
       "recovery": false,
       "loading": false
     },
@@ -488,14 +518,14 @@
       "kind": "application",
       "errors": [],
       "headings": [
-        "Enterprise control tower",
-        "Regional intelligence"
+        "Global supply chain.Total visibility. Smarter decisions."
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4074,
+      "body_text_length": 6872,
       "recovery": false,
       "loading": false
     },
@@ -506,11 +536,12 @@
       "headings": [
         "Instructions"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3744,
+      "body_text_length": 3943,
       "recovery": false,
       "loading": false
     },
@@ -521,11 +552,12 @@
       "headings": [
         "Instructions"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3777,
+      "body_text_length": 3976,
       "recovery": false,
       "loading": false
     },
@@ -536,11 +568,12 @@
       "headings": [
         "Instructions"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3758,
+      "body_text_length": 3957,
       "recovery": false,
       "loading": false
     },
@@ -557,11 +590,12 @@
       "headings": [
         "Inventory Analysis Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 8224,
+      "body_text_length": 8501,
       "recovery": false,
       "loading": false
     },
@@ -572,11 +606,12 @@
       "headings": [
         "Inventory Analysis Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 8257,
+      "body_text_length": 8551,
       "recovery": false,
       "loading": false
     },
@@ -587,11 +622,12 @@
       "headings": [
         "Inventory Analysis Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 8238,
+      "body_text_length": 8515,
       "recovery": false,
       "loading": false
     },
@@ -608,11 +644,12 @@
       "headings": [
         "Inventory Dashboard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3629,
+      "body_text_length": 3912,
       "recovery": false,
       "loading": false
     },
@@ -623,11 +660,12 @@
       "headings": [
         "Inventory Dashboard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3662,
+      "body_text_length": 3962,
       "recovery": false,
       "loading": false
     },
@@ -638,11 +676,12 @@
       "headings": [
         "Inventory Dashboard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3643,
+      "body_text_length": 3926,
       "recovery": false,
       "loading": false
     },
@@ -675,13 +714,14 @@
       "kind": "authentication",
       "errors": [],
       "headings": [
-        "Decisionsbegin withtrusted data."
+        "One workspace.Every moving part."
       ],
-      "shared_sidebar": 0,
+      "legacy_sidebar": 0,
       "shared_header": 0,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 716,
+      "body_text_length": 1214,
       "recovery": false,
       "loading": false
     },
@@ -692,11 +732,12 @@
       "headings": [
         "MK AI Analyst"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3385,
+      "body_text_length": 5358,
       "recovery": false,
       "loading": false
     },
@@ -707,11 +748,12 @@
       "headings": [
         "Order management control tower"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4390,
+      "body_text_length": 4614,
       "recovery": false,
       "loading": false
     },
@@ -722,11 +764,12 @@
       "headings": [
         "Bulk & Firm execution"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3700,
+      "body_text_length": 4003,
       "recovery": false,
       "loading": false
     },
@@ -737,11 +780,12 @@
       "headings": [
         "Cancelled customer orders"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2673,
+      "body_text_length": 2969,
       "recovery": false,
       "loading": false
     },
@@ -752,11 +796,12 @@
       "headings": [
         "Hold → Redemption lifecycle"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3521,
+      "body_text_length": 3825,
       "recovery": false,
       "loading": false
     },
@@ -767,11 +812,12 @@
       "headings": [
         "All open customer orders"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3186,
+      "body_text_length": 3492,
       "recovery": false,
       "loading": false
     },
@@ -782,11 +828,12 @@
       "headings": [
         "Order issues"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2861,
+      "body_text_length": 3170,
       "recovery": false,
       "loading": false
     },
@@ -797,11 +844,12 @@
       "headings": [
         "Create customer order"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4610,
+      "body_text_length": 4910,
       "recovery": false,
       "loading": false
     },
@@ -812,11 +860,12 @@
       "headings": [
         "Unvalidated customer orders"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2677,
+      "body_text_length": 2971,
       "recovery": false,
       "loading": false
     },
@@ -827,11 +876,12 @@
       "headings": [
         "Reorder to purchase order"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2738,
+      "body_text_length": 3043,
       "recovery": false,
       "loading": false
     },
@@ -842,11 +892,12 @@
       "headings": [
         "Open vendor PO management"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2959,
+      "body_text_length": 3189,
       "recovery": false,
       "loading": false
     },
@@ -857,11 +908,12 @@
       "headings": [
         "Create vendor PO"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3076,
+      "body_text_length": 3315,
       "recovery": false,
       "loading": false
     },
@@ -872,11 +924,12 @@
       "headings": [
         "Raw Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2660,
+      "body_text_length": 2952,
       "recovery": false,
       "loading": false
     },
@@ -887,11 +940,12 @@
       "headings": [
         "Raw Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2693,
+      "body_text_length": 3002,
       "recovery": false,
       "loading": false
     },
@@ -902,11 +956,12 @@
       "headings": [
         "Raw Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2674,
+      "body_text_length": 2966,
       "recovery": false,
       "loading": false
     },
@@ -929,11 +984,12 @@
       "headings": [
         "Reorder Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4216,
+      "body_text_length": 4504,
       "recovery": false,
       "loading": false
     },
@@ -944,11 +1000,12 @@
       "headings": [
         "Reorder Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4249,
+      "body_text_length": 4554,
       "recovery": false,
       "loading": false
     },
@@ -959,11 +1016,12 @@
       "headings": [
         "Reorder Report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4230,
+      "body_text_length": 4518,
       "recovery": false,
       "loading": false
     },
@@ -980,11 +1038,12 @@
       "headings": [
         "Sales and Demand Intelligence"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 9103,
+      "body_text_length": 9387,
       "recovery": false,
       "loading": false
     },
@@ -995,11 +1054,12 @@
       "headings": [
         "UPS & FedEx Tracking"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 11232,
+      "body_text_length": 11705,
       "recovery": false,
       "loading": false
     },
@@ -1010,11 +1070,12 @@
       "headings": [
         "Daily shipment report"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2530,
+      "body_text_length": 2702,
       "recovery": false,
       "loading": false
     },
@@ -1025,11 +1086,12 @@
       "headings": [
         "Ship orders · Sarasota"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2500,
+      "body_text_length": 2682,
       "recovery": false,
       "loading": false
     },
@@ -1040,11 +1102,12 @@
       "headings": [
         "Transportation"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2494,
+      "body_text_length": 2714,
       "recovery": false,
       "loading": false
     },
@@ -1055,11 +1118,12 @@
       "headings": [
         "Vendor management dashboard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3917,
+      "body_text_length": 4140,
       "recovery": false,
       "loading": false
     },
@@ -1070,11 +1134,12 @@
       "headings": [
         "Digital key vault management"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5027,
+      "body_text_length": 5251,
       "recovery": false,
       "loading": false
     },
@@ -1085,11 +1150,12 @@
       "headings": [
         "Vendor management dashboard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3916,
+      "body_text_length": 4142,
       "recovery": false,
       "loading": false
     },
@@ -1100,11 +1166,12 @@
       "headings": [
         "Procurement pipeline"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3764,
+      "body_text_length": 4000,
       "recovery": false,
       "loading": false
     },
@@ -1115,11 +1182,12 @@
       "headings": [
         "Vendor SLA scorecard"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3741,
+      "body_text_length": 3962,
       "recovery": false,
       "loading": false
     },
@@ -1130,11 +1198,12 @@
       "headings": [
         "Vendor master"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3938,
+      "body_text_length": 4166,
       "recovery": false,
       "loading": false
     },
@@ -1145,11 +1214,12 @@
       "headings": [
         "Vendor purchase orders"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2851,
+      "body_text_length": 3113,
       "recovery": false,
       "loading": false
     },
@@ -1160,11 +1230,12 @@
       "headings": [
         "Cycle counts & inventory accuracy"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3363,
+      "body_text_length": 3614,
       "recovery": false,
       "loading": false
     },
@@ -1175,11 +1246,12 @@
       "headings": [
         "Cycle counts & inventory accuracy"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3363,
+      "body_text_length": 3614,
       "recovery": false,
       "loading": false
     },
@@ -1190,11 +1262,12 @@
       "headings": [
         "Warehouse control tower"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3758,
+      "body_text_length": 4006,
       "recovery": false,
       "loading": false
     },
@@ -1205,11 +1278,12 @@
       "headings": [
         "Inventory & bin management"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4197,
+      "body_text_length": 4443,
       "recovery": false,
       "loading": false
     },
@@ -1220,11 +1294,12 @@
       "headings": [
         "Packing & dispatch"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3322,
+      "body_text_length": 3567,
       "recovery": false,
       "loading": false
     },
@@ -1235,11 +1310,12 @@
       "headings": [
         "Receiving & putaway"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4065,
+      "body_text_length": 4313,
       "recovery": false,
       "loading": false
     },
@@ -1250,11 +1326,12 @@
       "headings": [
         "Wave picking"
       ],
-      "shared_sidebar": 1,
+      "legacy_sidebar": 0,
       "shared_header": 1,
+      "shared_module_menu": 1,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3377,
+      "body_text_length": 3628,
       "recovery": false,
       "loading": false
     }

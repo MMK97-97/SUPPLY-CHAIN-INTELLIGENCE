@@ -1,5 +1,8 @@
 # MK Intelligence 4.2 — Supply AI Chain Hub
 
+> **Current v49 note:** The portfolio uses top module navigation and an isolated recruiter demo. Fresh demos use local analysis by default; optional external AI retains the existing Space connector. Working browser keys and server contracts remain compatible. See [Portfolio upgrade](PORTFOLIO_UPGRADE.md) and the current verification report. This guide retains the earlier integration/deployment details below.
+
+
 MK uses your [Hugging Face Space](https://huggingface.co/spaces/MMK97/supply-ai-chain-hub) for conversational AI and the existing website engines for verified report calculations. The connection uses the explicit `website_chat` endpoint, independently of Gradio's textboxes, buttons and status messages. It does not guess an endpoint or treat UI text such as “Enter a message” as an answer.
 
 The public Space was running during verification. Its website API, inference and cross-origin support for `https://mmk97-97.github.io` were checked with synthetic report data. No Space files, secrets, live business reports, repository files or Pages settings were changed remotely.

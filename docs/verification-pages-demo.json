@@ -1,0 +1,1339 @@
+{
+  "pages": 90,
+  "passed": 90,
+  "failed": 0,
+  "method": "Source-driven jsdom startup, duplicate-ID, active control label and loading-state checks; standard matchMedia and unavailable decorative canvas emulated. Redirects inspected separately by the static audit. No graphical rendering, authentication or live network.",
+  "checks": [
+    {
+      "file": "3pl-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "3PL management"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3370,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/integrations.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "3PL processing API"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3376,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/network.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "3PL network & inventory"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3995,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/order-history.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "3PL order history & processing API"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3289,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/orders.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Manage 3PL orders"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3117,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/reconciliation.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Reconciliation & SLA"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3918,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/routing.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Dynamic routing workbench"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3849,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/ship-orders.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Ship orders · 3PL"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3117,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/shipment-requests.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Shipment requests"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3579,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/shipments.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "3PL shipments"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3526,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "3pl-management/upload-shipments.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Upload 3PL shipments"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3161,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "active-brands-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Active Brands"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3674,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "active-brands-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Active Brands"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4870,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "active-brands-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Active Brands"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4834,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "active-brands.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "activity.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "System activity"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2996,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "ats-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "ATS"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3237,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "auth-callback.html",
+      "kind": "authentication",
+      "errors": [],
+      "headings": [
+        "Protect every supply-chain decision."
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 0,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 605,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "business-operations.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Global supply chain.Total visibility. Smarter decisions."
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7445,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "cloud-agent.html",
+      "kind": "authentication",
+      "errors": [],
+      "headings": [
+        "MK Cloud Supply Chain AI Engine"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 0,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 21525,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "crm.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "CRM operations dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4108,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "crm/accounts.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Agency accounts & programs"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3956,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "crm/catalog.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Product catalog & contractual pricing"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5643,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "crm/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "CRM operations dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4107,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "crm/partner-portal.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Agency partner portal"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4038,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "data-center.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Data center"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4100,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "decision-intelligence-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Supply Chain Decision Brain"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7517,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "decision-intelligence-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Supply Chain Decision Brain"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7521,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "decision-intelligence-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Supply Chain Decision Brain"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7445,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "events-tv.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "events.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Regional Events",
+        "Events Control Center"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 54350,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "freight-consolidate.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Freight Consolidator"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5507,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "freight-estimator.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Freight Estimator"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 67977,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Global supply chain.Total visibility. Smarter decisions."
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 7445,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "instructions-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Instructions"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4001,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "instructions-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Instructions"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4034,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "instructions-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Instructions"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4015,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "instructions.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-analysis-report-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Inventory Analysis Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 8557,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "inventory-analysis-report-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Inventory Analysis Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 8607,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "inventory-analysis-report-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Inventory Analysis Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 8571,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "inventory-ca.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-dashboard-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Inventory Dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4155,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "inventory-dashboard-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Inventory Dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4134,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "inventory-dashboard-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Inventory Dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4038,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "inventory-dashboard.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-eu.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory-us.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "inventory.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "login.html",
+      "kind": "authentication",
+      "errors": [],
+      "headings": [
+        "One workspace.Every moving part."
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 0,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1214,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "mk-brain.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "MK AI Analyst"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5232,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Order management control tower"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 9982,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management/bulk-firm.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Bulk & Firm execution"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 6415,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management/cancelled.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Cancelled customer orders"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3026,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management/hold-redemption.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Hold → Redemption lifecycle"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4088,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "All open customer orders"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5333,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management/issues.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Order issues"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3227,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management/new-order.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Create customer order"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4928,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "order-management/unvalidated.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Unvalidated customer orders"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3028,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "procurement-planning.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Reorder to purchase order"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3016,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "procurement/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Open vendor PO management"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3442,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "procurement/new-po.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Create vendor PO"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3710,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "raw-report-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Raw Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3390,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "raw-report-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Raw Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3438,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "raw-report-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Raw Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3402,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "raw-report.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "regional-workspace.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "reorder-report-ca.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Reorder Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4699,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "reorder-report-eu.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Reorder Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4534,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "reorder-report-us.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Reorder Report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4598,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "reorder-report.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "sales-analysis.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Sales and Demand Intelligence"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 9859,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "shipment-tracking.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "UPS & FedEx Tracking"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 11761,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "shipping/daily-report.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Daily shipment report"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3009,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "shipping/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Ship orders · Sarasota"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4061,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "transportation/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Transportation"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 2770,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "vendor-management.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Vendor management dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4006,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/digital-vault.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Digital key vault management"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5088,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Vendor management dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4008,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/procurement.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Procurement pipeline"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4311,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/sla.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Vendor SLA scorecard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3812,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "vendor-management/vendors.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Vendor master"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4120,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "vendor-po-management.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Vendor purchase orders"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3074,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/cycle-count.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Cycle counts & inventory accuracy"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3547,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/cycle-counts.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Cycle counts & inventory accuracy"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3547,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Warehouse control tower"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3953,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/inventory-bins.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Inventory & bin management"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5465,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/packing-dispatch.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Packing & dispatch"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5624,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/receiving.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Receiving & putaway"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4312,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "warehouse-management/wave-picking.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Wave picking"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 1,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5105,
+      "recovery": false,
+      "loading": false
+    }
+  ]
+}
