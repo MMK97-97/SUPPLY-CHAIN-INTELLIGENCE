@@ -1,6 +1,6 @@
 # Deploy this revision to Cloudflare Workers
 
-> **Current v49 note:** The portfolio uses top module navigation and an isolated recruiter demo. Fresh demos use local analysis by default; optional external AI retains the existing Space connector. Working browser keys and server contracts remain compatible. See [Portfolio upgrade](docs/PORTFOLIO_UPGRADE.md) and the current verification report. This guide retains the earlier integration/deployment details below.
+> **Current v51 note:** The root URL opens login; the portfolio uses top module navigation, an isolated recruiter demo and regional manual reorder coverage/probability scenarios. Fresh demos use local analysis by default; optional external AI retains the existing Space connector. Working browser keys and server contracts remain compatible. See [Portfolio upgrade](docs/PORTFOLIO_UPGRADE.md) and the current verification report. This guide retains the earlier integration/deployment details below.
 
 
 Target: https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html

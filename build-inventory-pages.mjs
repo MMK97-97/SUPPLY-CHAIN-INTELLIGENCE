@@ -11,7 +11,7 @@ const navItems = [
 ];
 
 function head(title) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Regional inventory analysis for Stark Premium"><title>${title} | Stark Regional Inventory</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/styles.css"><script src="assets/jszip.min.js" defer></script><script src="assets/inventory-core.js" defer></script><script src="assets/inventory-pages.js" defer></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" async></script></head>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Regional inventory analysis for Stark Premium"><title>${title} | Stark Regional Inventory</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/styles.css"><link rel="stylesheet" href="assets/planning-workspace.css"><script src="assets/jszip.min.js" defer></script><script src="assets/inventory-core.js" defer></script><script src="assets/inventory-pages.js" defer></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" async></script></head>`;
 }
 
 function header() {
@@ -19,11 +19,11 @@ function header() {
 }
 
 function inventoryNav() {
-  return ""; // Regional report navigation is provided by the shared sidebar.
+  return ""; // Regional report navigation is provided by the shared module navigation.
 }
 
 function pageShell(page, title, kicker, content) {
-  return `${head(title)}<body data-page="${page}">${header()}<main class="inventory-main">${inventoryNav(page)}<section class="inventory-page-heading"><div><p class="eyebrow">${kicker} • <span data-region-name>United States</span></p><h1>${title}</h1></div><div class="file-status" data-file-status>No Item Sales Report uploaded</div></section>${content}</main></body></html>`;
+  return `${head(title)}<body data-page="${page}">${header()}<main class="inventory-main">${inventoryNav(page)}<header class="planning-title"><h1>${title} · <span data-region-name>United States</span></h1><p class="planning-source" data-file-status>No report uploaded</p></header>${content}</main></body></html>`;
 }
 
 const inventoryMenu = `${head("Inventory Analysis")}<body data-page="inventory">${header()}<main class="inventory-main inventory-menu-page"><div class="inventory-menu-heading"><a class="text-back" data-region-link href="index.html">← Regional modules</a><p class="eyebrow"><span data-region-name>United States</span></p><h1>Inventory Analysis</h1><p>Choose a separate inventory page. The uploaded Item Sales Report is shared across all five pages for this region.</p><div class="file-status" data-file-status>No Item Sales Report uploaded</div></div><section class="inventory-menu-grid">${navItems.map(([key, label, href], index) => `<a class="inventory-menu-card menu-${key}" data-region-link href="${href}"><span>0${index + 1}</span><strong>${label}</strong><small>${key === "dashboard" ? "Upload the report and review inventory KPIs" : key === "raw" ? "View normalized item, sales, stock and supplier data" : key === "reorder" ? "Review active-brand reorder recommendations" : key === "brands" ? "Control which brands are included and set lead times" : "Review report rules, columns and workflow"}</small><i>→</i></a>`).join("")}</section></main></body></html>`;
