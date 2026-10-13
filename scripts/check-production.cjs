@@ -21,7 +21,7 @@ function sandbox(publicPage = false) {
   const vc = new VirtualConsole();
   const errors = [];
   vc.on('jsdomError', error => { if (!/navigation.*not implemented|Not implemented: navigation/i.test(error.message)) errors.push(error.message); });
-  const dom = new JSDOM('<!doctype html><html ' + (publicPage ? 'data-auth-public="true"' : '') + '><head></head><body><main id="content"><input value="Keep this draft"></main><p id="auth-message" hidden></p></body></html>', { url: 'https://example.test/SUPPLY-CHAIN-INTELLIGENCE/index.html', runScripts: 'outside-only', virtualConsole: vc });
+  const dom = new JSDOM('<!doctype html><html ' + (publicPage ? 'data-auth-public="true"' : '') + '><head></head><body><main id="content"><input value="Keep this draft"></main><p id="auth-message" hidden></p></body></html>', { url: 'https://example.test/SUPPLY-CHAIN-INTELLIGENCE/workspace.html', runScripts: 'outside-only', virtualConsole: vc });
   const w = dom.window, d = w.document;
   let script = { src: 'https://example.test/SUPPLY-CHAIN-INTELLIGENCE/assets/page-navigation.js' };
   Object.defineProperty(d, 'currentScript', { get: () => script, configurable: true });
@@ -72,7 +72,7 @@ async function main() {
         ['crm/index.html', {}, { shiftKey: true }], ['crm/index.html', {}, { altKey: true }],
         ['crm/index.html', {}, { button: 1 }], ['https://external.test/index.html', {}, {}],
         ['crm/index.html', { download: '' }, {}], ['crm/index.html', { target: '_blank' }, {}],
-        ['#section', {}, {}], ['index.html', {}, {}]
+        ['#section', {}, {}], ['workspace.html', {}, {}]
       ]) {
         const event = s.click(s.link(href, attr), option); await tick();
         assert.equal(event.defaultPrevented, false);
@@ -158,7 +158,7 @@ async function main() {
         dom.window.close();
       }
     }
-    visit(root); assert.equal(count, 88); // Former Regional Workspace is now a dependency-free redirect.
+    visit(root); assert.equal(count, 86); // Regional Workspace and three retired Analysis routes are dependency-free redirects.
   });
   await test('legacy regional handlers cannot hide a page or delay its native navigation', () => {
     for (const file of ['assets/app.js', 'assets/premium-shell.js', 'assets/inventory-transitions.js', 'assets/inventory-pages-us.js', 'assets/inventory-pages-eu.js', 'assets/inventory-pages-ca.js', 'assets/inventory-ats-eu.js', 'events.html']) {
@@ -177,7 +177,7 @@ async function main() {
       assert.deepEqual(fs.readFileSync(path.join(root, 'dist', fingerprinted)), bytes);
       assert.deepEqual(fs.readFileSync(path.join(root, original)), bytes, original + ': build is current');
     }
-    for (const page of ['index.html', 'mk-brain.html', 'crm/index.html', 'warehouse-management/index.html']) {
+    for (const page of ['workspace.html', 'mk-brain.html', 'crm/index.html', 'warehouse-management/index.html']) {
       const dom = new JSDOM(read('dist/' + page)), d = dom.window.document;
       for (const node of d.querySelectorAll('script[src],link[rel=stylesheet]')) {
         const url = node.getAttribute('src') || node.getAttribute('href');
@@ -387,12 +387,13 @@ async function main() {
     } finally { s.w.close(); }
   });
   await test('regional pages and built nested pages retain their full module startup lifecycle', async () => {
-    for (const file of ['inventory-dashboard-us.html', 'inventory-analysis-report-eu.html', 'decision-intelligence-ca.html', 'raw-report-us.html', 'reorder-report-eu.html', 'active-brands-us.html', 'instructions-ca.html', 'ats-eu.html', 'sales-analysis.html', 'events.html', 'shipment-tracking.html', 'dist/index.html', 'dist/crm/index.html']) {
+    for (const file of ['inventory-dashboard-us.html', 'decision-intelligence-eu.html', 'decision-intelligence-ca.html', 'raw-report-us.html', 'reorder-report-eu.html', 'active-brands-us.html', 'instructions-ca.html', 'ats-eu.html', 'sales-analysis.html', 'events.html', 'shipment-tracking.html', 'dist/workspace.html', 'dist/crm/index.html']) {
       const page = await boot(file);
       try {
         await tick();
         assert.deepEqual(page.errors, [], file);
-        assert.equal(page.d.querySelectorAll('#system-sidebar').length, 1, file);
+        assert.equal(page.d.querySelectorAll('#system-sidebar').length, 0, file);
+        assert.equal(page.d.querySelectorAll('#system-modules').length,1,file);
         assert.equal(page.d.querySelectorAll('.system-header').length, 1, file);
         assert.ok(!page.d.documentElement.classList.contains('stark-page-loading'), file);
         assert.ok(!/leaving/.test(page.d.body.className));

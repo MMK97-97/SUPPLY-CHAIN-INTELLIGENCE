@@ -28,7 +28,7 @@ async function main(){
     d.querySelector('[data-save]').click();const state=w.StarkSystem.getState();assert.equal(state.enterprise.accounts[0].contact,'Concurrent edit');assert.equal(state.enterprise.accounts.filter(x=>x.name==='Stale retry customer').length,1);
   }));
   let validRecords;
-  await page('index.html',{},async({w})=>{validRecords=w.StarkSystem.getState();});
+  await page('workspace.html',{},async({w})=>{validRecords=w.StarkSystem.getState();});
   for(const [kind,change] of [
     ['non-text order status',s=>s.enterprise.orders[0].status=42],
     ['invalid currency',s=>s.enterprise.accounts[0].currency='INVALID'],
@@ -37,19 +37,19 @@ async function main(){
     ['invalid supplier PO lines',s=>s.enterprise.purchaseOrders[0].lines=null]
   ])await test('invalid stored '+kind+' opens recovery before dashboard rendering',async()=>{
     const invalid=JSON.parse(JSON.stringify(validRecords));change(invalid);const raw=JSON.stringify(invalid);
-    await page('index.html',{localStorage:{[KEY]:raw}},async({w,d})=>{assert.ok(d.querySelector('#system-recovery-panel'));assert.equal(w.localStorage.getItem(KEY),raw);assert.equal(w.StarkSystem,undefined);});
+    await page('workspace.html',{localStorage:{[KEY]:raw}},async({w,d})=>{assert.ok(d.querySelector('#system-recovery-panel'));assert.equal(w.localStorage.getItem(KEY),raw);assert.equal(w.StarkSystem,undefined);});
   });
   const malformed=[['broken JSON','{broken'],['missing record arrays',JSON.stringify({schemaVersion:1,revision:0,enterprise:{},logistics:{}})],['null records','null'],['array records','[]'],['empty records','']];
-  for(const [kind,value] of malformed)for(const file of ['index.html','crm/accounts.html','shipping/index.html'])await test(file+' safely recovers '+kind,()=>page(file,{localStorage:{[KEY]:value}},async({w,d})=>{
+  for(const [kind,value] of malformed)for(const file of ['workspace.html','crm/accounts.html','shipping/index.html'])await test(file+' safely recovers '+kind,()=>page(file,{localStorage:{[KEY]:value}},async({w,d})=>{
     assert.ok(d.querySelector('#system-recovery-export'));assert.match(d.body.textContent,/preserved/);assert.equal(w.localStorage.getItem(KEY),value);assert.equal(w.StarkSystem,undefined);
   }));
-  await test('recovery export contains original unreadable records',()=>page('index.html',{localStorage:{[KEY]:'{broken','stark-report-fixture':'Original report'},beforeScripts(w){w.HTMLAnchorElement.prototype.click=function(){};}},async({w,d})=>{
+  await test('recovery export contains original unreadable records',()=>page('workspace.html',{localStorage:{[KEY]:'{broken','stark-report-fixture':'Original report'},beforeScripts(w){w.HTMLAnchorElement.prototype.click=function(){};}},async({w,d})=>{
     let blob;w.URL.createObjectURL=value=>{blob=value;return 'blob:recovery-fixture';};w.URL.revokeObjectURL=()=>{};
     d.querySelector('#system-recovery-export').click();assert.ok(blob);
     const raw=await new Promise((resolve,reject)=>{const reader=new w.FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsText(blob);});
     const exported=JSON.parse(raw);assert.equal(exported.format,'stark-storage-recovery');assert.equal(exported.records[KEY],'{broken');assert.equal(exported.records['stark-report-fixture'],'Original report');
   }));
-  await test('failed recovery downloads show an error and preserve stored records',()=>page('index.html',{localStorage:{[KEY]:'{broken'}},async({w,d})=>{
+  await test('failed recovery downloads show an error and preserve stored records',()=>page('workspace.html',{localStorage:{[KEY]:'{broken'}},async({w,d})=>{
     w.URL.createObjectURL=()=>{throw new Error('Downloads blocked');};d.querySelector('#system-recovery-export').click();assert.match(d.querySelector('#system-recovery-error').textContent,/Downloads blocked/);assert.ok(!d.querySelector('#system-recovery-error').hidden);assert.equal(w.localStorage.getItem(KEY),'{broken');
   }));
   for(const file of ['raw-report-eu.html','reorder-report-eu.html','active-brands-ca.html'])await test(file+' recovery preserves nodes used by asynchronous report startup',()=>page(file,{localStorage:{[KEY]:'{broken'}},async({d})=>{
@@ -63,7 +63,7 @@ async function main(){
     w.localStorage.setItem(KEY,valid);assert.ok(w.StarkSystem.getState().enterprise.accounts.length);
   }));
   const attack='TEST"><img data-audit-injection="sku" src="invalid">';let stored;
-  await page('index.html',{},async({w})=>{w.StarkSystem.transaction('TEST','Synthetic SKU',s=>{s.enterprise.inventory.push({sku:attack,model:'TEST',brand:'Fixture',title:'Fixture',region:'US',nature:'PHYSICAL',onHand:1,reserved:0,damaged:0,safety:0,cost:1,standardPrice:1});s.enterprise.accounts.push({...s.enterprise.accounts[0],id:attack,name:'Fixture account'});});stored=w.localStorage.getItem(KEY);});
+  await page('workspace.html',{},async({w})=>{w.StarkSystem.transaction('TEST','Synthetic SKU',s=>{s.enterprise.inventory.push({sku:attack,model:'TEST',brand:'Fixture',title:'Fixture',region:'US',nature:'PHYSICAL',onHand:1,reserved:0,damaged:0,safety:0,cost:1,standardPrice:1});s.enterprise.accounts.push({...s.enterprise.accounts[0],id:attack,name:'Fixture account'});});stored=w.localStorage.getItem(KEY);});
   await test('catalog action attributes preserve literal SKU without creating HTML',()=>page('crm/catalog.html',{localStorage:{[KEY]:stored}},async({d})=>{
     assert.equal(d.querySelectorAll('[data-audit-injection]').length,0);assert.ok([...d.querySelectorAll('[data-price]')].some(x=>x.dataset.price===attack));
   }));
@@ -84,17 +84,17 @@ async function main(){
     const before=w.localStorage.getItem(KEY);d.querySelector('#new-account').click();d.querySelector('[data-save]').click();assert.equal(w.localStorage.getItem(KEY),before);assert.equal(d.activeElement.id,'m-name');
     d.querySelector('#m-name').value='Invalid email fixture';d.querySelector('#m-email').value='invalid-email';d.querySelector('[data-save]').click();assert.equal(w.localStorage.getItem(KEY),before);assert.equal(d.activeElement.id,'m-email');assert.ok(!d.querySelector('[data-dialog-error]').hidden);
   }));
-  await test('pending dialog saves block duplicate submissions, edits and dismissal',()=>page('index.html',{},async({w,d})=>{
+  await test('pending dialog saves block duplicate submissions, edits and dismissal',()=>page('workspace.html',{},async({w,d})=>{
     let resolve,calls=0;const pending=new Promise(done=>resolve=done),wrap=w.StarkSystemUI.dialog('Pending save','<label>Draft<input id="pending-draft" value="Keep draft"></label>',()=>{calls++;return pending;},'Save',{system:true});
     wrap.querySelector('[data-save]').click();wrap.querySelector('[data-save]').click();assert.equal(calls,1);assert.ok(wrap.querySelector('input').disabled);assert.equal(wrap.querySelector('[role="dialog"]').getAttribute('aria-busy'),'true');
     d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert.ok(wrap.isConnected);resolve(true);await tick();assert.ok(!wrap.isConnected);
   }));
-  await test('rejected asynchronous saves keep drafts and enable a single retry',()=>page('index.html',{},async({w,d})=>{
+  await test('rejected asynchronous saves keep drafts and enable a single retry',()=>page('workspace.html',{},async({w,d})=>{
     let reject,calls=0;const pending=new Promise((_,fail)=>reject=fail),wrap=w.StarkSystemUI.dialog('Failed save','<label>Draft<input id="retry-draft" value="Keep draft"></label>',()=>{calls++;return calls===1?pending:true;},'Save',{system:true});
     wrap.querySelector('[data-save]').click();reject(new Error('Synthetic connection failed'));await tick();assert.ok(wrap.isConnected);assert.match(wrap.querySelector('[data-dialog-error]').textContent,/connection failed/);assert.equal(wrap.querySelector('input').value,'Keep draft');assert.ok(!wrap.querySelector('input').disabled);
     wrap.querySelector('[data-save]').click();assert.equal(calls,2);assert.ok(!wrap.isConnected);
   }));
-  await test('nested dialogs close in order without dismissing their parent',()=>page('index.html',{},async({w,d})=>{
+  await test('nested dialogs close in order without dismissing their parent',()=>page('workspace.html',{},async({w,d})=>{
     const parent=w.StarkSystemUI.dialog('Parent','<label>Draft<input id="parent-draft"></label>',()=>false),child=w.StarkSystemUI.dialog('Child','<p>Child details</p>',()=>true);
     d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert.ok(!child.isConnected);assert.ok(parent.isConnected);assert.ok(parent.contains(d.activeElement));
     d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert.ok(!parent.isConnected);

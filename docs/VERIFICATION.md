@@ -1,8 +1,8 @@
-# Verification — v49 portfolio upgrade
+# Verification — v51 regional reorder simulator
 
-Release: `2026.10.12-portfolio-upgrade49`; changed-asset cache version `20261012-2`. The complete source is prepared. No live deployment was performed.
+Release `2026.10.12-reorder-simulator51`; changed-asset cache version `20261012-4`. Complete source update; no remote publication was performed.
 
-**355 regression checks passed with zero failures across twelve suites.**
+**415 checks passed with zero failures across fourteen suites.**
 
 | Suite | Passed |
 | --- | ---: |
@@ -18,17 +18,21 @@ Release: `2026.10.12-portfolio-upgrade49`; changed-asset cache version `20261012
 | resilience | 41 |
 | enterprise-layout | 34 |
 | portfolio | 33 |
+| login-entry | 14 |
+| reorder-simulator | 46 |
 
-All 90 HTML pages passed separate working, demo and recovery startup audits. Redirects are inspected separately rather than executed as browser navigation. Audits found no runtime errors, duplicate IDs, unlabeled active inputs or stuck loading state. Source checks passed 183 JavaScript/TypeScript/inline syntax checks and 2,317 local HTML/CSS/redirect references. All 259 v48 source files are retained. The original inventory reorder, sales analysis, stock reconciliation, reservation and working fulfillment/receiving calculation sections match v48 exactly; application store routing and specified correctness fixes are documented separately.
+The 46 simulator checks verify arrival-adjusted coverage, negative net-stock backlog, buffer and optional inbound, finite/whole-number validation, complete-month sales evidence, same-region and exact-model matching, monotonic/reproducible probability and pre-arrival stockout risk. Source-driven control checks cover manual entry in all three regions, read-only records, working sales-store reads, missing/blocked history, source refresh races and recovery, duplicate inventory identities, model drafts, report/default quantity buttons, real brand lead-time saving, retired Analysis routes and responsive/accessibility declarations.
 
-The build contains 90 pages and 85 fingerprinted JS/CSS assets with matching SHA-256 contents. Root `.nojekyll` is empty; no custom `.github/workflows` or root `pages.yml` is included.
+All 91 pages pass separate working, demo and corrupt-record recovery startup audits. There are no runtime errors, duplicate IDs, unlabeled active controls or stuck loading states. Retired redirects are checked separately. The main login form, explicit guest demo and existing operations remain covered by their original regression suites.
 
-The added portfolio checks exercise first-visit demo entry; existing-record preservation; all three regions' order allocation and dispatch; receiving; warehouse picking; digital reward dispatch; simulated 3PL processing; recorded shipment tracking; report/preference/chat isolation; database/channel namespaces; reset safety; report clearing; resolved discrepancies; open inbound PO accuracy; connected-stock scenarios; currency boundaries; missing-cost/stale-source flags; real local analyst conversations; mobile menu/focus controls; inline analyst layout; login demo/password controls; declared text contrast; and optimized image size.
+Static inspection passes 189 syntax checks and 2,266 local HTML/CSS references. All 281 v50 source files are retained. Official regional inventory/sales, stock reconciliation, reservations, working fulfillment and receiving calculation sections match v50 exactly. Server and backend migration files remain unchanged.
 
-## Method and limits
+The build contains 91 HTML pages and 89 fingerprinted JS/CSS assets. Root `.nojekyll` is empty. No custom `.github/workflows` or root `pages.yml` is included; publishing remains Deploy from a branch, main / root.
 
-Tests use Node.js with jsdom 26, synthetic records, emulated viewport APIs, mocked transport and isolated SQL execution. HTML startup and declared CSS properties are checked without graphical rendering. Decorative canvas is emulated as unavailable in the all-page audits. These checks do not verify actual pixels, touch-device layout, real loading latency, production login/recovery, organization policies in the deployed database, live AI inference, carrier/partner service availability or remote publication.
+## Method and practical limits
 
-The demo blocks organization synchronization and live business transmission. Demo acknowledgements and tracking are explicit simulations. Local analysis works independently of external AI. Use the published-site checklist in `DEPLOY_FROM_BRANCH.md` before claiming the live site is production-verified.
+Checks use Node.js/jsdom, pure planning math, synthetic monthly sales and stock, emulated standard UI APIs, mocked authentication/transport, isolated PostgreSQL and byte/static/build inspection. They do not establish graphical desktop/mobile rendering, real sign-in, live inference, carrier/partner requests, live database migrations or deployment. A bootstrap estimate from fictional or uploaded history is not evidence of calibrated future accuracy; the interface displays its conditional assumptions and refuses to invent a probability when history is insufficient.
 
-Machine-readable evidence: `verification-release-20261012-v49.json`, `verification-static.json`, the twelve suite reports and `verification-pages{,-demo,-recovery}.json`. Historical v48/v47 release reports remain historical evidence.
+Commit the extracted complete source to the publishing branch to update the public site, then verify the published VERSION.json, login/demo, regional manual input and real browser/mobile behavior. See [DEPLOY_FROM_BRANCH.md](../DEPLOY_FROM_BRANCH.md) and [REORDER_SIMULATOR.md](REORDER_SIMULATOR.md).
+
+Current evidence is `verification-release-20261012-v51.json`, the fourteen suite reports, three all-page reports, `verification-static.json` and `source-manifest-v51.json`. Earlier v50/v49/v48/v47 release reports remain historical evidence.

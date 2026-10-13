@@ -1,6 +1,6 @@
 {
-  "pages": 90,
-  "passed": 90,
+  "pages": 91,
+  "passed": 91,
   "failed": 0,
   "method": "Source-driven jsdom startup, duplicate-ID, active control label and loading-state checks; standard matchMedia and unavailable decorative canvas emulated. Redirects inspected separately by the static audit. No graphical rendering, authentication or live network.",
   "checks": [
@@ -186,14 +186,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Active Brands"
+        "Active Brands Canada"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2545,
+      "body_text_length": 2352,
       "recovery": true,
       "loading": false
     },
@@ -203,14 +203,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Active Brands"
+        "Active Brands European Union"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2572,
+      "body_text_length": 2379,
       "recovery": true,
       "loading": false
     },
@@ -220,14 +220,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Active Brands"
+        "Active Brands United States"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2566,
+      "body_text_length": 2373,
       "recovery": true,
       "loading": false
     },
@@ -266,7 +266,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2085,
+      "body_text_length": 2070,
       "recovery": true,
       "loading": false
     },
@@ -420,14 +420,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Supply Chain Decision Brain"
+        "Decision Intelligence · Canada"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4715,
+      "body_text_length": 4042,
       "recovery": true,
       "loading": false
     },
@@ -437,14 +437,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Supply Chain Decision Brain"
+        "Decision Intelligence · European Union"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4741,
+      "body_text_length": 4069,
       "recovery": true,
       "loading": false
     },
@@ -454,14 +454,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Supply Chain Decision Brain"
+        "Decision Intelligence · United States"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4742,
+      "body_text_length": 4063,
       "recovery": true,
       "loading": false
     },
@@ -485,7 +485,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 53227,
+      "body_text_length": 53212,
       "recovery": true,
       "loading": false
     },
@@ -502,7 +502,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4453,
+      "body_text_length": 4438,
       "recovery": true,
       "loading": false
     },
@@ -519,24 +519,24 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 66923,
+      "body_text_length": 66908,
       "recovery": true,
       "loading": false
     },
     {
       "file": "index.html",
-      "kind": "application",
+      "kind": "authentication",
       "errors": [],
       "headings": [
-        "Workspace could not open"
+        "One workspace.Every moving part."
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 1157,
-      "recovery": true,
+      "body_text_length": 1220,
+      "recovery": false,
       "loading": false
     },
     {
@@ -552,7 +552,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2961,
+      "body_text_length": 2946,
       "recovery": true,
       "loading": false
     },
@@ -569,7 +569,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2988,
+      "body_text_length": 2973,
       "recovery": true,
       "loading": false
     },
@@ -586,7 +586,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2982,
+      "body_text_length": 2967,
       "recovery": true,
       "loading": false
     },
@@ -598,54 +598,21 @@
     },
     {
       "file": "inventory-analysis-report-ca.html",
-      "kind": "application",
-      "errors": [],
-      "headings": [
-        "Workspace could not open",
-        "Inventory Analysis Report"
-      ],
-      "legacy_sidebar": 0,
-      "shared_header": 0,
-      "shared_module_menu": 0,
-      "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 7428,
-      "recovery": true,
-      "loading": false
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
       "file": "inventory-analysis-report-eu.html",
-      "kind": "application",
-      "errors": [],
-      "headings": [
-        "Workspace could not open",
-        "Inventory Analysis Report"
-      ],
-      "legacy_sidebar": 0,
-      "shared_header": 0,
-      "shared_module_menu": 0,
-      "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 7455,
-      "recovery": true,
-      "loading": false
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
       "file": "inventory-analysis-report-us.html",
-      "kind": "application",
-      "errors": [],
-      "headings": [
-        "Workspace could not open",
-        "Inventory Analysis Report"
-      ],
-      "legacy_sidebar": 0,
-      "shared_header": 0,
-      "shared_module_menu": 0,
-      "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 7449,
-      "recovery": true,
-      "loading": false
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
       "file": "inventory-ca.html",
@@ -666,7 +633,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2839,
+      "body_text_length": 2824,
       "recovery": true,
       "loading": false
     },
@@ -683,7 +650,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2866,
+      "body_text_length": 2851,
       "recovery": true,
       "loading": false
     },
@@ -700,7 +667,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2860,
+      "body_text_length": 2845,
       "recovery": true,
       "loading": false
     },
@@ -740,7 +707,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 1214,
+      "body_text_length": 1220,
       "recovery": false,
       "loading": false
     },
@@ -943,14 +910,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Raw Report"
+        "Raw Report Canada"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 1879,
+      "body_text_length": 1845,
       "recovery": true,
       "loading": false
     },
@@ -960,14 +927,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Raw Report"
+        "Raw Report European Union"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 1906,
+      "body_text_length": 1872,
       "recovery": true,
       "loading": false
     },
@@ -977,14 +944,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Raw Report"
+        "Raw Report United States"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 1900,
+      "body_text_length": 1866,
       "recovery": true,
       "loading": false
     },
@@ -1006,14 +973,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Reorder Report"
+        "Reorder Report Canada"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3431,
+      "body_text_length": 2947,
       "recovery": true,
       "loading": false
     },
@@ -1023,14 +990,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Reorder Report"
+        "Reorder Report European Union"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3458,
+      "body_text_length": 2974,
       "recovery": true,
       "loading": false
     },
@@ -1040,14 +1007,14 @@
       "errors": [],
       "headings": [
         "Workspace could not open",
-        "Reorder Report"
+        "Reorder Report United States"
       ],
       "legacy_sidebar": 0,
       "shared_header": 0,
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3452,
+      "body_text_length": 2968,
       "recovery": true,
       "loading": false
     },
@@ -1070,7 +1037,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 8321,
+      "body_text_length": 8306,
       "recovery": true,
       "loading": false
     },
@@ -1087,7 +1054,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 10707,
+      "body_text_length": 10692,
       "recovery": true,
       "loading": false
     },
@@ -1360,6 +1327,22 @@
       "duplicate_ids": [],
       "unlabeled_inputs": [],
       "body_text_length": 1087,
+      "recovery": true,
+      "loading": false
+    },
+    {
+      "file": "workspace.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace could not open"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 0,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 1157,
       "recovery": true,
       "loading": false
     }

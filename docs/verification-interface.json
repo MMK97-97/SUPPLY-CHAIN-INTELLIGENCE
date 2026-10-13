@@ -3,7 +3,7 @@
   "module_pages": 46,
   "passed": 51,
   "checks": [
-    "index.html retains shared navigation after module startup",
+    "workspace.html retains shared navigation after module startup",
     "business-operations.html retains shared navigation after module startup",
     "mk-brain.html retains shared navigation after module startup",
     "data-center.html retains shared navigation after module startup",

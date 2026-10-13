@@ -144,7 +144,7 @@ async function main() {
     try { await callback(); passed.push(name); console.log('PASS', name); }
     catch (error) { console.error('FAIL', name, error); process.exitCode = 1; }
   }
-  const files = ['index.html', 'business-operations.html', 'mk-brain.html', 'data-center.html', 'activity.html', 'procurement-planning.html', 'vendor-po-management.html'];
+  const files = ['workspace.html', 'business-operations.html', 'mk-brain.html', 'data-center.html', 'activity.html', 'procurement-planning.html', 'vendor-po-management.html'];
   for (const dir of ['crm', 'order-management', 'vendor-management', 'warehouse-management', '3pl-management', 'shipping', 'procurement', 'transportation']) {
     files.push(...fs.readdirSync(path.join(root, dir)).filter(file => file.endsWith('.html')).map(file => dir + '/' + file));
   }

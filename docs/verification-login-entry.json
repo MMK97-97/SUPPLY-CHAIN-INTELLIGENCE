@@ -1,0 +1,22 @@
+{
+  "passed": 14,
+  "failed": 0,
+  "checks": [
+    "plain index contains login and guest entry without loading operational modules",
+    "existing working records are retained while the main URL shows login",
+    "guest entry works without waiting for the authentication service",
+    "the root login initializes authenticated controls without a login redirect loop",
+    "successful root sign-in selects the working workspace and preserves the destination",
+    "failed root sign-in keeps the form and reports the error for retry",
+    "signed-in return index.html resolves safely to the workspace",
+    "signed-in return login.html resolves safely to the workspace",
+    "signed-in return auth-callback.html resolves safely to the workspace",
+    "signed-in return https://untrusted.example/index.html resolves safely to the workspace",
+    "signed-in return ../outside.html resolves safely to the workspace",
+    "a safe nested return preserves its path and query after sign-in",
+    "legacy main demo links retain regional scope without starting auth",
+    "workspace and nested home navigation keep recruiters inside the demo"
+  ],
+  "failures": [],
+  "method": "Source-driven jsdom and VM with mocked authentication and navigation. No real login, browser rendering, network or live publishing."
+}

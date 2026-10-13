@@ -2,7 +2,7 @@
   "passed": 34,
   "failed": 0,
   "checks": [
-    "index.html renders the dashboard with real workspace values",
+    "workspace.html renders the dashboard with real workspace values",
     "business-operations.html renders the dashboard with real workspace values",
     "dashboard values are scoped to the selected region and prefer its uploaded report",
     "region map buttons synchronize the shared selector and analyst scope",

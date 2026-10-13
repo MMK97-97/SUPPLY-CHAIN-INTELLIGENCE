@@ -1,0 +1,134 @@
+{
+  "release": "2026.10.12-login-entry50",
+  "asset_version": "20261012-3",
+  "checked_at": "2026-10-12T18:43:22.103270+00:00",
+  "source_status": "validated",
+  "baseline": "2026.10.12-portfolio-upgrade49",
+  "regression_checks_passed": 369,
+  "regression_checks_failed": 0,
+  "suites": {
+    "workflows": {
+      "passed": 23,
+      "failed": 0,
+      "report": "docs/verification-workflows.json"
+    },
+    "interface": {
+      "passed": 51,
+      "failed": 0,
+      "report": "docs/verification-interface.json"
+    },
+    "mk-ai": {
+      "passed": 24,
+      "failed": 0,
+      "report": "docs/verification-mk-ai.json"
+    },
+    "mk-space": {
+      "passed": 14,
+      "failed": 0,
+      "report": "docs/verification-mk-space.json"
+    },
+    "production": {
+      "passed": 27,
+      "failed": 0,
+      "report": "docs/verification-production.json"
+    },
+    "fulfillment": {
+      "passed": 49,
+      "failed": 0,
+      "report": "docs/verification-fulfillment.json"
+    },
+    "fulfillment-sql": {
+      "passed": 10,
+      "failed": 0,
+      "report": "docs/verification-fulfillment-sql.json"
+    },
+    "mk-region": {
+      "passed": 15,
+      "failed": 0,
+      "report": "docs/verification-mk-region.json"
+    },
+    "customer-orders": {
+      "passed": 34,
+      "failed": 0,
+      "report": "docs/verification-customer-orders.json"
+    },
+    "resilience": {
+      "passed": 41,
+      "failed": 0,
+      "report": "docs/verification-resilience.json"
+    },
+    "enterprise-layout": {
+      "passed": 34,
+      "failed": 0,
+      "report": "docs/verification-enterprise-layout.json"
+    },
+    "portfolio": {
+      "passed": 33,
+      "failed": 0,
+      "report": "docs/verification-portfolio.json"
+    },
+    "login-entry": {
+      "passed": 14,
+      "failed": 0,
+      "report": "docs/verification-login-entry.json"
+    }
+  },
+  "page_audits": {
+    "working": {
+      "pages": 91,
+      "passed": 91,
+      "failed": 0,
+      "report": "docs/verification-pages.json"
+    },
+    "demo": {
+      "pages": 91,
+      "passed": 91,
+      "failed": 0,
+      "report": "docs/verification-pages-demo.json"
+    },
+    "recovery": {
+      "pages": 91,
+      "passed": 91,
+      "failed": 0,
+      "report": "docs/verification-pages-recovery.json"
+    }
+  },
+  "static_report": "docs/verification-static.json",
+  "syntax_checks": 186,
+  "local_references": 2329,
+  "html_pages": 91,
+  "fingerprinted_assets": 86,
+  "source_manifest": "docs/source-manifest-v50.json",
+  "branch_deployment": {
+    "root_index": true,
+    "empty_nojekyll": true,
+    "no_custom_workflows": true,
+    "no_root_pages_yml": true
+  },
+  "preserved_official_calculations": {
+    "reservation_formula": true,
+    "stock_reconciliation": true,
+    "working_fulfillment_and_receiving": true,
+    "us_official_inventory_analysis": true,
+    "eu_official_inventory_analysis": true,
+    "ca_official_inventory_analysis": true,
+    "official_sales_analysis": true
+  },
+  "live_status": {
+    "status": "unverified",
+    "verified_at": null,
+    "version_evidence": "v50 is a prepared source fix; live index, login and VERSION.json could not be retrieved during this request, and no publishing action was performed.",
+    "page_and_asset_contents": "unverified",
+    "navigation_and_forms": "unverified",
+    "sign_in": "unverified",
+    "ai_inference": "unverified"
+  },
+  "live_retrieval": "Index, login, release metadata and repository could not be retrieved by the reader; no conclusion about current live contents.",
+  "publishing_action": "None; prepared source archive only",
+  "limitations": [
+    "No graphical/mobile browser rendering",
+    "Authentication and service transport are mocked",
+    "No live sign-in, external inference, carrier requests, backend migration or repository publishing"
+  ],
+  "method": "Source-driven DOM/entry/transaction tests, mocked authentication and transport, isolated SQL, exact static/build integrity."
+}
