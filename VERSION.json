@@ -1,6 +1,6 @@
 {
   "name": "MK Supply Chain Intelligence \u2014 Portfolio Enterprise System",
-  "version": "2026.10.12-reorder-simulator51",
+  "version": "2026.10.13-workspace-fixes52",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -34,7 +34,7 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261012-4",
+  "asset_version": "20261013-1",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
     "Consistent readable light theme across operations and logistics",
@@ -69,7 +69,12 @@
     "Retired Analysis Report menu entries and redirected regional bookmarks to Decision Intelligence",
     "Manual reorder quantity simulator with arrival-adjusted months coverage, buffer and target quantity",
     "Same-region complete monthly sales evidence for transparent conditional bootstrap probability",
-    "Corrected Canadian Active Brands data/settings keys while retaining legacy records"
+    "Corrected Canadian Active Brands data/settings keys while retaining legacy records",
+    "Saved Reorder Reports restored after compact heading removal; explicit current-report saving and committed storage writes",
+    "Organization/demo links preserve module and region; unmarked deep links use working browser records",
+    "Removed top AI button and analyst tabs, with protection against legacy navigation reappearance",
+    "Fixed regional workspace dialogs and vertically arranged AI overlay; report headings use readable light text",
+    "Prevented duplicate legacy report-export loading and updated legacy asset versions"
   ],
   "ai": {
     "version": "MK Intelligence 5.0 \u00b7 Decision Lab",
@@ -102,27 +107,31 @@
     "regional_scope": "Report route/query or shared Analysis region by default; explicit analyst selection applies only for the current page session"
   },
   "deployment_readiness": {
-    "metadata_updated_at": "2026-10-12T19:19:17.206196+00:00",
+    "metadata_updated_at": "2026-10-13T14:57:27.794068+00:00",
     "guide": "DEPLOY_FROM_BRANCH.md",
     "target": "https://mmk97-97.github.io/SUPPLY-CHAIN-INTELLIGENCE/index.html",
     "alternate_target": "https://supply-chain-intelligence.manoj-k-manne.workers.dev/index.html",
     "source_status": "validated",
     "source_verification": {
-      "checked_at": "2026-10-12T19:19:17.206196+00:00",
-      "report": "docs/verification-release-20261012-v51.json",
-      "regression_checks_passed": 415,
+      "checked_at": "2026-10-13T14:57:27.794068+00:00",
+      "report": "docs/verification-release-20261013-v52.json",
+      "regression_checks_passed": 433,
       "html_pages": 91,
-      "method": "Source-driven DOM, manual reorder math/probability, mocked authentication/transport, synthetic operations, isolated SQL and static/build checks. No graphical browser or publishing."
+      "method": "Source-driven DOM/CSS, transaction-faithful synthetic IndexedDB and actual workbook serialization, mocked authentication/transport, synthetic operations, isolated SQL and static/build checks. Existing public defects reproduced in cloud browser; corrected source not published."
     },
     "publishing_status": "Use the declared branch publishing source; live deployment verification is recorded separately.",
     "live_verification": {
-      "status": "unverified",
+      "status": "issues reproduced in cloud browser; corrected source pending deployment",
       "verified_at": null,
-      "version_evidence": "v51 is a source-only update; no live publication or deployment verification was performed for this release.",
-      "page_and_asset_contents": "unverified",
-      "navigation_and_forms": "unverified",
-      "sign_in": "unverified",
-      "ai_inference": "unverified"
+      "version_evidence": "Live reorder page was inspected; Analysis Report and top AI controls remained visible, workspace modal was inline and report history was absent. VERSION.json navigation was blocked by the browser client.",
+      "page_and_asset_contents": "live DOM and loaded asset URLs observed; full deployed source not verified",
+      "navigation_and_forms": "workspace options and organization login entry reproduced",
+      "sign_in": "form observed; real credentials not submitted",
+      "ai_inference": "not tested",
+      "repository_inspection": "On main, assets/system-shell.js retains Analysis report, the top AI button and index.html home links. Newer root-level copies do not replace the assets/ files requested by pages.",
+      "repository_head_observed": "09555e9",
+      "publishing_access": "Cloud browser is signed out of GitHub; no repository changes made.",
+      "corrected_preview": "Official managed preview blocked by container mount permissions. Corrected layout checked through source-driven DOM and CSS only."
     },
     "live_inference_rechecked": false,
     "current_live_release_verified": false,
@@ -136,7 +145,7 @@
     "transportation": "Separate freight estimation, consolidation and tracking workspace",
     "api_status": "Authenticated 3PL processing requires the supplied connector, database migration and partner configuration."
   },
-  "metadata_revision": "2026.10.12-4",
+  "metadata_revision": "2026.10.13-1",
   "demo": {
     "entry": "workspace.html?demo=1",
     "login_entry": "login.html",

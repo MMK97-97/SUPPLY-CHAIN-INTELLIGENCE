@@ -1,6 +1,8 @@
 # MK Supply Chain Intelligence
 
-**Current release: v51 reorder simulator — October 12, 2026.** Decision Intelligence now accepts a manual reorder quantity and calculates arrival-adjusted months coverage and the target quantity. Complete same-region monthly sales can support a conditional probability estimate. The pictured large banners, learning/regulations cards and Analysis Report navigation are removed. See [Reorder simulator](docs/REORDER_SIMULATOR.md). The v50 login entry and all portfolio/workflow updates are retained.
+**Current release: v52 workspace and saved-report fixes — October 13, 2026.** Saved Reorder Reports now work below the compact title, with an explicit Save current report action. Organization/demo entry keeps the current page and region. Top AI controls and Analysis Report navigation are removed. Regional dialogs, report headings and the analyst conversation layout are repaired. See [Workspace fixes](docs/WORKSPACE_FIXES.md). The manual reorder simulator, login entry and portfolio workflows remain available.
+
+**Publishing correction:** the inspected repository has newer asset copies at the root while the actual `assets/` folder still contains older code. Preserve the extracted folder paths when publishing. `system-shell.js` at the root does not update `assets/system-shell.js`.
 
 Open `index.html` for sign-in or **Explore the demo**. `login.html` provides the same entry. The application home and demo reset now lead to `workspace.html`. Existing working records stay intact; legacy `index.html?demo=1` links redirect to the demo. `business-operations.html` remains a compatible dashboard route.
 
@@ -12,7 +14,7 @@ The full-width MK analyst combines existing verified report/forecast tools with 
 
 Use GitHub Pages **Deploy from a branch → main → /(root)**. Upload everything inside `SUPPLY-CHAIN-INTELLIGENCE-main/`, including `.nojekyll`, in one commit. Do not upload an extra outer folder, `dist/`, or custom `.github/workflows`. See [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). This package has not been published remotely.
 
-Workers compatibility remains; [DEPLOY_TO_WORKERS.md](DEPLOY_TO_WORKERS.md) explains the optional build. Changed application assets use version `20261012-4`, and Workers builds fingerprint the JS/CSS bundles.
+Workers compatibility remains; [DEPLOY_TO_WORKERS.md](DEPLOY_TO_WORKERS.md) explains the optional build. Changed application assets use version `20261013-1`, and Workers builds fingerprint the JS/CSS bundles.
 
 ## Run locally
 
@@ -30,4 +32,4 @@ Sign-in retains the configured authentication and organization membership flow. 
 
 See [VERIFICATION.md](docs/VERIFICATION.md) and the current release JSON report. Automated checks cover transactions, region isolation, demo isolation, conversations, forms, source-driven DOM startup, error recovery, SQL and build/static integrity. Graphical desktop/mobile rendering and live authentication, AI, carrier/partner services and deployment require separate checks on the published site.
 
-The archive retains the earlier source files and historical v50/v49/v48/v47 reports. `VERSION.json` and the current v51 release report are authoritative for this update.
+The archive retains the earlier source files and historical v51/v50/v49/v48/v47 reports. `VERSION.json` and the current v52 release report are authoritative for this update.
