@@ -2,7 +2,7 @@
   "passed": 33,
   "failed": 0,
   "checks": [
-    "first-time portfolio visitors receive a populated fictional demo",
+    "visitors who choose portfolio demo receive populated fictional records",
     "existing browser records select the working workspace automatically",
     "US guided order allocates and ships once without changing working records",
     "EU guided order allocates and ships once without changing working records",

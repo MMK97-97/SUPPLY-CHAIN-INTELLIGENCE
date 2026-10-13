@@ -1,0 +1,26 @@
+{
+  "passed": 18,
+  "failed": 0,
+  "checks": [
+    "us saved reports mount after the compact title and current save creates a downloadable XLSX",
+    "eu saved reports mount after the compact title and current save creates a downloadable XLSX",
+    "ca saved reports mount after the compact title and current save creates a downloadable XLSX",
+    "saving the unchanged current report twice does not create a duplicate",
+    "working/deep-link default retains the established archive database namespace",
+    "demo history remains isolated from working records",
+    "legacy Canada region labels remain visible without deleting or migrating their records",
+    "history retains only the latest 30 records in each region",
+    "a transaction abort cannot falsely report that an archive was saved",
+    "failed archiving prevents replacement of the prior Raw Report",
+    "us workspace options retain the module/region in organization and demo destinations",
+    "eu workspace options retain the module/region in organization and demo destinations",
+    "ca workspace options retain the module/region in organization and demo destinations",
+    "login guest entry uses a safe requested module and strips the previous workspace mode",
+    "workspace destinations reject external or encoded traversal and auth entry loops",
+    "top AI controls and Analysis links stay absent after a late legacy navigation refresh",
+    "regional modal and analyst use fixed positioning and a vertical conversation layout",
+    "legacy asset loader does not append a second report-export script"
+  ],
+  "failures": [],
+  "method": "Source-driven jsdom with transaction-faithful synthetic IndexedDB, actual workbook generation/reading, legacy history fixtures and mocked routing. Live screenshots established the original defects; corrected graphical preview was blocked by environment permissions."
+}

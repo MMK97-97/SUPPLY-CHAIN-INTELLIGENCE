@@ -1,0 +1,148 @@
+{
+  "release": "2026.10.13-workspace-fixes52",
+  "asset_version": "20261013-1",
+  "checked_at": "2026-10-13T14:57:27.794068+00:00",
+  "source_status": "validated",
+  "baseline": "2026.10.12-reorder-simulator51",
+  "regression_checks_passed": 433,
+  "regression_checks_failed": 0,
+  "suites": {
+    "workflows": {
+      "passed": 23,
+      "failed": 0,
+      "report": "docs/verification-workflows.json"
+    },
+    "interface": {
+      "passed": 51,
+      "failed": 0,
+      "report": "docs/verification-interface.json"
+    },
+    "mk-ai": {
+      "passed": 24,
+      "failed": 0,
+      "report": "docs/verification-mk-ai.json"
+    },
+    "mk-space": {
+      "passed": 14,
+      "failed": 0,
+      "report": "docs/verification-mk-space.json"
+    },
+    "production": {
+      "passed": 27,
+      "failed": 0,
+      "report": "docs/verification-production.json"
+    },
+    "fulfillment": {
+      "passed": 49,
+      "failed": 0,
+      "report": "docs/verification-fulfillment.json"
+    },
+    "fulfillment-sql": {
+      "passed": 10,
+      "failed": 0,
+      "report": "docs/verification-fulfillment-sql.json"
+    },
+    "mk-region": {
+      "passed": 15,
+      "failed": 0,
+      "report": "docs/verification-mk-region.json"
+    },
+    "customer-orders": {
+      "passed": 34,
+      "failed": 0,
+      "report": "docs/verification-customer-orders.json"
+    },
+    "resilience": {
+      "passed": 41,
+      "failed": 0,
+      "report": "docs/verification-resilience.json"
+    },
+    "enterprise-layout": {
+      "passed": 34,
+      "failed": 0,
+      "report": "docs/verification-enterprise-layout.json"
+    },
+    "portfolio": {
+      "passed": 33,
+      "failed": 0,
+      "report": "docs/verification-portfolio.json"
+    },
+    "login-entry": {
+      "passed": 14,
+      "failed": 0,
+      "report": "docs/verification-login-entry.json"
+    },
+    "reorder-simulator": {
+      "passed": 46,
+      "failed": 0,
+      "report": "docs/verification-reorder-simulator.json"
+    },
+    "workspace-fixes": {
+      "passed": 18,
+      "failed": 0,
+      "report": "docs/verification-workspace-fixes.json"
+    }
+  },
+  "page_audits": {
+    "working": {
+      "pages": 91,
+      "passed": 91,
+      "failed": 0,
+      "report": "docs/verification-pages.json"
+    },
+    "demo": {
+      "pages": 91,
+      "passed": 91,
+      "failed": 0,
+      "report": "docs/verification-pages-demo.json"
+    },
+    "recovery": {
+      "pages": 91,
+      "passed": 91,
+      "failed": 0,
+      "report": "docs/verification-pages-recovery.json"
+    }
+  },
+  "static_report": "docs/verification-static.json",
+  "syntax_checks": 191,
+  "local_references": 2430,
+  "html_pages": 91,
+  "fingerprinted_assets": 91,
+  "source_manifest": "docs/source-manifest-v52.json",
+  "branch_deployment": {
+    "root_index": true,
+    "empty_nojekyll": true,
+    "no_custom_workflows": true,
+    "no_root_pages_yml": true
+  },
+  "preserved_official_calculations": {
+    "reservation_formula": true,
+    "stock_reconciliation": true,
+    "working_fulfillment_and_receiving": true,
+    "us_official_inventory_analysis": true,
+    "eu_official_inventory_analysis": true,
+    "ca_official_inventory_analysis": true,
+    "official_sales_analysis": true
+  },
+  "live_status": {
+    "status": "issues reproduced in cloud browser; corrected source pending deployment",
+    "verified_at": null,
+    "version_evidence": "Live reorder page was inspected; Analysis Report and top AI controls remained visible, workspace modal was inline and report history was absent. VERSION.json navigation was blocked by the browser client.",
+    "page_and_asset_contents": "live DOM and loaded asset URLs observed; full deployed source not verified",
+    "navigation_and_forms": "workspace options and organization login entry reproduced",
+    "sign_in": "form observed; real credentials not submitted",
+    "ai_inference": "not tested",
+    "repository_inspection": "On main, assets/system-shell.js retains Analysis report, the top AI button and index.html home links. Newer root-level copies do not replace the assets/ files requested by pages.",
+    "repository_head_observed": "09555e9",
+    "publishing_access": "Cloud browser is signed out of GitHub; no repository changes made.",
+    "corrected_preview": "Official managed preview blocked by container mount permissions. Corrected layout checked through source-driven DOM and CSS only."
+  },
+  "publishing_action": "None; prepared source archive only",
+  "limitations": [
+    "Corrected graphical desktop/mobile preview blocked by environment permissions",
+    "Authentication and external service transport are mocked",
+    "No real sign-in, external inference, carrier request, database migration or repository publishing",
+    "Saved reports remain browser-, workspace- and origin-specific"
+  ],
+  "method": "Source-driven DOM/CSS, transaction-faithful synthetic IndexedDB and actual workbook serialization, mocked authentication/transport, synthetic operations, isolated SQL and static/build checks. Existing public defects reproduced in cloud browser; corrected source not published."
+}
