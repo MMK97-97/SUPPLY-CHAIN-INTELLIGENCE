@@ -30,6 +30,7 @@
       };
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error || new Error("Saved report storage could not be opened."));
+      request.onblocked = () => reject(new Error("Saved report storage is busy. Close another tab using these reports, then refresh the list."));
     });
   }
 
@@ -38,15 +39,16 @@
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(STORE_NAME, mode);
       const request = action(transaction.objectStore(STORE_NAME));
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error("Saved report storage failed."));
-      transaction.oncomplete = () => db.close();
+      let result;
+      request.onsuccess = () => { result = request.result; };
+      request.onerror = () => { db.close(); reject(request.error || new Error("Saved report storage failed.")); };
+      transaction.oncomplete = () => { db.close(); resolve(result); };
       transaction.onerror = () => { db.close(); reject(transaction.error || new Error("Saved report storage failed.")); };
       transaction.onabort = () => { db.close(); reject(transaction.error || new Error("Saved report storage was cancelled.")); };
     });
   }
 
-  function regionCode(region) { return SI.regionCode(region); }
+  function regionCode(region) { const code=String(SI.regionCode(region)).toUpperCase();return code==="CANADA"?"CA":code; }
   function reportHeaders(region) {
     return region === "EU"
       ? ["Model#", "Brand", "Item Title", "Status", "Avg Sales/Month (3M)", "Open Orders From Client", "On Hand", "ATS", "Actual Available", "Upcoming Availability", "Open Supplier Qty in Window", "Total Open Supplier Qty", "Supplier Delivery Window", "Days Until Supplier Delivery", "Recommended Reorder Qty", "Reorder Status", "PO#"]
@@ -133,7 +135,7 @@
 
   async function listReports(region) {
     const records = await dbRequest("readonly", store => store.getAll());
-    return records.filter(record => record.region === regionCode(region)).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    return records.filter(record => regionCode(record.region) === regionCode(region)).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   }
 
   async function trimReports(region) {
@@ -145,11 +147,12 @@
     await dbRequest("readwrite", store => store.delete(id));
   }
 
-  async function archiveDataset(region, dataset) {
+  async function archiveDataset(region, dataset, options = {}) {
     if (!dataset || !Array.isArray(dataset.rows) || !dataset.rows.length) return null;
     const createdAt = new Date().toISOString();
     const items = SI.analyze(dataset.rows, region).filter(item => item.reorderRequired).sort((a, b) => b.recommended - a.recommended || a.rawRow - b.rawRow);
     const snapshot = reportSnapshot(region, items);
+    if(options.dedupe){const existing=(await listReports(region)).find(record=>(record.sourceImportedAt||"")===(dataset.importedAt||"") && record.sourceFile===(dataset.fileName||"Previous Raw Report") && JSON.stringify(record.snapshot)===JSON.stringify(snapshot));if(existing)return existing;}
     const workbook = await createWorkbook(snapshot, createdAt);
     const stamp = createdAt.replace(/[:.]/g, "-").replace("T", "_").slice(0, 19);
     const record = {
@@ -220,45 +223,31 @@
 
   async function renderHistoryPanel() {
     if (document.body.dataset.page !== "reorder") return;
-    const main = document.querySelector(".inventory-main"), heading = document.querySelector(".inventory-page-heading");
-    if (!main || !heading || document.getElementById("reorder-history-panel")) return;
-    const panel = document.createElement("section");
-    panel.className = "inventory-panel reorder-history-panel";
-    panel.id = "reorder-history-panel";
-    panel.innerHTML = `<div class="reorder-history-heading"><div class="reorder-history-title"><span class="reorder-history-title-icon" aria-hidden="true">▣</span><div><h2>Saved Reorder Reports</h2><p>Access previously generated reorder reports. Reports are saved automatically when a new Raw Report is uploaded.</p></div></div><button class="button button-secondary reorder-history-toggle" id="toggle-reorder-history" type="button" aria-expanded="false">View all (0) <span aria-hidden="true">›</span></button></div><div class="reorder-history-content" id="reorder-history-content"><div class="reorder-history-grid" id="reorder-history-rows"></div></div>`;
-    heading.insertAdjacentElement("afterend", panel);
-    const toggle = panel.querySelector("#toggle-reorder-history");
-    let showAll = false;
-    const refresh = async () => {
-      try {
-        const records = await listReports(SI.getRegion());
-        if (records.length <= 3) showAll = false;
-        toggle.setAttribute("aria-expanded", String(showAll));
-        toggle.innerHTML = `${showAll ? "Show latest" : "View all"} (${records.length}) <span aria-hidden="true">${showAll ? "‹" : "›"}</span>`;
-        const visibleRecords = showAll ? records : records.slice(0, 3);
-        panel.querySelector("#reorder-history-rows").innerHTML = records.length
-          ? visibleRecords.map(record => `<article class="reorder-history-card"><span class="reorder-history-file-icon" aria-hidden="true">X</span><div class="reorder-history-file-copy"><strong title="${SI.escapeHtml(record.fileName)}">${SI.escapeHtml(record.fileName)}</strong><small>${SI.escapeHtml(dateLabel(record.createdAt))} · ${number.format(record.reorderItems || 0)} items · ${number.format(record.recommendedUnits || 0)} units</small></div><div class="reorder-history-actions"><button class="reorder-history-icon-button reorder-history-download" type="button" data-history-download="${SI.escapeHtml(record.id)}" aria-label="Download ${SI.escapeHtml(record.fileName)}" title="Download Excel"><span aria-hidden="true">↓</span></button><button class="reorder-history-icon-button reorder-history-delete" type="button" data-history-delete="${SI.escapeHtml(record.id)}" aria-label="Delete ${SI.escapeHtml(record.fileName)}" title="Delete saved report"><span aria-hidden="true">⌫</span></button></div></article>`).join("")
-          : `<div class="reorder-history-empty"><strong>No saved reports yet</strong><p>The current Reorder Report will be saved automatically the next time a new Raw Report is uploaded.</p></div>`;
-        panel.querySelectorAll("[data-history-download]").forEach(button => button.addEventListener("click", async () => {
-          const record = records.find(item => item.id === button.dataset.historyDownload);
-          button.disabled = true;
-          try { await downloadReport(record); }
-          catch (error) { alert(`Saved Reorder Report: ${error.message}`); }
-          finally { button.disabled = false; }
-        }));
-        panel.querySelectorAll("[data-history-delete]").forEach(button => button.addEventListener("click", async () => {
-          const record = records.find(item => item.id === button.dataset.historyDelete);
-          if (!record || !confirm(`Delete the saved Reorder Report from ${dateLabel(record.createdAt)}? This cannot be undone.`)) return;
-          button.disabled = true;
-          try { await deleteReport(record.id); await refresh(); }
-          catch (error) { button.disabled = false; alert(`Saved Reorder Report: ${error.message}`); }
-        }));
-      } catch (error) {
-        toggle.innerHTML = `Archive unavailable <span aria-hidden="true">!</span>`;
-        panel.querySelector("#reorder-history-rows").innerHTML = `<div class="reorder-history-empty"><strong>Saved reports are unavailable</strong><p>${SI.escapeHtml(error.message)}</p></div>`;
-      }
+    const main=document.querySelector(".inventory-main");
+    if(!main || document.getElementById("reorder-history-panel"))return;
+    const panel=document.createElement("section");panel.className="inventory-panel reorder-history-panel";panel.id="reorder-history-panel";panel.setAttribute("aria-labelledby","reorder-history-title");
+    const scope=global.StarkWorkspace?.isDemo?"Demo saved reports":"Working browser saved reports";
+    panel.innerHTML=`<div class="reorder-history-heading"><div class="reorder-history-title"><span class="reorder-history-title-icon" aria-hidden="true">▣</span><div><h2 id="reorder-history-title">Saved Reorder Reports</h2><p>${regionCode(SI.getRegion())} · ${scope} · Last ${HISTORY_LIMIT} reports in this browser. Previous reports are archived when Raw Report is replaced.</p></div></div><div class="reorder-history-toolbar"><button class="button button-primary" id="save-current-reorder" type="button" disabled>Save current report</button><button class="button button-secondary" id="refresh-reorder-history" type="button">Refresh files</button><button class="button button-secondary reorder-history-toggle" id="toggle-reorder-history" type="button" aria-expanded="false">View all (0)</button></div></div><div class="reorder-history-content" id="reorder-history-content"><div class="reorder-history-grid" id="reorder-history-rows"></div></div><p id="reorder-history-status" class="reorder-history-status" role="status" aria-live="polite"></p>`;
+    const heading=main.querySelector(".planning-title,.inventory-page-heading");if(heading)heading.after(panel);else main.prepend(panel);
+    const toggle=panel.querySelector("#toggle-reorder-history"),save=panel.querySelector("#save-current-reorder"),status=panel.querySelector("#reorder-history-status");
+    let showAll=false,epoch=0,saving=false;
+    const message=(text,failed=false)=>{status.textContent=text;status.classList.toggle("error",failed);};
+    const refresh=async()=>{
+      const current=++epoch;
+      try{
+        const [records,dataset]=await Promise.all([listReports(SI.getRegion()),SI.loadDataset(SI.getRegion())]);if(current!==epoch)return;
+        save.disabled=saving||!dataset?.rows?.length;
+        toggle.disabled=records.length<=3;if(records.length<=3)showAll=false;
+        toggle.setAttribute("aria-expanded",String(showAll));toggle.textContent=(showAll?"Show latest":"View all")+" ("+records.length+")";
+        const visible=showAll?records:records.slice(0,3);
+        panel.querySelector("#reorder-history-rows").innerHTML=records.length?visible.map(record=>`<article class="reorder-history-card"><span class="reorder-history-file-icon" aria-hidden="true">X</span><div class="reorder-history-file-copy"><strong>${SI.escapeHtml(record.fileName||"Saved Reorder Report")}</strong><small>${SI.escapeHtml(dateLabel(record.createdAt))} · ${number.format(record.reorderItems||0)} items · ${number.format(record.recommendedUnits||0)} units</small></div><div class="reorder-history-actions"><button class="reorder-history-icon-button" type="button" data-history-download="${SI.escapeHtml(record.id)}" aria-label="Download ${SI.escapeHtml(record.fileName||"saved report")}" title="Download Excel">↓</button><button class="reorder-history-icon-button" type="button" data-history-delete="${SI.escapeHtml(record.id)}" aria-label="Delete ${SI.escapeHtml(record.fileName||"saved report")}" title="Delete saved report">⌫</button></div></article>`).join(""):`<div class="reorder-history-empty"><strong>No saved reports in this workspace yet</strong><p>Save the current report above. Files from another browser or the working/demo workspace remain separate.</p></div>`;
+        panel.querySelectorAll("[data-history-download]").forEach(button=>button.addEventListener("click",async()=>{button.disabled=true;try{await downloadReport(records.find(record=>record.id===button.dataset.historyDownload));message("Excel download prepared.");}catch(error){message(error.message,true);}finally{button.disabled=false;}}));
+        panel.querySelectorAll("[data-history-delete]").forEach(button=>button.addEventListener("click",async()=>{const record=records.find(record=>record.id===button.dataset.historyDelete);if(!record||!confirm(`Delete the saved Reorder Report from ${dateLabel(record.createdAt)}? This cannot be undone.`))return;button.disabled=true;try{await deleteReport(record.id);await refresh();message("Saved report deleted.");}catch(error){button.disabled=false;message(error.message,true);}}));
+      }catch(error){if(current!==epoch)return;save.disabled=true;toggle.disabled=true;panel.querySelector("#reorder-history-rows").innerHTML=`<div class="reorder-history-empty"><strong>Saved reports could not be read</strong><p>${SI.escapeHtml(error.message)}</p></div>`;message("Refresh files to retry. Existing files have not been deleted.",true);}
     };
-    toggle.addEventListener("click", async () => { showAll = !showAll; await refresh(); });
+    save.addEventListener("click",async()=>{if(saving)return;saving=true;save.disabled=true;message("Saving current Reorder Report…");try{const dataset=await SI.loadDataset(SI.getRegion());if(!dataset?.rows?.length)throw new Error("Upload a Raw Report before saving.");await archiveDataset(SI.getRegion(),dataset,{dedupe:true});message("Report saved in this browser and workspace.");}catch(error){message(error.message,true);}finally{saving=false;await refresh();}});
+    toggle.addEventListener("click",()=>{showAll=!showAll;refresh();});panel.querySelector("#refresh-reorder-history").addEventListener("click",()=>{message("");refresh();});
+    window.addEventListener("focus",refresh);window.addEventListener("stark-report-state-change",refresh);
     await refresh();
   }
 

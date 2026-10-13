@@ -61,9 +61,9 @@
   if (!supported) return;
 
   const loadSharedAsset = file => {
-    if (document.querySelector(`script[data-shared-asset="${file}"]`)) return;
+    if (Array.from(document.scripts).some(node => node.src && new URL(node.src).pathname.endsWith("/assets/"+file))) return;
     const script = document.createElement("script");
-    script.src = `assets/${file}?v=20260929-3`;
+    script.src = `assets/${file}?v=20261013-1`;
     script.async = false;
     script.dataset.sharedAsset = file;
     document.head.appendChild(script);

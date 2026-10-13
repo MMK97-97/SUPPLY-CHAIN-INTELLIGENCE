@@ -26,8 +26,13 @@
     }
   }
   function workspaceMenu(){
-    const dialog=window.StarkSystemUI.dialog('Your workspace',`<div class="portfolio-workspace-choice"><p>${W?.isDemo?'You are exploring fictional records. All changes stay in the demo.':'Your current browser records stay in the working workspace.'}</p><a class="sys-btn primary" href="${S.url('workspace.html?demo=1')}">Explore portfolio demo</a><a class="sys-btn" href="${S.url('login.html?workspaceMode=working')}">Organization sign in</a>${W?.isDemo?'<button type="button" id="portfolio-reset">Reset fictional demo records</button>':''}<a href="${S.url('data-center.html')}">Data Center & backups</a></div>`,()=>true,'Done');
-    dialog.querySelector('#portfolio-reset')?.addEventListener('click',()=>{window.StarkSystemUI.dialog('Reset the demo?','<p>Replace the fictional orders, reports and chat in this demo with fresh sample records. Working records are kept.</p>',()=>{W.resetDemo();return true;},'Reset demo');});
+    const target=W?.destination()||'workspace.html';
+    const organizationURL=S.url('login.html?workspaceMode=working&from='+(W?.isDemo?'demo':'working')+'&return='+encodeURIComponent(target));
+    const demoURL=W?.modeURL('demo',target).href||S.url('workspace.html?demo=1');
+    const browserURL=W?.modeURL('working',target).href||S.url('workspace.html?workspaceMode=working');
+    const dialog=window.StarkSystemUI.dialog('Choose your workspace',`<div class="portfolio-workspace-choice"><p>${W?.isDemo?'You are in the fictional demo. Your organization and previous browser reports remain separate.':'You are using your working browser records. Organization sign-in returns you to this page.'}</p><a class="sys-btn primary" id="portfolio-organization-entry" href="${organizationURL}">Sign in to organization</a><a class="sys-btn" id="portfolio-demo-entry" href="${demoURL}">Explore demo of this page</a>${W?.isDemo?`<a class="sys-btn" href="${browserURL}">Return to working browser records</a>`:''}<p class="workspace-storage-note">Saved reports are stored in the browser and workspace where they were created. Switching does not copy or delete records.</p>${W?.isDemo?'<button type="button" id="portfolio-reset">Reset fictional demo records</button>':''}<a href="${S.url('data-center.html')}">Data Center & backups</a></div>`,()=>true,'Done',{system:true});
+    dialog.querySelector('#portfolio-demo-entry')?.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||event.button!==0)return;event.preventDefault();W.navigateMode('demo',target);});
+    dialog.querySelector('#portfolio-reset')?.addEventListener('click',()=>{window.StarkSystemUI.dialog('Reset the demo?','<p>Replace only fictional demo records. Working records and saved reports remain available.</p>',()=>{W.resetDemo();return true;},'Reset demo',{system:true});});
   }
   function readScenario(){try{return JSON.parse(storage.getItem(scenarioKey)||'{}');}catch(_){return {};}}
   function saveScenario(record){storage.setItem(scenarioKey,JSON.stringify(record));refreshDemo();}
