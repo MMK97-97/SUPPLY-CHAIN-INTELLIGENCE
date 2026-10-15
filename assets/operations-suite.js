@@ -114,7 +114,7 @@ const NAV=[
  {title:'Vendor Management',items:[['vendor-dashboard','vendor-management/index.html','⎔','Vendor Dashboard'],['vendor-master','vendor-management/vendors.html','◇','Vendor Master'],['vendor-procurement','vendor-management/procurement.html','⇄','Procurement Pipeline'],['vendor-vault','vendor-management/digital-vault.html','⌘','Digital Key Vault'],['vendor-sla','vendor-management/sla.html','↟','SLA Scorecard'],['vendor-po','vendor-po-management.html','≍','Vendor PO Management']]},
  {title:'Warehouse Management',items:[['wms-dashboard','warehouse-management/index.html','▦','WMS Control Tower'],['wms-inventory','warehouse-management/inventory-bins.html','▤','Inventory & Bins'],['wms-receiving','warehouse-management/receiving.html','⇣','Receiving & Putaway'],['wms-waves','warehouse-management/wave-picking.html','≋','Wave Picking'],['wms-packing','warehouse-management/packing-dispatch.html','▣','Packing & Dispatch']]},
  {title:'3PL Management',items:[['tpl-dashboard','3pl-management/index.html','◎','3PL Control Tower'],['tpl-network','3pl-management/network.html','◫','Network & Inventory'],['tpl-routing','3pl-management/routing.html','⇢','Routing Workbench'],['tpl-shipments','3pl-management/shipments.html','↗','Shipments'],['tpl-recon','3pl-management/reconciliation.html','≍','Reconciliation & SLA']]},
- {title:'Supply Chain',items:[['sci','index.html','◌','Supply Chain Intelligence']]}
+ {title:'Supply Chain',items:[['sci','workspace.html','◌','Supply Chain Intelligence']]}
 ];
 const PAGE_META={
  'portal':['Business Operations','Enterprise workspace'],

@@ -4,12 +4,16 @@
   if (window.StarkNavigation) return;
   const root = document.documentElement;
   const prefetched = new Set();
-  const ownRoot = new URL('../', document.currentScript.src);
+  const scriptEl = document.currentScript || document.querySelector('script[src*="page-navigation"]');
+  const ownRoot = new URL('../', scriptEl ? scriptEl.src : new URL('assets/', location.href).href);
   let resetTimer;
 
   function reset() {
     clearTimeout(resetTimer);
-    root.classList.remove('stark-navigation-pending');
+    root.classList.remove('stark-navigation-pending', 'stark-page-loading');
+    if (root.dataset.authPublic === 'true' || root.dataset.authEntry === 'true' || window.StarkWorkspace?.isDemo) {
+      root.classList.remove('stark-auth-pending');
+    }
     document.getElementById('stark-navigation-status')?.remove();
   }
   function indicate() {
@@ -24,7 +28,7 @@
       document.body.appendChild(status);
     }
     // A cancelled navigation or a beforeunload prompt must leave the page usable.
-    resetTimer = setTimeout(reset, 12000);
+    resetTimer = setTimeout(reset, 8000);
   }
   function destination(link) {
     if (!link || link.hasAttribute('download') || link.hasAttribute('data-no-prefetch') ||
@@ -62,15 +66,19 @@
   });
   document.addEventListener('pointerover', prefetch, { passive: true });
   document.addEventListener('focusin', prefetch);
-  window.addEventListener('pageshow', reset);
+  window.addEventListener('pageshow', () => { reset(); ready(); });
   window.addEventListener('pagehide', reset);
   window.addEventListener('pagereveal', reset);
+  window.addEventListener('popstate', () => { reset(); ready(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
   function ready() {
     // Modules and the shared shell finish their DOMContentLoaded listeners first.
-    queueMicrotask(() => root.classList.remove('stark-page-loading'));
+    root.classList.remove('stark-page-loading', 'stark-navigation-pending');
+    if (root.dataset.authPublic === 'true' || root.dataset.authEntry === 'true' || window.StarkWorkspace?.isDemo) {
+      root.classList.remove('stark-auth-pending');
+    }
   }
-  if (document.readyState === 'loading' || document.readyState === 'interactive') document.addEventListener('DOMContentLoaded', ready, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => queueMicrotask(ready), { once: true });
   else ready();
   window.StarkNavigation = Object.freeze({ navigate(url) { indicate(); location.assign(url); }, reset });
 })();

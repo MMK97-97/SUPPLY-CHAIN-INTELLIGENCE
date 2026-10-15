@@ -5,6 +5,7 @@
 
 
   const REGION = (location.pathname.match(/-(us|eu|ca)\.html$/i)?.[1] || "US").toUpperCase();
+  const REGION_KEY = REGION === "CA" ? "Canada" : REGION;
   const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   const el = id => document.getElementById(id);
   let SI;
@@ -17,6 +18,7 @@
   async function init() {
     SI = window.StarkInventory;
     SI.initFrame("brands");
+    preserveCanadaSettings();
     await refreshDataset();
     renderFileStatus();
     bindEvents();
@@ -30,12 +32,22 @@
     });
   }
 
-  async function refreshDataset() {
-    const latest = await SI.loadDataset(REGION);
-    if (latest) {
-      dataset = latest;
-      SI.ensureBrandSettings(REGION, rows());
+  function preserveCanadaSettings() {
+    if (REGION !== "CA") return;
+    const legacy = SI.loadBrandSettings("CA"), current = SI.loadBrandSettings("Canada");
+    const merged = Object.assign(Object.create(null), current), names = new Set(Object.keys(current).map(name => name.trim().toUpperCase()));
+    let added = false;
+    for (const [name, settings] of Object.entries(legacy)) {
+      if (!names.has(name.trim().toUpperCase())) { merged[name] = settings; added = true; }
     }
+    if (added) SI.saveBrandSettings("Canada", merged);
+    // The legacy CA key is retained; existing canonical settings take precedence.
+  }
+
+  async function refreshDataset() {
+    const latest = await SI.loadDataset(REGION_KEY);
+    dataset = latest || null;
+    if (dataset) SI.ensureBrandSettings(REGION_KEY, rows());
     if (!el("brand-file-status")) return;
     renderFileStatus();
     renderBrands();
@@ -47,7 +59,7 @@
   }
 
   function settings() {
-    return SI.loadBrandSettings(REGION);
+    return SI.loadBrandSettings(REGION_KEY);
   }
 
   function logisticsKey() {
@@ -113,9 +125,9 @@
 
   function renderFileStatus() {
     const status = el("brand-file-status");
-    const title = status.querySelector("strong");
+    if (!status) return;
     const detail = status.querySelector("small");
-    title.textContent = dataset ? "Live Data Active" : "Waiting for report";
+    if (!detail) return;
     detail.textContent = dataset
       ? `${dataset.fileName} • ${number.format(rows().length)} items`
       : "Upload an Item Sales Report to begin";
@@ -245,12 +257,12 @@
       el("brand-search").value = existing;
       currentPage = 1;
       renderBrands();
-      window.alert(`${existing} is already in the ${SI.regionName(REGION)} brand list.`);
+      window.alert(`${existing} is already in the ${SI.regionName(REGION_KEY)} brand list.`);
       return;
     }
     const saved = settings();
     saved[brand] = { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
-    SI.saveBrandSettings(REGION, saved);
+    SI.saveBrandSettings(REGION_KEY, saved);
     el("brand-search").value = brand;
     currentPage = 1;
     renderBrands();
@@ -263,7 +275,7 @@
     const brand = event.target.dataset.brandActive;
     saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
     saved[brand].active = event.target.checked;
-    SI.saveBrandSettings(REGION, saved);
+    SI.saveBrandSettings(REGION_KEY, saved);
     const status = Array.from(document.querySelectorAll("[data-brand-status]")).find(node => node.dataset.brandStatus === brand);
     if (status) {
       status.textContent = event.target.checked ? "Active" : "Inactive";
@@ -287,7 +299,7 @@
     logistics[brand].shippingCostResponsibility = shippingCost?.value || "";
     logistics[brand].shippingInfoAvailable = shippingInfo?.value || "";
     logistics[brand].palletOption = pallet?.value || "";
-    SI.saveBrandSettings(REGION, saved);
+    SI.saveBrandSettings(REGION_KEY, saved);
     saveLogistics(logistics);
     renderKpis();
     const button = Array.from(document.querySelectorAll("[data-brand-save]")).find(node => node.dataset.brandSave === brand);
@@ -310,7 +322,7 @@
       logistics[brand].shippingInfoAvailable = shippingInfo?.value || "";
       logistics[brand].palletOption = pallet?.value || "";
     });
-    SI.saveBrandSettings(REGION, saved);
+    SI.saveBrandSettings(REGION_KEY, saved);
     saveLogistics(logistics);
     renderKpis();
     flashSaved(el("save-lead-times"), "Saved ✓", "Save changes");
@@ -332,13 +344,13 @@
       saved[brand] = saved[brand] || { active: true, leadTime: "", shippingCostResponsibility: "", shippingInfoAvailable: "", palletOption: "" };
       saved[brand].active = active;
     });
-    SI.saveBrandSettings(REGION, saved);
+    SI.saveBrandSettings(REGION_KEY, saved);
     renderBrands();
   }
 
   function exportBrands() {
     const report = reportData();
-    SI.downloadCsv([report.headers, ...report.rows], `Active Brands ${SI.regionCode(REGION)}.csv`);
+    SI.downloadCsv([report.headers, ...report.rows], `Active Brands ${SI.regionCode(REGION_KEY)}.csv`);
   }
 
   function reportData() {

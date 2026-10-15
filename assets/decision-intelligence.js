@@ -9,7 +9,6 @@
   const REGION_NAME = { US: "United States", EU: "European Union", CA: "Canada" }[REGION];
   const HISTORY_DB = "stark-reorder-history-v1";
   const HISTORY_STORE = "reports";
-  const MODEL_VERSION = "Explainable Brain 1.0";
   const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
   const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 });
@@ -32,9 +31,9 @@
 
   async function init() {
     SI = window.StarkInventory;
-    dataset = await SI.loadDataset(REGION_KEY);
     bind();
-    renderRegulations();
+    try { dataset = await SI.loadDataset(REGION_KEY); }
+    catch (_) { renderEmpty(); exposeExport(); return; }
     if (!dataset?.rows?.length) {
       renderEmpty();
       exposeExport();
@@ -55,8 +54,10 @@
   }
 
   async function refreshIfChanged() {
-    const latest = await SI.loadDataset(REGION_KEY);
-    if (!latest?.rows?.length || latest.importedAt === dataset?.importedAt) return;
+    let latest;
+    try { latest = await SI.loadDataset(REGION_KEY); }
+    catch (_) { dataset = null; decisions = []; filtered = []; renderEmpty(); exposeExport(); return; }
+    if (!latest?.rows?.length) { dataset = null; decisions = []; filtered = []; renderEmpty(); exposeExport(); return; }
     dataset = latest;
     snapshots = await loadSnapshots();
     buildModel();
@@ -252,7 +253,7 @@
   }
 
   function applyFilters() {
-    const search = $("brain-search").value.trim().toLowerCase();
+    const search = $("brain-search")?.value.trim().toLowerCase() || "";
     const risk = $("brain-risk").value;
     const brand = $("brain-brand").value;
     filtered = decisions.filter(row => (!search || `${row.model} ${row.product} ${row.brand} ${row.action} ${row.businessReason}`.toLowerCase().includes(search)) && (!risk || row.risk === risk) && (!brand || row.brand === brand));
@@ -263,12 +264,10 @@
   function renderAll() {
     renderStatus();
     renderKpis();
-    renderLearning();
     renderTable();
   }
 
   function renderStatus() {
-    $("brain-live-title").textContent = "Decision brain active";
     $("brain-live-detail").textContent = `${dataset.fileName} • ${snapshots.length} uploaded observation${snapshots.length === 1 ? "" : "s"} • ${number.format(decisions.length)} SKU decisions`;
   }
 
@@ -282,16 +281,6 @@
     $("brain-kpi-accuracy").textContent = learning.accuracy == null ? "Learning" : `${percent.format(learning.accuracy)} backtest accuracy`;
   }
 
-  function renderLearning() {
-    $("learning-metrics").innerHTML = `
-      <div><small>Historical uploads</small><strong>${number.format(learning.snapshots)} / 30</strong></div>
-      <div><small>Backtest observations</small><strong>${number.format(learning.observations)}</strong></div>
-      <div><small>Portfolio accuracy</small><strong>${learning.accuracy == null ? "Learning" : percent.format(learning.accuracy)}</strong></div>
-      <div><small>Model version</small><strong>${MODEL_VERSION}</strong></div>`;
-    const total = Object.values(learning.methods).reduce((sum, value) => sum + value, 0) || 1;
-    $("method-bars").innerHTML = Object.entries(learning.methods).sort((a, b) => b[1] - a[1]).map(([method, count]) => `<div class="method-bar"><span>${esc(method)}</span><div><i style="width:${count / total * 100}%"></i></div><b>${number.format(count)}</b></div>`).join("");
-  }
-
   function renderTable() {
     $("decision-count").textContent = `${number.format(filtered.length)} of ${number.format(decisions.length)} decisions`;
     $("decision-rows").innerHTML = filtered.length ? filtered.map(row => `<tr>
@@ -301,7 +290,7 @@
       <td class="num">${row.daysToStockout == null ? "—" : decimal.format(row.daysToStockout)}</td><td class="num">${number.format(row.gap)}</td>
       <td>${esc(row.action)}</td><td class="reason">${esc(row.businessReason)}</td><td><span class="confidence-badge">${row.confidence}</span></td>
       <td class="num">${number.format(row.priority)}</td><td><button type="button" data-decision-key="${esc(keyOf(row))}">Why?</button></td>
-    </tr>`).join("") : `<tr><td colspan="12"><div class="empty-brain"><strong>No decisions match the filters</strong><span>Change the brand, risk, or search filter.</span></div></td></tr>`;
+    </tr>`).join("") : `<tr><td colspan="12"><div class="empty-brain"><strong>No decisions match the filters</strong><span>Change the brand or risk filter.</span></div></td></tr>`;
     $("decision-rows").querySelectorAll("[data-decision-key]").forEach(button => button.addEventListener("click", () => showDetail(button.dataset.decisionKey)));
   }
 
@@ -317,7 +306,7 @@
     $("detail-learning").textContent = `${row.method} was selected from ${row.observations} available SKU observation${row.observations === 1 ? "" : "s"}. Confidence is ${row.confidence} (${percent.format(row.confidenceScore)} evidence score). Portfolio backtest accuracy is ${learning.accuracy == null ? "not yet available" : percent.format(learning.accuracy)}.`;
     $("detail-governance").textContent = regulationDecision(row);
     $("decision-detail").classList.add("open");
-    $("decision-detail").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    $("decision-detail").scrollIntoView?.({ behavior: "smooth", block: "nearest" });
   }
 
   function regulationDecision(row) {
@@ -325,32 +314,10 @@
     return `${REGION_NAME}: ${inbound} This engine flags the control point but does not replace legal, customs-broker, tax, quality, or product-safety review.`;
   }
 
-  function regulations() {
-    const common = [
-      ["Demand and inventory controls", "Use validated demand history, lead time, service level, safety stock, reorder point, ABC/XYZ segmentation, open commitments, inbound timing, shelf life, and obsolescence exposure."],
-      ["Supplier and purchasing controls", "Confirm approved supplier status, price and MOQ, capacity, incoterms, payment terms, delivery commitment, quality requirements, and change/cancellation exposure before releasing a PO."],
-      ["Trade and logistics controls", "Confirm tariff classification, origin, customs value, sanctions/restricted-party screening, dangerous-goods status, packaging, insurance, transport mode, and record retention."],
-      ["Decision governance", "Review low-confidence recommendations, material master exceptions, unusual demand spikes, late supply, and high-value commitments with an authorized planner before execution."]
-    ];
-    const regional = {
-      US: ["United States checkpoints", "Validate HTS classification, CBP entry data and valuation, country-of-origin marking, applicable FDA/CPSC/FTC or other product rules, sanctions screening, state requirements, and broker documentation."],
-      EU: ["European Union checkpoints", "Validate CN/TARIC classification, EORI and customs value, VAT/import treatment, origin, CE/GPSR/REACH or other product obligations, sanctions, labeling, and importer/economic-operator records."],
-      CA: ["Canada checkpoints", "Validate HS classification, CBSA valuation and origin, GST/HST treatment, importer records, sanctions, bilingual labeling where applicable, CCPSA or other product obligations, and broker documentation."]
-    };
-    return [regional[REGION], ...common];
-  }
-
-  function renderRegulations() {
-    $("regulation-list").innerHTML = regulations().map(([title, description], index) => `<details ${index === 0 ? "open" : ""}><summary>${esc(title)}</summary><p>${esc(description)}</p></details>`).join("");
-  }
-
   function renderEmpty() {
-    $("brain-live-title").textContent = "Waiting for inventory history";
     $("brain-live-detail").textContent = "Upload a regional Raw Report to activate the decision brain";
     for (let index = 1; index <= 6; index += 1) $(`brain-kpi-${index}`).textContent = "0";
     $("brain-kpi-accuracy").textContent = "No model data";
-    $("learning-metrics").innerHTML = `<div><small>Historical uploads</small><strong>0 / 30</strong></div><div><small>Backtest observations</small><strong>0</strong></div><div><small>Portfolio accuracy</small><strong>Learning</strong></div><div><small>Model version</small><strong>${MODEL_VERSION}</strong></div>`;
-    $("method-bars").innerHTML = "";
     $("decision-count").textContent = "0 decisions";
     $("decision-rows").innerHTML = `<tr><td colspan="12"><div class="empty-brain"><strong>No inventory report available</strong><span>Upload the Raw Report first. Each future upload becomes another learning observation.</span></div></td></tr>`;
   }
