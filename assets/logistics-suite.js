@@ -126,7 +126,7 @@ const NAV=[
  {title:'Vendor Management',items:[['vendor-dashboard','vendor-management/index.html','⎔','Vendor Dashboard'],['vendor-po','vendor-po-management.html','⇄','Vendor PO Management']]},
  {title:'Warehouse Management',items:[['wms-dashboard','warehouse-management/index.html','▦','WMS Control Tower'],['wms-inventory','warehouse-management/inventory-bins.html','▤','Inventory & Bins'],['wms-receiving','warehouse-management/receiving.html','⇣','Receiving & Putaway'],['wms-waves','warehouse-management/wave-picking.html','≋','Wave Picking'],['wms-packing','warehouse-management/packing-dispatch.html','▣','Packing & Dispatch'],['wms-counts','warehouse-management/cycle-count.html','✓','Cycle Counts']]},
  {title:'3PL Management',items:[['tpl-dashboard','3pl-management/index.html','◎','3PL Control Tower'],['tpl-network','3pl-management/network.html','◫','Network & Inventory'],['tpl-routing','3pl-management/routing.html','⇢','Routing Workbench'],['tpl-shipments','3pl-management/shipments.html','↗','Shipments'],['tpl-recon','3pl-management/reconciliation.html','≍','Reconciliation & SLA'],['tpl-integrations','3pl-management/integrations.html','⌘','Integrations']]},
- {title:'Supply Chain',items:[['sci','index.html','◌','Supply Chain Intelligence']]}
+ {title:'Supply Chain',items:[['sci','workspace.html','◌','Supply Chain Intelligence']]}
 ];
 const META={
  'wms-dashboard':['WMS Control Tower','Warehouse Management System'],'wms-inventory':['Inventory & Bins','Location-level stock control'],'wms-receiving':['Receiving & Putaway','Inbound execution'],'wms-waves':['Wave Picking','Pick productivity engine'],'wms-packing':['Packing & Dispatch','White-label fulfillment'],'wms-counts':['Cycle Counts','Inventory accuracy & exceptions'],

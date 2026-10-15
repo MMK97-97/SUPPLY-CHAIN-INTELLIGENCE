@@ -41,7 +41,7 @@
   const LOCAL_ONLY_INTENTS = new Set(["voice", "space", "settings", "navigation", "export", "tracking", "learn", "help"]);
   const ROUTES = {
     "inventory dashboard": "inventory-dashboard", dashboard: "inventory-dashboard",
-    "analysis report": "inventory-analysis-report", "inventory analysis": "inventory-analysis-report",
+    "analysis report": "decision-intelligence", "inventory analysis": "decision-intelligence",
     "decision intelligence": "decision-intelligence", "decision brain": "decision-intelligence",
     "raw report": "raw-report", "reorder report": "reorder-report", reorder: "reorder-report",
     "active brands": "active-brands", brands: "active-brands", instructions: "instructions",

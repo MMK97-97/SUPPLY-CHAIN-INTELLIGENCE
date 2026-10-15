@@ -12,7 +12,7 @@
      and the full-screen events view. */
   if (body.querySelector(".tv-app") || document.documentElement.dataset.route) return;
 
-  const path = location.pathname.split("/").pop() || "index.html";
+  const path = location.pathname.split("/").pop() || "workspace.html";
   const suffixMatch = path.match(/-(us|eu|ca)\.html$/i);
   const queryRegion = new URLSearchParams(location.search).get("region") || new URLSearchParams(location.search).get("workspace");
   const storedRegion = localStorage.getItem("stark-selected-region");
@@ -56,14 +56,14 @@
     "instructions-us.html", "instructions-eu.html", "instructions-ca.html", "ats-eu.html"
   ]);
   const supported = inventoryPages.has(path) || [
-    "index.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"
+    "workspace.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"
   ].includes(path);
   if (!supported) return;
 
   const loadSharedAsset = file => {
-    if (document.querySelector(`script[data-shared-asset="${file}"]`)) return;
+    if (Array.from(document.scripts).some(node => node.src && new URL(node.src).pathname.endsWith("/assets/"+file))) return;
     const script = document.createElement("script");
-    script.src = `assets/${file}?v=20260929-3`;
+    script.src = `assets/${file}?v=20261013-1`;
     script.async = false;
     script.dataset.sharedAsset = file;
     document.head.appendChild(script);
@@ -100,7 +100,6 @@
     const regional = name => `${name}-${regionSlug}.html`;
     const inventoryItems = [
       ["dashboard", "Inventory Dashboard", regional("inventory-dashboard"), icons.dashboard],
-      ["analysis", "Analysis Report", regional("inventory-analysis-report"), icons.analysis],
       ["decision", "Decision Intelligence", regional("decision-intelligence"), icons.decision],
       ["raw", "Raw Report", regional("raw-report"), icons.raw],
       ["reorder", "Reorder Report", regional("reorder-report"), icons.reorder],
@@ -116,7 +115,7 @@
       ["tracking", "Tracking", "shipment-tracking.html", icons.tracking]
     ];
     rail.innerHTML = `
-      <a class="premium-rail-brand" href="index.html" aria-label="Stark Premium home"><img src="assets/supply-chain-logo.png?v=20260918-2" alt=""><div><small>Stark Premium</small><strong>Supply Chain Intelligence</strong></div></a>
+      <a class="premium-rail-brand" href="workspace.html" aria-label="Stark Premium home"><img src="assets/supply-chain-logo.png?v=20260918-2" alt=""><div><small>Stark Premium</small><strong>Supply Chain Intelligence</strong></div></a>
       <div class="premium-rail-region"><span>${nextRegionCode}</span><div><small>Regional workspace</small><strong>${nextRegionCode === "US" ? "United States" : nextRegionCode === "EU" ? "European Union" : "Canada"}</strong></div></div>
       <nav>
         <section class="premium-nav-group" aria-label="Inventory analysis">
@@ -160,7 +159,7 @@
   });
 
   const syncIndexMode = () => {
-    if (path !== "index.html") {
+    if (path !== "workspace.html") {
       body.classList.add("premium-shell-active");
       return;
     }
@@ -177,7 +176,7 @@
     if (!active) closeRail();
   };
   syncIndexMode();
-  if (path === "index.html") {
+  if (path === "workspace.html") {
     const observer = new MutationObserver(syncIndexMode);
     [document.getElementById("module-screen"), document.getElementById("regional-app")].filter(Boolean).forEach(node => observer.observe(node, {attributes: true, attributeFilter: ["class"]}));
     observer.observe(document.documentElement, {attributes: true, attributeFilter: ["data-region"]});

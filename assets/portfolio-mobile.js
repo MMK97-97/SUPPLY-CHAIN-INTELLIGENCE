@@ -4,7 +4,7 @@
   function init(){
     if(!document.querySelector('.system-header')||document.querySelector('.portfolio-mobile-nav'))return;
     const nav=document.createElement('nav');nav.className='portfolio-mobile-nav';nav.setAttribute('aria-label','Mobile workspace navigation');
-    const routes=[['index.html','Overview','home'],['order-management/index.html','Orders','orders'],['warehouse-management/index.html','Stock','warehouse'],['mk-brain.html','Analyst','data']];
+    const routes=[['workspace.html','Overview','home'],['order-management/index.html','Orders','orders'],['warehouse-management/index.html','Stock','warehouse'],['mk-brain.html','Analyst','data']];
     nav.innerHTML=routes.map(([route,label,icon])=>`<a href="${S.url(route)}" ${location.pathname===new URL(route,S.rootURL).pathname?'aria-current="page"':''}>${window.StarkSystemUI.glyph(icon)}<span>${label}</span></a>`).join('')+'<button type="button" aria-label="Open all modules" aria-controls="system-modules" aria-expanded="false">'+window.StarkSystemUI.glyph('data')+'<span>More</span></button>';
     document.body.append(nav);const more=nav.querySelector('button');more.onclick=()=>window.StarkModuleNavigation.open(more);
     const menu=document.querySelector('.system-menu');new MutationObserver(()=>more.setAttribute('aria-expanded',menu.getAttribute('aria-expanded'))).observe(menu,{attributes:true,attributeFilter:['aria-expanded']});

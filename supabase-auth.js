@@ -13,24 +13,37 @@
   const state = { ready: false, session: null, user: null, organizationId: "", organizationName: "", role: "" };
   const esc = value => String(value == null ? "" : value).replace(/[&<>\"]/g, character => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[character]));
 
-  const authRootURL = new URL("../", document.currentScript.src);
+  const scriptEl = document.currentScript || document.querySelector('script[src*="supabase-auth"]') || document.querySelector('script[src*="auth-bootstrap"]');
+  const authRootURL = new URL("../", scriptEl ? scriptEl.src : new URL("assets/", location.href).href);
   const appRoot = () => authRootURL.pathname;
 
   const safeReturnTarget = fallback => {
-    const entered = new URLSearchParams(location.search).get("return") || fallback || "workspace.html";
+    const raw = new URLSearchParams(location.search).get("return") || fallback || "workspace.html";
     try {
-      const target = new URL(entered, location.href);
-      if (target.origin !== location.origin || !target.pathname.startsWith(appRoot())) return "workspace.html";
-      const relative=target.pathname.slice(appRoot().length);
-      if(!relative || ["index.html","login.html","auth-callback.html"].includes(relative))return "workspace.html";
+      const target = new URL(raw, authRootURL);
+      if (target.origin !== authRootURL.origin || !target.pathname.startsWith(appRoot()) || /%2f|%5c/i.test(target.pathname)) return "workspace.html";
+      const relative = target.pathname.slice(appRoot().length);
+      if (!relative || ["index.html", "login.html", "auth-callback.html"].includes(relative) || !relative.endsWith(".html")) return "workspace.html";
+      for (const key of ["demo", "workspaceMode", "return", "from", "code", "token", "access_token", "refresh_token", "password"]) {
+        target.searchParams.delete(key);
+      }
       return `${relative}${target.search}${target.hash}`;
     } catch (_) {
       return "workspace.html";
     }
   };
 
-  const currentReturnTarget = () => `${location.pathname.slice(appRoot().length)}${location.search}${location.hash}`;
-  const loginUrl = () => new URL(`login.html?return=${encodeURIComponent(currentReturnTarget())}`,authRootURL).href;
+  const currentReturnTarget = () => {
+    const rel = location.pathname.slice(appRoot().length);
+    if (!rel || ["index.html", "login.html", "auth-callback.html", "workspace.html"].includes(rel)) return "";
+    return `${rel}${location.search}${location.hash}`;
+  };
+
+  const loginUrl = () => {
+    const ret = currentReturnTarget();
+    return new URL(ret ? `login.html?return=${encodeURIComponent(ret)}` : `login.html`, authRootURL).href;
+  };
+
   const callbackUrl = type => `${location.origin}${appRoot()}auth-callback.html?flow=${encodeURIComponent(type || "account")}`;
   const reveal = () => {
     root.classList.remove("stark-auth-pending", "stark-auth-failed");
@@ -137,10 +150,42 @@
     const form = document.getElementById("login-form");
     const forgot = document.getElementById("forgot-password");
     wirePasswordToggles(document);
+
     if (state.session) {
-      if(window.StarkWorkspace)window.StarkWorkspace.navigateMode("working",safeReturnTarget("workspace.html"));else location.replace(safeReturnTarget("workspace.html"));
+      const isHistoryNav = window.performance?.getEntriesByType?.("navigation")?.[0]?.type === "back_forward";
+      const target = safeReturnTarget("workspace.html");
+
+      if (!isHistoryNav) {
+        if (window.StarkWorkspace) window.StarkWorkspace.navigateMode("working", target);
+        else location.replace(new URL(target, authRootURL).href);
+        return;
+      }
+
+      setMessage(`You are signed in as ${esc(state.user?.email || "an organization member")}.`);
+      const submit = form?.querySelector("button[type=submit]");
+      if (submit) {
+        submit.textContent = "Open Workspace";
+        submit.disabled = false;
+        submit.onclick = e => {
+          e.preventDefault();
+          if (window.StarkWorkspace) window.StarkWorkspace.navigateMode("working", target);
+          else location.assign(new URL(target, authRootURL).href);
+        };
+      }
+      if (forgot) {
+        forgot.textContent = "Sign Out";
+        forgot.disabled = false;
+        forgot.onclick = async e => {
+          e.preventDefault();
+          await client.auth.signOut();
+          state.session = null;
+          state.user = null;
+          location.reload();
+        };
+      }
       return;
     }
+
     setMessage("");
     const submit = form?.querySelector("button[type=submit]");
     if (submit) submit.disabled = false;
@@ -158,7 +203,8 @@
         state.session = data.session;
         state.user = data.user;
         await ensureWorkspace();
-        if(window.StarkWorkspace)window.StarkWorkspace.navigateMode("working",safeReturnTarget("workspace.html"));else location.replace(safeReturnTarget("workspace.html"));
+        if (window.StarkWorkspace) window.StarkWorkspace.navigateMode("working", safeReturnTarget("workspace.html"));
+        else location.replace(new URL(safeReturnTarget("workspace.html"), authRootURL).href);
       } catch (error) {
         setMessage(error.message || "Sign in failed.", true);
         submit.disabled = false;
@@ -237,7 +283,7 @@
         history.replaceState({}, "", `${cleanUrl.pathname.split("/").pop() || "auth-callback.html"}${cleanUrl.search}${cleanUrl.hash}`);
       }
       window.dispatchEvent(new CustomEvent("stark:auth-client-ready", { detail: { session: state.session } }));
-      if (page === "login.html" || root.dataset.authEntry === "true") return initLoginPage();
+      if (page === "login.html" || page === "index.html" || root.dataset.authEntry === "true") return initLoginPage();
       if (page === "auth-callback.html") return initCallbackPage();
       if (!state.session) {
         location.replace(loginUrl());

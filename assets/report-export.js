@@ -6,8 +6,8 @@
 
   if (window.StarkReportExport) return;
 
-  const path = location.pathname.split("/").pop() || "index.html";
-  const reportPages = /^(inventory-dashboard|inventory-analysis-report|decision-intelligence|raw-report|reorder-report|active-brands|instructions)-(us|eu|ca)\.html$/i.test(path)
+  const path = location.pathname.split("/").pop() || "workspace.html";
+  const reportPages = /^(inventory-dashboard|decision-intelligence|raw-report|reorder-report|active-brands|instructions)-(us|eu|ca)\.html$/i.test(path)
     || ["ats-eu.html", "sales-analysis.html", "events.html", "freight-estimator.html", "freight-consolidate.html", "shipment-tracking.html"].includes(path);
   if (!reportPages || document.querySelector(".tv-app")) return;
 
@@ -387,10 +387,6 @@
         document.getElementById("export-reorder-xlsx").click();
         return;
       }
-      if (/^inventory-analysis-report-/.test(path) && document.getElementById("export-analysis")) {
-        document.getElementById("export-analysis").click();
-        return;
-      }
       await buildWorkbook();
     } catch (error) {
       console.error("Excel report export failed", error);
@@ -415,10 +411,6 @@
     if (/^reorder-report-/.test(path)) {
       const source = document.getElementById("export-reorder-xlsx");
       return { ready: Boolean(source && visible(source) && !source.disabled), message: "Upload a Raw Report before exporting the Reorder Report." };
-    }
-    if (/^inventory-analysis-report-/.test(path)) {
-      const source = document.getElementById("export-analysis");
-      return { ready: Boolean(source && !source.disabled), message: "Upload the required analysis reports before exporting Inventory Analysis." };
     }
     if (path === "sales-analysis.html") {
       const source = document.getElementById("export-workbook");
