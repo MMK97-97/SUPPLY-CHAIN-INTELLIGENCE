@@ -6,17 +6,26 @@
 
   const root = document.documentElement;
   const isPublicPage = root.dataset.authPublic === "true";
-  if(window.StarkWorkspace?.isDemo && !isPublicPage){root.dataset.authReady='true';root.classList.remove('stark-auth-pending');return;}
-  const scriptUrl = document.currentScript?.src || new URL("assets/auth-bootstrap.js", location.href).href;
+  if (window.StarkWorkspace?.isDemo && !isPublicPage) {
+    root.dataset.authReady = 'true';
+    root.classList.remove('stark-auth-pending');
+    return;
+  }
+  const scriptUrl = document.currentScript?.src ||
+    document.querySelector('script[src*="auth-bootstrap"]')?.src ||
+    new URL("assets/auth-bootstrap.js", location.href).href;
   const assetUrl = file => new URL(file, scriptUrl).href;
+
   // Prevent native form navigation while the client is starting, including Enter.
-  // The authenticated form handlers still receive and process the submit event.
   document.addEventListener("submit", event => {
     if (!event.target.matches?.("#login-form, #password-form")) return;
     event.preventDefault();
     if (root.dataset.authReady !== "true") {
       const node = document.getElementById("auth-message");
-      if (node) { node.textContent = root.classList.contains("stark-auth-failed") ? "Secure sign in is unavailable. Reload this page to try again." : "Secure sign in is still loading. Please wait or reload the page."; node.hidden = false; }
+      if (node) {
+        node.textContent = root.classList.contains("stark-auth-failed") ? "Secure sign in is unavailable. Reload this page to try again." : "Secure sign in is still loading. Please wait or reload the page.";
+        node.hidden = false;
+      }
     }
   }, true);
 
@@ -81,10 +90,12 @@
       loadScript(assetUrl("supabase-config.js?v=20261007-1"), () => Boolean(window.STARK_SUPABASE_CONFIG)),
       loadScript(assetUrl("vendor/supabase-2.117.3.min.js"), () => Boolean(window.supabase?.createClient))
     ])
-    .then(() => loadScript(assetUrl("supabase-auth.js?v=20261012-3"), () => Boolean(window.StarkAuth)))
+    .then(() => loadScript(assetUrl("supabase-auth.js?v=20261014-1"), () => Boolean(window.StarkAuth)))
     .catch(error => showFailure(error.message));
 
   window.setTimeout(() => {
-    if (!window.StarkAuth || root.classList.contains("stark-auth-pending") || (isPublicPage && root.dataset.authReady !== "true")) showFailure("The authentication service did not respond. Check the network connection and reload the page.");
+    if (!window.StarkAuth || root.classList.contains("stark-auth-pending") || (isPublicPage && root.dataset.authReady !== "true")) {
+      showFailure("The authentication service did not respond. Check the network connection and reload the page.");
+    }
   }, 20000);
 })();
