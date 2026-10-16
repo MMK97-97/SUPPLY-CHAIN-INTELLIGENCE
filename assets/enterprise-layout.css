@@ -567,12 +567,12 @@ body.stark-system:has(.portfolio-demo-ribbon) {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  padding: 0 11px !important;
+  padding: 0 10px !important;
   height: 100% !important;
   border: none !important;
   background: transparent !important;
   border-bottom: 2px solid transparent !important;
-  font-size: 12.5px !important;
+  font-size: 12px !important;
   font-weight: 550 !important;
   color: #475569 !important;
   cursor: pointer !important;
@@ -622,18 +622,22 @@ body.stark-system:has(.portfolio-demo-ribbon) {
    Module Click Dropdown Panels
    ========================================================================== */
 .system-module-dropdown {
-  position: absolute !important;
-  top: calc(100% + 4px) !important;
-  left: 0 !important;
+  position: fixed !important;
+  top: auto;
+  left: auto;
   min-width: 320px !important;
   max-width: 380px !important;
   background: #ffffff !important;
   border: 1px solid var(--sys-slate-200) !important;
   border-radius: 14px !important;
   box-shadow: 0 20px 48px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.08) !important;
-  z-index: 1000 !important;
+  z-index: 10000 !important;
   padding: 10px !important;
   animation: dropdownSlide 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.system-module-dropdown[hidden] {
+  display: none !important;
 }
 
 @keyframes dropdownSlide {
