@@ -29,6 +29,23 @@
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.data}</svg>`;
   };
 
+  function bannerSvg(id, color) {
+    const banners = {
+      planning: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#042e2b"/><path d="M0 20h360M0 40h360M0 60h360" stroke="#10b981" stroke-opacity="0.08"/><path d="M20 68 Q100 64, 150 44 T260 28 T340 16 L340 80 L20 80 Z" fill="#10b981" fill-opacity="0.2"/><path d="M20 68 Q100 64, 150 44 T260 28 T340 16" stroke="#10b981" stroke-width="2.5"/><circle cx="150" cy="44" r="3.5" fill="#34d399"/><circle cx="260" cy="28" r="3.5" fill="#34d399"/><circle cx="340" cy="16" r="4" fill="#a7f3d0"/><text x="342" y="70" text-anchor="end" fill="#6ee7b7" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">DEMAND &amp; REORDER LAB</text></svg>',
+      crm: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#0a1d3d"/><path d="M45 40 L110 22 L190 48 L265 26 L325 44" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="45" cy="40" r="11" fill="#1d4ed8"/><circle cx="110" cy="22" r="9" fill="#1e40af"/><circle cx="190" cy="48" r="13" fill="#2563eb"/><circle cx="265" cy="26" r="10" fill="#1e40af"/><circle cx="325" cy="44" r="9" fill="#1d4ed8"/><text x="342" y="70" text-anchor="end" fill="#93c5fd" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">PARTNER CRM &amp; CATALOGS</text></svg>',
+      orders: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#2a140b"/><line x1="20" y1="54" x2="340" y2="54" stroke="#f97316" stroke-width="2"/><rect x="50" y="30" width="26" height="22" rx="2" fill="#431407" stroke="#f97316"/><rect x="110" y="22" width="34" height="30" rx="3" fill="#431407" stroke="#f97316"/><rect x="180" y="32" width="24" height="20" rx="2" fill="#431407" stroke="#f97316"/><rect x="235" y="20" width="38" height="32" rx="3" fill="#431407" stroke="#f97316"/><line x1="254" y1="4" x2="254" y2="52" stroke="#ffedd5" stroke-width="1.8" stroke-dasharray="4 2"/><text x="342" y="70" text-anchor="end" fill="#fed7aa" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">ALLOCATION &amp; PACKAGING</text></svg>',
+      vendor: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#1e1035"/><line x1="0" y1="58" x2="360" y2="58" stroke="#8b5cf6" stroke-width="1.5"/><path d="M40 58 L55 34 L70 58 L85 34 L100 58 L140 58 L140 26 L170 26 L170 58" fill="#2e1065" stroke="#a78bfa" stroke-width="1.4"/><path d="M210 58 L225 38 L295 38 L310 58 Z" fill="#3b0764" stroke="#c4b5fd" stroke-width="1.5"/><text x="342" y="70" text-anchor="end" fill="#ddd6fe" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">SUPPLIER MASTER &amp; SLA</text></svg>',
+      procurement: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#2a1604"/><rect x="40" y="14" width="40" height="50" rx="4" fill="#451a03" stroke="#f59e0b" stroke-width="1.5"/><line x1="48" y1="28" x2="72" y2="28" stroke="#fbbf24" stroke-width="1.5"/><line x1="48" y1="38" x2="72" y2="38" stroke="#fbbf24" stroke-width="1.5"/><path d="M110 38 L220 38" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5 3"/><polygon points="225,38 215,33 215,43" fill="#f59e0b"/><rect x="240" y="16" width="48" height="44" rx="4" fill="#451a03" stroke="#fbbf24" stroke-width="1.4"/><text x="342" y="70" text-anchor="end" fill="#fde68a" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">PO MANAGEMENT &amp; RECEIVING</text></svg>',
+      shipping: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#2d0a12"/><line x1="0" y1="56" x2="360" y2="56" stroke="#ef4444" stroke-width="1.5"/><line x1="30" y1="42" x2="120" y2="42" stroke="#fca5a5" stroke-width="1.2" stroke-dasharray="8 6"/><rect x="130" y="24" width="65" height="30" rx="3" fill="#4c0519" stroke="#ef4444" stroke-width="1.5"/><path d="M195 34 L210 34 L218 44 L218 54 L195 54 Z" fill="#9f1239" stroke="#f87171" stroke-width="1.5"/><circle cx="150" cy="56" r="6" fill="#1c1917" stroke="#ef4444" stroke-width="2"/><circle cx="180" cy="56" r="6" fill="#1c1917" stroke="#ef4444" stroke-width="2"/><circle cx="204" cy="56" r="6" fill="#1c1917" stroke="#ef4444" stroke-width="2"/><text x="342" y="70" text-anchor="end" fill="#fecdd3" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">SARASOTA CARRIER DISPATCH</text></svg>',
+      warehouse: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#082338"/><g transform="translate(30,10)" stroke="#0284c7" stroke-width="1.4"><rect x="0" y="0" width="70" height="54" fill="none"/><line x1="0" y1="18" x2="70" y2="18"/><line x1="0" y1="36" x2="70" y2="36"/><line x1="35" y1="0" x2="35" y2="54"/><rect x="5" y="22" width="24" height="10" fill="#075985" rx="1"/><rect x="40" y="4" width="24" height="10" fill="#0284c7" rx="1"/></g><g transform="translate(130,10)" stroke="#0284c7" stroke-width="1.4"><rect x="0" y="0" width="70" height="54" fill="none"/><line x1="0" y1="18" x2="70" y2="18"/><line x1="0" y1="36" x2="70" y2="36"/><line x1="35" y1="0" x2="35" y2="54"/><rect x="5" y="4" width="24" height="10" fill="#38bdf8" rx="1"/><rect x="40" y="22" width="24" height="10" fill="#0284c7" rx="1"/></g><circle cx="270" cy="38" r="14" fill="#0c4a6e" stroke="#38bdf8" stroke-width="1.8"/><path d="M270 29 v10 l7 5" stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/><text x="342" y="70" text-anchor="end" fill="#bae6fd" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">CONTROL TOWER, BINS &amp; WAVES</text></svg>',
+      tpl: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#032a24"/><path d="M50 40 L130 22 L200 52 L280 28 L330 46" stroke="#10b981" stroke-width="1.6" stroke-dasharray="4 3"/><circle cx="50" cy="40" r="11" fill="#047857" stroke="#6ee7b7" stroke-width="1.8"/><circle cx="130" cy="22" r="14" fill="#059669" stroke="#a7f3d0" stroke-width="2"/><text x="130" y="26" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">API</text><circle cx="200" cy="52" r="12" fill="#047857" stroke="#6ee7b7" stroke-width="1.8"/><circle cx="280" cy="28" r="13" fill="#059669" stroke="#a7f3d0" stroke-width="1.8"/><text x="280" y="32" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">3PL</text><text x="342" y="70" text-anchor="end" fill="#a7f3d0" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">DISTRIBUTED 3PL NETWORK</text></svg>',
+      transportation: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#0a1a38"/><polygon points="120,80 240,80 190,40 170,40" fill="#172554"/><line x1="180" y1="42" x2="180" y2="80" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="6 4"/><rect x="40" y="28" width="52" height="24" rx="2" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.4"/><circle cx="52" cy="52" r="4.5" fill="#111827" stroke="#60a5fa" stroke-width="1.5"/><circle cx="80" cy="52" r="4.5" fill="#111827" stroke="#60a5fa" stroke-width="1.5"/><circle cx="280" cy="30" r="12" fill="#1d4ed8" stroke="#93c5fd" stroke-width="1.5"/><text x="342" y="70" text-anchor="end" fill="#bfdbfe" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">FREIGHT TRANSIT &amp; ROUTING</text></svg>',
+      analytics: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#2c1a04"/><rect x="40" y="42" width="12" height="28" rx="2" fill="#ca8a04"/><rect x="60" y="32" width="12" height="38" rx="2" fill="#eab308"/><rect x="80" y="44" width="12" height="26" rx="2" fill="#a16207"/><rect x="100" y="26" width="12" height="44" rx="2" fill="#facc15"/><rect x="120" y="36" width="12" height="34" rx="2" fill="#eab308"/><path d="M160 50 Q200 36, 240 40 T310 18" stroke="#fde047" stroke-width="2.5" fill="none"/><circle cx="310" cy="18" r="3.5" fill="#fef08a"/><text x="342" y="70" text-anchor="end" fill="#fef08a" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">EXECUTIVE REVENUE &amp; DEMAND</text></svg>',
+      data: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#0f172a"/><g transform="translate(45,14)" stroke="#64748b" stroke-width="1.4" fill="#1e293b"><rect width="60" height="46" rx="3"/><line x1="8" y1="12" x2="42" y2="12"/><line x1="8" y1="23" x2="42" y2="23"/><line x1="8" y1="34" x2="42" y2="34"/><circle cx="50" cy="12" r="2.5" fill="#10b981"/><circle cx="50" cy="23" r="2.5" fill="#3b82f6"/><circle cx="50" cy="34" r="2.5" fill="#10b981"/></g><g transform="translate(125,14)" stroke="#64748b" stroke-width="1.4" fill="#1e293b"><rect width="60" height="46" rx="3"/><line x1="8" y1="12" x2="42" y2="12"/><line x1="8" y1="23" x2="42" y2="23"/><line x1="8" y1="34" x2="42" y2="34"/><circle cx="50" cy="12" r="2.5" fill="#10b981"/><circle cx="50" cy="23" r="2.5" fill="#f59e0b"/><circle cx="50" cy="34" r="2.5" fill="#10b981"/></g><circle cx="265" cy="37" r="14" fill="#1e293b" stroke="#94a3b8" stroke-width="1.8"/><path d="M260 37 L264 41 L271 33" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" fill="none"/><text x="342" y="70" text-anchor="end" fill="#cbd5e1" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">DATA CENTER &amp; AUDIT TRAIL</text></svg>'
+    };
+    return banners[id] || banners.planning;
+  }
+
   function groups() {
     const region = S.getRegion(), suffix = region.toLowerCase();
     return [
@@ -147,6 +164,11 @@
     return names[code] || 'United States';
   }
 
+  function closeAllDropdowns() {
+    document.querySelectorAll('.system-modules-dropdown-panel, .system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
+    document.querySelectorAll('.system-modules-btn, .system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+  }
+
   function renderNavigation() {
     const nav = document.querySelector('#system-navigation');
     const homeActive = active('workspace.html') || active('business-operations.html') || active('index.html');
@@ -154,99 +176,6 @@
       nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('workspace.html')}">${glyph('home')}<span>Overview</span></a>` +
         groups().map(([id, label, , , items]) => `<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${items.map(([path,l])=>`<a href="${S.url(path)}" ${active(path)?'class="active" aria-current="page"':''}>${escape(l)}</a>`).join('')}</div></details>`).join('');
     }
-
-    const tabs = document.querySelector('#system-module-tabs');
-    if (tabs) {
-      const allGroups = groups();
-      let html = `
-        <div class="system-module-item">
-          <a class="system-module-tab home-tab ${homeActive ? 'active' : ''}" href="${S.url('workspace.html')}" aria-label="Home Overview">
-            <span class="system-tab-icon">${glyph('home')}</span>
-            <span class="system-tab-label">Home</span>
-          </a>
-        </div>
-      `;
-
-      allGroups.forEach(([id, label, subtitle, color, items, primaryUrl, quickAction]) => {
-        const isGroupActive = items.some(([path]) => active(path)) || active(primaryUrl);
-        html += `
-          <div class="system-module-item" data-module-id="${id}">
-            <button type="button" class="system-module-tab ${isGroupActive ? 'active' : ''}" aria-expanded="false" aria-haspopup="true" data-toggle-dropdown="${id}">
-              <span class="system-tab-icon" style="--tab-color:${color}">${glyph(id)}</span>
-              <span class="system-tab-label">${escape(label)}</span>
-              <span class="system-tab-caret">▾</span>
-            </button>
-            <div class="system-module-dropdown" id="dropdown-${id}" hidden role="menu" aria-label="${escape(label)} options">
-              <div class="system-dropdown-head" style="--mod-accent:${color}">
-                <div class="system-dropdown-badge" style="background:${color}">${glyph(id)}</div>
-                <div class="system-dropdown-title-wrap">
-                  <strong class="system-dropdown-title">${escape(label)}</strong>
-                  <small class="system-dropdown-sub">${escape(subtitle)}</small>
-                </div>
-                <a href="${S.url(primaryUrl)}" class="system-dropdown-overview-btn" aria-label="Open ${escape(label)} Overview">Overview ↗</a>
-              </div>
-              <ul class="system-dropdown-links" role="list">
-                ${items.map(([path, itemLabel, isHot]) => `
-                  <li role="none">
-                    <a href="${S.url(path)}" class="system-dropdown-link ${active(path) ? 'active' : ''} ${isHot ? 'featured' : ''}" role="menuitem">
-                      <span class="system-dropdown-link-bullet" style="--mod-accent:${color}"></span>
-                      <span class="system-dropdown-link-name">${escape(itemLabel)}</span>
-                      ${isHot ? '<span class="system-dropdown-pill">Active</span>' : ''}
-                      <span class="system-dropdown-arrow">›</span>
-                    </a>
-                  </li>
-                `).join('')}
-              </ul>
-              ${quickAction ? `
-                <div class="system-dropdown-foot">
-                  <a href="${S.url(quickAction.path)}" class="system-dropdown-quick-action" style="--mod-accent:${color}">
-                    ${quickAction.label}
-                  </a>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        `;
-      });
-
-      tabs.innerHTML = html;
-      bindDropdownEvents(tabs);
-    }
-  }
-
-  function closeAllDropdowns() {
-    document.querySelectorAll('.system-module-dropdown, .system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
-    document.querySelectorAll('.system-module-tab, .system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
-  }
-
-  function bindDropdownEvents(tabs) {
-    tabs.querySelectorAll('[data-toggle-dropdown]').forEach(button => {
-      button.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const id = button.dataset.toggleDropdown;
-        const dropdown = document.getElementById('dropdown-' + id);
-        if (!dropdown) return;
-
-        const isExpanded = button.getAttribute('aria-expanded') === 'true';
-        closeAllDropdowns();
-
-        if (!isExpanded) {
-          dropdown.hidden = false;
-          button.setAttribute('aria-expanded', 'true');
-
-          // Smart auto-alignment to prevent overflowing right viewport edge
-          const rect = dropdown.getBoundingClientRect();
-          if (rect.right > window.innerWidth - 18) {
-            dropdown.style.left = 'auto';
-            dropdown.style.right = '0';
-          } else {
-            dropdown.style.left = '0';
-            dropdown.style.right = 'auto';
-          }
-        }
-      };
-    });
   }
 
   function notice(message, error = false) {
@@ -278,6 +207,7 @@
 
     const W = window.StarkWorkspace;
     const currentRegion = S.getRegion();
+    const allGroups = groups();
 
     const header = document.createElement('header');
     header.className = 'system-header';
@@ -290,6 +220,80 @@
           <small>Supply Chain Intelligence</small>
         </div>
       </a>
+
+      <!-- Modules Dropdown Button in Header -->
+      <div class="system-modules-picker" id="system-modules-picker">
+        <button type="button" class="system-modules-btn" id="system-modules-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Browse application modules">
+          <span class="system-modules-grid-icon">
+            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+              <rect x="1" y="1" width="5" height="5" rx="1.2"/>
+              <rect x="10" y="1" width="5" height="5" rx="1.2"/>
+              <rect x="1" y="10" width="5" height="5" rx="1.2"/>
+              <rect x="10" y="10" width="5" height="5" rx="1.2"/>
+            </svg>
+          </span>
+          <span>Modules</span>
+          <span class="system-caret">▾</span>
+        </button>
+        <div class="system-modules-dropdown-panel" id="system-modules-dropdown-panel" hidden role="menu" aria-label="Modules menu">
+          <div class="system-modules-sidebar">
+            <div class="system-modules-sidebar-header">
+              <span>OPERATIONAL MODULES</span>
+            </div>
+            <div class="system-modules-list" role="tablist">
+              ${allGroups.map(([id, label, subtitle, color], idx) => `
+                <button type="button" class="system-module-nav-item ${idx===0?'active':''}" data-mod-target="${id}" role="tab" style="--nav-mod-color:${color}">
+                  <span class="system-module-nav-icon" style="background:${color}">${glyph(id)}</span>
+                  <span class="system-module-nav-text">
+                    <strong>${escape(label)}</strong>
+                    <small>${escape(subtitle)}</small>
+                  </span>
+                  <span class="system-module-nav-arrow">›</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="system-modules-content">
+            ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction], idx) => `
+              <div class="system-module-content-pane ${idx===0?'active':''}" id="pane-${id}" role="tabpanel">
+                <div class="system-pane-head" style="--pane-accent:${color}">
+                  <div class="system-pane-badge" style="background:${color}">${glyph(id)}</div>
+                  <div class="system-pane-titles">
+                    <h3>${escape(label)}</h3>
+                    <p>${escape(subtitle)}</p>
+                  </div>
+                  <a href="${S.url(primaryUrl)}" class="system-pane-overview-btn">Module Dashboard ↗</a>
+                </div>
+                <div class="system-pane-banner">
+                  ${bannerSvg(id, color)}
+                </div>
+                <div class="system-pane-links-wrap">
+                  <span class="system-pane-links-label">MODULE FEATURES &amp; PAGES</span>
+                  <ul class="system-pane-links">
+                    ${items.map(([path, itemLabel, isHot]) => `
+                      <li>
+                        <a href="${S.url(path)}" class="system-pane-link ${isHot ? 'featured' : ''}">
+                          <span class="system-pane-dot" style="background:${color}"></span>
+                          <span class="system-pane-link-name">${escape(itemLabel)}</span>
+                          ${isHot ? '<span class="system-pane-pill">Active</span>' : ''}
+                          <span class="system-pane-chevron">›</span>
+                        </a>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+                ${quickAction ? `
+                  <div class="system-pane-foot">
+                    <a href="${S.url(quickAction.path)}" class="system-pane-quick-action" style="--pane-accent:${color}">
+                      ${quickAction.label}
+                    </a>
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
 
       <!-- Center Global Search Pill -->
       <div class="system-search" role="search">
@@ -319,7 +323,6 @@
               <span>🇨🇦</span><strong>Canada</strong><small>CAD ($)</small>
             </li>
           </ul>
-          <!-- Keep hidden select for compatibility with background handlers -->
           <select id="system-region-select" aria-label="Analysis Region" style="display:none">
             <option value="US" ${currentRegion==='US'?'selected':''}>US</option>
             <option value="EU" ${currentRegion==='EU'?'selected':''}>EU</option>
@@ -385,11 +388,6 @@
       </div>
     `;
 
-    const rail = document.createElement('nav');
-    rail.id = 'system-module-tabs';
-    rail.className = 'system-module-tabs';
-    rail.setAttribute('aria-label', 'Enterprise Operations Modules');
-
     const scrim = document.createElement('button');
     scrim.className = 'system-scrim';
     scrim.setAttribute('aria-label', 'Close menu');
@@ -405,7 +403,8 @@
       skip.href = '#' + main.id;
     }
 
-    document.body.prepend(skip, header, rail, scrim);
+    // Mount header (without top module banner rail)
+    document.body.prepend(skip, header, scrim);
     document.body.classList.add('stark-system');
 
     const footer = document.createElement('footer');
@@ -414,6 +413,37 @@
     document.body.append(footer);
 
     renderNavigation();
+
+    // Setup Modules Mega-Dropdown Toggle & Item Switching
+    const modulesBtn = header.querySelector('#system-modules-btn');
+    const modulesPanel = header.querySelector('#system-modules-dropdown-panel');
+
+    if (modulesBtn && modulesPanel) {
+      modulesBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const open = modulesPanel.hidden;
+        closeAllDropdowns();
+        if (open) {
+          modulesPanel.hidden = false;
+          modulesBtn.setAttribute('aria-expanded', 'true');
+        }
+      };
+
+      // Hover / Click to switch pane
+      modulesPanel.querySelectorAll('.system-module-nav-item').forEach(btn => {
+        const activate = () => {
+          modulesPanel.querySelectorAll('.system-module-nav-item').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const targetId = btn.dataset.modTarget;
+          modulesPanel.querySelectorAll('.system-module-content-pane').forEach(p => p.classList.remove('active'));
+          const targetPane = modulesPanel.querySelector('#pane-' + targetId);
+          if (targetPane) targetPane.classList.add('active');
+        };
+        btn.onclick = activate;
+        btn.onmouseenter = activate;
+      });
+    }
 
     // Setup Region Picker Interactive Menu
     const regionBtn = header.querySelector('#system-region-btn');
@@ -476,7 +506,7 @@
 
     // Close all menus on outside click or Escape
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.system-module-item, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
+      if (!e.target.closest('.system-modules-picker, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
         closeAllDropdowns();
         const searchResults = header.querySelector('#system-search-results');
         if (searchResults) searchResults.hidden = true;
@@ -489,7 +519,6 @@
         const searchResults = header.querySelector('#system-search-results');
         if (searchResults) searchResults.hidden = true;
       }
-      // Ctrl + K shortcut for search
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         const input = header.querySelector('#system-search-input');
         if (input) {
@@ -579,8 +608,12 @@
 
     window.StarkModuleNavigation = {
       open: (id) => {
-        const target = document.querySelector(`[data-toggle-dropdown="${id}"]`);
-        if (target) target.click();
+        if (modulesBtn && modulesPanel) {
+          modulesPanel.hidden = false;
+          modulesBtn.setAttribute('aria-expanded', 'true');
+          const targetNav = modulesPanel.querySelector(`[data-mod-target="${id}"]`);
+          if (targetNav) targetNav.click();
+        }
       },
       close: closeAllDropdowns,
       groups
