@@ -382,7 +382,7 @@
             </button>
             <a href="${S.url('data-center.html')}" class="system-account-item">⚙️ Data Center &amp; Backups</a>
             <a href="${S.url('activity.html')}" class="system-account-item">📋 Audit Log &amp; Exceptions</a>
-            <a href="${S.url('login.html?workspaceMode=working&from='+(W?.isDemo?'demo':'working')+'&return='+encodeURIComponent(W?.destination()||relativePath+location.search))}" class="system-account-item danger">🚪 Sign Out</a>
+            <button type="button" class="system-account-item danger" id="system-signout-btn">🚪 Sign Out</button>
           </div>
         </div>
       </div>
@@ -605,6 +605,57 @@
 
     const wsBtn = header.querySelector('#system-workspace-button');
     if (wsBtn) wsBtn.onclick = () => window.StarkPortfolio?.workspaceMenu();
+
+    const signoutBtn = header.querySelector('#system-signout-btn');
+    if (signoutBtn) {
+      signoutBtn.onclick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeAllDropdowns();
+        signoutBtn.disabled = true;
+        signoutBtn.textContent = '🚪 Signing out…';
+
+        try {
+          if (window.StarkSystemCloud?.disconnect) window.StarkSystemCloud.disconnect();
+        } catch (_) {}
+
+        try {
+          if (window.StarkAuth && typeof window.StarkAuth.signOut === 'function') {
+            await window.StarkAuth.signOut();
+            return;
+          }
+        } catch (err) {
+          console.warn('StarkAuth signOut warning:', err);
+        }
+
+        try {
+          if (window.supabaseAuth && typeof window.supabaseAuth.signOut === 'function') {
+            await window.supabaseAuth.signOut();
+            return;
+          }
+        } catch (_) {}
+
+        try {
+          localStorage.removeItem('stark-organization-id');
+          localStorage.removeItem('stark-organization-role');
+          localStorage.removeItem('stark.unifiedCloudLink.v1');
+          sessionStorage.removeItem('sci.workspace.mode.v1');
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && (/^sb-.*-auth-token$|^stark-auth|^stark-session|^stark-organization/.test(k))) {
+              localStorage.removeItem(k);
+            }
+          }
+        } catch (_) {}
+
+        const loginUrl = S.url('login.html?signedOut=1');
+        if (window.StarkNavigation && typeof window.StarkNavigation.navigate === 'function') {
+          window.StarkNavigation.navigate(loginUrl);
+        } else {
+          location.replace(loginUrl);
+        }
+      };
+    }
 
     window.StarkModuleNavigation = {
       open: (id) => {

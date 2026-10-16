@@ -137,12 +137,34 @@
   }
 
   async function signOut() {
-    await client.auth.signOut();
+    try {
+      if (window.StarkSystemCloud?.disconnect) window.StarkSystemCloud.disconnect();
+    } catch (_) {}
+    try {
+      await client.auth.signOut();
+    } catch (err) {
+      console.warn("Supabase auth signOut warning:", err);
+    }
     try {
       localStorage.removeItem("stark-organization-id");
       localStorage.removeItem("stark-organization-role");
+      localStorage.removeItem("stark.unifiedCloudLink.v1");
+      sessionStorage.removeItem("sci.workspace.mode.v1");
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && (/^sb-.*-auth-token$|^stark-auth|^stark-session|^stark-organization/.test(k))) {
+          localStorage.removeItem(k);
+        }
+      }
     } catch (_) {}
-    location.replace("login.html");
+    state.session = null;
+    state.user = null;
+    const targetUrl = new URL("login.html?signedOut=1", authRootURL).href;
+    if (window.StarkNavigation && typeof window.StarkNavigation.navigate === "function") {
+      window.StarkNavigation.navigate(targetUrl);
+    } else {
+      location.replace(targetUrl);
+    }
   }
 
   async function initLoginPage() {
@@ -150,6 +172,42 @@
     const form = document.getElementById("login-form");
     const forgot = document.getElementById("forgot-password");
     wirePasswordToggles(document);
+
+    const params = new URLSearchParams(location.search);
+    const wasSignedOut = params.get("signedOut") === "1" || params.get("logout") === "1";
+
+    if (wasSignedOut) {
+      try {
+        if (state.session) {
+          await client.auth.signOut();
+        }
+      } catch (_) {}
+      state.session = null;
+      state.user = null;
+      try {
+        localStorage.removeItem("stark-organization-id");
+        localStorage.removeItem("stark-organization-role");
+        localStorage.removeItem("stark.unifiedCloudLink.v1");
+        sessionStorage.removeItem("sci.workspace.mode.v1");
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const k = localStorage.key(i);
+          if (k && (/^sb-.*-auth-token$|^stark-auth|^stark-session|^stark-organization/.test(k))) {
+            localStorage.removeItem(k);
+          }
+        }
+      } catch (_) {}
+      setMessage("You have been signed out of your workspace.");
+      const submit = form?.querySelector("button[type=submit]");
+      if (submit) {
+        submit.textContent = "Sign in to organization";
+        submit.disabled = false;
+      }
+      if (forgot) {
+        forgot.textContent = "Forgot password?";
+        forgot.disabled = false;
+      }
+      return;
+    }
 
     if (state.session) {
       const isHistoryNav = window.performance?.getEntriesByType?.("navigation")?.[0]?.type === "back_forward";
@@ -177,10 +235,7 @@
         forgot.disabled = false;
         forgot.onclick = async e => {
           e.preventDefault();
-          await client.auth.signOut();
-          state.session = null;
-          state.user = null;
-          location.reload();
+          await api.signOut();
         };
       }
       return;
@@ -318,7 +373,14 @@
   client.auth.onAuthStateChange((event, session) => {
     state.session = session || null;
     state.user = session?.user || null;
-    if (event === "SIGNED_OUT" && !publicPage) location.replace("login.html");
+    if (event === "SIGNED_OUT" && !publicPage) {
+      const targetUrl = new URL("login.html?signedOut=1", authRootURL).href;
+      if (window.StarkNavigation && typeof window.StarkNavigation.navigate === "function") {
+        window.StarkNavigation.navigate(targetUrl);
+      } else {
+        location.replace(targetUrl);
+      }
+    }
   });
   initialize();
 })();
