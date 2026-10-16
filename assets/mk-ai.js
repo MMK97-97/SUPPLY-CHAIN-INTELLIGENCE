@@ -50,6 +50,37 @@
     const total = field => all.reduce((sum, item) => sum + item[field], 0);
     return { region: code, fileName: report.sales?.fileName || 'Sales report', importedAt: report.sales?.importedAt || '', signature: hash([all, report.sales?.importedAt]), items: all.slice().sort((a,b) => b.revenueAtRisk - a.revenueAtRisk).slice(0,500), summary: { models: all.length, units: total('units'), estimatedRevenue: all.reduce((sum,item) => sum + item.units * item.price,0), estimatedMargin: all.reduce((sum,item) => sum + (item.cost > 0 ? item.units * Math.max(0,item.price-item.cost) : 0),0), revenueAtRisk: total('revenueAtRisk'), suggestedQty: total('suggestedQty'), excessCost: total('excessCost'), deadStockCost: total('deadStockCost'), missingPrices: all.filter(item => !item.price).length } };
   }
+  function openPOsForSnapshot() {
+    const state = window.StarkSystem?.getState(), e = state?.enterprise || {};
+    const pos = e.purchaseOrders || [], vendors = e.vendors || [];
+    return pos.filter(p => !['RECEIVED', 'CANCELLED'].includes(p.status)).map(p => {
+      const v = vendors.find(x => x.id === p.vendorId);
+      const ord = (p.lines || []).reduce((n, l) => n + (Number(l.qty) || 0), 0);
+      const shp = (p.lines || []).reduce((n, l) => n + (Number(l.received || l.shipped) || 0), 0);
+      const isOverdue = Boolean(p.eta && new Date(p.eta).getTime() < Date.now() && shp < ord);
+      const fulfillmentPct = ord > 0 ? Math.round((shp / ord) * 100) : 0;
+      return {
+        evidence_id: `po:${p.id || p.po}`,
+        id: p.id || p.po,
+        po: p.po,
+        vendor: v?.name || 'Supplier',
+        purpose: p.purpose || 'INVENTORY',
+        status: p.status,
+        region: p.region || 'US',
+        orderedQty: ord,
+        shippedQty: shp,
+        remainingQty: Math.max(0, ord - shp),
+        fulfillmentPct,
+        shippingWindow: p.shippingWindow || (p.eta ? `ETA: ${p.eta.slice(0, 10)}` : 'TBD'),
+        eta: p.eta ? p.eta.slice(0, 10) : '',
+        carrier: p.carrier || '',
+        tracking: p.tracking || '',
+        hasTracking: Boolean(p.tracking && p.tracking.trim()),
+        notes: p.notes || '',
+        isOverdue
+      };
+    });
+  }
   async function snapshot(selected = scope(), question = '') {
     if (!window.MKVerifiedEngine) throw new Error('The verified report engine is still loading.');
     const codes = selected === 'ALL' ? ['US', 'EU', 'CA'] : [selected], reports = [], sales = [];
@@ -61,7 +92,7 @@
       if (report.items.length > limit) report.items = report.items.map((item, position) => ({ item, position, match: [item.model, item.brand].some(v => String(v).length > 2 && question.toLowerCase().includes(String(v).toLowerCase())) })).sort((a, b) => Number(b.match) - Number(a.match) || b.item.riskScore - a.item.riskScore || a.position - b.position).slice(0, limit).sort((a, b) => a.position - b.position).map(entry => entry.item);
       remaining -= report.items.length;
     });
-    return T.validateSnapshot({ capturedAt: new Date().toISOString(), scope: selected, reports, sales, workspace: workspace() });
+    return T.validateSnapshot({ capturedAt: new Date().toISOString(), scope: selected, reports, sales, workspace: workspace(), openPurchaseOrders: openPOsForSnapshot() });
   }
   function localResult(question, source, localAnswer) {
     if(window.StarkDecisionLab && /executive brief|operational brief|action plan|cash exposure|supplier risk/i.test(question))return window.StarkDecisionLab.briefResult(source);
@@ -103,6 +134,31 @@
     } else if (/compare.*(regions?|\bus\b|\beu\b|canada)|cross.region/.test(query)) {
       answer = 'Regional comparison\n' + reports.map(r => `${r.region}: ${r.summary.eligibleItems} eligible models, ${fmt(r.summary.recommendedUnits)} recommended units, ${r.summary.stockoutRisks} stockout risks, ${fmt(r.summary.dataQuality)}/100 data quality.`).join('\n');
       assumptions.push('Regional inventory remains separate. These totals do not imply stock can transfer between regions.');
+    } else if (/vendor.*po|open.*(vendor|po)|purchase order|shipping window|shipped.*quantit|ordered.*quantit|tracking.*update|supplier.*shipment|procurement/i.test(query)) {
+      const result = call('vendor_procurement_intelligence', { query: named });
+      ids.push(...result.orders.map(p => p.evidence_id));
+      answer = `Open Vendor Purchase Order Intelligence\n` +
+        `Active Open POs: ${result.totalOpenPOs} | Total Ordered: ${fmt(result.totalOrdered)} units | Total Shipped: ${fmt(result.totalShipped)} units (${result.overallFulfillmentPct}% fulfilled)\n` +
+        `Operational status: ${result.overdueCount} overdue shipping windows, ${result.missingTrackingCount} POs awaiting carrier tracking.\n\n` +
+        result.orders.map(p =>
+          `• ${p.po} [${p.vendor} · ${p.purpose}]: ${fmt(p.orderedQty)} ordered, ${fmt(p.shippedQty)} shipped (${p.fulfillmentPct}%) | Window: ${p.shippingWindow} | Carrier/Tracking: ${p.carrier ? p.carrier + ' ' : ''}${p.tracking || 'None'} | Notes: ${p.notes || '—'}`
+        ).join('\n');
+      findings = result.orders.map(p => ({
+        title: `${p.po} · ${p.vendor}`,
+        severity: p.isOverdue ? 'critical' : (!p.hasTracking ? 'high' : (p.shippedQty < p.orderedQty ? 'medium' : 'low')),
+        explanation: `${fmt(p.orderedQty)} units ordered, ${fmt(p.shippedQty)} units shipped (${p.remainingUnits} remaining). Shipping window: ${p.shippingWindow}. Tracking: ${p.carrier ? p.carrier + ' ' : ''}${p.tracking || 'Awaiting carrier tracking'}. Notes: ${p.notes || 'None'}.`,
+        evidence_ids: [p.evidence_id]
+      }));
+      actions = result.orders.filter(p => p.isOverdue || !p.hasTracking || p.shippedQty < p.orderedQty).map(p => ({
+        title: `${p.po}: ${p.isOverdue ? 'Expedite overdue delivery' : (!p.hasTracking ? 'Assign carrier tracking' : 'Monitor open shipment balance')}`,
+        priority: p.isOverdue ? 'now' : (!p.hasTracking ? 'now' : 'next'),
+        reason: p.isOverdue ? `Target delivery window (${p.shippingWindow}) is overdue. Contact ${p.vendor} to confirm shipment status and update tracking.` : `Fulfillment at ${p.fulfillmentPct}%. ${p.hasTracking ? 'Track carrier transit' : 'Carrier tracking number required to verify dispatch'}.`,
+        owner: 'Procurement & Operations',
+        evidence_ids: [p.evidence_id]
+      }));
+      if (result.overdueCount > 0) assumptions.push(`${result.overdueCount} open purchase orders have shipping windows past today's date.`);
+      if (result.missingTrackingCount > 0) assumptions.push(`${result.missingTrackingCount} open vendor purchase orders are awaiting carrier tracking numbers.`);
+      questions.push('Would you like to update the shipping window, notes or tracking in the Open Vendor PO register?');
     } else if (/orders?|warehouse|fulfillment|operational|purchase orders?/.test(query) && !/reorder|stock/.test(query)) {
       const result = call('workspace_health', {});
       answer = `Operations: ${result.openCustomerOrders} open customer orders, ${result.openPurchaseOrders} open purchase orders, ${result.pendingPickWaves} pending picking waves and ${result.unresolvedIssues} unresolved issues.`;

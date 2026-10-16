@@ -489,6 +489,38 @@
       const p={...clone(input),id:uid('vpo'),status:'PO_ISSUED',issuedAt:stamp(),carrier:input.carrier||'TBD',tracking:'',lines:input.lines.map(x=>({...x,received:0}))};e.purchaseOrders.push(p);return p.id;
     });
   }
+  function updatePurchaseOrder(id, input) {
+    return transaction('VENDOR_PO_UPDATED', id, s => {
+      const e = s.enterprise, po = e.purchaseOrders.find(x => x.id === id);
+      if (!po || ['RECEIVED', 'CANCELLED'].includes(po.status)) throw new Error('Choose an open vendor PO.');
+      if (input.shippingWindow !== undefined) po.shippingWindow = String(input.shippingWindow || '').trim();
+      if (input.eta) po.eta = input.eta;
+      if (input.carrier !== undefined) po.carrier = String(input.carrier || '').trim();
+      if (input.tracking !== undefined) {
+        po.tracking = String(input.tracking || '').trim();
+        if (po.tracking && po.status === 'PO_ISSUED') po.status = 'DISPATCHED';
+      }
+      if (input.notes !== undefined) po.notes = String(input.notes || '').trim();
+      if (Array.isArray(input.lines)) {
+        input.lines.forEach((l, idx) => {
+          if (po.lines[idx]) {
+            if (Number.isFinite(Number(l.received))) po.lines[idx].received = Math.max(0, Number(l.received));
+            if (Number.isFinite(Number(l.shipped))) po.lines[idx].received = Math.max(0, Number(l.shipped));
+            if (Number.isFinite(Number(l.qty)) && Number(l.qty) > 0) po.lines[idx].qty = Number(l.qty);
+          }
+        });
+      } else if (input.shippedQty !== undefined && Number.isFinite(Number(input.shippedQty))) {
+        const sq = Math.max(0, Number(input.shippedQty));
+        if (po.lines.length === 1) { po.lines[0].received = sq; }
+        else {
+          let rem = sq;
+          po.lines.forEach(l => { const take = Math.min(l.qty, rem); l.received = take; rem -= take; });
+        }
+      }
+      po.updatedAt = stamp();
+      po.recordRevision = (Number(po.recordRevision) || 0) + 1;
+    });
+  }
   function shipDropshipPO(id,tracking){transaction('DROPSHIP_DISPATCHED',id,s=>{const p=s.enterprise.purchaseOrders.find(x=>x.id===id&&x.purpose==='DROPSHIP');if(!p||p.status==='CANCELLED'||p.status==='DISPATCHED')throw new Error('Select an open dropship PO.');if(!tracking?.trim())throw new Error('Supplier tracking is required.');const o=s.enterprise.orders.find(x=>x.id===p.customerOrderId);if(!o||final(o.status))throw new Error('Linked customer order is closed.');p.status='DISPATCHED';p.tracking=tracking.trim();p.dispatchedAt=stamp();o.status='SHIPPED';o.tracking=p.tracking;o.updatedAt=stamp();o.lines.forEach(x=>x.shipped=x.qty);});}
   async function exportBackup() {
     const regionalDatasets = await collectRegional(); const extras = {};
@@ -521,6 +553,6 @@
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});
     return rows;
   }
-  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
+  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
   expireHolds();
 })();

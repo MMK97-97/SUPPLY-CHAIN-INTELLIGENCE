@@ -158,6 +158,7 @@
       <div class="mk-brain-feed" role="log" aria-live="polite"></div>
       <div class="mk-quick-actions" aria-label="MK actions">
         <button type="button" data-mk-question="Analyze my current data">Analyze data</button>
+        <button type="button" data-mk-question="Show open vendor POs with shipping windows and tracking">Vendor POs &amp; Tracking</button>
         <button type="button" data-mk-question="Show top stockout risks">Stockout risks</button>
         <button type="button" data-mk-question="Show reorder summary">Reorder summary</button>
         <button type="button" data-mk-question="Explain demand">Explain demand</button>
@@ -448,6 +449,7 @@
     if (route && /\b(open|go|navigate|show|take me)\b/.test(q)) return navigateTo(route);
 
     if (/sales|revenue|margin|seller/.test(q) && !/stock|reorder/.test(q)) return salesAnswer(q);
+    if (/vendor.*po|open.*(vendor|po)|purchase order|shipping window|shipped.*quantit|ordered.*quantit|tracking.*update|supplier.*shipment|procurement/i.test(q)) return vendorPOAnswer(q);
 
     const knowledge = supplyChainKnowledge(q);
     if (knowledge) return knowledge;
@@ -1022,6 +1024,57 @@
     const currency = regionCode() === "EU" ? "EUR" : regionCode() === "CA" ? "CAD" : "USD";
     const money = value => new Intl.NumberFormat(regionCode() === "EU" ? "en-IE" : "en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
     return { intent: "sales", category: "sales decision", message: `**${REGION_NAMES[regionCode()]} sales analysis**\n${number.format(items.length)} models generated ${number.format(units)} demand units, ${money(revenue)} revenue and ${money(margin)} gross margin in the analyzed scope. Suggested replenishment is ${number.format(replenishment)} units across ${number.format(atRisk.length)} urgent stock-risk models. Excess exposure is ${money(excessCost)} and dead-stock exposure is ${money(deadStockCost)}.${top ? ` First protect ${top.model} — ${top.brand}: ${number.format(top.suggestedQty)} suggested units and ${money(top.revenueAtRisk)} revenue at risk.` : " No immediate high-probability stockout signal is present."}\nForecasts were backtested for ${number.format(forecastBacktested)} models. Open Sales Analysis for seller-tier, model contribution, forecast ranges and data-quality evidence.` };
+  }
+
+  function vendorPOAnswer(q) {
+    const state = window.StarkSystem?.getState(), e = state?.enterprise || {};
+    const pos = e.purchaseOrders || [], vendors = e.vendors || [];
+    const open = pos.filter(p => !['RECEIVED', 'CANCELLED'].includes(p.status));
+    if (!open.length) {
+      return {
+        intent: "vendor-po",
+        category: "procurement",
+        message: "No open vendor purchase orders found in the current workspace. You can create a new vendor PO in the Procurement workspace."
+      };
+    }
+    const totalOrdered = open.reduce((s, p) => s + (p.lines || []).reduce((n, l) => n + (Number(l.qty) || 0), 0), 0);
+    const totalShipped = open.reduce((s, p) => s + (p.lines || []).reduce((n, l) => n + (Number(l.received || l.shipped) || 0), 0), 0);
+    const overdue = open.filter(p => p.eta && new Date(p.eta).getTime() < Date.now() && (p.lines || []).reduce((n, l) => n + (Number(l.received || l.shipped) || 0), 0) < (p.lines || []).reduce((n, l) => n + (Number(l.qty) || 0), 0));
+    const missingTracking = open.filter(p => !p.tracking || !p.tracking.trim());
+    const pct = totalOrdered > 0 ? Math.round((totalShipped / totalOrdered) * 100) : 0;
+
+    let msg = `**Open Vendor Purchase Order Register (${open.length} active)**\n\n` +
+      `• **Total Units Ordered:** ${number.format(totalOrdered)}\n` +
+      `• **Total Units Shipped:** ${number.format(totalShipped)} (${pct}% fulfillment)\n` +
+      `• **Remaining Balance:** ${number.format(Math.max(0, totalOrdered - totalShipped))} units\n` +
+      `• **Overdue Shipping Windows:** ${overdue.length}\n` +
+      `• **Missing Tracking:** ${missingTracking.length}\n\n` +
+      `**Active PO Breakdown:**\n`;
+
+    open.forEach(p => {
+      const v = vendors.find(x => x.id === p.vendorId);
+      const ord = (p.lines || []).reduce((n, l) => n + (Number(l.qty) || 0), 0);
+      const shp = (p.lines || []).reduce((n, l) => n + (Number(l.received || l.shipped) || 0), 0);
+      const win = p.shippingWindow || (p.eta ? `ETA: ${p.eta.slice(0, 10)}` : 'TBD');
+      const isLate = p.eta && new Date(p.eta).getTime() < Date.now() && shp < ord;
+      const trk = p.tracking ? (p.carrier ? p.carrier + ': ' : '') + p.tracking : 'No tracking';
+      const lineSummary = (p.lines || []).map(l => `${l.model || l.sku} (Ordered: ${l.qty}, Shipped: ${l.received || l.shipped || 0})`).join(', ');
+
+      msg += `\n**${p.po}** — *${v?.name || 'Supplier'}* (${p.status.replace(/_/g, ' ')})\n` +
+        `  • Ordered Qty: **${number.format(ord)}** | Shipped Qty: **${number.format(shp)}** (${ord > 0 ? Math.round(shp / ord * 100) : 0}%)\n` +
+        `  • Shipping Window: **${win}** ${isLate ? '⚠️ *(OVERDUE)*' : ''}\n` +
+        `  • Carrier / Tracking: \`${trk}\`\n` +
+        `  • Notes: ${p.notes ? `“${p.notes}”` : '—'}\n` +
+        `  • Line Items: ${lineSummary}\n`;
+    });
+
+    msg += `\n*You can update the shipping window, notes, tracking, and shipped quantities directly in [Open Vendor PO Management](${window.StarkSystem?.url('vendor-po-management.html') || 'vendor-po-management.html'}) or [Procurement](${window.StarkSystem?.url('procurement/index.html') || 'procurement/index.html'}).*`;
+
+    return {
+      intent: "vendor-po",
+      category: "procurement",
+      message: msg
+    };
   }
 
   function findItemInQuestion(q, items) {

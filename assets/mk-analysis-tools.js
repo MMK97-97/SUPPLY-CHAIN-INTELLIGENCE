@@ -48,7 +48,27 @@
       for (const key of ['models', 'units', 'estimatedRevenue', 'estimatedMargin', 'revenueAtRisk', 'suggestedQty', 'excessCost', 'deadStockCost', 'missingPrices']) summary[key] = Math.max(0, round(report.summary?.[key]));
       sales.push({ region: report.region, currency: report.region === 'EU' ? 'EUR' : report.region === 'CA' ? 'CAD' : 'USD', fileName: text(report.fileName), importedAt: text(report.importedAt, 40), signature: text(report.signature, 100), evidence_id: `${report.region}:sales:summary`, summary, items, omittedRows: Math.max(0, summary.models - items.length) });
     }
-    return { capturedAt: text(value.capturedAt, 40), scope: text(value.scope, 10), reports, sales, workspace, workspaceEvidenceId: 'workspace:summary' };
+    const openPurchaseOrders = Array.isArray(value.openPurchaseOrders) ? value.openPurchaseOrders.map(p => ({
+      evidence_id: text(p.evidence_id || `po:${p.po}`),
+      id: text(p.id || p.po),
+      po: text(p.po),
+      vendor: text(p.vendor),
+      purpose: text(p.purpose || 'INVENTORY'),
+      status: text(p.status),
+      region: text(p.region || 'US'),
+      orderedQty: Math.max(0, numeric(p.orderedQty)),
+      shippedQty: Math.max(0, numeric(p.shippedQty)),
+      remainingQty: Math.max(0, numeric(p.remainingQty)),
+      fulfillmentPct: Math.min(100, Math.max(0, numeric(p.fulfillmentPct))),
+      shippingWindow: text(p.shippingWindow || 'TBD'),
+      eta: text(p.eta),
+      carrier: text(p.carrier),
+      tracking: text(p.tracking),
+      hasTracking: p.hasTracking === true || Boolean(p.tracking && text(p.tracking)),
+      notes: text(p.notes, 500),
+      isOverdue: p.isOverdue === true
+    })) : [];
+    return { capturedAt: text(value.capturedAt, 40), scope: text(value.scope, 10), reports, sales, workspace, openPurchaseOrders, workspaceEvidenceId: 'workspace:summary' };
   }
   function selected(snapshot, region = 'ALL') {
     if (region !== 'ALL' && !regions.has(region)) throw new Error('Choose US, EU, CA or ALL.');
@@ -105,7 +125,27 @@
     if (args.region && args.region !== 'ALL' && !regions.has(args.region)) throw new Error('Invalid sales region.');
     return { valuation: 'Estimated revenue and margin use historical units times the current price/cost snapshot; these are not accounting totals.', reports: (snapshot.sales || []).filter(r => !args.region || args.region === 'ALL' || args.region === r.region).map(report => ({ evidence_id: report.evidence_id, region: report.region, currency: report.currency, fileName: report.fileName, importedAt: report.importedAt, ...report.summary, omittedRows: report.omittedRows, items: report.items.filter(item => matches(item, args.query || '')).sort((a, b) => b.revenueAtRisk - a.revenueAtRisk || b.units - a.units).slice(0, 20) })) };
   }
-  const handlers = { report_overview: overview, search_report_items: search, compare_brands: brands, simulate_scenario: scenario, workspace_health: workspace, sales_report: salesReports };
+  function vendorProcurement(snapshot, args) {
+    const pos = snapshot.openPurchaseOrders || [];
+    const query = text(args.query || '').toLowerCase();
+    const filtered = pos.filter(p => !query || [p.po, p.vendor, p.carrier, p.tracking, p.notes, p.shippingWindow].join(' ').toLowerCase().includes(query));
+    const totalOrdered = filtered.reduce((s, p) => s + (Number(p.orderedQty) || 0), 0);
+    const totalShipped = filtered.reduce((s, p) => s + (Number(p.shippedQty) || 0), 0);
+    const overdue = filtered.filter(p => p.isOverdue).length;
+    const missingTracking = filtered.filter(p => !p.hasTracking).length;
+    const overallPct = totalOrdered > 0 ? Math.round((totalShipped / totalOrdered) * 100) : 0;
+    return {
+      totalOpenPOs: filtered.length,
+      totalOrdered,
+      totalShipped,
+      remainingUnits: Math.max(0, totalOrdered - totalShipped),
+      overallFulfillmentPct: overallPct,
+      overdueCount: overdue,
+      missingTrackingCount: missingTracking,
+      orders: filtered
+    };
+  }
+  const handlers = { report_overview: overview, search_report_items: search, compare_brands: brands, simulate_scenario: scenario, workspace_health: workspace, sales_report: salesReports, vendor_procurement_intelligence: vendorProcurement };
   function run(name, args, snapshot) {
     if (!Object.hasOwn(handlers, name)) throw new Error('This analysis tool is not available.');
     return handlers[name](snapshot, args || {});
@@ -121,6 +161,9 @@
       result.push({ id: report.evidence_id, label: `${report.region} · sales · ${report.fileName}`, kind: 'sales', region: report.region, fileName: report.fileName, importedAt: report.importedAt });
       report.items.forEach(item => result.push({ id: item.evidence_id, label: `${report.region} · ${item.model} · sales · ${report.fileName}`, kind: 'sales-item', region: report.region, facts: item }));
     }
+    for (const po of snapshot.openPurchaseOrders || []) {
+      result.push({ id: po.evidence_id || `po:${po.po}`, label: `Vendor PO ${po.po} · ${po.vendor} · ${po.orderedQty} ordered, ${po.shippedQty} shipped · Window: ${po.shippingWindow}`, kind: 'vendor-po', region: po.region || 'ALL', facts: po });
+    }
     return result;
   }
   const regionProperty = { type: 'string', enum: ['US', 'EU', 'CA', 'ALL'] };
@@ -131,7 +174,8 @@
     ['compare_brands', 'Compare each brand separately in each region. Never merge currencies or inventory regions.', { region: regionProperty, query: queryProperty }],
     ['simulate_scenario', 'Calculate a what-if scenario without changing live data or planning settings. Nullable stock/inbound overrides apply to each matched model, not a shared aggregate.', { region: regionProperty, query: queryProperty, demand_change_pct: { type: 'number', minimum: -100, maximum: 500 }, lead_delay_days: { type: 'number', minimum: 0, maximum: 365 }, lead_months: { type: ['number', 'null'], minimum: 0, maximum: 24 }, coverage_months: { type: ['number', 'null'], minimum: 0, maximum: 24 }, on_hand: { type: ['number', 'null'], minimum: 0, maximum: 1e8 }, inbound_units: { type: ['number', 'null'], minimum: 0, maximum: 1e8 }, exclude_inbound: { type: 'boolean' } }],
     ['sales_report', 'Read sales-model demand, prices, forecast, stock risk and valuation separately by region/currency.', { region: regionProperty, query: queryProperty }],
-    ['workspace_health', 'Read operational counts and whether they include sample data. No customer contact information is available.', {}]
+    ['workspace_health', 'Read operational counts and whether they include sample data. No customer contact information is available.', {}],
+    ['vendor_procurement_intelligence', 'Analyze open vendor purchase orders, ordered vs shipped quantities, shipping windows, carrier tracking and supplier fulfillment performance.', { query: queryProperty }]
   ];
   const definitions = specs.map(([name, description, properties]) => ({ type: 'function', name, description, strict: true, parameters: { type: 'object', properties, required: Object.keys(properties), additionalProperties: false } }));
   const api = { validateSnapshot, run, evidence, definitions, matches };

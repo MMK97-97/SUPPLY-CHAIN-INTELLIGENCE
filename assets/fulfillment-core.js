@@ -337,7 +337,26 @@
       if(expectedVersion !== undefined && num(po.recordRevision)!==expectedVersion)throw new Error('This vendor PO changed in another tab. Reload before saving.');
       if(expectedUpdatedAt && (po.updatedAt || po.issuedAt)!==expectedUpdatedAt)throw new Error('This vendor PO changed in another tab. Reload before saving.');
       const tracking=text(input.tracking).slice(0,200),notes=text(input.notes).slice(0,5000);
-      Object.assign(po,{tracking,carrier:text(input.carrier).slice(0,100),notes,recordRevision:num(po.recordRevision)+1,updatedAt:now()});
+      const carrier=text(input.carrier).slice(0,100);
+      const shippingWindow=input.shippingWindow!==undefined?text(input.shippingWindow).slice(0,120):po.shippingWindow;
+      const eta=input.eta||po.eta;
+      Object.assign(po,{tracking,carrier,notes,shippingWindow,eta,recordRevision:num(po.recordRevision)+1,updatedAt:now()});
+      if(Array.isArray(input.lines)){
+        input.lines.forEach((l, idx)=>{
+          if(po.lines[idx]){
+            if(Number.isFinite(Number(l.received))) po.lines[idx].received = Math.max(0, Number(l.received));
+            if(Number.isFinite(Number(l.shipped))) po.lines[idx].received = Math.max(0, Number(l.shipped));
+            if(Number.isFinite(Number(l.qty)) && Number(l.qty) > 0) po.lines[idx].qty = Number(l.qty);
+          }
+        });
+      } else if(input.shippedQty !== undefined && Number.isFinite(Number(input.shippedQty))){
+        const sq = Math.max(0, Number(input.shippedQty));
+        if(po.lines.length===1){ po.lines[0].received = sq; }
+        else {
+          let rem = sq;
+          po.lines.forEach(l=>{ const take=Math.min(l.qty, rem); l.received=take; rem-=take; });
+        }
+      }
       if(tracking && po.status==='PO_ISSUED')po.status='DISPATCHED';
     });
   }

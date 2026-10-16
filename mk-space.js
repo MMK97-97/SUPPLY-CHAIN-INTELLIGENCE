@@ -49,12 +49,15 @@
       simulate_scenario: 'Planning scenario',
       workspace_health: 'Operations summary',
       sales_report: 'Sales and valuation estimates',
+      vendor_procurement_intelligence: 'Vendor procurement and open PO intelligence',
     };
     const results = calls.map(call => ({
       calculation: labels[call.name] || 'Verified report calculation',
       status: 'completed', filters: call.arguments,
       measurement_notes: call.name === 'compare_brands'
         ? 'Brand totals include eligible models only. Excluded or discontinued stock does not contribute to these totals. Demand is units per month; confidence is a score out of 100, not a probability.'
+        : call.name === 'vendor_procurement_intelligence'
+        ? 'Open vendor POs include ordered quantity, shipped quantity, shipping window, tracking and notes. Keep regions separate.'
         : 'Confidence is a score out of 100. Distinguish units, monthly demand, estimates and missing records.',
       facts: T.run(call.name, call.arguments, source)
     }));
@@ -68,6 +71,7 @@
         reports: source.reports.map(report => ({ evidence_id: report.evidence_id, region: report.region, fileName: report.fileName, importedAt: report.importedAt, settings: report.settings, summary: report.summary, rowsAvailableToWebsite: report.items.length, omittedSourceRows: report.omittedRows })),
         sales: source.sales.map(report => ({ evidence_id: report.evidence_id, region: report.region, currency: report.currency, fileName: report.fileName, importedAt: report.importedAt, summary: report.summary, rowsAvailableToWebsite: report.items.length, omittedSourceRows: report.omittedRows })),
         workspace: { evidence_id: 'workspace:summary', ...source.workspace },
+        open_vendor_purchase_orders: bound((source.openPurchaseOrders || []).slice(0, 10), limit, 'purchaseOrders', excerpts),
         verified_observations: bound((local.findings || []).slice(0, 8), limit, 'observations', excerpts),
         local_planning_suggestions: bound((local.actions || []).slice(0, 3), limit, 'suggestions', excerpts),
         assumptions: (local.assumptions || []).slice(0, 12).map(value => String(value).slice(0, 300)),
