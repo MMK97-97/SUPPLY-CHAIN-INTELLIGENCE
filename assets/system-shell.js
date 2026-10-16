@@ -165,8 +165,8 @@
   }
 
   function closeAllDropdowns() {
-    document.querySelectorAll('.system-modules-dropdown-panel, .system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
-    document.querySelectorAll('.system-modules-btn, .system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    document.querySelectorAll('.system-module-dropdown, .system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
+    document.querySelectorAll('.system-module-tab, .system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
   }
 
   function renderNavigation() {
@@ -176,6 +176,93 @@
       nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('workspace.html')}">${glyph('home')}<span>Overview</span></a>` +
         groups().map(([id, label, , , items]) => `<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${items.map(([path,l])=>`<a href="${S.url(path)}" ${active(path)?'class="active" aria-current="page"':''}>${escape(l)}</a>`).join('')}</div></details>`).join('');
     }
+
+    const tabs = document.querySelector('#system-module-tabs');
+    if (tabs) {
+      const allGroups = groups();
+      let html = `
+        <div class="system-module-item">
+          <a class="system-module-tab home-tab ${homeActive ? 'active' : ''}" href="${S.url('workspace.html')}" aria-label="Home Overview">
+            <span class="system-tab-icon" style="--tab-color:#0d9488">${glyph('home')}</span>
+            <span class="system-tab-label">Home</span>
+          </a>
+        </div>
+      `;
+
+      allGroups.forEach(([id, label, subtitle, color, items, primaryUrl, quickAction]) => {
+        const isGroupActive = items.some(([path]) => active(path)) || active(primaryUrl);
+        html += `
+          <div class="system-module-item" data-module-id="${id}">
+            <button type="button" class="system-module-tab ${isGroupActive ? 'active' : ''}" aria-expanded="false" aria-haspopup="true" data-toggle-dropdown="${id}">
+              <span class="system-tab-icon" style="--tab-color:${color}">${glyph(id)}</span>
+              <span class="system-tab-label">${escape(label)}</span>
+              <span class="system-tab-caret">▾</span>
+            </button>
+            <div class="system-module-dropdown" id="dropdown-${id}" hidden role="menu" aria-label="${escape(label)} options">
+              <div class="system-dropdown-head" style="--mod-accent:${color}">
+                <div class="system-dropdown-badge" style="background:${color}">${glyph(id)}</div>
+                <div class="system-dropdown-title-wrap">
+                  <strong class="system-dropdown-title">${escape(label)}</strong>
+                  <small class="system-dropdown-sub">${escape(subtitle)}</small>
+                </div>
+                <a href="${S.url(primaryUrl)}" class="system-dropdown-overview-btn">Dashboard ↗</a>
+              </div>
+              <ul class="system-dropdown-links">
+                ${items.map(([path, itemLabel, isHot]) => `
+                  <li>
+                    <a href="${S.url(path)}" class="system-dropdown-link ${active(path) ? 'active' : ''}">
+                      <span class="system-dropdown-link-bullet" style="background:${color}"></span>
+                      <span class="system-dropdown-link-name">${escape(itemLabel)}</span>
+                      ${isHot ? '<span class="system-dropdown-pill">Active</span>' : ''}
+                      <span class="system-dropdown-arrow">›</span>
+                    </a>
+                  </li>
+                `).join('')}
+              </ul>
+              ${quickAction ? `
+                <div class="system-dropdown-foot">
+                  <a href="${S.url(quickAction.path)}" class="system-dropdown-quick-action" style="--btn-accent:${color}">
+                    ${quickAction.label}
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      tabs.innerHTML = html;
+      bindDropdownEvents(tabs);
+    }
+  }
+
+  function bindDropdownEvents(tabs) {
+    tabs.querySelectorAll('[data-toggle-dropdown]').forEach(button => {
+      button.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = button.dataset.toggleDropdown;
+        const dropdown = document.getElementById('dropdown-' + id);
+        if (!dropdown) return;
+
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        closeAllDropdowns();
+
+        if (!isExpanded) {
+          dropdown.hidden = false;
+          button.setAttribute('aria-expanded', 'true');
+
+          const rect = dropdown.getBoundingClientRect();
+          if (rect.right > window.innerWidth - 18) {
+            dropdown.style.left = 'auto';
+            dropdown.style.right = '0';
+          } else {
+            dropdown.style.left = '0';
+            dropdown.style.right = 'auto';
+          }
+        }
+      };
+    });
   }
 
   function notice(message, error = false) {
@@ -220,80 +307,6 @@
           <small>Supply Chain Intelligence</small>
         </div>
       </a>
-
-      <!-- Modules Dropdown Button in Header -->
-      <div class="system-modules-picker" id="system-modules-picker">
-        <button type="button" class="system-modules-btn" id="system-modules-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Browse application modules">
-          <span class="system-modules-grid-icon">
-            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
-              <rect x="1" y="1" width="5" height="5" rx="1.2"/>
-              <rect x="10" y="1" width="5" height="5" rx="1.2"/>
-              <rect x="1" y="10" width="5" height="5" rx="1.2"/>
-              <rect x="10" y="10" width="5" height="5" rx="1.2"/>
-            </svg>
-          </span>
-          <span>Modules</span>
-          <span class="system-caret">▾</span>
-        </button>
-        <div class="system-modules-dropdown-panel" id="system-modules-dropdown-panel" hidden role="menu" aria-label="Modules menu">
-          <div class="system-modules-sidebar">
-            <div class="system-modules-sidebar-header">
-              <span>OPERATIONAL MODULES</span>
-            </div>
-            <div class="system-modules-list" role="tablist">
-              ${allGroups.map(([id, label, subtitle, color], idx) => `
-                <button type="button" class="system-module-nav-item ${idx===0?'active':''}" data-mod-target="${id}" role="tab" style="--nav-mod-color:${color}">
-                  <span class="system-module-nav-icon" style="background:${color}">${glyph(id)}</span>
-                  <span class="system-module-nav-text">
-                    <strong>${escape(label)}</strong>
-                    <small>${escape(subtitle)}</small>
-                  </span>
-                  <span class="system-module-nav-arrow">›</span>
-                </button>
-              `).join('')}
-            </div>
-          </div>
-          <div class="system-modules-content">
-            ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction], idx) => `
-              <div class="system-module-content-pane ${idx===0?'active':''}" id="pane-${id}" role="tabpanel">
-                <div class="system-pane-head" style="--pane-accent:${color}">
-                  <div class="system-pane-badge" style="background:${color}">${glyph(id)}</div>
-                  <div class="system-pane-titles">
-                    <h3>${escape(label)}</h3>
-                    <p>${escape(subtitle)}</p>
-                  </div>
-                  <a href="${S.url(primaryUrl)}" class="system-pane-overview-btn">Module Dashboard ↗</a>
-                </div>
-                <div class="system-pane-banner">
-                  ${bannerSvg(id, color)}
-                </div>
-                <div class="system-pane-links-wrap">
-                  <span class="system-pane-links-label">MODULE FEATURES &amp; PAGES</span>
-                  <ul class="system-pane-links">
-                    ${items.map(([path, itemLabel, isHot]) => `
-                      <li>
-                        <a href="${S.url(path)}" class="system-pane-link ${isHot ? 'featured' : ''}">
-                          <span class="system-pane-dot" style="background:${color}"></span>
-                          <span class="system-pane-link-name">${escape(itemLabel)}</span>
-                          ${isHot ? '<span class="system-pane-pill">Active</span>' : ''}
-                          <span class="system-pane-chevron">›</span>
-                        </a>
-                      </li>
-                    `).join('')}
-                  </ul>
-                </div>
-                ${quickAction ? `
-                  <div class="system-pane-foot">
-                    <a href="${S.url(quickAction.path)}" class="system-pane-quick-action" style="--pane-accent:${color}">
-                      ${quickAction.label}
-                    </a>
-                  </div>
-                ` : ''}
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </div>
 
       <!-- Center Global Search Pill -->
       <div class="system-search" role="search">
@@ -388,6 +401,11 @@
       </div>
     `;
 
+    const rail = document.createElement('nav');
+    rail.id = 'system-module-tabs';
+    rail.className = 'system-module-tabs';
+    rail.setAttribute('aria-label', 'Enterprise Operations Modules');
+
     const scrim = document.createElement('button');
     scrim.className = 'system-scrim';
     scrim.setAttribute('aria-label', 'Close menu');
@@ -403,8 +421,8 @@
       skip.href = '#' + main.id;
     }
 
-    // Mount header (without top module banner rail)
-    document.body.prepend(skip, header, scrim);
+    // Mount header and top module buttons rail
+    document.body.prepend(skip, header, rail, scrim);
     document.body.classList.add('stark-system');
 
     const footer = document.createElement('footer');
@@ -413,37 +431,6 @@
     document.body.append(footer);
 
     renderNavigation();
-
-    // Setup Modules Mega-Dropdown Toggle & Item Switching
-    const modulesBtn = header.querySelector('#system-modules-btn');
-    const modulesPanel = header.querySelector('#system-modules-dropdown-panel');
-
-    if (modulesBtn && modulesPanel) {
-      modulesBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const open = modulesPanel.hidden;
-        closeAllDropdowns();
-        if (open) {
-          modulesPanel.hidden = false;
-          modulesBtn.setAttribute('aria-expanded', 'true');
-        }
-      };
-
-      // Hover / Click to switch pane
-      modulesPanel.querySelectorAll('.system-module-nav-item').forEach(btn => {
-        const activate = () => {
-          modulesPanel.querySelectorAll('.system-module-nav-item').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const targetId = btn.dataset.modTarget;
-          modulesPanel.querySelectorAll('.system-module-content-pane').forEach(p => p.classList.remove('active'));
-          const targetPane = modulesPanel.querySelector('#pane-' + targetId);
-          if (targetPane) targetPane.classList.add('active');
-        };
-        btn.onclick = activate;
-        btn.onmouseenter = activate;
-      });
-    }
 
     // Setup Region Picker Interactive Menu
     const regionBtn = header.querySelector('#system-region-btn');
@@ -506,7 +493,7 @@
 
     // Close all menus on outside click or Escape
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.system-modules-picker, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
+      if (!e.target.closest('.system-module-item, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
         closeAllDropdowns();
         const searchResults = header.querySelector('#system-search-results');
         if (searchResults) searchResults.hidden = true;
@@ -659,12 +646,8 @@
 
     window.StarkModuleNavigation = {
       open: (id) => {
-        if (modulesBtn && modulesPanel) {
-          modulesPanel.hidden = false;
-          modulesBtn.setAttribute('aria-expanded', 'true');
-          const targetNav = modulesPanel.querySelector(`[data-mod-target="${id}"]`);
-          if (targetNav) targetNav.click();
-        }
+        const btn = document.querySelector(`[data-toggle-dropdown="${id}"]`);
+        if (btn) btn.click();
       },
       close: closeAllDropdowns,
       groups
