@@ -6,161 +6,659 @@
   const S = window.StarkSystem;
   if (!S) return;
   const escape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
   const glyph = name => {
     const paths = {
-      home:'M3 10l9-7 9 7v10H3z M9 20v-7h6v7',
-      planning:'M4 19V9m5 10V5m5 14v-7m5 7V3',
-      crm:'M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3 M16 4a4 4 0 0 1 0 8 M22 21v-3a4 4 0 0 0-3-3 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
-      orders:'M6 3h12v18H6z M9 8h6m-6 4h6m-6 4h4',
-      vendor:'M3 21h18M5 21V9l7-6 7 6v12M9 21v-6h6v6 M8 10h1m6 0h1',
-      warehouse:'M3 21V8l9-5 9 5v13M7 21V11h10v10M7 15h10m-10 3h10',
-      logistics:'M3 6h11v12H3z M14 10h4l3 4v4h-7 M8 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0 M20 18a2 2 0 1 1-4 0 2 2 0 0 1 4 0',
-      data:'M20 6c0 2-4 3-8 3S4 8 4 6s4-3 8-3 8 1 8 3 M4 6v12c0 2 4 3 8 3s8-1 8-3V6 M4 12c0 2 4 3 8 3s8-1 8-3',
-      search:'M21 21l-6-6 M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0'
+      home: '<path d="M3 10l9-7 9 7v10H3z M9 20v-7h6v7"/>',
+      planning: '<path d="M4 19V9m5 10V5m5 14v-7m5 7V3"/>',
+      crm: '<path d="M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3 M16 4a4 4 0 0 1 0 8 M22 21v-3a4 4 0 0 0-3-3 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0"/>',
+      orders: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+      vendor: '<path d="M3 21h18M5 21V9l7-6 7 6v12M9 21v-6h6v6 M8 10h1m6 0h1"/>',
+      procurement: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5h6m-6 6l2 2 4-4"/>',
+      shipping: '<path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>',
+      warehouse: '<path d="M3 21V8l9-5 9 5v13M7 21V11h10v10M7 15h10m-10 3h10"/>',
+      tpl: '<circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2.5"/><circle cx="20" cy="6" r="2.5"/><circle cx="4" cy="18" r="2.5"/><circle cx="20" cy="18" r="2.5"/><line x1="6.5" y1="7" x2="9.5" y2="10"/><line x1="17.5" y1="7" x2="14.5" y2="10"/><line x1="6.5" y1="17" x2="9.5" y2="14"/><line x1="17.5" y1="17" x2="14.5" y2="14"/>',
+      transportation: '<path d="M2 17h2m16 0h2M4 17a2 2 0 1 0 4 0 2 2 0 0 0-4 0zm12 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM4 17H2V6a2 2 0 0 1 2-2h11v13M15 8h4l3 4v5h-2"/>',
+      analytics: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+      data: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+      bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+      search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+      plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      chevron: '<polyline points="6 9 12 15 18 9"/>'
     };
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[({tpl:'warehouse',shipping:'logistics',transportation:'logistics',procurement:'vendor'})[name] || name] || paths.data}"/></svg>`;
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.data}</svg>`;
   };
+
   function groups() {
     const region = S.getRegion(), suffix = region.toLowerCase();
     return [
-      ['planning','Inventory & planning',[
+      ['planning','Inventory & Planning','Replenishment · Reorder · Demand','#10b981',[
         [`inventory-dashboard-${suffix}.html`,'Inventory dashboard'],
         [`decision-intelligence-${suffix}.html`,'Decision intelligence'],
         [`raw-report-${suffix}.html`,'Raw report & upload'],
-        [`reorder-report-${suffix}.html`,'Reorder report'],
+        [`reorder-report-${suffix}.html`,'Reorder report',true],
         [`active-brands-${suffix}.html`,'Active brands'],
         ...(region==='EU'?[['ats-eu.html','Available to sell']]:[]),
         ['sales-analysis.html?region='+region,'Sales analysis'],
         ['procurement-planning.html','Reorder to purchase order']
-      ]],
-      ['crm','Customers & CRM', [['crm/index.html','CRM dashboard'],['crm/accounts.html','Accounts & programs'],['crm/catalog.html','Catalog & pricing'],['crm/partner-portal.html','Partner portal']]],
-      ['orders','Order management',[['order-management/index.html','All open orders'],['order-management/new-order.html','Create customer order'],['order-management/issues.html','Order issues'],['order-management/unvalidated.html','Unvalidated orders'],['order-management/cancelled.html','Cancelled orders'],['order-management/hold-redemption.html','Hold & redemption'],['order-management/bulk-firm.html','Bulk & firm orders'],['events.html?region='+region,'Event planning'],['events-tv.html?region='+region,'Events display']]],
-      ['vendor','Vendor management',[['vendor-management/index.html','Vendor dashboard'],['vendor-management/vendors.html','Vendor master'],['vendor-management/sla.html','Supplier performance'],['vendor-management/digital-vault.html','Digital rewards']]],
-      ['procurement','Procurement',[['procurement/index.html','Open vendor PO management'],['procurement/new-po.html','Create vendor PO'],['vendor-po-management.html','Event / dropship POs'],['vendor-management/procurement.html','Procurement & receiving']]],
-      ['shipping','Shipping',[['shipping/index.html','Ship orders · Sarasota'],['shipping/daily-report.html','Daily shipment report']]],
-      ['warehouse','Warehouse management',[['warehouse-management/index.html','Warehouse control tower'],['warehouse-management/inventory-bins.html','Stock & locations'],['warehouse-management/receiving.html','Receiving & putaway'],['warehouse-management/wave-picking.html','Wave picking'],['warehouse-management/packing-dispatch.html','Packing & dispatch'],['warehouse-management/cycle-counts.html','Cycle counts']]],
-      ['tpl','3PL management',[['3pl-management/index.html','3PL overview'],['3pl-management/order-history.html','Order history & processing API'],['3pl-management/shipment-requests.html','Shipment requests'],['3pl-management/orders.html','Manage 3PL orders'],['3pl-management/ship-orders.html','Ship 3PL orders'],['3pl-management/upload-shipments.html','Upload 3PL shipments'],['3pl-management/network.html','Partner network & stock'],['3pl-management/routing.html','Routing workbench'],['3pl-management/shipments.html','Partner shipment register'],['3pl-management/reconciliation.html','Reconciliation & SLA'],['3pl-management/integrations.html','API connection']]],
-      ['transportation','Transportation',[['transportation/index.html','Transportation overview'],['freight-estimator.html','Freight estimator'],['freight-consolidate.html','Freight consolidation'],['shipment-tracking.html','Shipment tracking']]],
-      ['data','System & data',[['data-center.html','Data center & backups'],['activity.html','Audit activity'],[`instructions-${suffix}.html`,'Regional instructions']]]
+      ],`inventory-dashboard-${suffix}.html`,{label:'+ Reorder planning',path:'procurement-planning.html'}],
+
+      ['crm','Customers & CRM','Accounts · Programs · Catalogs','#3b82f6',[
+        ['crm/index.html','CRM dashboard'],
+        ['crm/accounts.html','Accounts & programs'],
+        ['crm/catalog.html','Catalog & pricing'],
+        ['crm/partner-portal.html','Partner portal']
+      ],'crm/index.html',{label:'+ Add account',path:'crm/accounts.html'}],
+
+      ['orders','Order Management','Orders · Allocation · Exceptions','#f97316',[
+        ['order-management/index.html','All open orders'],
+        ['order-management/new-order.html','Create customer order'],
+        ['order-management/issues.html','Order issues'],
+        ['order-management/unvalidated.html','Unvalidated orders'],
+        ['order-management/cancelled.html','Cancelled orders'],
+        ['order-management/hold-redemption.html','Hold & redemption'],
+        ['order-management/bulk-firm.html','Bulk & firm orders'],
+        ['events.html?region='+region,'Event planning'],
+        ['events-tv.html?region='+region,'Events display']
+      ],'order-management/index.html',{label:'+ Create customer order',path:'order-management/new-order.html'}],
+
+      ['vendor','Vendor Management','Suppliers · Contracts · Performance','#8b5cf6',[
+        ['vendor-management/index.html','Vendor dashboard'],
+        ['vendor-management/vendors.html','Vendor master'],
+        ['vendor-management/sla.html','Supplier performance'],
+        ['vendor-management/digital-vault.html','Digital rewards']
+      ],'vendor-management/index.html',{label:'+ Vendor master',path:'vendor-management/vendors.html'}],
+
+      ['procurement','Procurement','Purchase Orders · Receiving · PO Lifecycle','#f59e0b',[
+        ['procurement/index.html','Open vendor PO management'],
+        ['procurement/new-po.html','Create vendor PO'],
+        ['vendor-po-management.html','Event / dropship POs'],
+        ['vendor-management/procurement.html','Procurement & receiving']
+      ],'procurement/index.html',{label:'+ Create vendor PO',path:'procurement/new-po.html'}],
+
+      ['shipping','Shipping','Dispatch · Sarasota Operations','#ef4444',[
+        ['shipping/index.html','Ship orders · Sarasota'],
+        ['shipping/daily-report.html','Daily shipment report']
+      ],'shipping/index.html',{label:'+ Sarasota dispatch',path:'shipping/index.html'}],
+
+      ['warehouse','Warehouse Management','Control Tower · Putaway · Waves · Picking','#0284c7',[
+        ['warehouse-management/index.html','Warehouse control tower'],
+        ['warehouse-management/inventory-bins.html','Stock & locations'],
+        ['warehouse-management/receiving.html','Receiving & putaway'],
+        ['warehouse-management/wave-picking.html','Wave picking'],
+        ['warehouse-management/packing-dispatch.html','Packing & dispatch'],
+        ['warehouse-management/cycle-counts.html','Cycle counts']
+      ],'warehouse-management/index.html',{label:'+ Inbound receiving',path:'warehouse-management/receiving.html'}],
+
+      ['tpl','3PL Management','Partners · API Transmission · Routing','#10b981',[
+        ['3pl-management/index.html','3PL overview'],
+        ['3pl-management/order-history.html','Order history & processing API'],
+        ['3pl-management/shipment-requests.html','Shipment requests'],
+        ['3pl-management/orders.html','Manage 3PL orders'],
+        ['3pl-management/ship-orders.html','Ship 3PL orders'],
+        ['3pl-management/upload-shipments.html','Upload 3PL shipments'],
+        ['3pl-management/network.html','Partner network & stock'],
+        ['3pl-management/routing.html','Routing workbench'],
+        ['3pl-management/shipments.html','Partner shipment register'],
+        ['3pl-management/reconciliation.html','Reconciliation & SLA'],
+        ['3pl-management/integrations.html','API connection']
+      ],'3pl-management/index.html',{label:'+ 3PL dispatch',path:'3pl-management/ship-orders.html'}],
+
+      ['transportation','Transportation','Freight · Consolidation · Tracking','#2563eb',[
+        ['transportation/index.html','Transportation overview'],
+        ['freight-estimator.html','Freight estimator'],
+        ['freight-consolidate.html','Freight consolidation'],
+        ['shipment-tracking.html','Shipment tracking']
+      ],'transportation/index.html',{label:'+ Estimate freight',path:'freight-estimator.html'}],
+
+      ['analytics','Analytics & Reports','Intelligence · Reports · Forecasts','#eab308',[
+        ['business-operations.html','Executive dashboard'],
+        ['sales-analysis.html','Sales & demand analysis'],
+        [`decision-intelligence-${suffix}.html`,'Inventory analytics'],
+        ['vendor-management/sla.html','Supplier performance'],
+        ['freight-estimator.html','Freight spend analysis'],
+        [`raw-report-${suffix}.html`,'Custom reports'],
+        ['data-center.html','Data export & automation']
+      ],'business-operations.html',{label:'+ Executive report',path:'business-operations.html'}],
+
+      ['data','System & Data','Data Center · Backups · Audit Activity','#475569',[
+        ['data-center.html','Data center & backups'],
+        ['activity.html','Audit activity'],
+        [`instructions-${suffix}.html`,'Regional instructions']
+      ],'data-center.html',{label:'+ Audit activity',path:'activity.html'}]
     ];
   }
-  const currentPath = location.pathname;
-  // Resolve route-selected regions before any module's DOMContentLoaded renderer.
-  const initialQuery=new URLSearchParams(location.search),initialRegion=currentPath.match(/-(us|eu|ca)\.html$/)?.[1]||initialQuery.get('region')||initialQuery.get('workspace');
-  if(initialRegion)localStorage.setItem('stark-selected-region',S.regionCode(initialRegion));
-  const relativePath = currentPath.slice(S.rootURL.pathname.length);
-  const searchEnabled = /^(order-management|vendor-management|procurement)\//.test(relativePath) || ['order-management.html','vendor-management.html','vendor-po-management.html'].includes(relativePath);
-  const navigationPath = currentPath.replace(/\/warehouse-management\/cycle-count\.html$/, '/warehouse-management/cycle-counts.html');
-  const active = path => new URL(path,S.rootURL).pathname === navigationPath;
-  function links(items, top=false) { if(top)items=items.filter(([path])=>!/(?:mk-brain|decision-intelligence-(?:us|eu|ca))\.html/i.test(path)); return items.map(([path,label])=>`<a href="${S.url(path)}" ${active(path)?'class="active" aria-current="page"':''}>${escape(label)}</a>`).join(''); }
-  function renderNavigation() {
-    const nav = document.querySelector('#system-navigation'); if (!nav) return;
-    const homeActive = active('workspace.html') || active('business-operations.html');
-    nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('workspace.html')}">${glyph('home')}<span>Overview</span></a>` + groups().map(([id,label,items])=>`<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${links(items)}</div></details>`).join('');
-    const tabs=document.querySelector('#system-module-tabs');if(tabs){const group=groups().find(([,label,items])=>items.some(([path])=>active(path)));tabs.innerHTML=group?`<span class="system-module-name">${escape(group[1])}</span>`+links(group[2],true):`<span class="system-module-name">Workspace</span>`+links([['workspace.html','Overview'],['order-management/index.html','Orders'],['crm/index.html','Customers'],['procurement/index.html','Procurement'],['warehouse-management/index.html','Warehouse'],['3pl-management/index.html','3PL'],['transportation/index.html','Transportation'],['mk-brain.html','AI analyst']],true);}
 
+  const currentPath = location.pathname;
+  const initialQuery = new URLSearchParams(location.search);
+  const initialRegion = currentPath.match(/-(us|eu|ca)\.html$/)?.[1] || initialQuery.get('region') || initialQuery.get('workspace');
+  if (initialRegion) localStorage.setItem('stark-selected-region', S.regionCode(initialRegion));
+  const relativePath = currentPath.slice(S.rootURL.pathname.length);
+  const navigationPath = currentPath.replace(/\/warehouse-management\/cycle-count\.html$/, '/warehouse-management/cycle-counts.html');
+  const active = path => new URL(path, S.rootURL).pathname === navigationPath;
+
+  function regionFlag(code) {
+    const flags = { US: '🇺🇸', EU: '🇪🇺', CA: '🇨🇦' };
+    return flags[code] || '🇺🇸';
   }
-  function notice(message,error=false) {
-    const node = document.createElement('div'); node.className='system-toast'+(error?' error':''); node.setAttribute('role',error?'alert':'status'); node.textContent=message; document.body.append(node); setTimeout(()=>node.remove(),5000);
+
+  function regionName(code) {
+    const names = { US: 'United States', EU: 'European Union', CA: 'Canada' };
+    return names[code] || 'United States';
   }
+
+  function renderNavigation() {
+    const nav = document.querySelector('#system-navigation');
+    const homeActive = active('workspace.html') || active('business-operations.html') || active('index.html');
+    if (nav) {
+      nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('workspace.html')}">${glyph('home')}<span>Overview</span></a>` +
+        groups().map(([id, label, , , items]) => `<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${items.map(([path,l])=>`<a href="${S.url(path)}" ${active(path)?'class="active" aria-current="page"':''}>${escape(l)}</a>`).join('')}</div></details>`).join('');
+    }
+
+    const tabs = document.querySelector('#system-module-tabs');
+    if (tabs) {
+      const allGroups = groups();
+      let html = `
+        <div class="system-module-item">
+          <a class="system-module-tab home-tab ${homeActive ? 'active' : ''}" href="${S.url('workspace.html')}" aria-label="Home Overview">
+            <span class="system-tab-icon">${glyph('home')}</span>
+            <span class="system-tab-label">Home</span>
+          </a>
+        </div>
+      `;
+
+      allGroups.forEach(([id, label, subtitle, color, items, primaryUrl, quickAction]) => {
+        const isGroupActive = items.some(([path]) => active(path)) || active(primaryUrl);
+        html += `
+          <div class="system-module-item" data-module-id="${id}">
+            <button type="button" class="system-module-tab ${isGroupActive ? 'active' : ''}" aria-expanded="false" aria-haspopup="true" data-toggle-dropdown="${id}">
+              <span class="system-tab-icon" style="--tab-color:${color}">${glyph(id)}</span>
+              <span class="system-tab-label">${escape(label)}</span>
+              <span class="system-tab-caret">▾</span>
+            </button>
+            <div class="system-module-dropdown" id="dropdown-${id}" hidden role="menu" aria-label="${escape(label)} options">
+              <div class="system-dropdown-head" style="--mod-accent:${color}">
+                <div class="system-dropdown-badge" style="background:${color}">${glyph(id)}</div>
+                <div class="system-dropdown-title-wrap">
+                  <strong class="system-dropdown-title">${escape(label)}</strong>
+                  <small class="system-dropdown-sub">${escape(subtitle)}</small>
+                </div>
+                <a href="${S.url(primaryUrl)}" class="system-dropdown-overview-btn" aria-label="Open ${escape(label)} Overview">Overview ↗</a>
+              </div>
+              <ul class="system-dropdown-links" role="list">
+                ${items.map(([path, itemLabel, isHot]) => `
+                  <li role="none">
+                    <a href="${S.url(path)}" class="system-dropdown-link ${active(path) ? 'active' : ''} ${isHot ? 'featured' : ''}" role="menuitem">
+                      <span class="system-dropdown-link-bullet" style="--mod-accent:${color}"></span>
+                      <span class="system-dropdown-link-name">${escape(itemLabel)}</span>
+                      ${isHot ? '<span class="system-dropdown-pill">Active</span>' : ''}
+                      <span class="system-dropdown-arrow">›</span>
+                    </a>
+                  </li>
+                `).join('')}
+              </ul>
+              ${quickAction ? `
+                <div class="system-dropdown-foot">
+                  <a href="${S.url(quickAction.path)}" class="system-dropdown-quick-action" style="--mod-accent:${color}">
+                    ${quickAction.label}
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      tabs.innerHTML = html;
+      bindDropdownEvents(tabs);
+    }
+  }
+
+  function closeAllDropdowns() {
+    document.querySelectorAll('.system-module-dropdown, .system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
+    document.querySelectorAll('.system-module-tab, .system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+  }
+
+  function bindDropdownEvents(tabs) {
+    tabs.querySelectorAll('[data-toggle-dropdown]').forEach(button => {
+      button.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = button.dataset.toggleDropdown;
+        const dropdown = document.getElementById('dropdown-' + id);
+        if (!dropdown) return;
+
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        closeAllDropdowns();
+
+        if (!isExpanded) {
+          dropdown.hidden = false;
+          button.setAttribute('aria-expanded', 'true');
+
+          // Smart auto-alignment to prevent overflowing right viewport edge
+          const rect = dropdown.getBoundingClientRect();
+          if (rect.right > window.innerWidth - 18) {
+            dropdown.style.left = 'auto';
+            dropdown.style.right = '0';
+          } else {
+            dropdown.style.left = '0';
+            dropdown.style.right = 'auto';
+          }
+        }
+      };
+    });
+  }
+
+  function notice(message, error = false) {
+    const node = document.createElement('div');
+    node.className = 'system-toast' + (error ? ' error' : '');
+    node.setAttribute('role', error ? 'alert' : 'status');
+    node.textContent = message;
+    document.body.append(node);
+    setTimeout(() => node.remove(), 5000);
+  }
+
   function search(query) {
-    const q = query.toLowerCase().trim(), s = S.getState(); if (!q) return [];
-    const routeMatches = groups().flatMap(([,group,items])=>items.map(([path,label])=>({label,kind:group,path}))).filter(x=>x.label.toLowerCase().includes(q));
+    const q = query.toLowerCase().trim(), s = S.getState();
+    if (!q) return [];
+    const routeMatches = groups().flatMap(([, group, , , items]) => items.map(([path, label]) => ({ label, kind: group, path }))).filter(x => x.label.toLowerCase().includes(q));
     const records = [
-      ...s.enterprise.accounts.map(x=>({label:x.name,kind:'Customer',path:'crm/accounts.html',hay:x.name+' '+x.email})),
-      ...s.enterprise.vendors.map(x=>({label:x.name,kind:'Vendor',path:'vendor-management/vendors.html',hay:x.name+' '+x.email})),
-      ...s.enterprise.orders.map(x=>({label:x.po,kind:'Customer order · '+x.status.replaceAll('_',' '),path:'order-management/index.html?search='+encodeURIComponent(x.po),hay:[x.po,x.id,x.orderNumber,x.tracking,x.createdAt,x.inHandsDate,...x.lines.flatMap(l=>[l.model,l.sku]),...s.logistics.tplShipments.filter(p=>p.customerOrderId===x.id).map(p=>p.tracking),...s.logistics.packing.filter(p=>p.orderId===x.id).map(p=>p.tracking)].filter(Boolean).join(' ')})),
-      ...s.enterprise.purchaseOrders.map(x=>({label:x.po,kind:'Vendor PO · '+x.status,path:'vendor-management/procurement.html',hay:x.po})),
-      ...s.enterprise.inventory.map(x=>({label:x.model+' · '+x.brand,kind:'SKU · '+x.region,path:'crm/catalog.html',hay:x.sku+' '+x.model+' '+x.brand+' '+x.title}))
-    ].filter(x=>String(x.hay).toLowerCase().includes(q));
-    return [...routeMatches,...records].slice(0,12);
+      ...s.enterprise.accounts.map(x => ({ label: x.name, kind: 'Customer Account', path: 'crm/accounts.html', hay: x.name + ' ' + x.email })),
+      ...s.enterprise.vendors.map(x => ({ label: x.name, kind: 'Vendor', path: 'vendor-management/vendors.html', hay: x.name + ' ' + x.email })),
+      ...s.enterprise.orders.map(x => ({ label: (x.po || x.orderNumber || 'Order') + ' · ' + (x.status || '').replaceAll('_', ' '), kind: 'Customer Order', path: 'order-management/index.html?search=' + encodeURIComponent(x.po), hay: [x.po, x.id, x.orderNumber, x.tracking, x.createdAt, x.inHandsDate, ...x.lines.flatMap(l => [l.model, l.sku])].filter(Boolean).join(' ') })),
+      ...s.enterprise.purchaseOrders.map(x => ({ label: x.po + ' · ' + (x.status || ''), kind: 'Vendor PO', path: 'vendor-management/procurement.html', hay: x.po })),
+      ...s.enterprise.inventory.map(x => ({ label: x.model + ' · ' + x.brand, kind: 'SKU · ' + x.region, path: 'crm/catalog.html', hay: x.sku + ' ' + x.model + ' ' + x.brand + ' ' + x.title }))
+    ].filter(x => String(x.hay).toLowerCase().includes(q));
+    return [...routeMatches, ...records].slice(0, 14);
   }
+
   function start() {
     if (document.body.classList.contains('tv-view') || document.querySelector('.tv-app') || /\/(login|auth-callback|cloud-agent)\.html$/.test(currentPath)) return;
     if (document.querySelector('.system-header')) return;
-    const W=window.StarkWorkspace;
-    const header=document.createElement('header');header.className='system-header';
-    header.innerHTML=`<a class="system-brand" href="${S.url('workspace.html')}" aria-label="Supply Chain Intelligence home"><span class="system-wordmark">MK<span>◆</span></span><span><b>Supply Chain</b><small>Intelligence</small></span></a><button class="system-menu" type="button" aria-label="Open module menu" aria-controls="system-modules" aria-expanded="false">${glyph('data')}<span>Modules</span><span>⌄</span></button><span class="system-header-spacer"></span>${searchEnabled?`<div class="system-search"><label class="visually-hidden" for="system-search-input">Search orders, purchase orders and vendors</label>${glyph('search')}<input id="system-search-input" placeholder="PO, order, tracking or model…" autocomplete="off"><div class="system-search-results" hidden></div></div>`:''}<label class="system-region"><span>Analysis region</span><select id="system-region-select" aria-label="Analysis region"><option value="US">US · USD</option><option value="EU">EU · EUR</option><option value="CA">CA · CAD</option></select></label><button id="system-workspace-button" class="system-mode-button" type="button">${W?.isDemo?'Demo workspace':'Working workspace'}</button><a class="system-icon-action system-header-alert" href="${S.url('activity.html')}" aria-label="View workspace activity">${glyph('orders')}<span class="system-header-alert-count" id="system-alert-count" hidden></span></a><a class="system-account" href="${S.url('login.html?workspaceMode=working&from='+(W?.isDemo?'demo':'working')+'&return='+encodeURIComponent(W?.destination()||relativePath+location.search))}" aria-label="Organization sign in">${W?.isDemo?'D':'↗'}</a>`;
-    const modules=document.createElement('section');modules.id='system-modules';modules.className='system-modules';modules.hidden=true;modules.setAttribute('role','dialog');modules.setAttribute('aria-modal','true');modules.setAttribute('aria-label','Choose a module');
-    modules.innerHTML='<div class="system-modules-heading"><div><p>ONE CONNECTED WORKSPACE</p><h2>Choose a module</h2></div><button type="button" id="system-modules-close" aria-label="Close module menu">×</button></div><nav id="system-navigation" aria-label="All application modules"></nav>';
-    const rail=document.createElement('nav');rail.id='system-module-tabs';rail.className='system-module-tabs';rail.setAttribute('aria-label','Current module pages');
-    const scrim=document.createElement('button');scrim.className='system-scrim';scrim.setAttribute('aria-label','Close module menu');scrim.hidden=true;
-    const skip=document.createElement('a');skip.className='system-layout-skip';skip.textContent='Skip to workspace';
-    const main=document.querySelector('main');if(main){main.id||='workspace-main';main.setAttribute('tabindex','-1');skip.href='#'+main.id;}
-    document.body.prepend(skip,header,rail,scrim,modules);document.body.classList.add('stark-system');document.body.dataset.systemSearch=String(searchEnabled);
-    const footer=document.createElement('footer');footer.className='system-workspace-footer';footer.innerHTML='<span id="system-data-status"></span><span>Supply Chain Intelligence · Portfolio edition</span>';document.body.append(footer);
-    if(!searchEnabled){const restrictSearch=()=>document.querySelectorAll('input[type="search"],input[id*="search" i],input[placeholder^="Search" i]').forEach(input=>{input.disabled=true;const wrapper=input.closest('label,.search,.search-field,.op-search');(wrapper||input).hidden=true;});restrictSearch();new MutationObserver(restrictSearch).observe(document.body,{childList:true,subtree:true});}
+
+    const W = window.StarkWorkspace;
+    const currentRegion = S.getRegion();
+
+    const header = document.createElement('header');
+    header.className = 'system-header';
+    header.innerHTML = `
+      <!-- Brand Block -->
+      <a class="system-brand" href="${S.url('workspace.html')}" aria-label="STARK Premium Supply Chain Intelligence Home">
+        <span class="system-wordmark">SK<span>◆</span></span>
+        <div class="system-brand-text">
+          <b>STARK PREMIUM</b>
+          <small>Supply Chain Intelligence</small>
+        </div>
+      </a>
+
+      <!-- Center Global Search Pill -->
+      <div class="system-search" role="search">
+        <span class="system-search-icon">${glyph('search')}</span>
+        <input id="system-search-input" placeholder="Search accounts, orders, products, vendors, shipments..." autocomplete="off" aria-label="Global system search">
+        <kbd class="system-search-kbd">Ctrl K</kbd>
+        <div class="system-search-results" id="system-search-results" hidden></div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="system-header-right">
+        <!-- Region Selector -->
+        <div class="system-region-picker" id="system-region-picker">
+          <button type="button" class="system-region-btn" id="system-region-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Analysis Region">
+            <span class="system-region-flag" id="system-region-flag">${regionFlag(currentRegion)}</span>
+            <span class="system-region-name" id="system-region-name">${regionName(currentRegion)}</span>
+            <span class="system-caret">▾</span>
+          </button>
+          <ul class="system-region-menu" id="system-region-menu" hidden role="listbox">
+            <li role="option" data-region="US" ${currentRegion==='US'?'aria-selected="true" class="selected"':''}>
+              <span>🇺🇸</span><strong>United States</strong><small>USD ($)</small>
+            </li>
+            <li role="option" data-region="EU" ${currentRegion==='EU'?'aria-selected="true" class="selected"':''}>
+              <span>🇪🇺</span><strong>European Union</strong><small>EUR (€)</small>
+            </li>
+            <li role="option" data-region="CA" ${currentRegion==='CA'?'aria-selected="true" class="selected"':''}>
+              <span>🇨🇦</span><strong>Canada</strong><small>CAD ($)</small>
+            </li>
+          </ul>
+          <!-- Keep hidden select for compatibility with background handlers -->
+          <select id="system-region-select" aria-label="Analysis Region" style="display:none">
+            <option value="US" ${currentRegion==='US'?'selected':''}>US</option>
+            <option value="EU" ${currentRegion==='EU'?'selected':''}>EU</option>
+            <option value="CA" ${currentRegion==='CA'?'selected':''}>CA</option>
+          </select>
+        </div>
+
+        <!-- Notification Bell -->
+        <a class="system-icon-action system-alert-btn" href="${S.url('activity.html')}" aria-label="View activity alerts and exceptions" title="12 open alerts and exceptions">
+          ${glyph('bell')}
+          <span class="system-alert-count" id="system-alert-count">12</span>
+        </a>
+
+        <!-- Create New Teal Button -->
+        <div class="system-create-picker" id="system-create-picker">
+          <button type="button" class="system-create-btn" id="system-create-btn" aria-haspopup="menu" aria-expanded="false">
+            <span class="system-create-plus">+</span>
+            <span>Create new</span>
+            <span class="system-caret">▾</span>
+          </button>
+          <div class="system-create-menu" id="system-create-menu" hidden role="menu">
+            <a href="${S.url('order-management/new-order.html')}" class="system-create-item" role="menuitem">
+              <span class="system-create-item-icon" style="background:#fff7ed;color:#ea580c">${glyph('orders')}</span>
+              <div><strong>Customer Order</strong><small>New customer sale &amp; reservation</small></div>
+            </a>
+            <a href="${S.url('procurement/new-po.html')}" class="system-create-item" role="menuitem">
+              <span class="system-create-item-icon" style="background:#fef3c7;color:#d97706">${glyph('procurement')}</span>
+              <div><strong>Vendor PO</strong><small>Replenishment purchase order</small></div>
+            </a>
+            <a href="${S.url('warehouse-management/receiving.html')}" class="system-create-item" role="menuitem">
+              <span class="system-create-item-icon" style="background:#e0f2fe;color:#0284c7">${glyph('warehouse')}</span>
+              <div><strong>Warehouse Inbound</strong><small>Receive &amp; putaway stock</small></div>
+            </a>
+            <a href="${S.url('3pl-management/ship-orders.html')}" class="system-create-item" role="menuitem">
+              <span class="system-create-item-icon" style="background:#ecfdf5;color:#059669">${glyph('tpl')}</span>
+              <div><strong>3PL Shipment</strong><small>Dispatch partner order</small></div>
+            </a>
+            <a href="${S.url('crm/catalog.html')}" class="system-create-item" role="menuitem">
+              <span class="system-create-item-icon" style="background:#eff6ff;color:#2563eb">${glyph('crm')}</span>
+              <div><strong>Product / SKU</strong><small>Catalog and price books</small></div>
+            </a>
+          </div>
+        </div>
+
+        <!-- User Avatar Circle -->
+        <div class="system-account-picker" id="system-account-picker">
+          <button type="button" class="system-account-btn" id="system-account-btn" aria-haspopup="menu" aria-expanded="false" aria-label="User Profile &amp; Workspace">
+            <span>SC</span>
+          </button>
+          <div class="system-account-menu" id="system-account-menu" hidden role="menu">
+            <div class="system-account-header">
+              <strong>Supply Chain Director</strong>
+              <small>${W?.isDemo ? 'Demo Workspace · Fictional Data' : 'Working Workspace · Connected'}</small>
+            </div>
+            <button type="button" class="system-account-item" id="system-workspace-button">
+              🔄 Switch Workspace (${W?.isDemo ? 'Working Mode' : 'Demo Mode'})
+            </button>
+            <a href="${S.url('data-center.html')}" class="system-account-item">⚙️ Data Center &amp; Backups</a>
+            <a href="${S.url('activity.html')}" class="system-account-item">📋 Audit Log &amp; Exceptions</a>
+            <a href="${S.url('login.html?workspaceMode=working&from='+(W?.isDemo?'demo':'working')+'&return='+encodeURIComponent(W?.destination()||relativePath+location.search))}" class="system-account-item danger">🚪 Sign Out</a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const rail = document.createElement('nav');
+    rail.id = 'system-module-tabs';
+    rail.className = 'system-module-tabs';
+    rail.setAttribute('aria-label', 'Enterprise Operations Modules');
+
+    const scrim = document.createElement('button');
+    scrim.className = 'system-scrim';
+    scrim.setAttribute('aria-label', 'Close menu');
+    scrim.hidden = true;
+
+    const skip = document.createElement('a');
+    skip.className = 'system-layout-skip';
+    skip.textContent = 'Skip to workspace';
+    const main = document.querySelector('main');
+    if (main) {
+      main.id ||= 'workspace-main';
+      main.setAttribute('tabindex', '-1');
+      skip.href = '#' + main.id;
+    }
+
+    document.body.prepend(skip, header, rail, scrim);
+    document.body.classList.add('stark-system');
+
+    const footer = document.createElement('footer');
+    footer.className = 'system-workspace-footer';
+    footer.innerHTML = '<span id="system-data-status"></span><span>STARK Premium Supply Chain Intelligence · Portfolio Edition</span>';
+    document.body.append(footer);
+
     renderNavigation();
-    const select=header.querySelector('select');select.value=S.getRegion();
-    select.addEventListener('change',()=>{localStorage.setItem('stark-selected-region',select.value);renderNavigation();window.dispatchEvent(new CustomEvent('stark:region-change',{detail:{region:select.value}}));const relative=currentPath.slice(S.rootURL.pathname.length);const navigate=url=>window.StarkNavigation?window.StarkNavigation.navigate(url):location.assign(url);if(/-(us|eu|ca)\.html$/.test(relative))navigate(S.url(relative.replace(/-(us|eu|ca)\.html$/,`-${select.value.toLowerCase()}.html`)));else if(['events.html','sales-analysis.html'].includes(relative))navigate(S.url(relative+'?region='+select.value));});
-    window.addEventListener('stark:region-change',()=>{select.value=S.getRegion();renderNavigation();});
-    const toggle=header.querySelector('.system-menu');let menuOrigin=toggle;
-    const expanded=value=>document.querySelectorAll('[aria-controls="system-modules"]').forEach(button=>button.setAttribute('aria-expanded',String(value)));
-    const close=()=>{if(modules.hidden)return;modules.hidden=true;scrim.hidden=true;document.body.classList.remove('system-nav-open');expanded(false);(menuOrigin?.isConnected?menuOrigin:toggle).focus();};
-    const open=(origin=toggle)=>{menuOrigin=origin;modules.hidden=false;scrim.hidden=false;document.body.classList.add('system-nav-open');expanded(true);modules.querySelector('a,summary,button')?.focus();};
-    toggle.onclick=()=>modules.hidden?open():close();scrim.onclick=close;modules.querySelector('#system-modules-close').onclick=close;
-    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.querySelector('.modal-backdrop,.sys-modal-backdrop'))close();if(event.key==='Tab'&&!modules.hidden){const nodes=[...modules.querySelectorAll('button,a,summary')].filter(n=>!n.closest('details:not([open]) .system-subnav'));const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
-    const input=header.querySelector('input'),results=header.querySelector('.system-search-results');
-    if(input&&results){input.addEventListener('input',()=>{const rows=search(input.value);results.hidden=!input.value.trim();results.innerHTML=rows.length?rows.map(x=>`<a href="${S.url(x.path)}"><b>${escape(x.label)}</b><small>${escape(x.kind)}</small></a>`).join(''):'<p>No matching records</p>';});document.addEventListener('click',e=>{if(!e.target.closest('.system-search'))results.hidden=true;});input.addEventListener('keydown',e=>{if(e.key==='Escape')results.hidden=true;if(e.key==='Enter'&&results.querySelector('a'))window.StarkNavigation?window.StarkNavigation.navigate(results.querySelector('a').href):location.assign(results.querySelector('a').href);});}
-    const status=()=>{const state=S.getState(),cloud=window.StarkSystemCloud?.getStatus(),count=S.issues().length;document.querySelector('#system-data-status').textContent=W?.isDemo?'DEMO · Fictional records · Saved in this browser':cloud?.active?cloud.status:'Browser records · Connect organization data in Data Center';const badge=document.querySelector('#system-alert-count');badge.hidden=!count;badge.textContent=String(count);};status();window.addEventListener('stark:system-change',status);window.addEventListener('stark:region-change',status);window.addEventListener('stark:cloud-status',status);
-    header.querySelector('#system-workspace-button').onclick=()=>window.StarkPortfolio?.workspaceMenu();
-    window.StarkModuleNavigation={open,close,groups};
-    window.addEventListener('error',e=>{if(/storage|newer changes/i.test(e.message||''))notice(e.message,true);});
+
+    // Setup Region Picker Interactive Menu
+    const regionBtn = header.querySelector('#system-region-btn');
+    const regionMenu = header.querySelector('#system-region-menu');
+    const select = header.querySelector('#system-region-select');
+
+    if (regionBtn && regionMenu) {
+      regionBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const open = regionMenu.hidden;
+        closeAllDropdowns();
+        if (open) {
+          regionMenu.hidden = false;
+          regionBtn.setAttribute('aria-expanded', 'true');
+        }
+      };
+
+      regionMenu.querySelectorAll('[data-region]').forEach(opt => {
+        opt.onclick = () => {
+          const newRegion = opt.dataset.region;
+          select.value = newRegion;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          closeAllDropdowns();
+        };
+      });
+    }
+
+    // Setup Create New Menu
+    const createBtn = header.querySelector('#system-create-btn');
+    const createMenu = header.querySelector('#system-create-menu');
+    if (createBtn && createMenu) {
+      createBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const open = createMenu.hidden;
+        closeAllDropdowns();
+        if (open) {
+          createMenu.hidden = false;
+          createBtn.setAttribute('aria-expanded', 'true');
+        }
+      };
+    }
+
+    // Setup Account Menu
+    const accountBtn = header.querySelector('#system-account-btn');
+    const accountMenu = header.querySelector('#system-account-menu');
+    if (accountBtn && accountMenu) {
+      accountBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const open = accountMenu.hidden;
+        closeAllDropdowns();
+        if (open) {
+          accountMenu.hidden = false;
+          accountBtn.setAttribute('aria-expanded', 'true');
+        }
+      };
+    }
+
+    // Close all menus on outside click or Escape
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.system-module-item, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
+        closeAllDropdowns();
+        const searchResults = header.querySelector('#system-search-results');
+        if (searchResults) searchResults.hidden = true;
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAllDropdowns();
+        const searchResults = header.querySelector('#system-search-results');
+        if (searchResults) searchResults.hidden = true;
+      }
+      // Ctrl + K shortcut for search
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        const input = header.querySelector('#system-search-input');
+        if (input) {
+          e.preventDefault();
+          input.focus();
+          input.select();
+        }
+      }
+    });
+
+    // Handle Region Change
+    select.addEventListener('change', () => {
+      const val = select.value;
+      localStorage.setItem('stark-selected-region', val);
+      document.querySelector('#system-region-flag').textContent = regionFlag(val);
+      document.querySelector('#system-region-name').textContent = regionName(val);
+      regionMenu.querySelectorAll('[data-region]').forEach(el => {
+        const sel = el.dataset.region === val;
+        el.setAttribute('aria-selected', String(sel));
+        el.classList.toggle('selected', sel);
+      });
+      renderNavigation();
+      window.dispatchEvent(new CustomEvent('stark:region-change', { detail: { region: val } }));
+      const relative = currentPath.slice(S.rootURL.pathname.length);
+      const navigate = url => window.StarkNavigation ? window.StarkNavigation.navigate(url) : location.assign(url);
+      if (/-(us|eu|ca)\.html$/.test(relative)) {
+        navigate(S.url(relative.replace(/-(us|eu|ca)\.html$/, `-${val.toLowerCase()}.html`)));
+      } else if (['events.html', 'sales-analysis.html'].includes(relative)) {
+        navigate(S.url(relative + '?region=' + val));
+      }
+    });
+
+    window.addEventListener('stark:region-change', () => {
+      select.value = S.getRegion();
+      document.querySelector('#system-region-flag').textContent = regionFlag(select.value);
+      document.querySelector('#system-region-name').textContent = regionName(select.value);
+      renderNavigation();
+    });
+
+    // Search Input Realtime Results
+    const searchInput = header.querySelector('#system-search-input');
+    const searchResults = header.querySelector('#system-search-results');
+    if (searchInput && searchResults) {
+      searchInput.addEventListener('input', () => {
+        const rows = search(searchInput.value);
+        searchResults.hidden = !searchInput.value.trim();
+        searchResults.innerHTML = rows.length ? rows.map(x => `
+          <a href="${S.url(x.path)}" class="system-search-item">
+            <span class="system-search-badge">${escape(x.kind)}</span>
+            <b class="system-search-title">${escape(x.label)}</b>
+            <span class="system-search-arrow">↗</span>
+          </a>
+        `).join('') : '<p class="system-search-empty">No matching records found</p>';
+      });
+
+      searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Escape') searchResults.hidden = true;
+        if (e.key === 'Enter') {
+          const first = searchResults.querySelector('a');
+          if (first) {
+            window.StarkNavigation ? window.StarkNavigation.navigate(first.href) : location.assign(first.href);
+          }
+        }
+      });
+    }
+
+    // Live status updates
+    const status = () => {
+      const state = S.getState(), cloud = window.StarkSystemCloud?.getStatus(), count = S.issues().length;
+      const statusEl = document.querySelector('#system-data-status');
+      if (statusEl) {
+        statusEl.textContent = W?.isDemo ? 'DEMO · Fictional records · Saved in this browser' : cloud?.active ? cloud.status : 'Browser records · Connect organization data in Data Center';
+      }
+      const badge = document.querySelector('#system-alert-count');
+      if (badge) {
+        badge.hidden = !count;
+        badge.textContent = String(count || 12);
+      }
+    };
+    status();
+    window.addEventListener('stark:system-change', status);
+    window.addEventListener('stark:region-change', status);
+    window.addEventListener('stark:cloud-status', status);
+
+    const wsBtn = header.querySelector('#system-workspace-button');
+    if (wsBtn) wsBtn.onclick = () => window.StarkPortfolio?.workspaceMenu();
+
+    window.StarkModuleNavigation = {
+      open: (id) => {
+        const target = document.querySelector(`[data-toggle-dropdown="${id}"]`);
+        if (target) target.click();
+      },
+      close: closeAllDropdowns,
+      groups
+    };
+
+    window.addEventListener('error', e => {
+      if (/storage|newer changes/i.test(e.message || '')) notice(e.message, true);
+    });
   }
 
-  let dialogSequence=0;
-  function dialog(title,body,onSave,saveLabel='Save',options={}) {
-    const former=document.activeElement, wrap=document.createElement('div'), titleId='system-dialog-title-'+(++dialogSequence);
-    wrap.className='modal-backdrop';
-    wrap.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="${titleId}"><div class="modal-head"><h3 id="${titleId}">${escape(title)}</h3><button type="button" class="icon-btn" data-close aria-label="Close dialog">×</button></div><div class="modal-body">${body}<p data-dialog-error class="notice danger" role="alert" hidden></p></div><div class="modal-actions"><button type="button" class="btn" data-close>Cancel</button><button type="button" class="btn primary" data-save>${escape(saveLabel)}</button></div></div>`;
-    if(options.system){wrap.className='sys-modal-backdrop';wrap.querySelector('.modal').className='sys-modal';wrap.querySelector('.modal-actions').className='sys-modal-footer';wrap.querySelectorAll('button').forEach(button=>button.className=button.hasAttribute('data-save')?'sys-btn primary':'sys-btn');}
+  let dialogSequence = 0;
+  function dialog(title, body, onSave, saveLabel = 'Save', options = {}) {
+    const former = document.activeElement, wrap = document.createElement('div'), titleId = 'system-dialog-title-' + (++dialogSequence);
+    wrap.className = 'modal-backdrop';
+    wrap.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="${titleId}"><div class="modal-head"><h3 id="${titleId}">${escape(title)}</h3><button type="button" class="icon-btn" data-close aria-label="Close dialog">×</button></div><div class="modal-body">${body}<p data-dialog-error class="notice danger" role="alert" hidden></p></div><div class="modal-actions"><button type="button" class="btn" data-close>Cancel</button><button type="button" class="btn primary" data-save>${escape(saveLabel)}</button></div></div>`;
+    if (options.system) {
+      wrap.className = 'sys-modal-backdrop';
+      wrap.querySelector('.modal').className = 'sys-modal';
+      wrap.querySelector('.modal-actions').className = 'sys-modal-footer';
+      wrap.querySelectorAll('button').forEach(button => button.className = button.hasAttribute('data-save') ? 'sys-btn primary' : 'sys-btn');
+    }
     document.body.append(wrap);
-    const box=wrap.querySelector('[role="dialog"]'), saveButton=wrap.querySelector('[data-save]'), errorBox=wrap.querySelector('[data-dialog-error]');
-    let busy=false;
-    const focusables=()=>[...wrap.querySelectorAll('button,input:not([type="hidden"]),select,textarea,a[href],[tabindex]')].filter(node=>!node.disabled&&!node.hidden&&!node.closest('[hidden]')&&node.tabIndex>=0);
+    const box = wrap.querySelector('[role="dialog"]'), saveButton = wrap.querySelector('[data-save]'), errorBox = wrap.querySelector('[data-dialog-error]');
+    let busy = false;
+    const focusables = () => [...wrap.querySelectorAll('button,input:not([type="hidden"]),select,textarea,a[href],[tabindex]')].filter(node => !node.disabled && !node.hidden && !node.closest('[hidden]') && node.tabIndex >= 0);
+
     function close() {
-      if(busy)return;
-      wrap.remove();document.removeEventListener('keydown',keys);
-      const target=former?.isConnected?former:former?.id?document.getElementById(former.id):null;
+      if (busy) return;
+      wrap.remove();
+      document.removeEventListener('keydown', keys);
+      const target = former?.isConnected ? former : former?.id ? document.getElementById(former.id) : null;
       target?.focus();
     }
+
     function keys(event) {
-      if(!wrap.isConnected){document.removeEventListener('keydown',keys);return;}
-      if([...document.querySelectorAll('.modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop')].at(-1)!==wrap)return;
-      if(event.key==='Escape'){event.preventDefault();close();}
-      if(event.key==='Tab'){
-        const nodes=focusables(), first=nodes[0], last=nodes.at(-1);
-        if(!first){event.preventDefault();box.focus();}
-        else if(event.shiftKey&&(document.activeElement===first||!wrap.contains(document.activeElement))){event.preventDefault();last.focus();}
-        else if(!event.shiftKey&&(document.activeElement===last||!wrap.contains(document.activeElement))){event.preventDefault();first.focus();}
+      if (!wrap.isConnected) { document.removeEventListener('keydown', keys); return; }
+      if ([...document.querySelectorAll('.modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop')].at(-1) !== wrap) return;
+      if (event.key === 'Escape') { event.preventDefault(); close(); }
+      if (event.key === 'Tab') {
+        const nodes = focusables(), first = nodes[0], last = nodes.at(-1);
+        if (!first) { event.preventDefault(); box.focus(); }
+        else if (event.shiftKey && (document.activeElement === first || !wrap.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && (document.activeElement === last || !wrap.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
       }
     }
-    const fail=error=>{errorBox.hidden=false;errorBox.textContent=error?.message||'The change could not be saved. Review the form and try again.';};
-    wrap.querySelectorAll('[data-close]').forEach(button=>button.onclick=close);
-    wrap.addEventListener('click',event=>{if(event.target===wrap)close();});
-    saveButton.onclick=()=>{
-      if(busy)return;
-      errorBox.hidden=true;errorBox.textContent='';
-      const invalid=[...wrap.querySelectorAll('input,select,textarea')].find(node=>!node.disabled&&node.type!=='hidden'&&!node.closest('[hidden]')&&!node.checkValidity());
-      if(invalid){invalid.reportValidity();invalid.focus();fail(new Error(invalid.validationMessage));return;}
-      try{
-        const result=onSave?.(wrap);
-        if(result&&typeof result.then==='function'){
-          busy=true;box.setAttribute('aria-busy','true');
-          const controls=[...wrap.querySelectorAll('button,input,select,textarea')], disabled=controls.map(node=>node.disabled);
-          controls.forEach(node=>node.disabled=true);
-          Promise.resolve(result).then(ok=>{busy=false;if(ok!==false)close();},fail).finally(()=>{busy=false;box.removeAttribute('aria-busy');controls.forEach((node,index)=>node.disabled=disabled[index]);});
-        }else if(result!==false)close();
-      }catch(error){fail(error);}
+
+    const fail = error => {
+      errorBox.hidden = false;
+      errorBox.textContent = error?.message || 'The change could not be saved. Review the form and try again.';
     };
-    box.tabIndex=-1;document.addEventListener('keydown',keys);
-    (wrap.querySelector('input:not([type="hidden"]),select,textarea')||saveButton).focus();
+
+    wrap.querySelectorAll('[data-close]').forEach(button => button.onclick = close);
+    wrap.addEventListener('click', event => { if (event.target === wrap) close(); });
+    saveButton.onclick = () => {
+      if (busy) return;
+      errorBox.hidden = true;
+      errorBox.textContent = '';
+      const invalid = [...wrap.querySelectorAll('input,select,textarea')].find(node => !node.disabled && node.type !== 'hidden' && !node.closest('[hidden]') && !node.checkValidity());
+      if (invalid) { invalid.reportValidity(); invalid.focus(); fail(new Error(invalid.validationMessage)); return; }
+      try {
+        const result = onSave?.(wrap);
+        if (result && typeof result.then === 'function') {
+          busy = true; box.setAttribute('aria-busy', 'true');
+          const controls = [...wrap.querySelectorAll('button,input,select,textarea')], disabled = controls.map(node => node.disabled);
+          controls.forEach(node => node.disabled = true);
+          Promise.resolve(result).then(ok => { busy = false; if (ok !== false) close(); }, fail).finally(() => { busy = false; box.removeAttribute('aria-busy'); controls.forEach((node, index) => node.disabled = disabled[index]); });
+        } else if (result !== false) close();
+      } catch (error) { fail(error); }
+    };
+    box.tabIndex = -1;
+    document.addEventListener('keydown', keys);
+    (wrap.querySelector('input:not([type="hidden"]),select,textarea') || saveButton).focus();
     return wrap;
   }
-  window.addEventListener('stark:storage-error',event=>notice(event.detail.message,true));
-  window.StarkSystemUI={notice,escape,glyph,dialog};
-  // Deferred scripts run at "interactive" before DOMContentLoaded. Module listeners
-  // build their page body at that event, so mount the shared chrome after them.
-  if(document.readyState==='complete')start();
-  else document.addEventListener('DOMContentLoaded',start,{once:true});
+
+  window.addEventListener('stark:storage-error', event => notice(event.detail.message, true));
+  window.StarkSystemUI = { notice, escape, glyph, dialog };
+
+  if (document.readyState === 'complete') start();
+  else document.addEventListener('DOMContentLoaded', start, { once: true });
 })();
