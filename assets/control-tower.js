@@ -376,7 +376,7 @@
           <div class="tower-hero-top">
             <span class="tower-live"><i></i>${window.StarkWorkspace?.isDemo?'Portfolio demo':model.state.mode==='sample'?'Sample workspace':'Current workspace'}</span>
             <span>${esc(model.regionName)} · Enterprise control tower</span>
-            <label class="tower-period">
+            <label class="tower-period" hidden style="display:none!important">
               <span class="visually-hidden">Dashboard activity period</span>
               <select id="tower-period">
                 <option value="30" ${period===30?'selected':''}>Last 30 days</option>
@@ -386,18 +386,7 @@
             </label>
           </div>
           <h1>Global supply chain.<br>Total visibility. Smarter decisions.</h1>
-          <p>Orders, inventory, suppliers and fulfillment,<br>connected in one workspace.</p>
-          <div class="tower-hero-bottom">
-            <div class="tower-hero-actions">
-              <a href="${S.url('order-management/new-order.html')}">＋ Create order</a>
-              <a href="${S.url('procurement/new-po.html')}">Create vendor PO ↗</a>
-            </div>
-            <div class="tower-hero-stats">
-              <span>${icon('warehouse')}<b>${l.warehouses.length}</b><small>Warehouse records</small></span>
-              <span>${icon('tpl')}<b>${l.tplNodes.length}</b><small>3PL partners</small></span>
-              <span>${icon('planning')}<b>${Object.keys(model.state.regional).length} / 3</b><small>Connected reports</small></span>
-            </div>
-          </div>
+          <p>Orders, inventory, suppliers and fulfillment, connected in one workspace.</p>
         </section>
 
         <div class="tower-kpis">
