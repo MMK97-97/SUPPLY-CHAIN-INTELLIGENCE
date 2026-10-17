@@ -50,10 +50,17 @@
   function receiveScenarioPO(){requireDemo();const code=S.getRegion(),po=S.getState().enterprise.purchaseOrders.find(p=>p.id==='demo_po_'+code&&p.status!=='RECEIVED');if(!po)throw new Error('This example PO has already been received. Create another vendor PO or reset the demo.');S.receivePO(po.id);refreshDemo();return po.id;}
   function refreshDemo(){
     if(!W?.isDemo || document.body.dataset.systemPage!=='dashboard')return;
-    let host=document.getElementById('portfolio-demo-guide');if(!host){host=document.createElement('section');host.id='portfolio-demo-guide';host.className='portfolio-demo-guide';document.querySelector('.tower-hero')?.after(host);}if(!host.isConnected)return;
-    const record=readScenario(),order=S.getState().enterprise.orders.find(o=>o.id===record.orderId),region=S.getRegion();
-    host.innerHTML=`<div class="portfolio-demo-intro"><span class="portfolio-eyebrow">RECRUITER DEMO · FICTIONAL DATA</span><h2>Try the system. Follow the records.</h2><p>Create an order, reserve stock, then dispatch it. Watch the inventory, shipment report and audit update together.</p><a href="${S.url('mk-brain.html')}">Explore the AI decision lab ↗</a></div><div class="portfolio-demo-steps"><button type="button" data-demo-action="create" ${order&&!['SHIPPED','DELIVERED','CANCELLED'].includes(order.status)?'disabled':''}><span>01</span><b>Create an order</b><small>CRM address + live catalog</small></button><button type="button" data-demo-action="validate" ${!order||!['UNVALIDATED','ISSUES'].includes(order.status)?'disabled':''}><span>02</span><b>Validate & allocate</b><small>Check credit and stock</small></button><button type="button" data-demo-action="ship" ${!order||!['PICKING','ALLOCATED','PACKED'].includes(order.status)?'disabled':''}><span>03</span><b>Dispatch locally</b><small>Update stock + tracking</small></button></div><div class="portfolio-demo-footer"><p id="portfolio-demo-status" role="status">${order?esc(order.po+' · '+order.status.replaceAll('_',' ')):'Ready to try a '+region+' order. No sign-up required.'}</p><button type="button" data-demo-action="receive">Receive the ${esc(region)} demo vendor PO</button><a href="${S.url('3pl-management/shipment-requests.html')}">Try the separate 3PL workflow</a><button type="button" data-demo-action="reset">Reset demo</button></div>`;
-    host.querySelectorAll('[data-demo-action]').forEach(button=>button.onclick=()=>{try{const action=button.dataset.demoAction;if(action==='create')createScenarioOrder();else if(action==='validate')validateScenarioOrder();else if(action==='ship')shipScenarioOrder();else if(action==='receive')receiveScenarioPO();else workspaceMenu();}catch(error){const status=document.getElementById('portfolio-demo-status');status.textContent=error.message;status.setAttribute('role','alert');}});
+    let host=document.getElementById('portfolio-demo-guide');
+    if(!host){
+      host=document.createElement('section');
+      host.id='portfolio-demo-guide';
+      host.className='portfolio-demo-guide';
+      document.querySelector('.tower-hero')?.after(host);
+    }
+    if(!host)return;
+    host.hidden=true;
+    host.style.display='none';
+    host.innerHTML='';
   }
   function demoTracking(tracking){
     requireDemo();const state=S.getState(),order=state.enterprise.orders.find(o=>String(o.tracking||'').toUpperCase().replace(/[^A-Z0-9]/g,'')===String(tracking).toUpperCase().replace(/[^A-Z0-9]/g,''));
