@@ -1,0 +1,1406 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+    html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}
+    html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}
+    @keyframes stark-navigation-progress{to{background-position:-200% 0}}
+    @media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}
+  </style>
+  <script data-stark-navigation-boot>
+    document.documentElement.classList.add('stark-page-loading');
+    window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);
+  </script>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261012-2" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create Customer Order · Supply Chain Intelligence</title>
+  <meta name="description" content="Add customer and delivery details, select items, shipping method and review before creating the order.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-3">
+  <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
+
+  <script src="assets/system-shell.js?v=20261017-2" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+  <script src="assets/fulfillment-core.js?v=20261012-2" defer></script>
+</head>
+<body data-system-page="orders">
+  <main class="system-page co-page-container" aria-label="Create Customer Order">
+    <!-- Breadcrumb -->
+    <nav class="co-breadcrumb" aria-label="Breadcrumb">
+      <a href="order-management/index.html" class="co-bc-link">
+        <svg class="co-home-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Order Management
+      </a>
+      <span class="co-bc-sep">&gt;</span>
+      <span class="co-bc-current">Create Customer Order</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="co-header">
+      <div class="co-header-left">
+        <h1 class="co-page-title">Create Customer Order</h1>
+        <p class="co-page-subtitle">Add customer and delivery details, select items, shipping method and review before creating the order.</p>
+      </div>
+      <div class="co-header-actions">
+        <button type="button" class="co-btn-outline" id="co-hdr-save-draft">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Save as Draft
+        </button>
+        <button type="button" class="co-btn-outline" id="co-hdr-preview">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+          </svg>
+          Preview
+        </button>
+        <button type="button" class="co-btn-primary" id="co-hdr-create-order">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Create Order
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Order Entry Form -->
+    <form id="co-order-form" autocomplete="off">
+      <div class="co-main-grid">
+        <!-- 1. Order & Customer Details -->
+        <section class="co-card co-card-order-details">
+          <div class="co-card-header">
+            <div class="co-card-header-left">
+              <span class="co-step-badge">1</span>
+              <h2 class="co-card-title">Order &amp; Customer Details</h2>
+            </div>
+          </div>
+
+          <!-- Row 1: Order type, Customer, Region -->
+          <div class="co-grid-3">
+            <div class="co-form-group">
+              <label class="co-label" for="co-order-type">Order type <span class="co-req">*</span></label>
+              <select class="co-select" id="co-order-type" name="orderType" required>
+                <option value="Firm PO" selected>Firm PO</option>
+                <option value="Hold PO">Hold PO</option>
+                <option value="Bulk Order">Bulk Order</option>
+                <option value="Regular customer order">Regular customer order</option>
+                <option value="Presentation">Presentation</option>
+              </select>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-customer">Customer <span class="co-req">*</span></label>
+              <div class="co-input-icon-wrap">
+                <input type="text" class="co-input" id="co-customer" name="customer" value="ABC Company" required>
+                <button type="button" class="co-input-icon-btn" id="co-btn-cust-search" title="Search customer" aria-label="Search customer">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-region">Region</label>
+              <select class="co-select" id="co-region" name="region">
+                <option value="US" selected>US</option>
+                <option value="EU">EU</option>
+                <option value="CA">CA</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 2: Customer PO#, Sales order#, Program -->
+          <div class="co-grid-3">
+            <div class="co-form-group">
+              <label class="co-label" for="co-customer-po">Customer PO# <span class="co-req">*</span></label>
+              <input type="text" class="co-input" id="co-customer-po" name="customerPo" value="315980" required maxlength="100">
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-sales-order">Sales order# <span class="co-req">*</span></label>
+              <input type="text" class="co-input" id="co-sales-order" name="salesOrder" value="Auto-generate" readonly>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-program">Program (optional)</label>
+              <select class="co-select" id="co-program" name="program">
+                <option value="No program" selected>No program</option>
+                <option value="VIP Executive">VIP Executive</option>
+                <option value="Corporate Rewards">Corporate Rewards</option>
+                <option value="Dealer Excellence">Dealer Excellence</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 3: Purpose, In-hands date, Hold early -->
+          <div class="co-grid-3">
+            <div class="co-form-group">
+              <label class="co-label" for="co-purpose">Purpose <span class="co-req">*</span></label>
+              <select class="co-select" id="co-purpose" name="purpose" required>
+                <option value="Regular customer order" selected>Regular customer order</option>
+                <option value="Event order">Event order</option>
+                <option value="Dropship">Dropship</option>
+                <option value="Warranty Replacement">Warranty Replacement</option>
+              </select>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-inhands-date">In-hands date</label>
+              <div class="co-input-icon-wrap">
+                <input type="text" class="co-input" id="co-inhands-date" name="inHandsDate" value="10/28/2026">
+                <span class="co-input-icon-static" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+              </div>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-hold-early">Hold early (Hold PO only)</label>
+              <div class="co-input-icon-wrap">
+                <input type="text" class="co-input" id="co-hold-early" name="holdEarlyDate" placeholder="mm/dd/yyyy">
+                <span class="co-input-icon-static" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Ship-to Address -->
+        <section class="co-card co-card-ship-address">
+          <div class="co-card-header">
+            <div class="co-card-header-left">
+              <span class="co-step-badge">2</span>
+              <h2 class="co-card-title">Ship-to Address</h2>
+            </div>
+            <button type="button" class="co-crm-btn" id="co-btn-load-crm">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Load from CRM
+            </button>
+          </div>
+
+          <!-- Row 1: Address type, Company -->
+          <div class="co-grid-2">
+            <div class="co-form-group">
+              <label class="co-label" for="co-address-type">Address type</label>
+              <select class="co-select" id="co-address-type" name="addressType">
+                <option value="Customer address" selected>Customer address</option>
+                <option value="Warehouse / 3PL">Warehouse / 3PL</option>
+                <option value="Direct to Consumer">Direct to Consumer</option>
+                <option value="Event Venue">Event Venue</option>
+              </select>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-ship-company">Company <span class="co-req">*</span></label>
+              <input type="text" class="co-input" id="co-ship-company" name="shipCompany" value="ABC Company" required>
+            </div>
+          </div>
+
+          <!-- Row 2: Address line 1 -->
+          <div class="co-form-group">
+            <label class="co-label" for="co-address-line1">Address line 1 <span class="co-req">*</span></label>
+            <input type="text" class="co-input" id="co-address-line1" name="addressLine1" value="1234 Main St, Suite 500" required>
+          </div>
+
+          <!-- Row 3: Address line 2 -->
+          <div class="co-form-group">
+            <label class="co-label" for="co-address-line2">Address line 2</label>
+            <input type="text" class="co-input" id="co-address-line2" name="addressLine2" placeholder="">
+          </div>
+
+          <!-- Row 4: City, State, ZIP -->
+          <div class="co-grid-3">
+            <div class="co-form-group">
+              <label class="co-label" for="co-city">City <span class="co-req">*</span></label>
+              <input type="text" class="co-input" id="co-city" name="city" value="Tampa" required>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-state">State <span class="co-req">*</span></label>
+              <select class="co-select" id="co-state" name="state" required>
+                <option value="FL" selected>FL</option>
+                <option value="AL">AL</option>
+                <option value="AZ">AZ</option>
+                <option value="CA">CA</option>
+                <option value="CO">CO</option>
+                <option value="GA">GA</option>
+                <option value="IL">IL</option>
+                <option value="NC">NC</option>
+                <option value="NY">NY</option>
+                <option value="TX">TX</option>
+                <option value="WA">WA</option>
+              </select>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-zip">ZIP <span class="co-req">*</span></label>
+              <input type="text" class="co-input" id="co-zip" name="zip" value="33602" required>
+            </div>
+          </div>
+
+          <!-- Row 5: Country -->
+          <div class="co-form-group">
+            <label class="co-label" for="co-country">Country <span class="co-req">*</span></label>
+            <select class="co-select" id="co-country" name="country" required>
+              <option value="United States" selected>United States</option>
+              <option value="Canada">Canada</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Germany">Germany</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Order Summary Card -->
+        <section class="co-card co-card-order-summary" aria-label="Order Summary">
+          <div class="co-card-header">
+            <h2 class="co-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="3" y1="15" x2="21" y2="15"/>
+                <line x1="9" y1="3" x2="9" y2="21"/>
+                <line x1="15" y1="3" x2="15" y2="21"/>
+              </svg>
+              Order Summary
+            </h2>
+          </div>
+
+          <div class="co-sum-list">
+            <div class="co-sum-row">
+              <span class="co-sum-label">Customer</span>
+              <span class="co-sum-val" id="sum-customer">ABC Company</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">Order type</span>
+              <span class="co-sum-val" id="sum-order-type">Firm PO</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">Customer PO#</span>
+              <span class="co-sum-val" id="sum-customer-po">315980</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">Sales order#</span>
+              <span class="co-sum-val" id="sum-sales-order">Auto-generate</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">Region</span>
+              <span class="co-sum-val" id="sum-region">US</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">In-hands date</span>
+              <span class="co-sum-val" id="sum-inhands-date">10/28/2026</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">Items</span>
+              <span class="co-sum-val" id="sum-items-count">3</span>
+            </div>
+
+            <hr class="co-sum-divider">
+
+            <div class="co-sum-row">
+              <span class="co-sum-label">Subtotal</span>
+              <span class="co-sum-val" id="sum-subtotal">$6,365.00</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">Shipping (Est.)</span>
+              <span class="co-sum-val" id="sum-shipping">$0.00</span>
+            </div>
+            <div class="co-sum-row">
+              <span class="co-sum-label">Tax (Est.)</span>
+              <span class="co-sum-val" id="sum-tax">$0.00</span>
+            </div>
+
+            <hr class="co-sum-divider">
+
+            <div class="co-sum-total-row">
+              <span class="co-sum-total-label">Order Total</span>
+              <span class="co-sum-total-val" id="sum-total">$6,365.00</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Shipping Details -->
+        <section class="co-card co-card-shipping-details">
+          <div class="co-card-header">
+            <div class="co-card-header-left">
+              <span class="co-step-badge">3</span>
+              <h2 class="co-card-title">Shipping Details</h2>
+            </div>
+          </div>
+
+          <div class="co-grid-shipping">
+            <div class="co-form-group">
+              <label class="co-label" for="co-carrier">Carrier / Transport <span class="co-req">*</span></label>
+              <select class="co-select" id="co-carrier" name="carrier" required>
+                <option value="UPS" selected>UPS</option>
+                <option value="FedEx">FedEx</option>
+                <option value="USPS">USPS</option>
+                <option value="DHL">DHL</option>
+                <option value="Freight / LTL">Freight / LTL</option>
+              </select>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-shipping-method">Shipping method <span class="co-req">*</span></label>
+              <select class="co-select" id="co-shipping-method" name="shippingMethod" required>
+                <option value="UPS Ground" selected>UPS Ground</option>
+                <option value="UPS Next Day Air">UPS Next Day Air</option>
+                <option value="UPS 2nd Day Air">UPS 2nd Day Air</option>
+                <option value="UPS 3 Day Select">UPS 3 Day Select</option>
+              </select>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-shipping-billing">Shipping billing <span class="co-req">*</span></label>
+              <select class="co-select" id="co-shipping-billing" name="shippingBilling" required>
+                <option value="Shipper account" selected>Shipper account</option>
+                <option value="Prepaid">Prepaid</option>
+                <option value="Recipient account">Recipient account</option>
+                <option value="Third Party">Third Party</option>
+              </select>
+            </div>
+            <div class="co-toggle-wrap">
+              <span class="co-toggle-label">3rd party shipping (optional)</span>
+              <label class="co-toggle-switch" aria-label="Toggle 3rd party shipping">
+                <input type="checkbox" id="co-toggle-3rdparty" checked>
+                <span class="co-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 3rd Party Account & Zip Container -->
+          <div class="co-3rd-party-box" id="co-3rdparty-box">
+            <div class="co-form-group">
+              <label class="co-label" for="co-3rdparty-acct">3rd party account #</label>
+              <input type="text" class="co-input" id="co-3rdparty-acct" name="thirdPartyAccount" value="123456">
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-3rdparty-zip">3rd party ZIP code</label>
+              <input type="text" class="co-input" id="co-3rdparty-zip" name="thirdPartyZip" value="33073">
+            </div>
+          </div>
+
+          <div class="co-info-note">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>Domestic, international and account-specific methods are available. Confirm the selected service is eligible for the shipment and your carrier account.</span>
+          </div>
+        </section>
+
+        <!-- Additional Details Card -->
+        <section class="co-card co-card-additional-details">
+          <div class="co-card-header">
+            <h2 class="co-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Additional Details
+            </h2>
+          </div>
+
+          <div class="co-grid-2">
+            <div class="co-form-group">
+              <label class="co-label" for="co-special-instructions">Special instructions</label>
+              <textarea class="co-textarea" id="co-special-instructions" name="specialInstructions" maxlength="500" placeholder="e.g. Deliver before event, call before delivery, inside delivery, etc."></textarea>
+              <div class="co-char-counter" id="co-special-counter">0/500</div>
+            </div>
+            <div class="co-form-group">
+              <label class="co-label" for="co-internal-notes">Internal notes (not visible to customer)</label>
+              <textarea class="co-textarea" id="co-internal-notes" name="internalNotes" maxlength="500" placeholder="Add internal notes, approvals, or special handling instructions..."></textarea>
+              <div class="co-char-counter" id="co-notes-counter">0/500</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Order Items Section (matching updated screenshot media_1792220565951_26fe3e99.png) -->
+      <section class="co-card-order-items" aria-label="Order Items">
+        <div class="co-card-header">
+          <div class="co-card-header-left">
+            <h2 class="co-card-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              Order Items
+            </h2>
+          </div>
+          <div class="co-header-actions">
+            <button type="button" class="co-btn-outline" id="co-btn-add-item">
+              <span style="color:#2563eb; font-weight:700; margin-right:4px;">+</span> Add Item
+            </button>
+            <button type="button" class="co-btn-outline" id="co-btn-bulk-add">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              Bulk Add
+            </button>
+            <button type="button" class="co-btn-outline" id="co-btn-import-excel">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Import from Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="co-items-search-wrap">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="co-items-search-icon" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" class="co-items-search-input" id="co-item-filter-input" placeholder="Search by model#, title, SKU, brand...">
+        </div>
+
+        <!-- Data Table -->
+        <div class="co-table-responsive">
+          <table class="co-table" id="co-items-table">
+            <thead>
+              <tr>
+                <th class="co-th-center" style="width: 36px;">#</th>
+                <th class="co-th-center" style="width: 64px;">Image</th>
+                <th style="width: 210px;">Model# / SKU <span class="co-req">*</span></th>
+                <th>Description</th>
+                <th style="width: 90px;">Qty <span class="co-req">*</span></th>
+                <th style="width: 120px;">Unit Price ($) <span class="co-req">*</span></th>
+                <th class="co-th-right" style="width: 130px;">Line Total ($)</th>
+                <th style="width: 170px;">Fulfill From <span class="co-req">*</span></th>
+                <th class="co-th-center" style="width: 50px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="co-items-tbody">
+              <!-- Row 1: Sony WH-1000XM5 -->
+              <tr data-row-idx="1">
+                <td class="co-td-center">1</td>
+                <td>
+                  <div class="co-img-thumb" id="thumb-1" title="Sony Wireless Headphones">
+                    <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+                      <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+                      <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+                      <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+                      <g transform="translate(25, 68) rotate(6)">
+                        <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                        <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
+                        <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+                      </g>
+                      <g transform="translate(107, 70) rotate(-6)">
+                        <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                        <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
+                        <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+                      </g>
+                    </svg>
+                  </div>
+                </td>
+                <td>
+                  <div class="co-input-icon-wrap">
+                    <input type="text" class="co-input co-row-model" value="WH-1000XM5" required>
+                    <button type="button" class="co-input-icon-btn co-row-search-btn" title="Look up item in catalog">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" class="co-input co-row-desc" value="Sony Wireless Headphones">
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-qty" value="10" min="1" step="1" required>
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-price" value="349.00" min="0" step="0.01" required>
+                </td>
+                <td class="co-td-right">
+                  <span class="co-line-total co-row-total">$3,490.00</span>
+                </td>
+                <td>
+                  <select class="co-select co-row-warehouse">
+                    <option value="Automatic" selected>Automatic</option>
+                    <option value="Sarasota DC">Sarasota DC</option>
+                    <option value="Demo_3PL">Demo_3PL</option>
+                    <option value="TX DC">TX DC</option>
+                  </select>
+                </td>
+                <td class="co-td-center">
+                  <button type="button" class="co-trash-btn" title="Delete row" aria-label="Delete row">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Row 2: New Balance 550 -->
+              <tr data-row-idx="2">
+                <td class="co-td-center">2</td>
+                <td>
+                  <div class="co-img-thumb" id="thumb-2" title="New Balance 550 Sneakers">
+                    <svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
+                      <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+                      <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                      <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
+                      <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
+                      <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
+                      <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
+                      <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
+                      <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
+                      <line x1="72" y1="74" x2="84" y2="72" stroke="#e2d9cc" stroke-width="2"/>
+                      <line x1="76" y1="70" x2="88" y2="68" stroke="#e2d9cc" stroke-width="2"/>
+                    </svg>
+                  </div>
+                </td>
+                <td>
+                  <div class="co-input-icon-wrap">
+                    <input type="text" class="co-input co-row-model" value="NB-550" required>
+                    <button type="button" class="co-input-icon-btn co-row-search-btn" title="Look up item in catalog">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" class="co-input co-row-desc" value="New Balance 550 Sneakers">
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-qty" value="20" min="1" step="1" required>
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-price" value="110.00" min="0" step="0.01" required>
+                </td>
+                <td class="co-td-right">
+                  <span class="co-line-total co-row-total">$2,200.00</span>
+                </td>
+                <td>
+                  <select class="co-select co-row-warehouse">
+                    <option value="Automatic" selected>Automatic</option>
+                    <option value="Sarasota DC">Sarasota DC</option>
+                    <option value="Demo_3PL">Demo_3PL</option>
+                    <option value="TX DC">TX DC</option>
+                  </select>
+                </td>
+                <td class="co-td-center">
+                  <button type="button" class="co-trash-btn" title="Delete row" aria-label="Delete row">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Row 3: YETI Rambler 40oz -->
+              <tr data-row-idx="3">
+                <td class="co-td-center">3</td>
+                <td>
+                  <div class="co-img-thumb" id="thumb-3" title="YETI Rambler 40oz">
+                    <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+                      <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
+                      <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
+                      <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
+                      <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
+                      <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
+                      <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                      <rect x="70" y="74" width="20" height="8" rx="1.5" fill="#e2e8f0"/>
+                      <text x="80" y="80.5" text-anchor="middle" fill="#64748b" font-size="5" font-family="sans-serif" font-weight="700">YETI</text>
+                    </svg>
+                  </div>
+                </td>
+                <td>
+                  <div class="co-input-icon-wrap">
+                    <input type="text" class="co-input co-row-model" value="TMBLR-40" required>
+                    <button type="button" class="co-input-icon-btn co-row-search-btn" title="Look up item in catalog">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" class="co-input co-row-desc" value="YETI Rambler 40oz">
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-qty" value="15" min="1" step="1" required>
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-price" value="45.00" min="0" step="0.01" required>
+                </td>
+                <td class="co-td-right">
+                  <span class="co-line-total co-row-total">$675.00</span>
+                </td>
+                <td>
+                  <select class="co-select co-row-warehouse">
+                    <option value="Automatic" selected>Automatic</option>
+                    <option value="Sarasota DC">Sarasota DC</option>
+                    <option value="Demo_3PL">Demo_3PL</option>
+                    <option value="TX DC">TX DC</option>
+                  </select>
+                </td>
+                <td class="co-td-center">
+                  <button type="button" class="co-trash-btn" title="Delete row" aria-label="Delete row">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Row 4: New Entry Row -->
+              <tr data-row-idx="4">
+                <td class="co-td-center">4</td>
+                <td>
+                  <div class="co-img-thumb" id="thumb-4" title="Placeholder item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" width="22" height="22">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                  </div>
+                </td>
+                <td>
+                  <div class="co-input-icon-wrap">
+                    <input type="text" class="co-input co-row-model" placeholder="Model# or catalog SKU">
+                    <button type="button" class="co-input-icon-btn co-row-search-btn" title="Look up item in catalog">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" class="co-input co-row-desc" placeholder="Description - automatic">
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-qty" value="1" min="1" step="1">
+                </td>
+                <td>
+                  <input type="number" class="co-input co-row-price" value="0.00" min="0" step="0.01">
+                </td>
+                <td class="co-td-right">
+                  <span class="co-line-total co-row-total">$0.00</span>
+                </td>
+                <td>
+                  <select class="co-select co-row-warehouse">
+                    <option value="Automatic" selected>Automatic</option>
+                    <option value="Sarasota DC">Sarasota DC</option>
+                    <option value="Demo_3PL">Demo_3PL</option>
+                    <option value="TX DC">TX DC</option>
+                  </select>
+                </td>
+                <td class="co-td-center">
+                  <button type="button" class="co-trash-btn" title="Delete row" aria-label="Delete row">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Bottom Action Bar -->
+      <div class="co-bottom-actions">
+        <button type="button" class="co-btn-outline" id="co-btn-save-draft">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Save as Draft
+        </button>
+        <button type="button" class="co-btn-outline" id="co-btn-save-unvalidated">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          Save Unvalidated
+        </button>
+        <button type="submit" class="co-btn-primary" id="co-btn-save-validate">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#ffffff" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Save &amp; Validate
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Interactive Scripts -->
+  <script>
+    (function() {
+      'use strict';
+
+      // Vector Illustration Bank
+      const ITEM_THUMBS = {
+        'WH-1000XM5': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+          <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+          <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+          <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+          <g transform="translate(25, 68) rotate(6)">
+            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+            <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
+            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+          </g>
+          <g transform="translate(107, 70) rotate(-6)">
+            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+            <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
+            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+          </g>
+        </svg>`,
+
+        'NB-550': `<svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
+          <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+          <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+          <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
+          <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
+          <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
+          <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
+          <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
+          <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
+          <line x1="72" y1="74" x2="84" y2="72" stroke="#e2d9cc" stroke-width="2"/>
+          <line x1="76" y1="70" x2="88" y2="68" stroke="#e2d9cc" stroke-width="2"/>
+        </svg>`,
+
+        'TMBLR-40': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+          <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
+          <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
+          <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
+          <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
+          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <rect x="70" y="74" width="20" height="8" rx="1.5" fill="#e2e8f0"/>
+          <text x="80" y="80.5" text-anchor="middle" fill="#64748b" font-size="5" font-family="sans-serif" font-weight="700">YETI</text>
+        </svg>`,
+
+        'DEFAULT': `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" width="22" height="22">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>`
+      };
+
+      const S = window.StarkSystem;
+      const F = window.StarkFulfillment;
+
+      function notice(message, error = false) {
+        if (window.StarkSystemUI?.notice) {
+          window.StarkSystemUI.notice(message, error);
+        } else {
+          const toast = document.createElement('div');
+          toast.className = 'system-toast' + (error ? ' error' : '');
+          toast.textContent = message;
+          document.body.append(toast);
+          setTimeout(() => toast.remove(), 4000);
+        }
+      }
+
+      function formatMoney(n) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(n) || 0);
+      }
+
+      // Live Recalculation
+      function recalculate() {
+        const rows = document.querySelectorAll('#co-items-tbody tr');
+        let subtotal = 0;
+        let validItemCount = 0;
+
+        rows.forEach((row, idx) => {
+          row.querySelector('td:first-child').textContent = String(idx + 1);
+          const model = row.querySelector('.co-row-model')?.value.trim();
+          const qty = Number(row.querySelector('.co-row-qty')?.value) || 0;
+          const price = Number(row.querySelector('.co-row-price')?.value) || 0;
+          const lineTotal = qty * price;
+
+          const totalEl = row.querySelector('.co-row-total');
+          if (totalEl) totalEl.textContent = formatMoney(lineTotal);
+
+          if (model && qty > 0) {
+            subtotal += lineTotal;
+            validItemCount++;
+          }
+        });
+
+        const subtotalEl = document.querySelector('#sum-subtotal');
+        const itemsCountEl = document.querySelector('#sum-items-count');
+        const totalEl = document.querySelector('#sum-total');
+
+        if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal);
+        if (itemsCountEl) itemsCountEl.textContent = String(validItemCount);
+        if (totalEl) totalEl.textContent = formatMoney(subtotal);
+      }
+
+      // Synchronize Summary Header Values
+      function syncSummary() {
+        const cust = document.querySelector('#co-customer')?.value.trim() || 'ABC Company';
+        const type = document.querySelector('#co-order-type')?.value || 'Firm PO';
+        const po = document.querySelector('#co-customer-po')?.value.trim() || '315980';
+        const reg = document.querySelector('#co-region')?.value || 'US';
+        const inhands = document.querySelector('#co-inhands-date')?.value.trim() || '10/28/2026';
+
+        const sumCust = document.querySelector('#sum-customer');
+        const sumType = document.querySelector('#sum-order-type');
+        const sumPo = document.querySelector('#sum-customer-po');
+        const sumReg = document.querySelector('#sum-region');
+        const sumInhands = document.querySelector('#sum-inhands-date');
+
+        if (sumCust) sumCust.textContent = cust;
+        if (sumType) sumType.textContent = type;
+        if (sumPo) sumPo.textContent = po;
+        if (sumReg) sumReg.textContent = reg;
+        if (sumInhands) sumInhands.textContent = inhands;
+      }
+
+      // Attach Row Listeners
+      function bindRow(row) {
+        const qtyInput = row.querySelector('.co-row-qty');
+        const priceInput = row.querySelector('.co-row-price');
+        const modelInput = row.querySelector('.co-row-model');
+        const descInput = row.querySelector('.co-row-desc');
+        const trashBtn = row.querySelector('.co-trash-btn');
+        const searchBtn = row.querySelector('.co-row-search-btn');
+
+        [qtyInput, priceInput, modelInput].forEach(inp => {
+          if (inp) {
+            inp.addEventListener('input', recalculate);
+            inp.addEventListener('change', recalculate);
+          }
+        });
+
+        if (modelInput) {
+          modelInput.addEventListener('change', () => {
+            const m = modelInput.value.trim().toUpperCase();
+            const thumbBox = row.querySelector('.co-img-thumb');
+            if (thumbBox) {
+              if (m.includes('1000XM') || m.includes('WH-1000')) {
+                thumbBox.innerHTML = ITEM_THUMBS['WH-1000XM5'];
+                if (descInput && !descInput.value) descInput.value = 'Sony Wireless Headphones';
+                if (priceInput && Number(priceInput.value) === 0) priceInput.value = '349.00';
+              } else if (m.includes('550') || m.includes('NB-550')) {
+                thumbBox.innerHTML = ITEM_THUMBS['NB-550'];
+                if (descInput && !descInput.value) descInput.value = 'New Balance 550 Sneakers';
+                if (priceInput && Number(priceInput.value) === 0) priceInput.value = '110.00';
+              } else if (m.includes('TMBLR') || m.includes('YETI') || m.includes('40')) {
+                thumbBox.innerHTML = ITEM_THUMBS['TMBLR-40'];
+                if (descInput && !descInput.value) descInput.value = 'YETI Rambler 40oz';
+                if (priceInput && Number(priceInput.value) === 0) priceInput.value = '45.00';
+              } else {
+                thumbBox.innerHTML = ITEM_THUMBS['DEFAULT'];
+              }
+            }
+            recalculate();
+          });
+        }
+
+        if (trashBtn) {
+          trashBtn.addEventListener('click', () => {
+            const tbody = document.querySelector('#co-items-tbody');
+            if (tbody.querySelectorAll('tr').length > 1) {
+              row.remove();
+            } else {
+              // Clear line instead of leaving empty table
+              if (modelInput) modelInput.value = '';
+              if (descInput) descInput.value = '';
+              if (qtyInput) qtyInput.value = '1';
+              if (priceInput) priceInput.value = '0.00';
+              const thumbBox = row.querySelector('.co-img-thumb');
+              if (thumbBox) thumbBox.innerHTML = ITEM_THUMBS['DEFAULT'];
+            }
+            recalculate();
+          });
+        }
+
+        if (searchBtn) {
+          searchBtn.addEventListener('click', () => openCatalogPicker(row));
+        }
+      }
+
+      // Add New Item Row
+      function addNewRow(model = '', desc = '', qty = 1, price = 0.00, warehouse = 'Automatic') {
+        const tbody = document.querySelector('#co-items-tbody');
+        const newIdx = tbody.querySelectorAll('tr').length + 1;
+        const tr = document.createElement('tr');
+        tr.dataset.rowIdx = String(newIdx);
+
+        let svgIcon = ITEM_THUMBS['DEFAULT'];
+        const m = model.toUpperCase();
+        if (m.includes('1000XM') || m.includes('WH-1000')) svgIcon = ITEM_THUMBS['WH-1000XM5'];
+        else if (m.includes('550') || m.includes('NB-550')) svgIcon = ITEM_THUMBS['NB-550'];
+        else if (m.includes('TMBLR') || m.includes('YETI') || m.includes('40')) svgIcon = ITEM_THUMBS['TMBLR-40'];
+
+        const lineTotal = Number(qty) * Number(price);
+
+        tr.innerHTML = `
+          <td class="co-td-center">${newIdx}</td>
+          <td>
+            <div class="co-img-thumb" title="${desc || 'Product Image'}">
+              ${svgIcon}
+            </div>
+          </td>
+          <td>
+            <div class="co-input-icon-wrap">
+              <input type="text" class="co-input co-row-model" value="${model}" placeholder="Model# or catalog SKU">
+              <button type="button" class="co-input-icon-btn co-row-search-btn" title="Look up item in catalog">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+            </div>
+          </td>
+          <td>
+            <input type="text" class="co-input co-row-desc" value="${desc}" placeholder="Description - automatic">
+          </td>
+          <td>
+            <input type="number" class="co-input co-row-qty" value="${qty}" min="1" step="1">
+          </td>
+          <td>
+            <input type="number" class="co-input co-row-price" value="${Number(price).toFixed(2)}" min="0" step="0.01">
+          </td>
+          <td class="co-td-right">
+            <span class="co-line-total co-row-total">${formatMoney(lineTotal)}</span>
+          </td>
+          <td>
+            <select class="co-select co-row-warehouse">
+              <option value="Automatic" ${warehouse === 'Automatic' ? 'selected' : ''}>Automatic</option>
+              <option value="Sarasota DC" ${warehouse === 'Sarasota DC' ? 'selected' : ''}>Sarasota DC</option>
+              <option value="Demo_3PL" ${warehouse === 'Demo_3PL' ? 'selected' : ''}>Demo_3PL</option>
+              <option value="TX DC" ${warehouse === 'TX DC' ? 'selected' : ''}>TX DC</option>
+            </select>
+          </td>
+          <td class="co-td-center">
+            <button type="button" class="co-trash-btn" title="Delete row" aria-label="Delete row">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+        bindRow(tr);
+        recalculate();
+      }
+
+      // Modals: Catalog Picker, CRM Loader, Bulk Add, Import Excel, Preview
+      function openCatalogPicker(targetRow) {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 600px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Select Product from Catalog</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <p style="color:#64748b; font-size:13px; margin:0 0 16px 0;">Select an item from the enterprise master catalog to populate the order line.</p>
+            <div style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
+              <div class="co-picker-item" data-model="WH-1000XM5" data-desc="Sony Wireless Headphones" data-price="349.00" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="color:#0f172a;">WH-1000XM5</strong>
+                  <div style="font-size:12px; color:#64748b;">Sony Wireless Headphones · Audio / Electronics</div>
+                </div>
+                <span style="font-weight:700; color:#2563eb;">$349.00</span>
+              </div>
+              <div class="co-picker-item" data-model="NB-550" data-desc="New Balance 550 Sneakers" data-price="110.00" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="color:#0f172a;">NB-550</strong>
+                  <div style="font-size:12px; color:#64748b;">New Balance 550 Sneakers · Footwear / Lifestyle</div>
+                </div>
+                <span style="font-weight:700; color:#2563eb;">$110.00</span>
+              </div>
+              <div class="co-picker-item" data-model="TMBLR-40" data-desc="YETI Rambler 40oz" data-price="45.00" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="color:#0f172a;">TMBLR-40</strong>
+                  <div style="font-size:12px; color:#64748b;">YETI Rambler 40oz · Drinkware / Lifestyle</div>
+                </div>
+                <span style="font-weight:700; color:#2563eb;">$45.00</span>
+              </div>
+              <div class="co-picker-item" data-model="DY-V15" data-desc="Dyson V15 Detect Vacuum" data-price="749.00" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="color:#0f172a;">DY-V15</strong>
+                  <div style="font-size:12px; color:#64748b;">Dyson V15 Detect Vacuum · Home / Appliances</div>
+                </div>
+                <span style="font-weight:700; color:#2563eb;">$749.00</span>
+              </div>
+            </div>
+            <div style="margin-top:20px; text-align:right;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+            </div>
+          </section>
+        `;
+
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelectorAll('.co-picker-item').forEach(item => {
+          item.onclick = () => {
+            const m = item.dataset.model;
+            const d = item.dataset.desc;
+            const p = item.dataset.price;
+            if (targetRow) {
+              const modelInp = targetRow.querySelector('.co-row-model');
+              const descInp = targetRow.querySelector('.co-row-desc');
+              const priceInp = targetRow.querySelector('.co-row-price');
+              if (modelInp) modelInp.value = m;
+              if (descInp) descInp.value = d;
+              if (priceInp) priceInp.value = p;
+              modelInp?.dispatchEvent(new Event('change'));
+            }
+            modal.remove();
+          };
+        });
+      }
+
+      function openCrmLoader() {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 580px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Load Account from CRM</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <p style="color:#64748b; font-size:13px; margin:0 0 16px 0;">Select a verified customer account to auto-populate shipping address and commercial details.</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div class="co-crm-card" data-name="ABC Company" data-addr="1234 Main St, Suite 500" data-city="Tampa" data-state="FL" data-zip="33602" style="padding:14px; border:1px solid #bfdbfe; background:#eff6ff; border-radius:8px; cursor:pointer;">
+                <strong style="color:#1e3a8a; font-size:15px;">ABC Company</strong> (Current Default)
+                <div style="font-size:12px; color:#475569; margin-top:3px;">1234 Main St, Suite 500 · Tampa, FL 33602 · Terms: Net 30</div>
+              </div>
+              <div class="co-crm-card" data-name="Northstar Rewards Group" data-addr="742 Evergreen Terrace" data-city="Orlando" data-state="FL" data-zip="32801" style="padding:14px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                <strong style="color:#0f172a; font-size:15px;">Northstar Rewards Group</strong>
+                <div style="font-size:12px; color:#64748b; margin-top:3px;">742 Evergreen Terrace · Orlando, FL 32801 · Terms: Net 30</div>
+              </div>
+              <div class="co-crm-card" data-name="Apex Incentives" data-addr="900 Biscayne Blvd, Floor 18" data-city="Miami" data-state="FL" data-zip="33132" style="padding:14px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                <strong style="color:#0f172a; font-size:15px;">Apex Incentives</strong>
+                <div style="font-size:12px; color:#64748b; margin-top:3px;">900 Biscayne Blvd, Floor 18 · Miami, FL 33132 · Terms: Net 45</div>
+              </div>
+            </div>
+            <div style="margin-top:20px; text-align:right;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+            </div>
+          </section>
+        `;
+
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelectorAll('.co-crm-card').forEach(card => {
+          card.onclick = () => {
+            const name = card.dataset.name;
+            const addr = card.dataset.addr;
+            const city = card.dataset.city;
+            const state = card.dataset.state;
+            const zip = card.dataset.zip;
+
+            document.querySelector('#co-customer').value = name;
+            document.querySelector('#co-ship-company').value = name;
+            document.querySelector('#co-address-line1').value = addr;
+            document.querySelector('#co-city').value = city;
+            document.querySelector('#co-state').value = state;
+            document.querySelector('#co-zip').value = zip;
+
+            syncSummary();
+            notice(`Loaded details for ${name} from CRM.`);
+            modal.remove();
+          };
+        });
+      }
+
+      function openBulkAddModal() {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 540px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Bulk Add Order Items</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <p style="color:#64748b; font-size:13px; margin:0 0 12px 0;">Enter items in format: <code>SKU / Model, Quantity, UnitPrice</code> (one per line):</p>
+            <textarea id="co-bulk-textarea" style="width:100%; height:130px; font-family:monospace; padding:10px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;" placeholder="WH-1000XM5, 10, 349.00&#10;NB-550, 20, 110.00&#10;TMBLR-40, 15, 45.00"></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+              <button type="button" class="sys-btn primary" id="co-bulk-confirm">Add Lines</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelector('#co-bulk-confirm').onclick = () => {
+          const text = modal.querySelector('#co-bulk-textarea').value.trim();
+          if (text) {
+            const lines = text.split('\n');
+            lines.forEach(l => {
+              const parts = l.split(',').map(s => s.trim());
+              if (parts[0]) {
+                const model = parts[0];
+                const qty = Number(parts[1]) || 1;
+                const price = Number(parts[2]) || 0;
+                addNewRow(model, '', qty, price);
+              }
+            });
+            notice(`Bulk added ${lines.length} lines.`);
+          }
+          modal.remove();
+        };
+      }
+
+      function openImportExcelModal() {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 520px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Import Order Lines from Excel / CSV</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <div style="border:2px dashed #cbd5e1; border-radius:8px; padding:32px 20px; text-align:center; background:#f8fafc; cursor:pointer;" id="co-drop-excel">
+              <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#2563eb" stroke-width="2" style="margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <div style="font-weight:600; color:#0f172a;">Click to browse or drag Excel / CSV file here</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">Supports .xlsx, .xls, .csv up to 10MB</div>
+              <input type="file" id="co-file-excel" accept=".xlsx,.xls,.csv" style="display:none;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+              <button type="button" class="sys-btn" data-close>Close</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        const drop = modal.querySelector('#co-drop-excel');
+        const fileInp = modal.querySelector('#co-file-excel');
+        drop.onclick = () => fileInp.click();
+        fileInp.onchange = () => {
+          if (fileInp.files[0]) {
+            notice(`Parsed file ${fileInp.files[0].name}: 3 items imported.`);
+            modal.remove();
+          }
+        };
+      }
+
+      function openPreviewModal() {
+        const cust = document.querySelector('#co-customer')?.value || 'ABC Company';
+        const po = document.querySelector('#co-customer-po')?.value || '315980';
+        const total = document.querySelector('#sum-total')?.textContent || '$6,365.00';
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 620px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Customer Order Preview · PO# ${po}</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px;">
+                <div><span style="color:#64748b;">Customer:</span> <strong>${cust}</strong></div>
+                <div><span style="color:#64748b;">Customer PO#:</span> <strong>${po}</strong></div>
+                <div><span style="color:#64748b;">Carrier:</span> <strong>${document.querySelector('#co-carrier')?.value}</strong></div>
+                <div><span style="color:#64748b;">Ship Method:</span> <strong>${document.querySelector('#co-shipping-method')?.value}</strong></div>
+                <div><span style="color:#64748b;">Destination:</span> <strong>Tampa, FL</strong></div>
+                <div><span style="color:#64748b;">Total:</span> <strong style="color:#2563eb;">${total}</strong></div>
+              </div>
+            </div>
+            <p style="font-size:13px; color:#475569;">All order lines and credit parameters have passed pre-flight validation.</p>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+              <button type="button" class="sys-btn" data-close>Close</button>
+              <button type="button" class="sys-btn primary" id="co-preview-submit">Create Order Now</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelector('#co-preview-submit').onclick = () => {
+          modal.remove();
+          submitOrder(true);
+        };
+      }
+
+      // Order Submission
+      function submitOrder(validate = true) {
+        const form = document.querySelector('#co-order-form');
+        if (!form.reportValidity()) return;
+
+        const customer = document.querySelector('#co-customer').value.trim();
+        const po = document.querySelector('#co-customer-po').value.trim();
+        const orderType = document.querySelector('#co-order-type').value;
+        const region = document.querySelector('#co-region').value;
+        const inHandsDate = document.querySelector('#co-inhands-date').value.trim();
+        const carrier = document.querySelector('#co-carrier').value;
+        const shippingMethod = document.querySelector('#co-shipping-method').value;
+        const shippingBilling = document.querySelector('#co-shipping-billing').value;
+        const is3rdParty = document.querySelector('#co-toggle-3rdparty').checked;
+        const thirdPartyAccount = is3rdParty ? document.querySelector('#co-3rdparty-acct').value.trim() : '';
+        const thirdPartyZip = is3rdParty ? document.querySelector('#co-3rdparty-zip').value.trim() : '';
+
+        const lines = [];
+        document.querySelectorAll('#co-items-tbody tr').forEach(row => {
+          const model = row.querySelector('.co-row-model')?.value.trim();
+          const desc = row.querySelector('.co-row-desc')?.value.trim();
+          const qty = Number(row.querySelector('.co-row-qty')?.value) || 0;
+          const price = Number(row.querySelector('.co-row-price')?.value) || 0;
+          const warehouse = row.querySelector('.co-row-warehouse')?.value || 'Automatic';
+          if (model && qty > 0) {
+            lines.push({ model, sku: model, title: desc, description: desc, qty, price, warehouse });
+          }
+        });
+
+        if (lines.length === 0) {
+          notice('Please add at least one item line with model and quantity.', true);
+          return;
+        }
+
+        const totalAmount = lines.reduce((acc, l) => acc + l.qty * l.price, 0);
+
+        // Save order into Enterprise storage / StarkSystem
+        try {
+          if (S && S.getState) {
+            const state = S.getState();
+            if (state && state.enterprise) {
+              // Ensure customer account exists in CRM
+              let account = state.enterprise.accounts?.find(a => a.name.toLowerCase() === customer.toLowerCase());
+              if (!account) {
+                account = {
+                  id: 'acct_' + customer.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20),
+                  name: customer,
+                  type: 'PARENT',
+                  status: 'ACTIVE',
+                  currency: 'USD',
+                  terms: 'Net 30',
+                  creditLimit: 500000,
+                  creditUsed: 0
+                };
+                if (!state.enterprise.accounts) state.enterprise.accounts = [];
+                state.enterprise.accounts.push(account);
+              }
+
+              const newOrder = {
+                id: 'ord_' + Math.floor(100000 + Math.random() * 900000),
+                orderNumber: 'SO-' + po,
+                po,
+                accountId: account.id,
+                type: orderType === 'Hold PO' ? 'HOLD_PO' : orderType === 'Bulk Order' ? 'BULK_PO' : 'FIRM_PO',
+                status: validate ? 'OPEN' : 'UNVALIDATED',
+                region,
+                inHandsDate,
+                shipping: {
+                  carrier,
+                  method: shippingMethod,
+                  billingType: shippingBilling,
+                  thirdPartyAccount,
+                  thirdPartyZip,
+                  destination: 'Tampa, FL'
+                },
+                lines,
+                total: totalAmount,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+
+              if (!state.enterprise.orders) state.enterprise.orders = [];
+              state.enterprise.orders.unshift(newOrder);
+
+              // Persist to local storage if available
+              try {
+                localStorage.setItem('stark-enterprise-orders', JSON.stringify(state.enterprise.orders));
+              } catch(e) {}
+            }
+          }
+        } catch(err) {
+          console.error(err);
+        }
+
+        sessionStorage.setItem('stark-toast-msg', `Customer Order ${po} (${customer}) created and ${validate ? 'validated' : 'saved'} successfully.`);
+        window.location.href = validate ? 'order-management/index.html' : 'order-management/unvalidated.html';
+      }
+
+      // Initialize Page
+      document.addEventListener('DOMContentLoaded', () => {
+        // Bind initial rows
+        document.querySelectorAll('#co-items-tbody tr').forEach(bindRow);
+
+        // Toggle 3rd Party Box
+        const toggle3rd = document.querySelector('#co-toggle-3rdparty');
+        const box3rd = document.querySelector('#co-3rdparty-box');
+        if (toggle3rd && box3rd) {
+          toggle3rd.addEventListener('change', () => {
+            box3rd.style.display = toggle3rd.checked ? 'grid' : 'none';
+          });
+        }
+
+        // Summary Input Listeners
+        ['#co-customer', '#co-order-type', '#co-customer-po', '#co-region', '#co-inhands-date'].forEach(sel => {
+          const el = document.querySelector(sel);
+          if (el) {
+            el.addEventListener('input', syncSummary);
+            el.addEventListener('change', syncSummary);
+          }
+        });
+
+        // Textarea Char Counters
+        const specTxt = document.querySelector('#co-special-instructions');
+        const specCount = document.querySelector('#co-special-counter');
+        if (specTxt && specCount) {
+          specTxt.addEventListener('input', () => {
+            specCount.textContent = `${specTxt.value.length}/500`;
+          });
+        }
+
+        const noteTxt = document.querySelector('#co-internal-notes');
+        const noteCount = document.querySelector('#co-notes-counter');
+        if (noteTxt && noteCount) {
+          noteTxt.addEventListener('input', () => {
+            noteCount.textContent = `${noteTxt.value.length}/500`;
+          });
+        }
+
+        // Search Filter for Items Table
+        const searchInp = document.querySelector('#co-item-filter-input');
+        if (searchInp) {
+          searchInp.addEventListener('input', () => {
+            const q = searchInp.value.toLowerCase().trim();
+            document.querySelectorAll('#co-items-tbody tr').forEach(row => {
+              const text = row.textContent.toLowerCase();
+              row.style.display = (!q || text.includes(q)) ? '' : 'none';
+            });
+          });
+        }
+
+        // Header and Footer Action Buttons
+        document.querySelector('#co-btn-add-item')?.addEventListener('click', () => addNewRow());
+        document.querySelector('#co-btn-load-crm')?.addEventListener('click', openCrmLoader);
+        document.querySelector('#co-btn-cust-search')?.addEventListener('click', openCrmLoader);
+        document.querySelector('#co-btn-bulk-add')?.addEventListener('click', openBulkAddModal);
+        document.querySelector('#co-btn-import-excel')?.addEventListener('click', openImportExcelModal);
+        document.querySelector('#co-hdr-preview')?.addEventListener('click', openPreviewModal);
+
+        document.querySelector('#co-hdr-save-draft')?.addEventListener('click', () => submitOrder(false));
+        document.querySelector('#co-btn-save-draft')?.addEventListener('click', () => submitOrder(false));
+        document.querySelector('#co-btn-save-unvalidated')?.addEventListener('click', () => submitOrder(false));
+        document.querySelector('#co-hdr-create-order')?.addEventListener('click', () => submitOrder(true));
+
+        const form = document.querySelector('#co-order-form');
+        if (form) {
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            submitOrder(true);
+          });
+        }
+
+        recalculate();
+        syncSummary();
+      });
+    })();
+  </script>
+</body>
+</html>
