@@ -26,7 +26,7 @@
   let maxPrice = params.get('maxPrice') || '';
   let priceTier = params.get('tier') || 'all';
   let sortBy = params.get('sort') || 'model-asc';
-  let viewMode = params.get('view') || 'cards'; // Default to 5-column grid view matching screenshot
+  let viewMode = params.get('view') || 'cards'; // Enhanced 4-column card view
   let activeMenuSku = null;
 
   function notice(message, error = false) {
@@ -42,365 +42,210 @@
   }
 
   // =========================================================================
-  // HIGH-FIDELITY VECTOR PRODUCT ILLUSTRATIONS
-  // Crisp, retina-ready, 100% offline, 0ms load time
+  // VECTOR PRODUCT ILLUSTRATIONS
   // =========================================================================
   const productSVGs = {
-    // 1. Sony WH-1000XM5 (Black modern wireless over-ear headphones)
+    // 1. Sony WH-1000XM5
     'SONY-1000XM5': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="sonyCupGrad" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#2d3748"/>
-          <stop offset="100%" stop-color="#0f172a"/>
-        </radialGradient>
-      </defs>
-      <!-- Headband Arc -->
       <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
       <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
-      <!-- Sliders -->
       <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
       <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
-      <!-- Left Ear Cup (Angled) -->
       <g transform="translate(25, 68) rotate(6)">
-        <ellipse cx="14" cy="24" rx="14" ry="24" fill="url(#sonyCupGrad)" stroke="#0f172a" stroke-width="2"/>
-        <ellipse cx="17" cy="24" rx="9" ry="18" fill="#1e293b"/>
+        <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+        <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
         <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
       </g>
-      <!-- Right Ear Cup (Angled) -->
       <g transform="translate(107, 70) rotate(-6)">
-        <ellipse cx="14" cy="24" rx="14" ry="24" fill="url(#sonyCupGrad)" stroke="#0f172a" stroke-width="2"/>
-        <ellipse cx="11" cy="24" rx="9" ry="18" fill="#1e293b"/>
+        <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+        <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
         <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
       </g>
     </svg>`,
 
-    // 2. New Balance 550 (Cream/white vintage basketball low-top)
+    // 2. New Balance 550
     'NB-550': `<svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Outsole Shadow -->
       <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
-      <!-- Outsole & Midsole -->
       <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
       <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-      <!-- Upper Panels (Cream Leather) -->
       <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
-      <!-- Heel Counter & Collar -->
       <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
-      <!-- Perforations Toe -->
-      <circle cx="44" cy="81" r="1" fill="#cbd5e1"/>
-      <circle cx="48" cy="80" r="1" fill="#cbd5e1"/>
-      <circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
-      <!-- Signature 'N' Logo -->
+      <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
       <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
       <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
       <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
-      <!-- Laces -->
       <line x1="72" y1="74" x2="84" y2="72" stroke="#e2d9cc" stroke-width="2"/>
       <line x1="76" y1="70" x2="88" y2="68" stroke="#e2d9cc" stroke-width="2"/>
     </svg>`,
 
-    // 3. YETI Rambler 40oz (Cream/sand insulated tumbler with straw)
+    // 3. YETI Rambler 40oz
     'YETI-40': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="yetiBody" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#f5efe6"/>
-          <stop offset="50%" stop-color="#faf7f2"/>
-          <stop offset="100%" stop-color="#e8dfd1"/>
-        </linearGradient>
-      </defs>
-      <!-- Straw -->
       <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
-      <!-- Lid & Clear Cap -->
       <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
       <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
-      <!-- Stainless Steel Rim -->
       <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
-      <!-- Tumbler Body (Tapered) -->
-      <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="url(#yetiBody)" stroke="#d6cbbe" stroke-width="1.5"/>
-      <!-- Handle -->
+      <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
       <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
       <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <!-- Bottom Base Plate -->
       <rect x="71" y="122" width="18" height="4" rx="1" fill="#94a3b8"/>
     </svg>`,
 
-    // 4. Bose SoundLink Flex (Black pill speaker)
+    // 4. Bose SoundLink Flex
     'BOSE-FLEX': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Speaker Body (Rounded Pill) -->
       <rect x="30" y="46" width="96" height="46" rx="23" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
-      <!-- Speaker Grille Area -->
       <rect x="42" y="52" width="72" height="34" rx="17" fill="#0f172a"/>
-      <!-- Grille Dots Pattern -->
       <g fill="#475569">
         <circle cx="56" cy="62" r="1.5"/><circle cx="64" cy="62" r="1.5"/><circle cx="72" cy="62" r="1.5"/><circle cx="80" cy="62" r="1.5"/><circle cx="88" cy="62" r="1.5"/><circle cx="96" cy="62" r="1.5"/><circle cx="104" cy="62" r="1.5"/>
         <circle cx="52" cy="69" r="1.5"/><circle cx="60" cy="69" r="1.5"/><circle cx="68" cy="69" r="1.5"/><circle cx="76" cy="69" r="1.5"/><circle cx="84" cy="69" r="1.5"/><circle cx="92" cy="69" r="1.5"/><circle cx="100" cy="69" r="1.5"/><circle cx="108" cy="69" r="1.5"/>
         <circle cx="56" cy="76" r="1.5"/><circle cx="64" cy="76" r="1.5"/><circle cx="72" cy="76" r="1.5"/><circle cx="80" cy="76" r="1.5"/><circle cx="88" cy="76" r="1.5"/><circle cx="96" cy="76" r="1.5"/><circle cx="104" cy="76" r="1.5"/>
       </g>
-      <!-- Utility Loop -->
       <path d="M125 61 C134 61, 134 77, 125 77" stroke="#475569" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <!-- Bose Logo Text Accent -->
       <rect x="72" y="68" width="16" height="3" rx="1" fill="#e2e8f0"/>
     </svg>`,
 
-    // 5. Ray-Ban Wayfarer (Black classic sunglasses)
+    // 5. Ray-Ban Wayfarer
     'RB-2140': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Left Temple Arm Behind -->
       <path d="M34 62 L18 52" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
-      <!-- Right Temple Arm Behind -->
       <path d="M126 62 L142 52" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
-      <!-- Acetate Frame -->
       <path d="M26 60 C32 58, 66 56, 74 62 C76 64, 84 64, 86 62 C94 56, 128 58, 134 60 C138 66, 132 88, 114 90 C96 92, 92 78, 88 78 C84 78, 80 92, 62 90 C44 88, 22 66, 26 60 Z" fill="#0f172a"/>
-      <!-- Left Dark Lens with Glare -->
       <path d="M34 63 C40 62, 66 61, 71 65 C72 73, 68 85, 57 85 C43 85, 32 75, 34 63 Z" fill="#092825"/>
       <path d="M40 65 L48 82" stroke="#14b8a6" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
-      <!-- Right Dark Lens with Glare -->
       <path d="M89 65 C94 61, 120 62, 126 63 C128 75, 117 85, 103 85 C92 85, 88 73, 89 65 Z" fill="#092825"/>
       <path d="M96 65 L104 82" stroke="#14b8a6" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
-      <!-- Silver Corner Rivets -->
-      <ellipse cx="29" cy="62" rx="1.5" ry="1" fill="#e2e8f0"/>
-      <ellipse cx="131" cy="62" rx="1.5" ry="1" fill="#e2e8f0"/>
+      <ellipse cx="29" cy="62" rx="1.5" ry="1" fill="#e2e8f0"/><ellipse cx="131" cy="62" rx="1.5" ry="1" fill="#e2e8f0"/>
     </svg>`,
 
-    // 6. Apple AirPods Pro 2 (White earbuds & case)
+    // 6. Apple AirPods Pro 2
     'AP-PRO2': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="appleCaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#ffffff"/>
-          <stop offset="100%" stop-color="#e2e8f0"/>
-        </linearGradient>
-      </defs>
-      <!-- Open Charging Case Body -->
-      <rect x="52" y="66" width="56" height="48" rx="20" fill="url(#appleCaseGrad)" stroke="#cbd5e1" stroke-width="1.5"/>
-      <!-- LED Status Indicator -->
+      <rect x="52" y="66" width="56" height="48" rx="20" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
       <circle cx="80" cy="84" r="2" fill="#10b981"/>
-      <!-- Open Lid Back Cavity -->
       <path d="M54 66 C54 52, 106 52, 106 66 Z" fill="#cbd5e1"/>
-      <!-- Left AirPod Earbud Protruding -->
       <g transform="translate(62, 42)">
         <ellipse cx="8" cy="12" rx="7" ry="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
         <rect x="6" y="18" width="4" height="18" rx="2" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
-        <ellipse cx="4" cy="10" rx="3" ry="5" fill="#f1f5f9"/>
-        <circle cx="8" cy="8" r="1.5" fill="#475569"/>
+        <ellipse cx="4" cy="10" rx="3" ry="5" fill="#f1f5f9"/><circle cx="8" cy="8" r="1.5" fill="#475569"/>
       </g>
-      <!-- Right AirPod Earbud Protruding -->
       <g transform="translate(84, 42)">
         <ellipse cx="6" cy="12" rx="7" ry="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
         <rect x="4" y="18" width="4" height="18" rx="2" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
-        <ellipse cx="10" cy="10" rx="3" ry="5" fill="#f1f5f9"/>
-        <circle cx="6" cy="8" r="1.5" fill="#475569"/>
+        <ellipse cx="10" cy="10" rx="3" ry="5" fill="#f1f5f9"/><circle cx="6" cy="8" r="1.5" fill="#475569"/>
       </g>
     </svg>`,
 
-    // 7. Stanley Quencher 40oz (Sage green tumbler with handle)
-    'STAN-40': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="stanBody" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#557564"/>
-          <stop offset="50%" stop-color="#698b77"/>
-          <stop offset="100%" stop-color="#476353"/>
-        </linearGradient>
-      </defs>
-      <!-- Straw -->
-      <rect x="78" y="12" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
-      <!-- Lid & Rim -->
-      <rect x="58" y="36" width="44" height="6" rx="2" fill="#d1d5db"/>
-      <rect x="60" y="42" width="40" height="4" fill="#9ca3af"/>
-      <!-- Body (Stanley Shape) -->
-      <path d="M61 46 L99 46 L95 86 L91 86 L88 122 L72 122 L69 86 L65 86 Z" fill="url(#stanBody)" stroke="#3f5849" stroke-width="1.5"/>
-      <!-- Ergonomic Handle (Left-Side) -->
-      <path d="M60 52 C44 52, 44 86, 64 88" stroke="#476353" stroke-width="6" stroke-linecap="round" fill="none"/>
-      <path d="M60 52 C44 52, 44 86, 64 88" stroke="#e5e7eb" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-      <!-- Base Plate -->
-      <rect x="72" y="122" width="16" height="4" rx="1" fill="#9ca3af"/>
-    </svg>`,
-
-    // 8. Nike Brasilia Backpack (Black backpack with white swoosh)
+    // 7. Nike Brasilia Backpack
     'NK-BRAS': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Shoulder Straps Behind -->
       <path d="M50 36 C42 48, 40 92, 46 112" stroke="#334155" stroke-width="5" stroke-linecap="round" fill="none"/>
       <path d="M110 36 C118 48, 120 92, 114 112" stroke="#334155" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <!-- Main Backpack Body -->
       <path d="M52 42 C52 28, 108 28, 108 42 L112 110 C112 116, 106 120, 100 120 L60 120 C54 120, 48 116, 48 110 Z" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
-      <!-- Front Pocket -->
       <path d="M54 78 C54 72, 106 72, 106 78 L108 114 C108 118, 104 120, 98 120 L62 120 C56 120, 52 118, 52 114 Z" fill="#1e293b"/>
-      <!-- Zipper Track -->
       <path d="M55 76 C55 74, 105 74, 105 76" stroke="#475569" stroke-width="2"/>
-      <!-- White Nike Swoosh Logo -->
       <path d="M66 94 C76 96, 92 88, 98 80 C95 86, 85 99, 72 99 C66 99, 63 96, 66 94 Z" fill="#ffffff"/>
-      <!-- Top Carry Handle Loop -->
       <path d="M72 30 C72 24, 88 24, 88 30" stroke="#475569" stroke-width="3" fill="none"/>
     </svg>`,
 
-    // 9. Kendra Scott Elisa (Gold necklace with iridescent oval pendant)
-    'KS-ELISA': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="ksStoneGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffffff"/>
-          <stop offset="40%" stop-color="#fef08a"/>
-          <stop offset="70%" stop-color="#a7f3d0"/>
-          <stop offset="100%" stop-color="#fbcfe8"/>
-        </radialGradient>
-      </defs>
-      <!-- Draped Delicate Gold Chain -->
-      <path d="M42 24 C44 68, 62 94, 80 94 C98 94, 116 68, 118 24" stroke="#d97706" stroke-width="1.8" stroke-dasharray="3 1.5" fill="none"/>
-      <!-- Pendant Setting (Gold Border with Filigree) -->
-      <ellipse cx="80" cy="94" rx="16" ry="10" fill="#b45309" stroke="#f59e0b" stroke-width="2"/>
-      <ellipse cx="80" cy="94" rx="13" ry="7.5" fill="url(#ksStoneGrad)"/>
-      <!-- Subtle Stone Facet Shimmer -->
-      <path d="M74 92 L86 92 M76 95 L84 95" stroke="#ffffff" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
-    </svg>`,
-
-    // 10. Bogg Bag Original (Sky blue perforated EVA tote)
+    // 8. Bogg Bag Original
     'BOGG-ORIG': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- White Arch Handles -->
       <path d="M58 72 C58 24, 102 24, 102 72" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
       <path d="M58 72 C58 24, 102 24, 102 72" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <!-- Bag Body (Sky Blue EVA Foam) -->
       <path d="M42 56 L118 56 L114 114 C114 118, 110 120, 106 120 L54 120 C50 120, 46 118, 46 114 Z" fill="#7dd3fc" stroke="#38bdf8" stroke-width="2"/>
-      <!-- Perforations Grid (Bogg signature holes) -->
       <g fill="#0284c7" opacity="0.7">
         <ellipse cx="54" cy="68" rx="2.5" ry="3.5"/><ellipse cx="64" cy="68" rx="2.5" ry="3.5"/><ellipse cx="74" cy="68" rx="2.5" ry="3.5"/><ellipse cx="84" cy="68" rx="2.5" ry="3.5"/><ellipse cx="94" cy="68" rx="2.5" ry="3.5"/><ellipse cx="104" cy="68" rx="2.5" ry="3.5"/>
         <ellipse cx="54" cy="80" rx="2.5" ry="3.5"/><ellipse cx="64" cy="80" rx="2.5" ry="3.5"/><ellipse cx="74" cy="80" rx="2.5" ry="3.5"/><ellipse cx="84" cy="80" rx="2.5" ry="3.5"/><ellipse cx="94" cy="80" rx="2.5" ry="3.5"/><ellipse cx="104" cy="80" rx="2.5" ry="3.5"/>
         <ellipse cx="54" cy="92" rx="2.5" ry="3.5"/><ellipse cx="64" cy="92" rx="2.5" ry="3.5"/><ellipse cx="74" cy="92" rx="2.5" ry="3.5"/><ellipse cx="84" cy="92" rx="2.5" ry="3.5"/><ellipse cx="94" cy="92" rx="2.5" ry="3.5"/><ellipse cx="104" cy="92" rx="2.5" ry="3.5"/>
-        <ellipse cx="54" cy="104" rx="2.5" ry="3.5"/><ellipse cx="64" cy="104" rx="2.5" ry="3.5"/><ellipse cx="74" cy="104" rx="2.5" ry="3.5"/><ellipse cx="84" cy="104" rx="2.5" ry="3.5"/><ellipse cx="94" cy="104" rx="2.5" ry="3.5"/><ellipse cx="104" cy="104" rx="2.5" ry="3.5"/>
       </g>
-      <!-- Handle Snap Rivets -->
       <circle cx="58" cy="72" r="3.5" fill="#ffffff" stroke="#38bdf8" stroke-width="1.5"/>
       <circle cx="102" cy="72" r="3.5" fill="#ffffff" stroke="#38bdf8" stroke-width="1.5"/>
     </svg>`,
 
-    // 11. Solo Stove Bonfire 2.0 (Stainless fire pit)
+    // 9. Stanley Quencher 40oz
+    'STAN-40': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="78" y="12" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+      <rect x="58" y="36" width="44" height="6" rx="2" fill="#d1d5db"/>
+      <rect x="60" y="42" width="40" height="4" fill="#9ca3af"/>
+      <path d="M61 46 L99 46 L95 86 L91 86 L88 122 L72 122 L69 86 L65 86 Z" fill="#698b77" stroke="#3f5849" stroke-width="1.5"/>
+      <path d="M60 52 C44 52, 44 86, 64 88" stroke="#476353" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M60 52 C44 52, 44 86, 64 88" stroke="#e5e7eb" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      <rect x="72" y="122" width="16" height="4" rx="1" fill="#9ca3af"/>
+    </svg>`,
+
+    // 10. Kendra Scott Elisa
+    'KS-ELISA': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M42 24 C44 68, 62 94, 80 94 C98 94, 116 68, 118 24" stroke="#d97706" stroke-width="1.8" stroke-dasharray="3 1.5" fill="none"/>
+      <ellipse cx="80" cy="94" rx="16" ry="10" fill="#b45309" stroke="#f59e0b" stroke-width="2"/>
+      <ellipse cx="80" cy="94" rx="13" ry="7.5" fill="#fef08a"/>
+      <path d="M74 92 L86 92 M76 95 L84 95" stroke="#ffffff" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+    </svg>`,
+
+    // 11. Solo Stove Bonfire 2.0
     'SOLO-BON2': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="soloSteel" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#94a3b8"/>
-          <stop offset="45%" stop-color="#f8fafc"/>
-          <stop offset="100%" stop-color="#64748b"/>
-        </linearGradient>
-      </defs>
-      <!-- Top Ring -->
       <ellipse cx="80" cy="52" rx="36" ry="9" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
       <ellipse cx="80" cy="52" rx="26" ry="6" fill="#1e293b"/>
-      <!-- Drum Cylinder -->
-      <path d="M44 52 L116 52 L116 106 C116 112, 44 112, 44 106 Z" fill="url(#soloSteel)" stroke="#475569" stroke-width="1.5"/>
-      <!-- Lower Vent Puncture Holes -->
-      <g fill="#1e293b">
-        <circle cx="52" cy="100" r="2"/><circle cx="60" cy="101" r="2"/><circle cx="68" cy="102" r="2"/><circle cx="76" cy="102.5" r="2"/><circle cx="84" cy="102.5" r="2"/><circle cx="92" cy="102" r="2"/><circle cx="100" cy="101" r="2"/><circle cx="108" cy="100" r="2"/>
-      </g>
-      <!-- Base Stand Ring -->
+      <path d="M44 52 L116 52 L116 106 C116 112, 44 112, 44 106 Z" fill="#94a3b8" stroke="#475569" stroke-width="1.5"/>
+      <circle cx="52" cy="100" r="2" fill="#1e293b"/><circle cx="64" cy="101" r="2" fill="#1e293b"/><circle cx="76" cy="102" r="2" fill="#1e293b"/><circle cx="88" cy="102" r="2" fill="#1e293b"/><circle cx="100" cy="101" r="2" fill="#1e293b"/>
       <ellipse cx="80" cy="110" rx="34" ry="7" fill="none" stroke="#64748b" stroke-width="2"/>
     </svg>`,
 
-    // 12. Dyson Supersonic (Futuristic hair dryer)
+    // 12. Dyson Supersonic
     'DYS-SONIC': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Handle (Iron Grey) -->
       <rect x="73" y="64" width="14" height="54" rx="7" fill="#475569" stroke="#334155" stroke-width="1.5"/>
-      <!-- Cord Bushing -->
       <rect x="77" y="118" width="6" height="8" rx="2" fill="#1e293b"/>
-      <!-- Circular Hollow Head Cylinder -->
       <rect x="52" y="38" width="46" height="28" rx="6" fill="#64748b"/>
-      <!-- Fuchsia Ring Face Accent -->
       <ellipse cx="52" cy="52" rx="4" ry="14" fill="#d946ef" stroke="#c026d3" stroke-width="1.5"/>
-      <!-- Hollow Center Aperture -->
       <ellipse cx="52" cy="52" rx="1.5" ry="6" fill="#1e293b"/>
-      <!-- Rear Cap (Fuchsia Border) -->
       <ellipse cx="98" cy="52" rx="4" ry="14" fill="#d946ef"/>
-      <ellipse cx="98" cy="52" rx="2.5" ry="11" fill="#475569"/>
     </svg>`,
 
-    // 13. Garmin Forerunner 265 (GPS Sports smartwatch)
+    // 13. Garmin Forerunner 265
     'GAR-FR265': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Silicone Strap (Top & Bottom) -->
-      <path d="M68 20 L92 20 L90 50 L70 50 Z" fill="#1e293b"/>
-      <path d="M70 90 L90 90 L92 124 L68 124 Z" fill="#1e293b"/>
-      <!-- Watch Case (Circular Black Bezel) -->
+      <path d="M68 20 L92 20 L90 50 L70 50 Z" fill="#1e293b"/><path d="M70 90 L90 90 L92 124 L68 124 Z" fill="#1e293b"/>
       <circle cx="80" cy="70" r="28" fill="#0f172a" stroke="#334155" stroke-width="2.5"/>
-      <!-- Screen (Vibrant Display) -->
       <circle cx="80" cy="70" r="23" fill="#090d16"/>
-      <!-- UI Heart Rate & Pace Ring Indicator -->
       <circle cx="80" cy="70" r="20" stroke="#06b6d4" stroke-width="2" stroke-dasharray="80 30" fill="none"/>
       <text x="80" y="74" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="700" font-family="system-ui,sans-serif">10:24</text>
-      <!-- Buttons -->
-      <rect x="49" y="60" width="3" height="7" rx="1" fill="#64748b"/>
-      <rect x="49" y="74" width="3" height="7" rx="1" fill="#64748b"/>
-      <rect x="108" y="64" width="3" height="9" rx="1" fill="#06b6d4"/>
     </svg>`,
 
-    // 14. Theragun Prime (Ergonomic percussive massager)
+    // 14. Theragun Prime
     'THERA-PRM': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Patented Triangle Loop Body -->
       <path d="M64 42 C74 34, 102 34, 114 46 C124 58, 116 88, 104 96 L76 96 C64 96, 52 82, 54 68 Z" fill="#0f172a" stroke="#1e293b" stroke-width="3"/>
-      <!-- Center Ergonomic Grip Cutout -->
       <path d="M78 54 C82 50, 96 50, 100 56 C104 62, 100 78, 94 82 L84 82 C78 82, 74 74, 76 66 Z" fill="#ffffff"/>
-      <!-- Percussive Arm & Attachment -->
       <rect x="38" y="74" width="22" height="10" rx="3" fill="#334155"/>
       <circle cx="34" cy="79" r="9" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
     </svg>`,
 
-    // 15. FieldBar Cooler (Luxury hard cooler trunk)
+    // 15. FieldBar Cooler
     'FB-COOLER': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Leather Top Handle -->
       <path d="M64 46 C64 30, 96 30, 96 46" stroke="#b45309" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-      <!-- Cooler Body (Sage Green Trunk) -->
       <rect x="46" y="52" width="68" height="62" rx="8" fill="#a7f3d0" stroke="#059669" stroke-width="2"/>
-      <!-- Lid Seam -->
       <line x1="46" y1="68" x2="114" y2="68" stroke="#047857" stroke-width="2"/>
-      <!-- Chrome Front Center Latch -->
       <rect x="76" y="62" width="8" height="14" rx="2" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
-      <circle cx="80" cy="69" r="1.5" fill="#475569"/>
     </svg>`,
 
-    // 16. Aura Carver Frame (Digital photo frame)
+    // 16. Aura Carver Frame
     'AURA-CRV': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="auraScreen" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#38bdf8"/>
-          <stop offset="60%" stop-color="#f472b6"/>
-          <stop offset="100%" stop-color="#fbbf24"/>
-        </linearGradient>
-      </defs>
-      <!-- Charcoal Textured Outer Frame -->
       <rect x="34" y="38" width="92" height="68" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
-      <!-- White Matting Border -->
       <rect x="44" y="46" width="72" height="52" rx="2" fill="#f8fafc"/>
-      <!-- High-Res Display Photo Preview -->
-      <rect x="50" y="52" width="60" height="40" fill="url(#auraScreen)"/>
-      <!-- Mountain Silhouette in Photo -->
+      <rect x="50" y="52" width="60" height="40" fill="#38bdf8"/>
       <polygon points="50,92 68,76 80,86 94,70 110,92" fill="#0f172a" opacity="0.6"/>
     </svg>`,
 
-    // 17. OluKai Ohana Sandal (Brown leather-look flip flop)
+    // 17. OluKai Ohana Sandal
     'OLU-OHANA': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Anatomical Footbed (Dark Brown) -->
       <path d="M60 40 C60 26, 92 26, 96 46 C98 64, 94 96, 92 114 C90 120, 66 120, 64 114 C62 96, 60 62, 60 40 Z" fill="#78350f" stroke="#451a03" stroke-width="2"/>
-      <!-- Laser-Etched Island Wave Logo -->
-      <path d="M74 100 C76 96, 82 96, 84 100" stroke="#b45309" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <!-- Synthetic Leather Straps -->
       <path d="M62 68 C72 62, 77 48, 77 44" stroke="#92400e" stroke-width="4.5" stroke-linecap="round"/>
       <path d="M94 68 C84 62, 79 48, 79 44" stroke="#92400e" stroke-width="4.5" stroke-linecap="round"/>
-      <!-- Toe Post -->
-      <circle cx="78" cy="44" r="2.5" fill="#451a03"/>
     </svg>`,
 
-    // 18. Lululemon Everywhere Belt Bag (Black crossbody waist bag)
+    // 18. Lululemon Everywhere Belt Bag
     'LULU-EBB': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Nylon Webbing Strap Behind -->
       <path d="M30 64 L50 66 M110 66 L130 64" stroke="#334155" stroke-width="6" stroke-linecap="round"/>
-      <!-- Bag Body (Rounded Water-Repellent Nylon) -->
       <rect x="46" y="52" width="68" height="42" rx="10" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
-      <!-- Curved Top Zipper with Silver Pull -->
       <path d="M52 60 C66 58, 94 58, 108 60" stroke="#475569" stroke-width="2"/>
-      <circle cx="56" cy="60" r="2" fill="#cbd5e1"/>
-      <!-- Metallic Lululemon Logo Disc -->
-      <circle cx="104" cy="84" r="3" fill="#cbd5e1" stroke="#94a3b8" stroke-width="0.8"/>
+      <circle cx="104" cy="84" r="3" fill="#cbd5e1"/>
     </svg>`,
 
-    // 19. Audio-Technica ATH-M50x (Professional studio headphones)
+    // 19. Audio-Technica ATH-M50x
     'ATH-M50X': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Headband Arc -->
       <path d="M42 74 C42 28, 118 28, 118 74" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
-      <!-- Textured Ribbed Headband Cushion -->
-      <path d="M54 48 C54 36, 106 36, 106 48" stroke="#334155" stroke-width="5" stroke-linecap="round"/>
-      <!-- Swivel Gimbals with Silver Rings -->
       <circle cx="38" cy="84" r="17" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
       <circle cx="38" cy="84" r="9" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
       <circle cx="122" cy="84" r="17" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
@@ -408,7 +253,6 @@
     </svg>`
   };
 
-  // Generic fallback SVG for any newly created items
   const fallbackProductSVG = `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="45" y="38" width="70" height="64" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
     <path d="M60 70 L72 58 L85 72 L95 62 L105 76" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -416,7 +260,7 @@
   </svg>`;
 
   // =========================================================================
-  // ENTERPRISE MASTER CATALOG (19 PRODUCTS MATCHING SCREENSHOT)
+  // ENTERPRISE MASTER CATALOG DATASET (19 ITEMS MATCHING SCREENSHOT)
   // =========================================================================
   const defaultMasterCatalog = [
     {
@@ -428,13 +272,16 @@
       cost: 278.00,
       status: 'Live',
       tags: ['Electronics', 'Audio'],
-      totalATS: 24,
+      onOrder: 120,
+      poNumber: 'PO-38447',
+      onHold: 12,
+      totalATS: 212,
       uploadedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
       uploadSource: 'Brand Feed · Sony EDI ATS',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 18, highlight: true },
-        { name: 'DEMO_3PL', ats: 6 },
-        { name: 'NY DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 124 },
+        { name: 'Demo_3PL', ats: 56 },
+        { name: 'TX DC', ats: 32 }
       ]
     },
     {
@@ -446,13 +293,16 @@
       cost: 65.00,
       status: 'Live',
       tags: ['Footwear', 'Fashion'],
+      onOrder: 100,
+      poNumber: 'PO-38451',
+      onHold: 8,
       totalATS: 86,
       uploadedAt: new Date(Date.now() - 3600000 * 8).toISOString(),
       uploadSource: 'Brand Feed · New Balance B2B',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 60, highlight: true },
-        { name: 'DEMO_3PL', ats: 24 },
-        { name: 'TX DC', ats: 2 }
+        { name: 'Sarasota DC', ats: 40 },
+        { name: 'Demo_3PL', ats: 30 },
+        { name: 'NY DC', ats: 16 }
       ]
     },
     {
@@ -464,13 +314,16 @@
       cost: 24.00,
       status: 'Live',
       tags: ['Drinkware', 'Lifestyle'],
+      onOrder: 0,
+      poNumber: 'PO: —',
+      onHold: 20,
       totalATS: 142,
       uploadedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
       uploadSource: 'Brand Feed · YETI Direct Stock',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 120, highlight: true },
-        { name: 'FL DC', ats: 22 },
-        { name: 'DEMO_3PL', ats: 0 }
+        { name: 'Sarasota DC', ats: 68 },
+        { name: 'FL DC', ats: 54 },
+        { name: 'Demo_3PL', ats: 20 }
       ]
     },
     {
@@ -482,13 +335,16 @@
       cost: 82.00,
       status: 'Live',
       tags: ['Electronics', 'Audio'],
+      onOrder: 80,
+      poNumber: 'PO-38462',
+      onHold: 5,
       totalATS: 56,
       uploadedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
       uploadSource: 'Brand Feed · Bose Partner Portal',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 40, highlight: true },
-        { name: 'DEMO_3PL', ats: 12 },
-        { name: 'CA DC', ats: 4 }
+        { name: 'Sarasota DC', ats: 24 },
+        { name: 'Demo_3PL', ats: 20 },
+        { name: 'CA DC', ats: 12 }
       ]
     },
     {
@@ -500,13 +356,16 @@
       cost: 88.00,
       status: 'Internal Use',
       tags: ['Accessories', 'Fashion'],
+      onOrder: 50,
+      poNumber: 'PO-38470',
+      onHold: 10,
       totalATS: 12,
       uploadedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
       uploadSource: 'Luxottica Master Price & ATS',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 8, highlight: true },
+        { name: 'Sarasota DC', ats: 6 },
         { name: 'NY DC', ats: 4 },
-        { name: 'DEMO_3PL', ats: 0 }
+        { name: 'Demo_3PL', ats: 2 }
       ]
     },
     {
@@ -518,31 +377,16 @@
       cost: 185.00,
       status: 'Live',
       tags: ['Electronics', 'Audio'],
+      onOrder: 180,
+      poNumber: 'PO-38472',
+      onHold: 6,
       totalATS: 62,
       uploadedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
       uploadSource: 'Apple B2B Direct Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 40, highlight: true },
-        { name: 'DEMO_3PL', ats: 20 },
-        { name: 'TX DC', ats: 2 }
-      ]
-    },
-    {
-      sku: 'STAN-40',
-      model: 'STAN-40',
-      brand: 'Stanley',
-      title: 'Stanley Quencher 40oz',
-      standardPrice: 45.00,
-      cost: 22.00,
-      status: 'Presentation',
-      tags: ['Drinkware', 'Lifestyle'],
-      totalATS: 0,
-      uploadedAt: new Date(Date.now() - 3600000 * 18).toISOString(),
-      uploadSource: 'PMI Worldwide Feed',
-      warehouses: [
-        { name: 'SARASOTA DC', ats: 0 },
-        { name: 'DEMO_3PL', ats: 0 },
-        { name: 'FL DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 28 },
+        { name: 'Demo_3PL', ats: 20 },
+        { name: 'TX DC', ats: 14 }
       ]
     },
     {
@@ -554,13 +398,58 @@
       cost: 32.00,
       status: 'Live',
       tags: ['Bags', 'Sports'],
+      onOrder: 100,
+      poNumber: 'PO-38475',
+      onHold: 4,
       totalATS: 48,
       uploadedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
       uploadSource: 'Nike Equipment Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 36, highlight: true },
-        { name: 'DEMO_3PL', ats: 12 },
-        { name: 'CA DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 26 },
+        { name: 'Demo_3PL', ats: 14 },
+        { name: 'NY DC', ats: 8 }
+      ]
+    },
+    {
+      sku: 'BOGG-ORIG',
+      model: 'BOGG-ORIG',
+      brand: 'Bogg Bag',
+      title: 'Bogg Bag Original',
+      standardPrice: 90.00,
+      cost: 45.00,
+      status: 'Presentation',
+      tags: ['Accessories', 'Lifestyle'],
+      onOrder: 400,
+      poNumber: 'PO-38488',
+      onHold: 0,
+      totalATS: 104,
+      uploadedAt: new Date(Date.now() - 3600000 * 7).toISOString(),
+      uploadSource: 'Bogg Direct Brand Feed',
+      warehouses: [
+        { name: 'Sarasota DC', ats: 80 },
+        { name: 'FL DC', ats: 18 },
+        { name: 'Demo_3PL', ats: 6 }
+      ]
+    },
+    {
+      sku: 'STAN-40',
+      model: 'STAN-40',
+      brand: 'Stanley',
+      title: 'Stanley Quencher 40oz',
+      standardPrice: 45.00,
+      cost: 22.00,
+      status: 'Presentation',
+      tags: ['Drinkware', 'Lifestyle'],
+      onOrder: 150,
+      poNumber: 'PO-38491',
+      onHold: 0,
+      totalATS: 0,
+      uploadedAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+      uploadSource: 'PMI Worldwide Feed',
+      warehouses: [
+        { name: 'Sarasota DC', ats: 0 },
+        { name: 'Demo_3PL', ats: 0 },
+        { name: 'FL DC', ats: 0 }
       ]
     },
     {
@@ -572,31 +461,16 @@
       cost: 48.00,
       status: 'Internal Use',
       tags: ['Jewelry', 'Fashion'],
+      onOrder: 40,
+      poNumber: 'PO-38495',
+      onHold: 5,
       totalATS: 28,
       uploadedAt: new Date(Date.now() - 3600000 * 14).toISOString(),
       uploadSource: 'Kendra Scott Wholesale Desk',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 20, highlight: true },
-        { name: 'DEMO_3PL', ats: 8 },
-        { name: 'NY DC', ats: 0 }
-      ]
-    },
-    {
-      sku: 'BOGG-ORIG',
-      model: 'BOGG-ORIG',
-      brand: 'Bogg Bag',
-      title: 'Bogg Bag Original',
-      standardPrice: 90.00,
-      cost: 45.00,
-      status: 'Live',
-      tags: ['Accessories', 'Lifestyle'],
-      totalATS: 104,
-      uploadedAt: new Date(Date.now() - 3600000 * 7).toISOString(),
-      uploadSource: 'Bogg Direct Brand Feed',
-      warehouses: [
-        { name: 'SARASOTA DC', ats: 80, highlight: true },
-        { name: 'DEMO_3PL', ats: 24 },
-        { name: 'FL DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 16 },
+        { name: 'Demo_3PL', ats: 8 },
+        { name: 'NY DC', ats: 4 }
       ]
     },
     {
@@ -608,13 +482,16 @@
       cost: 195.00,
       status: 'Live',
       tags: ['Outdoors', 'Lifestyle'],
+      onOrder: 60,
+      poNumber: 'PO-38501',
+      onHold: 8,
       totalATS: 32,
       uploadedAt: new Date(Date.now() - 3600000 * 10).toISOString(),
       uploadSource: 'Solo Stove EDI Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 24, highlight: true },
-        { name: 'DEMO_3PL', ats: 8 },
-        { name: 'TX DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 20 },
+        { name: 'Demo_3PL', ats: 8 },
+        { name: 'TX DC', ats: 4 }
       ]
     },
     {
@@ -626,13 +503,16 @@
       cost: 310.00,
       status: 'Live',
       tags: ['Beauty', 'Appliances'],
+      onOrder: 30,
+      poNumber: 'PO-38505',
+      onHold: 4,
       totalATS: 18,
       uploadedAt: new Date(Date.now() - 3600000 * 16).toISOString(),
       uploadSource: 'Dyson Commercial Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 12, highlight: true },
-        { name: 'DEMO_3PL', ats: 6 },
-        { name: 'NY DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 10 },
+        { name: 'Demo_3PL', ats: 6 },
+        { name: 'NY DC', ats: 2 }
       ]
     },
     {
@@ -644,13 +524,16 @@
       cost: 320.00,
       status: 'Live',
       tags: ['Fitness', 'Electronics'],
+      onOrder: 45,
+      poNumber: 'PO-38510',
+      onHold: 3,
       totalATS: 22,
       uploadedAt: new Date(Date.now() - 3600000 * 9).toISOString(),
       uploadSource: 'Garmin Direct Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 16, highlight: true },
-        { name: 'DEMO_3PL', ats: 6 },
-        { name: 'CA DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 14 },
+        { name: 'Demo_3PL', ats: 6 },
+        { name: 'CA DC', ats: 2 }
       ]
     },
     {
@@ -662,13 +545,16 @@
       cost: 205.00,
       status: 'Live',
       tags: ['Wellness', 'Electronics'],
+      onOrder: 50,
+      poNumber: 'PO-38515',
+      onHold: 5,
       totalATS: 35,
       uploadedAt: new Date(Date.now() - 3600000 * 11).toISOString(),
       uploadSource: 'Therabody Partner Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 25, highlight: true },
-        { name: 'DEMO_3PL', ats: 10 },
-        { name: 'FL DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 20 },
+        { name: 'Demo_3PL', ats: 10 },
+        { name: 'FL DC', ats: 5 }
       ]
     },
     {
@@ -680,13 +566,16 @@
       cost: 140.00,
       status: 'Live',
       tags: ['Outdoor', 'Lifestyle'],
+      onOrder: 25,
+      poNumber: 'PO-38520',
+      onHold: 6,
       totalATS: 40,
       uploadedAt: new Date(Date.now() - 3600000 * 15).toISOString(),
       uploadSource: 'FieldBar Brand Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 30, highlight: true },
-        { name: 'DEMO_3PL', ats: 10 },
-        { name: 'CA DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 25 },
+        { name: 'Demo_3PL', ats: 10 },
+        { name: 'CA DC', ats: 5 }
       ]
     },
     {
@@ -698,13 +587,16 @@
       cost: 126.00,
       status: 'Live',
       tags: ['Home', 'Electronics'],
+      onOrder: 20,
+      poNumber: 'PO-38525',
+      onHold: 2,
       totalATS: 15,
       uploadedAt: new Date(Date.now() - 3600000 * 13).toISOString(),
       uploadSource: 'Aura Frames Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 10, highlight: true },
-        { name: 'DEMO_3PL', ats: 5 },
-        { name: 'NY DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 8 },
+        { name: 'Demo_3PL', ats: 5 },
+        { name: 'NY DC', ats: 2 }
       ]
     },
     {
@@ -716,13 +608,16 @@
       cost: 42.00,
       status: 'Live',
       tags: ['Footwear', 'Lifestyle'],
+      onOrder: 80,
+      poNumber: 'PO-38530',
+      onHold: 10,
       totalATS: 70,
       uploadedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
       uploadSource: 'OluKai Wholesale Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 50, highlight: true },
-        { name: 'DEMO_3PL', ats: 20 },
-        { name: 'FL DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 45 },
+        { name: 'Demo_3PL', ats: 15 },
+        { name: 'FL DC', ats: 10 }
       ]
     },
     {
@@ -734,13 +629,16 @@
       cost: 19.00,
       status: 'Live',
       tags: ['Accessories', 'Fashion'],
+      onOrder: 120,
+      poNumber: 'PO-38535',
+      onHold: 15,
       totalATS: 110,
       uploadedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
       uploadSource: 'Lululemon B2B Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 85, highlight: true },
-        { name: 'DEMO_3PL', ats: 25 },
-        { name: 'TX DC', ats: 0 }
+        { name: 'Sarasota DC', ats: 70 },
+        { name: 'Demo_3PL', ats: 25 },
+        { name: 'TX DC', ats: 15 }
       ]
     },
     {
@@ -752,19 +650,21 @@
       cost: 115.00,
       status: 'Live',
       tags: ['Electronics', 'Audio'],
+      onOrder: 15,
+      poNumber: 'PO-38540',
+      onHold: 0,
       totalATS: 15,
       uploadedAt: new Date(Date.now() - 3600000 * 20).toISOString(),
       uploadSource: 'Audio-Technica Feed',
       warehouses: [
-        { name: 'SARASOTA DC', ats: 10, highlight: true },
-        { name: 'DEMO_3PL', ats: 5 },
+        { name: 'Sarasota DC', ats: 10 },
+        { name: 'Demo_3PL', ats: 5 },
         { name: 'NY DC', ats: 0 }
       ]
     }
   ];
 
-  // Storage key for user modifications
-  const STORAGE_KEY = 'stark.enterpriseItemMaster.customRecords.v1';
+  const STORAGE_KEY = 'stark.enterpriseItemMaster.customRecords.v2';
 
   function getStoredCatalog() {
     try {
@@ -834,8 +734,8 @@
         const whTarget = selectedWarehouse.toLowerCase();
         const hasStockInWh = (item.warehouses || []).some(w => {
           const matchName = w.name.toLowerCase().includes(whTarget) ||
-            (whTarget === 'sarasota' && w.name.includes('SARASOTA')) ||
-            (whTarget === 'demo_3pl' && w.name.includes('DEMO_3PL'));
+            (whTarget === 'sarasota' && w.name.toLowerCase().includes('sarasota')) ||
+            (whTarget === 'demo_3pl' && w.name.toLowerCase().includes('demo_3pl'));
           return matchName && w.ats > 0;
         });
         if (!hasStockInWh) return false;
@@ -1063,11 +963,13 @@
           item.uploadedAt = uploadTimestamp;
           item.uploadSource = `Brand ATS Feed · ${targetBrand} (${uploadedFileName || 'file'})`;
           if (item.warehouses && item.warehouses[0]) {
-            item.warehouses[0].ats = Math.round(newQty * 0.75);
-            item.warehouses[0].highlight = item.warehouses[0].ats > 0;
+            item.warehouses[0].ats = Math.round(newQty * 0.6);
           }
           if (item.warehouses && item.warehouses[1]) {
             item.warehouses[1].ats = Math.round(newQty * 0.25);
+          }
+          if (item.warehouses && item.warehouses[2]) {
+            item.warehouses[2].ats = Math.max(0, newQty - (item.warehouses[0]?.ats || 0) - (item.warehouses[1]?.ats || 0));
           }
           updatedCount++;
         }
@@ -1079,7 +981,6 @@
       return true;
     }, 'Apply Brand ATS Upload', { system: true });
 
-    // Handle brand select change
     const brandSel = document.querySelector('#ats-upload-brand');
     const customWrap = document.querySelector('#ats-custom-brand-wrap');
     if (brandSel && customWrap) {
@@ -1088,7 +989,6 @@
       };
     }
 
-    // Drag and drop setup
     const dropzone = document.querySelector('#ats-dropzone');
     const fileInput = document.querySelector('#ats-file-input');
     const dropTitle = document.querySelector('#ats-drop-title');
@@ -1167,24 +1067,21 @@
       notice(`Parsed ${parsedRows.length} brand ATS records from file.`);
     }
 
-    // Template download
     document.querySelector('#ats-download-template').onclick = () => {
-      const template = 'Model#,Brand,Product_Description,ATS_Quantity,Upload_Date\r\nWH-1000XM5,Sony,Sony WH-1000XM5,45,2026-10-17\r\nNB-550,New Balance,New Balance 550,110,2026-10-17\r\nTMBLR-40,YETI,YETI Rambler 40oz,180,2026-10-17\r\nSL-FLEX,Bose,Bose SoundLink Flex,65,2026-10-17';
+      const template = 'Model#,Brand,Product_Description,ATS_Quantity,Upload_Date\r\nWH-1000XM5,Sony,Sony WH-1000XM5,212,2026-10-17\r\nNB-550,New Balance,New Balance 550,86,2026-10-17\r\nTMBLR-40,YETI,YETI Rambler 40oz,142,2026-10-17\r\nSL-FLEX,Bose,Bose SoundLink Flex,56,2026-10-17';
       downloadCsvFile('Brand-ATS-Upload-Template.csv', template);
       notice('Brand ATS CSV template downloaded.');
     };
 
-    // Load sample feed
     document.querySelector('#ats-load-sample').onclick = () => {
       uploadedFileName = `${activeBrand}_ATS_Feed_Live.xlsx`;
       dropTitle.innerHTML = `Loaded Sample Feed: <b>${esc(uploadedFileName)}</b>`;
       const sampleRows = [
-        { model: 'WH-1000XM5', ats: 36, brand: 'Sony', title: 'Sony WH-1000XM5' },
-        { model: 'NB-550', ats: 98, brand: 'New Balance', title: 'New Balance 550' },
-        { model: 'TMBLR-40', ats: 160, brand: 'YETI', title: 'YETI Rambler 40oz' },
-        { model: 'SL-FLEX', ats: 72, brand: 'Bose', title: 'Bose SoundLink Flex' },
-        { model: 'AP-PRO2', ats: 85, brand: 'Apple', title: 'Apple AirPods Pro 2' },
-        { model: 'STAN-40', ats: 40, brand: 'Stanley', title: 'Stanley Quencher 40oz' }
+        { model: 'WH-1000XM5', ats: 212, brand: 'Sony', title: 'Sony WH-1000XM5' },
+        { model: 'NB-550', ats: 86, brand: 'New Balance', title: 'New Balance 550' },
+        { model: 'TMBLR-40', ats: 142, brand: 'YETI', title: 'YETI Rambler 40oz' },
+        { model: 'SL-FLEX', ats: 56, brand: 'Bose', title: 'Bose SoundLink Flex' },
+        { model: 'AP-PRO2', ats: 62, brand: 'Apple', title: 'Apple AirPods Pro 2' }
       ];
       processAtsRows(sampleRows);
     };
@@ -1192,7 +1089,6 @@
 
   // =========================================================================
   // PRICE UPDATE (BRAND)
-  // By the brand to upload any price changes
   // =========================================================================
   function openPriceUpdateModal(defaultBrand = '') {
     const allRecords = getItemMasterRecords();
@@ -1217,7 +1113,6 @@
           </label>
         </div>
 
-        <!-- File Dropzone -->
         <div class="im-upload-zone" id="price-dropzone">
           <input type="file" id="price-file-input" accept=".xlsx,.xls,.csv,.tsv" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -1230,7 +1125,6 @@
           <button type="button" class="im-template-btn" id="price-load-sample">⚡ Load Sample Brand Price Revision</button>
         </div>
 
-        <!-- Live Parsed Preview Table -->
         <div id="price-preview-wrap" class="im-upload-preview" style="display:none">
           <table class="im-preview-table">
             <thead>
@@ -1359,23 +1253,19 @@
       notice(`Parsed ${parsedRows.length} price update records from file.`);
     }
 
-    // Template download
     document.querySelector('#price-download-template').onclick = () => {
-      const template = 'Model#,Brand,New_Standard_Price,Unit_Cost,Effective_Date\r\nWH-1000XM5,Sony,359.00,285.00,2026-11-01\r\nAP-PRO2,Apple,249.00,185.00,2026-11-01\r\nKS-ELISA,Kendra Scott,115.00,64.00,2026-11-01\r\nAURA-CRV,Aura Frames,159.00,130.00,2026-11-01';
+      const template = 'Model#,Brand,New_Standard_Price,Unit_Cost,Effective_Date\r\nWH-1000XM5,Sony,349.00,278.00,2026-11-01\r\nAP-PRO2,Apple,249.00,185.00,2026-11-01\r\nNB-550,New Balance,110.00,65.00,2026-11-01';
       downloadCsvFile('Brand-Price-Update-Template.csv', template);
       notice('Price Sheet CSV template downloaded.');
     };
 
-    // Load sample price sheet
     document.querySelector('#price-load-sample').onclick = () => {
       uploadedFileName = `${activeBrand}_Price_Revision_Q4.xlsx`;
       dropTitle.innerHTML = `Loaded Sample Sheet: <b>${esc(uploadedFileName)}</b>`;
       const sampleRows = [
-        { model: 'WH-1000XM5', price: 359.00, cost: 282.00, brand: 'Sony' },
-        { model: 'AP-PRO2', price: 239.00, cost: 180.00, brand: 'Apple' },
-        { model: 'KS-ELISA', price: 115.00, cost: 65.00, brand: 'Kendra Scott' },
-        { model: 'AURA-CRV', price: 155.00, cost: 128.00, brand: 'Aura Frames' },
-        { model: 'FB-COOLER', price: 229.00, cost: 145.00, brand: 'FieldBar' }
+        { model: 'WH-1000XM5', price: 349.00, cost: 278.00, brand: 'Sony' },
+        { model: 'AP-PRO2', price: 249.00, cost: 185.00, brand: 'Apple' },
+        { model: 'NB-550', price: 110.00, cost: 65.00, brand: 'New Balance' }
       ];
       processPriceRows(sampleRows);
     };
@@ -1390,28 +1280,29 @@
       'Status',
       'Standard Price ($)',
       'Unit Cost ($)',
-      'Total ATS',
-      'Primary Warehouse (Sarasota DC ATS)',
+      'On Order',
+      'PO Number',
+      'On Hold',
+      'Available (ATS)',
       'Uploaded Date & Time',
       'Upload Source'
     ];
 
-    const rows = items.map(item => {
-      const p = (item.warehouses || [])[0] || { name: 'SARASOTA DC', ats: item.totalATS };
-      return [
-        item.model,
-        item.sku,
-        item.brand,
-        item.title,
-        item.status,
-        item.standardPrice.toFixed(2),
-        (item.cost || 0).toFixed(2),
-        item.totalATS,
-        p.ats,
-        formatDate(item.uploadedAt),
-        item.uploadSource
-      ];
-    });
+    const rows = items.map(item => [
+      item.model,
+      item.sku,
+      item.brand,
+      item.title,
+      item.status,
+      item.standardPrice.toFixed(2),
+      (item.cost || 0).toFixed(2),
+      item.onOrder || 0,
+      item.poNumber || '—',
+      item.onHold || 0,
+      item.totalATS,
+      formatDate(item.uploadedAt),
+      item.uploadSource
+    ]);
 
     const csvContent = [headers, ...rows].map(row =>
       row.map(cell => {
@@ -1423,7 +1314,7 @@
       }).join(',')
     ).join('\r\n');
 
-    downloadCsvFile(`Item-Master-Catalog-${new Date().toISOString().slice(0, 10)}.csv`, csvContent);
+    downloadCsvFile(`Enterprise-Item-Master-${new Date().toISOString().slice(0, 10)}.csv`, csvContent);
     notice('Item Master exported successfully.');
   }
 
@@ -1470,14 +1361,18 @@
           </label>
         </div>
 
-        <div class="im-form-row">
+        <div class="im-form-row three">
           <label class="im-form-field">
-            <span>Initial Available To Sell (ATS)</span>
+            <span>Available (ATS)</span>
             <input type="number" id="add-ats" min="0" step="1" value="50">
           </label>
           <label class="im-form-field">
-            <span>Category Tag</span>
-            <input type="text" id="add-tag" value="Electronics" placeholder="e.g. Electronics, Footwear">
+            <span>On Order</span>
+            <input type="number" id="add-onorder" min="0" step="1" value="100">
+          </label>
+          <label class="im-form-field">
+            <span>PO Number</span>
+            <input type="text" id="add-ponum" value="PO-38550" placeholder="e.g. PO-38550">
           </label>
         </div>
       </form>
@@ -1494,7 +1389,8 @@
       const price = Number(document.querySelector('#add-price').value) || 0;
       const cost = Number(document.querySelector('#add-cost').value) || 0;
       const ats = Number(document.querySelector('#add-ats').value) || 0;
-      const tag = document.querySelector('#add-tag').value.trim() || 'General';
+      const onOrder = Number(document.querySelector('#add-onorder').value) || 0;
+      const poNumber = document.querySelector('#add-ponum').value.trim() || 'PO: —';
 
       if (!model || !brand || !title) {
         notice('Please fill in all required fields.', true);
@@ -1511,14 +1407,17 @@
         standardPrice: price,
         cost,
         status,
-        tags: [tag],
+        tags: ['General'],
+        onOrder,
+        poNumber,
+        onHold: 0,
         totalATS: ats,
         uploadedAt: new Date().toISOString(),
         uploadSource: 'Manual Item Entry',
         warehouses: [
-          { name: 'SARASOTA DC', ats: Math.round(ats * 0.8), highlight: ats > 0 },
-          { name: 'DEMO_3PL', ats: Math.round(ats * 0.2) },
-          { name: 'NY DC', ats: 0 }
+          { name: 'Sarasota DC', ats: Math.round(ats * 0.7) },
+          { name: 'Demo_3PL', ats: Math.round(ats * 0.2) },
+          { name: 'TX DC', ats: Math.max(0, ats - Math.round(ats * 0.7) - Math.round(ats * 0.2)) }
         ]
       });
 
@@ -1568,21 +1467,19 @@
           </label>
         </div>
 
-        <div class="im-form-row">
+        <div class="im-form-row three">
           <label class="im-form-field">
-            <span>Available To Sell (ATS)</span>
+            <span>Available (ATS)</span>
             <input type="number" id="edit-ats" min="0" step="1" value="${item.totalATS}">
           </label>
           <label class="im-form-field">
-            <span>SKU Identifier</span>
-            <input type="text" id="edit-sku" value="${esc(item.sku)}" readonly style="background:#f8fafc;color:#64748b">
+            <span>On Order</span>
+            <input type="number" id="edit-onorder" min="0" step="1" value="${item.onOrder || 0}">
           </label>
-        </div>
-
-        <div class="im-form-info-box">
-          <div class="im-info-item"><small>Total ATS</small><strong>${num(item.totalATS)} units</strong></div>
-          <div class="im-info-item"><small>Primary Warehouse</small><span>SARASOTA DC (${num((item.warehouses && item.warehouses[0]?.ats) || 0)} ATS)</span></div>
-          <div class="im-info-item"><small>Last Uploaded / Sync</small><span>${esc(formatDate(item.uploadedAt))}</span></div>
+          <label class="im-form-field">
+            <span>On Hold</span>
+            <input type="number" id="edit-onhold" min="0" step="1" value="${item.onHold || 0}">
+          </label>
         </div>
       </form>
     `;
@@ -1595,6 +1492,8 @@
       const standardPrice = Number(document.querySelector('#edit-price').value) || 0;
       const cost = Number(document.querySelector('#edit-cost').value) || 0;
       const totalATS = Number(document.querySelector('#edit-ats').value) || 0;
+      const onOrder = Number(document.querySelector('#edit-onorder').value) || 0;
+      const onHold = Number(document.querySelector('#edit-onhold').value) || 0;
 
       const items = getItemMasterRecords();
       const existing = items.find(x => x.sku === item.sku);
@@ -1606,9 +1505,16 @@
         existing.standardPrice = standardPrice;
         existing.cost = cost;
         existing.totalATS = totalATS;
+        existing.onOrder = onOrder;
+        existing.onHold = onHold;
         if (existing.warehouses && existing.warehouses[0]) {
-          existing.warehouses[0].ats = Math.round(totalATS * 0.75);
-          existing.warehouses[0].highlight = existing.warehouses[0].ats > 0;
+          existing.warehouses[0].ats = Math.round(totalATS * 0.6);
+        }
+        if (existing.warehouses && existing.warehouses[1]) {
+          existing.warehouses[1].ats = Math.round(totalATS * 0.25);
+        }
+        if (existing.warehouses && existing.warehouses[2]) {
+          existing.warehouses[2].ats = Math.max(0, totalATS - (existing.warehouses[0]?.ats || 0) - (existing.warehouses[1]?.ats || 0));
         }
         existing.uploadedAt = new Date().toISOString();
         saveCatalog(items);
@@ -1633,8 +1539,7 @@
   }
 
   // =========================================================================
-  // MAIN RENDER FUNCTION
-  // Exact layout matching media_1792214923499_e9b46256.png
+  // MAIN RENDER FUNCTION (MATCHES media_1792216254947_5371ff9e.png)
   // =========================================================================
   function render() {
     const root = document.querySelector('#item-master-content');
@@ -1644,14 +1549,14 @@
     const brands = getBrandList(allRecords);
     const filtered = filterItems(allRecords);
 
-    // Counts for toolbar status chips
+    // Dynamic Counts for Toolbar Status Chips
     const liveCount = allRecords.filter(i => (i.status || '').toLowerCase() === 'live').length;
     const fashionCount = allRecords.filter(i => (i.status || '').toLowerCase() === 'fashion').length;
     const internalCount = allRecords.filter(i => ['internal use', 'internal_use', 'internal'].includes((i.status || '').toLowerCase())).length;
     const presentationCount = allRecords.filter(i => (i.status || '').toLowerCase() === 'presentation').length;
 
     let html = `
-      <!-- Header: Title & Action Buttons -->
+      <!-- Page Header: Title & Action Buttons -->
       <div class="im-header">
         <div class="im-header-title-block">
           <h1 class="im-page-title">Enterprise Item Master</h1>
@@ -1681,14 +1586,12 @@
       <div class="im-toolbar-panel">
         <!-- Row 1: Search, Brand, Warehouse, Sort, View Toggles, Filters [2] -->
         <div class="im-toolbar-top">
-          <!-- Search box -->
           <div class="im-search-box">
             <svg class="im-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="search" id="im-search-input" placeholder="Search by model#, brand, title, SKU, bin..." value="${esc(query)}" autocomplete="off" aria-label="Search catalog items">
             ${query ? `<button type="button" class="im-clear-search" id="im-clear-search-btn" title="Clear search">✕</button>` : ''}
           </div>
 
-          <!-- Brand select -->
           <div class="im-filter-group">
             <label class="im-filter-label" for="im-brand-select">Brand</label>
             <select id="im-brand-select" class="im-select">
@@ -1697,13 +1600,12 @@
             </select>
           </div>
 
-          <!-- Warehouse select -->
           <div class="im-filter-group">
             <label class="im-filter-label" for="im-warehouse-select">Warehouse</label>
             <select id="im-warehouse-select" class="im-select">
               <option value="all" ${selectedWarehouse === 'all' ? 'selected' : ''}>All Warehouses</option>
               <option value="sarasota" ${selectedWarehouse === 'sarasota' ? 'selected' : ''}>Sarasota DC</option>
-              <option value="demo_3pl" ${selectedWarehouse === 'demo_3pl' ? 'selected' : ''}>DEMO_3PL</option>
+              <option value="demo_3pl" ${selectedWarehouse === 'demo_3pl' ? 'selected' : ''}>Demo_3PL</option>
               <option value="ny" ${selectedWarehouse === 'ny' ? 'selected' : ''}>NY DC</option>
               <option value="fl" ${selectedWarehouse === 'fl' ? 'selected' : ''}>FL DC</option>
               <option value="tx" ${selectedWarehouse === 'tx' ? 'selected' : ''}>TX DC</option>
@@ -1711,7 +1613,6 @@
             </select>
           </div>
 
-          <!-- Sort by select -->
           <div class="im-filter-group">
             <label class="im-filter-label" for="im-sort-select">Sort by</label>
             <select id="im-sort-select" class="im-select">
@@ -1726,17 +1627,15 @@
             </select>
           </div>
 
-          <!-- View toggles: List vs Grid (Grid active with blue #0284c7) -->
           <div class="im-view-toggles">
             <button class="im-view-btn ${viewMode === 'table' ? 'active' : ''}" id="im-toggle-table" type="button" title="Dense Table View">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
-            <button class="im-view-btn ${viewMode === 'cards' ? 'active' : ''}" id="im-toggle-cards" type="button" title="5-Column Grid View">
+            <button class="im-view-btn ${viewMode === 'cards' ? 'active' : ''}" id="im-toggle-cards" type="button" title="Enhanced 4-Column Grid View">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             </button>
           </div>
 
-          <!-- Filters [2] Button -->
           <button class="im-filters-btn" id="im-filters-btn" type="button" title="Advanced filter toggles">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
             <span>Filters</span>
@@ -1744,9 +1643,8 @@
           </button>
         </div>
 
-        <!-- Row 2: Status Chips (Left) + Price Filter Chips/Inputs (Right) -->
+        <!-- Row 2: Status Chips + Price Filters -->
         <div class="im-toolbar-bottom">
-          <!-- Status Chips -->
           <div class="im-status-chips" role="tablist" aria-label="Catalog Status Filter">
             <button class="im-status-chip ${selectedStatus === 'all' ? 'active' : ''}" data-status="all" type="button">
               All Items (${allRecords.length})
@@ -1765,7 +1663,6 @@
             </button>
           </div>
 
-          <!-- Price Filter -->
           <div class="im-price-toolbar">
             <span class="im-price-label">Price:</span>
             <button class="im-price-chip ${priceTier === 'all' ? 'active' : ''}" data-tier="all" type="button">All</button>
@@ -1785,7 +1682,7 @@
         </div>
       </div>
 
-      <!-- Sub-Bar: Showing items + View dropdown + Pagination -->
+      <!-- Sub-Bar -->
       <div class="im-subbar">
         <div class="im-subbar-count">
           Showing <strong>${filtered.length}</strong> of <strong>${allRecords.length}</strong> items
@@ -1794,8 +1691,8 @@
           <span class="im-subbar-view-label">View:</span>
           <select class="im-subbar-select" id="im-subbar-view-select">
             <option value="all">All items</option>
-            <option value="10">10 per page</option>
-            <option value="25">25 per page</option>
+            <option value="8">8 per page</option>
+            <option value="16">16 per page</option>
           </select>
           <div class="im-pagination-arrows">
             <button class="im-page-arrow" disabled type="button" aria-label="Previous page">‹</button>
@@ -1805,7 +1702,7 @@
       </div>
     `;
 
-    // 5-Column Cards Grid View or Dense Table View
+    // 4-Column Enhanced Cards Grid View or Dense Table View
     if (viewMode === 'cards') {
       html += `
         <div class="im-cards-grid">
@@ -1817,54 +1714,96 @@
             </div>
           ` : filtered.map(item => {
             const svg = productSVGs[item.sku] || fallbackProductSVG;
-            const atsVal = Number(item.totalATS) || 0;
-            const isZero = atsVal === 0;
+            const onOrder = Number(item.onOrder) || 0;
+            const onHold = Number(item.onHold) || 0;
+            const available = Number(item.totalATS) || 0;
             const isMenuOpen = activeMenuSku === item.sku;
 
             return `
               <div class="im-product-card" data-sku="${esc(item.sku)}">
-                <!-- Floating Status Badge -->
-                ${getStatusBadgeHtml(item.status)}
+                <!-- 1. Top Split: Left Image, Right Details -->
+                <div class="im-card-top-split">
+                  <div class="im-card-image-box">
+                    ${svg}
+                  </div>
 
-                <!-- Centered Product Image Box -->
-                <div class="im-card-image-box">
-                  ${svg}
-                </div>
-
-                <!-- Title & Price Row -->
-                <div class="im-card-title-row">
-                  <h3 class="im-card-product-title">${esc(item.title)}</h3>
-                  <div class="im-card-product-price">${money(item.standardPrice)}</div>
-                </div>
-
-                <!-- Brand & Model Subline -->
-                <div class="im-card-subline">${esc(item.brand)} &nbsp;|&nbsp; ${esc(item.model)}</div>
-
-                <!-- SKU Line -->
-                <div class="im-card-sku-line">SKU: ${esc(item.sku)}</div>
-
-                <!-- Category Tags Row -->
-                <div class="im-card-tags-row">
-                  ${(item.tags || []).map(t => `<span class="im-card-tag">${esc(t)}</span>`).join('')}
-                </div>
-
-                <!-- ATS (Available to Sell) Metric Section -->
-                <div class="im-card-ats-section">
-                  <span class="im-card-ats-number ${isZero ? 'zero' : ''}">${num(atsVal)}</span>
-                  <span class="im-card-ats-label">Available to Sell (ATS) ⓘ</span>
-                </div>
-
-                <!-- Multi-Warehouse Breakdown (3 Cells) -->
-                <div class="im-card-wh-grid">
-                  ${(item.warehouses || []).slice(0, 3).map(w => `
-                    <div class="im-card-wh-cell ${w.highlight && w.ats > 0 ? 'highlight' : ''}">
-                      <span class="im-card-wh-name">${esc(w.name)}</span>
-                      <span class="im-card-wh-val">${num(w.ats)} ATS</span>
+                  <div class="im-card-meta-col">
+                    <div class="im-card-header-line">
+                      ${getStatusBadgeHtml(item.status)}
+                      <button class="im-card-kebab-btn" data-more="${esc(item.sku)}" type="button" title="More options" aria-haspopup="true">⋮</button>
                     </div>
-                  `).join('')}
+
+                    <h3 class="im-card-product-title" title="${esc(item.title)}">${esc(item.title)}</h3>
+                    <div class="im-card-subline">${esc(item.brand)} &nbsp;|&nbsp; ${esc(item.model)}</div>
+                    <div class="im-card-sku-line">SKU: ${esc(item.sku)}</div>
+
+                    <div class="im-card-tags-row">
+                      ${(item.tags || []).map(t => `<span class="im-card-tag">${esc(t)}</span>`).join('')}
+                    </div>
+
+                    <div class="im-card-price-bottom">
+                      <span class="im-card-product-price">${money(item.standardPrice)}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <!-- Bottom Actions -->
+                <!-- 2. Middle 3-Cell KPI Metrics Row -->
+                <div class="im-card-kpi-row">
+                  <!-- On Order (Blue) -->
+                  <div class="im-kpi-cell blue">
+                    <div class="im-kpi-icon-wrap blue">
+                      <svg class="im-kpi-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    </div>
+                    <div class="im-kpi-text-wrap">
+                      <span class="im-kpi-title">On Order</span>
+                      <strong class="im-kpi-number">${num(onOrder)}</strong>
+                      <span class="im-kpi-po">${esc(item.poNumber || 'PO: —')}</span>
+                    </div>
+                  </div>
+
+                  <!-- On Hold (Amber) -->
+                  <div class="im-kpi-cell amber">
+                    <div class="im-kpi-icon-wrap amber">
+                      <svg class="im-kpi-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div class="im-kpi-text-wrap">
+                      <span class="im-kpi-title">On Hold</span>
+                      <strong class="im-kpi-number">${num(onHold)}</strong>
+                    </div>
+                  </div>
+
+                  <!-- Available (Green) -->
+                  <div class="im-kpi-cell green">
+                    <div class="im-kpi-icon-wrap green">
+                      <svg class="im-kpi-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 10.5 10.5 13.5 16.5 7.5"/></svg>
+                    </div>
+                    <div class="im-kpi-text-wrap">
+                      <span class="im-kpi-title">Available</span>
+                      <strong class="im-kpi-number">${num(available)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Warehouse Breakdown Stacked List -->
+                <div class="im-card-wh-section">
+                  <div class="im-card-wh-heading">Inventory by Warehouse</div>
+                  <div class="im-card-wh-list">
+                    ${(item.warehouses || []).slice(0, 3).map(w => `
+                      <a href="${S.url('warehouse-management/inventory-bins.html?sku=' + encodeURIComponent(item.sku))}" class="im-wh-row" title="View warehouse stock and bin locations">
+                        <div class="im-wh-row-left">
+                          <svg class="im-wh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                          <span class="im-wh-title">${esc(w.name)}</span>
+                        </div>
+                        <div class="im-wh-row-right">
+                          <span class="im-wh-qty">${num(w.ats)}</span>
+                          <span class="im-wh-chevron">›</span>
+                        </div>
+                      </a>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- 4. Card Bottom Actions -->
                 <div class="im-card-actions">
                   <button class="im-card-more-btn" data-more="${esc(item.sku)}" type="button" title="More options" aria-haspopup="true">···</button>
                   <button class="im-card-edit-btn" data-edit="${esc(item.sku)}" type="button">Edit</button>
@@ -1876,7 +1815,7 @@
                       <button type="button" class="im-card-menu-item" data-quick-status="${esc(item.sku)}" data-val="internal use">● Set to Internal Use</button>
                       <button type="button" class="im-card-menu-item" data-quick-status="${esc(item.sku)}" data-val="presentation">● Set to Presentation</button>
                       <hr style="margin:4px 0; border:none; border-top:1px solid #e2e8f0">
-                      <a href="${S.url('warehouse-management/inventory-bins.html')}" class="im-card-menu-item">📦 View Warehouse Bins</a>
+                      <a href="${S.url('warehouse-management/inventory-bins.html?sku=' + encodeURIComponent(item.sku))}" class="im-card-menu-item">📦 View Warehouse Bins</a>
                     </div>
                   ` : ''}
                 </div>
@@ -1897,7 +1836,7 @@
                 <th style="min-width:240px">Title / Product Description</th>
                 <th style="width:140px">Status</th>
                 <th style="width:120px">Standard Price</th>
-                <th style="width:180px">ATS (Available to Sell)</th>
+                <th style="width:180px">Available (ATS)</th>
                 <th style="min-width:260px">Warehouse Breakdown</th>
                 <th style="width:100px;text-align:right">Actions</th>
               </tr>
@@ -1945,7 +1884,7 @@
                   <td class="im-wh-column">
                     <div class="im-wh-matrix">
                       ${(item.warehouses || []).map(w => `
-                        <div class="im-wh-pill ${w.highlight && w.ats > 0 ? 'primary-wh' : ''}">
+                        <div class="im-wh-pill ${w.ats > 0 ? 'primary-wh' : ''}">
                           <span>${esc(w.name)}</span>
                           <b>${num(w.ats)} ATS</b>
                         </div>
@@ -2080,7 +2019,7 @@
       };
     }
 
-    // Card more buttons
+    // Card more buttons (both kebab and triple dots)
     document.querySelectorAll('[data-more]').forEach(btn => {
       btn.onclick = e => {
         e.stopPropagation();
@@ -2092,7 +2031,7 @@
 
     // Close menu on click elsewhere
     document.addEventListener('click', e => {
-      if (activeMenuSku && !e.target.closest('.im-card-actions')) {
+      if (activeMenuSku && !e.target.closest('.im-card-actions, .im-card-header-line')) {
         activeMenuSku = null;
         render();
       }
