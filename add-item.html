@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+    html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}
+    html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}
+    @keyframes stark-navigation-progress{to{background-position:-200% 0}}
+    @media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}
+  </style>
+  <script data-stark-navigation-boot>
+    document.documentElement.classList.add('stark-page-loading');
+    window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);
+  </script>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261012-2" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Add New Item · Supply Chain Intelligence</title>
+  <meta name="description" content="Add new master catalog item with catalog info, product images, features, commercial pricing, customer feeds, and physical measurements.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-2">
+  <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
+
+  <script src="assets/system-shell.js?v=20261017-2" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+</head>
+<body data-system-page="item-master">
+  <main class="system-page im-add-page-container" aria-label="Add New Catalog Item to Master">
+    <div class="im-add-page-card">
+      <!-- Header -->
+      <div class="im-add-modal-header">
+        <div class="im-add-modal-header-left">
+          <div class="im-add-modal-icon-box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="im-add-modal-title">Add New Catalog Item to Master</h1>
+            <p class="im-add-modal-subtitle">Create a new master item with catalog, pricing, supplier, and distribution details.</p>
+          </div>
+        </div>
+        <a href="item-master.html" class="im-add-modal-close" aria-label="Back to Item Master" title="Back to Item Master">×</a>
+      </div>
+
+      <form id="im-add-item-form" autocomplete="off">
+        <!-- Section 1: Basic Item Info -->
+        <section class="im-add-section">
+          <div class="im-add-sec-head">
+            <span class="im-add-badge">1</span>
+            <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <div>
+              <h2 class="im-add-sec-title">Basic Item Info</h2>
+              <p class="im-add-sec-desc">Core identification details for this catalog item.</p>
+            </div>
+          </div>
+          <div class="im-add-grid-4">
+            <label class="im-add-field">
+              <span>Model # (Identifier) <b class="req">*</b></span>
+              <input type="text" id="add-model" required value="WH-1000XM6" placeholder="e.g. WH-1000XM6">
+            </label>
+            <label class="im-add-field">
+              <span>Vendor Item #</span>
+              <input type="text" id="add-vendor-item" value="VND-778899" placeholder="e.g. VND-778899">
+            </label>
+            <label class="im-add-field">
+              <span>Brand <b class="req">*</b></span>
+              <select id="add-brand" required>
+                <option value="Sony" selected>Sony</option>
+                <option value="Apple">Apple</option>
+                <option value="Bose">Bose</option>
+                <option value="Nike">Nike</option>
+                <option value="New Balance">New Balance</option>
+                <option value="YETI">YETI</option>
+                <option value="Ray-Ban">Ray-Ban</option>
+                <option value="Stanley">Stanley</option>
+                <option value="Kendra Scott">Kendra Scott</option>
+                <option value="Bogg Bag">Bogg Bag</option>
+                <option value="Dyson">Dyson</option>
+                <option value="Garmin">Garmin</option>
+                <option value="JBL">JBL</option>
+                <option value="KitchenAid">KitchenAid</option>
+                <option value="Nespresso">Nespresso</option>
+                <option value="Samsung">Samsung</option>
+                <option value="Sonos">Sonos</option>
+                <option value="Therabody">Therabody</option>
+                <option value="Under Armour">Under Armour</option>
+                <option value="__NEW__">+ Custom Brand...</option>
+              </select>
+              <input type="text" id="add-brand-custom" placeholder="Enter new brand name" style="display:none;margin-top:6px;">
+            </label>
+            <label class="im-add-field">
+              <span>UPC</span>
+              <input type="text" id="add-upc" value="027242923882" placeholder="e.g. 027242923882">
+            </label>
+          </div>
+        </section>
+
+        <!-- Section 2: Product Images (Exact match to media_1792219356267_48174428.jpg) -->
+        <section class="im-add-section">
+          <div class="im-add-sec-head">
+            <span class="im-add-badge">2</span>
+            <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <div>
+              <h2 class="im-add-sec-title">Product Images</h2>
+              <p class="im-add-sec-desc">Upload product images and set one as the primary image.</p>
+            </div>
+          </div>
+
+          <div class="im-add-img-gallery" id="im-img-gallery">
+            <!-- Slot 1: Upload Dropzone -->
+            <div class="im-add-upload-dropzone" id="im-dropzone" tabindex="0" role="button" aria-label="Upload Images">
+              <input type="file" id="im-file-input" accept="image/*" multiple style="display:none">
+              <svg class="im-add-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+                <path d="M12 12v9"/>
+                <path d="m16 16-4-4-4 4"/>
+              </svg>
+              <span class="im-add-upload-title">Upload Images</span>
+              <span class="im-add-upload-sub">Drag and drop images here,<br>or click to <b style="color:#0284c7">browse</b></span>
+              <span class="im-add-upload-hint">JPG, PNG, WEBP (max 10MB)</span>
+            </div>
+
+            <!-- Slot 2: Image 1 (Primary Angled View) -->
+            <div class="im-add-img-card is-primary" id="im-card-img-1" data-id="1">
+              <div class="im-add-img-card-top">
+                <span class="im-add-primary-badge">Primary</span>
+                <button type="button" class="im-add-trash-btn" title="Remove image" aria-label="Remove image">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+              <div class="im-add-img-preview">
+                <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M35 55 C35 22, 105 22, 105 55" stroke="#1e293b" stroke-width="7" stroke-linecap="round"/>
+                  <path d="M42 50 C42 27, 98 27, 98 50" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+                  <rect x="32" y="48" width="6" height="14" rx="2" fill="#64748b"/>
+                  <rect x="102" y="48" width="6" height="14" rx="2" fill="#64748b"/>
+                  <g transform="translate(22, 50) rotate(6)">
+                    <ellipse cx="12" cy="18" rx="12" ry="20" fill="#1e293b" stroke="#0f172a" stroke-width="1.8"/>
+                    <ellipse cx="15" cy="18" rx="8" ry="15" fill="#334155"/>
+                    <circle cx="12" cy="10" r="2" fill="#94a3b8"/>
+                  </g>
+                  <g transform="translate(94, 52) rotate(-6)">
+                    <ellipse cx="12" cy="18" rx="12" ry="20" fill="#1e293b" stroke="#0f172a" stroke-width="1.8"/>
+                    <ellipse cx="9" cy="18" rx="8" ry="15" fill="#334155"/>
+                    <circle cx="12" cy="10" r="2" fill="#94a3b8"/>
+                  </g>
+                </svg>
+              </div>
+              <label class="im-add-radio-lbl">
+                <input type="radio" name="primaryImageRadio" value="1" checked>
+                <span>Set as Primary</span>
+              </label>
+            </div>
+
+            <!-- Slot 3: Image 2 (Side Profile View) -->
+            <div class="im-add-img-card" id="im-card-img-2" data-id="2">
+              <div class="im-add-img-card-top">
+                <button type="button" class="im-add-trash-btn" title="Remove image" aria-label="Remove image">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+              <div class="im-add-img-preview">
+                <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M70 18 C50 18, 40 32, 40 50 L40 65" stroke="#1e293b" stroke-width="7" stroke-linecap="round"/>
+                  <rect x="36" y="58" width="8" height="14" rx="2" fill="#64748b"/>
+                  <ellipse cx="40" cy="74" rx="16" ry="22" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                  <ellipse cx="43" cy="74" rx="11" ry="17" fill="#334155"/>
+                  <circle cx="40" cy="65" r="2.5" fill="#94a3b8"/>
+                  <line x1="38" y1="74" x2="38" y2="82" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <label class="im-add-radio-lbl">
+                <input type="radio" name="primaryImageRadio" value="2">
+                <span>Set as Primary</span>
+              </label>
+            </div>
+
+            <!-- Slot 4: Image 3 (Folded Flat View) -->
+            <div class="im-add-img-card" id="im-card-img-3" data-id="3">
+              <div class="im-add-img-card-top">
+                <button type="button" class="im-add-trash-btn" title="Remove image" aria-label="Remove image">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+              <div class="im-add-img-preview">
+                <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M45 42 C45 20, 95 20, 95 42" stroke="#1e293b" stroke-width="6" stroke-linecap="round"/>
+                  <rect x="42" y="38" width="6" height="10" rx="1" fill="#64748b"/>
+                  <rect x="92" y="38" width="6" height="10" rx="1" fill="#64748b"/>
+                  <g transform="translate(32, 44)">
+                    <ellipse cx="18" cy="22" rx="18" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                    <ellipse cx="18" cy="22" rx="12" ry="17" fill="#334155"/>
+                  </g>
+                  <g transform="translate(72, 44)">
+                    <ellipse cx="18" cy="22" rx="18" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                    <ellipse cx="18" cy="22" rx="12" ry="17" fill="#334155"/>
+                  </g>
+                </svg>
+              </div>
+              <label class="im-add-radio-lbl">
+                <input type="radio" name="primaryImageRadio" value="3">
+                <span>Set as Primary</span>
+              </label>
+            </div>
+
+            <!-- Slot 5: Image 4 (Hard Case) -->
+            <div class="im-add-img-card" id="im-card-img-4" data-id="4">
+              <div class="im-add-img-card-top">
+                <button type="button" class="im-add-trash-btn" title="Remove image" aria-label="Remove image">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+              <div class="im-add-img-preview">
+                <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="70" cy="52" rx="36" ry="42" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+                  <ellipse cx="70" cy="52" rx="32" ry="38" fill="#0f172a"/>
+                  <path d="M38 52 C38 72, 102 72, 102 52" stroke="#475569" stroke-width="2" stroke-dasharray="3 2" fill="none"/>
+                  <rect x="67" y="10" width="6" height="10" rx="2" fill="#64748b"/>
+                  <text x="70" y="55" text-anchor="middle" fill="#64748b" font-size="8" font-family="sans-serif" font-weight="700" letter-spacing="1">SONY</text>
+                </svg>
+              </div>
+              <label class="im-add-radio-lbl">
+                <input type="radio" name="primaryImageRadio" value="4">
+                <span>Set as Primary</span>
+              </label>
+            </div>
+
+            <!-- Slot 6: Add More Images -->
+            <div class="im-add-more-box" id="im-add-more-btn" tabindex="0" role="button" aria-label="Add More Images">
+              <span class="im-add-more-plus">+</span>
+              <span class="im-add-more-text">Add More<br>Images</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 3: Product Details -->
+        <section class="im-add-section">
+          <div class="im-add-sec-head">
+            <span class="im-add-badge">3</span>
+            <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <div>
+              <h2 class="im-add-sec-title">Product Details</h2>
+              <p class="im-add-sec-desc">Provide the product title and detailed description.</p>
+            </div>
+          </div>
+          <div class="im-add-grid-split">
+            <label class="im-add-field">
+              <span>Product Title <b class="req">*</b></span>
+              <input type="text" id="add-title" required value="WH-1000XM6 Premium Noise Canceling Wireless Headphones" placeholder="e.g. WH-1000XM6 Premium Noise Canceling Wireless Headphones">
+            </label>
+            <label class="im-add-field">
+              <span>Catalog Status <b class="req">*</b></span>
+              <select id="add-status" required>
+                <option value="Live" selected>Live</option>
+                <option value="fashion">Fashion</option>
+                <option value="internal use">Internal Use</option>
+                <option value="presentation">Presentation</option>
+              </select>
+            </label>
+          </div>
+          <label class="im-add-field" style="margin-top: 10px;">
+            <span>Description <b class="req">*</b></span>
+            <textarea id="add-desc" rows="3" required placeholder="e.g. Premium wireless noise canceling headphones with industry-leading sound quality, 30-hour battery life, and fast USB-C charging...">Premium wireless noise canceling headphones with industry-leading sound quality, 30-hour battery life, and fast USB-C charging...</textarea>
+          </label>
+        </section>
+
+        <!-- Section 4: Features -->
+        <section class="im-add-section">
+          <div class="im-add-sec-head">
+            <span class="im-add-badge">4</span>
+            <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            <div>
+              <h2 class="im-add-sec-title">Features</h2>
+              <p class="im-add-sec-desc">Enter key product features (up to 6).</p>
+            </div>
+          </div>
+          <div class="im-add-features-grid">
+            <div class="im-add-feat-item">
+              <span class="im-add-feat-lbl">Feature 1</span>
+              <input type="text" id="add-feat-1" value="Active Noise Cancellation" placeholder="e.g. Active Noise Cancellation">
+            </div>
+            <div class="im-add-feat-item">
+              <span class="im-add-feat-lbl">Feature 4</span>
+              <input type="text" id="add-feat-4" value="USB-C charging" placeholder="e.g. USB-C charging">
+            </div>
+            <div class="im-add-feat-item">
+              <span class="im-add-feat-lbl">Feature 2</span>
+              <input type="text" id="add-feat-2" value="Bluetooth 5.3" placeholder="e.g. Bluetooth 5.3">
+            </div>
+            <div class="im-add-feat-item">
+              <span class="im-add-feat-lbl">Feature 5</span>
+              <input type="text" id="add-feat-5" value="Lightweight and comfortable" placeholder="e.g. Lightweight and comfortable">
+            </div>
+            <div class="im-add-feat-item">
+              <span class="im-add-feat-lbl">Feature 3</span>
+              <input type="text" id="add-feat-3" value="30-hour battery life" placeholder="e.g. 30-hour battery life">
+            </div>
+            <div class="im-add-feat-item">
+              <span class="im-add-feat-lbl">Feature 6</span>
+              <input type="text" id="add-feat-6" value="Built-in microphone" placeholder="e.g. Built-in microphone">
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 5: Commercial Details (Numbered 4 in original screenshot) -->
+        <section class="im-add-section">
+          <div class="im-add-sec-head">
+            <span class="im-add-badge">4</span>
+            <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            <div>
+              <h2 class="im-add-sec-title">Commercial Details</h2>
+              <p class="im-add-sec-desc">Pricing, sourcing, and manufacturing information.</p>
+            </div>
+          </div>
+          <div class="im-add-grid-6">
+            <label class="im-add-field">
+              <span>Standard Price ($) <b class="req">*</b></span>
+              <input type="number" id="add-price" step="0.01" min="0" required value="199.00" placeholder="e.g. 199.00">
+            </label>
+            <label class="im-add-field">
+              <span>Unit Cost ($) <b class="req">*</b></span>
+              <input type="number" id="add-cost" step="0.01" min="0" required value="120.00" placeholder="e.g. 120.00">
+            </label>
+            <label class="im-add-field">
+              <span>Country of Origin <b class="req">*</b></span>
+              <select id="add-origin" required>
+                <option value="China" selected>e.g. China</option>
+                <option value="United States">United States</option>
+                <option value="Vietnam">Vietnam</option>
+                <option value="Taiwan">Taiwan</option>
+                <option value="Japan">Japan</option>
+                <option value="Mexico">Mexico</option>
+                <option value="Germany">Germany</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+            <label class="im-add-field">
+              <span>HS Code <span class="im-info-tip" title="Harmonized System tariff code">ⓘ</span></span>
+              <input type="text" id="add-hscode" value="851830" placeholder="e.g. 851830">
+            </label>
+            <label class="im-add-field">
+              <span>MOQ</span>
+              <input type="number" id="add-moq" min="1" step="1" value="100" placeholder="e.g. 100">
+            </label>
+            <label class="im-add-field">
+              <span>Lead Time</span>
+              <input type="text" id="add-leadtime" value="4-6 weeks" placeholder="e.g. 4-6 weeks">
+            </label>
+          </div>
+        </section>
+
+        <!-- Bottom Row: 6 Customer Feed & 7 Item Measurements -->
+        <div class="im-add-bottom-row">
+          <!-- Section 6: Customer Feed -->
+          <section class="im-add-section">
+            <div class="im-add-sec-head">
+              <span class="im-add-badge">6</span>
+              <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <div>
+                <h2 class="im-add-sec-title">Customer Feed</h2>
+                <p class="im-add-sec-desc">Select which customers will receive this item in their catalog feed.</p>
+              </div>
+            </div>
+            <div class="im-add-field">
+              <span>Select Customers to Feed This Item <b class="req">*</b></span>
+              <div class="im-add-tag-box" id="im-add-tag-box">
+                <span class="im-add-tag" data-cust="Amazon">Amazon <span class="im-add-tag-remove">&times;</span></span>
+                <span class="im-add-tag" data-cust="Best Buy">Best Buy <span class="im-add-tag-remove">&times;</span></span>
+                <span class="im-add-tag" data-cust="Walmart">Walmart <span class="im-add-tag-remove">&times;</span></span>
+                <span class="im-add-tag" data-cust="Target">Target <span class="im-add-tag-remove">&times;</span></span>
+                <span class="im-add-tag-chevron">⌄</span>
+              </div>
+              <input type="text" class="im-add-tag-input" id="add-customer-feed" placeholder="e.g. Amazon, Best Buy, Walmart, Target (press Enter to add)...">
+            </div>
+          </section>
+
+          <!-- Section 7: Item Measurements -->
+          <section class="im-add-section">
+            <div class="im-add-sec-head">
+              <span class="im-add-badge">7</span>
+              <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+              <div>
+                <h2 class="im-add-sec-title">Item Measurements</h2>
+                <p class="im-add-sec-desc">Physical dimensions and weight.</p>
+              </div>
+            </div>
+            <div class="im-add-measure-grid">
+              <label class="im-add-field">
+                <span>Length</span>
+                <input type="number" id="add-dim-l" step="0.1" value="7.3" placeholder="e.g. 7.3">
+              </label>
+              <label class="im-add-field">
+                <span>Width</span>
+                <input type="number" id="add-dim-w" step="0.1" value="6.8" placeholder="e.g. 6.8">
+              </label>
+              <label class="im-add-field">
+                <span>Height</span>
+                <input type="number" id="add-dim-h" step="0.1" value="3.2" placeholder="e.g. 3.2">
+              </label>
+              <label class="im-add-field">
+                <span>Weight</span>
+                <input type="number" id="add-dim-wt" step="0.01" value="0.25" placeholder="e.g. 0.25">
+              </label>
+              <label class="im-add-field">
+                <span>Units</span>
+                <select id="add-dim-units">
+                  <option value="in / lb (Imperial)" selected>in / lb (Imperial)</option>
+                  <option value="cm / kg (Metric)">cm / kg (Metric)</option>
+                </select>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="im-add-modal-footer">
+          <a href="item-master.html" class="im-add-btn-cancel" style="text-decoration:none;display:inline-block;text-align:center;">Cancel</a>
+          <button type="submit" class="im-add-btn-create" id="im-btn-create-item">Create Item</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      'use strict';
+      const S = window.StarkSystem;
+      const escape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+      // 1. Brand custom toggle
+      const brandSelect = document.querySelector('#add-brand');
+      const brandCustom = document.querySelector('#add-brand-custom');
+      if (brandSelect && brandCustom) {
+        brandSelect.addEventListener('change', () => {
+          if (brandSelect.value === '__NEW__') {
+            brandCustom.style.display = 'block';
+            brandCustom.required = true;
+            brandCustom.focus();
+          } else {
+            brandCustom.style.display = 'none';
+            brandCustom.required = false;
+          }
+        });
+      }
+
+      // 2. Customer tag pills
+      const tagBox = document.querySelector('#im-add-tag-box');
+      const tagInput = document.querySelector('#add-customer-feed');
+      function bindTagRemovals() {
+        if (!tagBox) return;
+        tagBox.querySelectorAll('.im-add-tag-remove').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            btn.closest('.im-add-tag')?.remove();
+          };
+        });
+      }
+      bindTagRemovals();
+
+      if (tagInput && tagBox) {
+        tagInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = tagInput.value.trim();
+            if (val) {
+              const tag = document.createElement('span');
+              tag.className = 'im-add-tag';
+              tag.setAttribute('data-cust', val);
+              tag.innerHTML = `${escape(val)} <span class="im-add-tag-remove">&times;</span>`;
+              tagBox.insertBefore(tag, tagBox.querySelector('.im-add-tag-chevron'));
+              tagInput.value = '';
+              bindTagRemovals();
+            }
+          }
+        });
+      }
+
+      // 3. Image gallery interactions
+      const dropzone = document.querySelector('#im-dropzone');
+      const fileInput = document.querySelector('#im-file-input');
+      const addMoreBtn = document.querySelector('#im-add-more-btn');
+      const gallery = document.querySelector('#im-img-gallery');
+
+      if (dropzone && fileInput) {
+        dropzone.onclick = () => fileInput.click();
+        dropzone.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); };
+      }
+      if (addMoreBtn && fileInput) {
+        addMoreBtn.onclick = () => fileInput.click();
+        addMoreBtn.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); };
+      }
+
+      function updatePrimaryBadges() {
+        gallery.querySelectorAll('.im-add-img-card').forEach(card => {
+          const radio = card.querySelector('input[type="radio"]');
+          const topBar = card.querySelector('.im-add-img-card-top');
+          let badge = topBar.querySelector('.im-add-primary-badge');
+          if (radio && radio.checked) {
+            card.classList.add('is-primary');
+            if (!badge) {
+              badge = document.createElement('span');
+              badge.className = 'im-add-primary-badge';
+              badge.textContent = 'Primary';
+              topBar.prepend(badge);
+            }
+          } else {
+            card.classList.remove('is-primary');
+            badge?.remove();
+          }
+        });
+      }
+
+      function bindCardActions() {
+        gallery.querySelectorAll('.im-add-img-card').forEach(card => {
+          const trash = card.querySelector('.im-add-trash-btn');
+          const radio = card.querySelector('input[type="radio"]');
+          if (trash) {
+            trash.onclick = (e) => {
+              e.stopPropagation();
+              const wasChecked = radio?.checked;
+              card.remove();
+              if (wasChecked) {
+                const nextRadio = gallery.querySelector('.im-add-img-card input[type="radio"]');
+                if (nextRadio) nextRadio.checked = true;
+              }
+              updatePrimaryBadges();
+            };
+          }
+          if (radio) {
+            radio.onchange = updatePrimaryBadges;
+          }
+        });
+      }
+      bindCardActions();
+
+      if (fileInput) {
+        fileInput.addEventListener('change', () => {
+          const files = [...fileInput.files];
+          files.forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const id = 'user-img-' + Date.now() + Math.random().toString(36).slice(2, 6);
+              const card = document.createElement('div');
+              card.className = 'im-add-img-card';
+              card.id = 'im-card-' + id;
+              card.innerHTML = `
+                <div class="im-add-img-card-top">
+                  <button type="button" class="im-add-trash-btn" title="Remove image" aria-label="Remove image">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+                <div class="im-add-img-preview">
+                  <img src="${e.target.result}" alt="Uploaded Product Image">
+                </div>
+                <label class="im-add-radio-lbl">
+                  <input type="radio" name="primaryImageRadio" value="${id}">
+                  <span>Set as Primary</span>
+                </label>
+              `;
+              gallery.insertBefore(card, addMoreBtn);
+              bindCardActions();
+            };
+            reader.readAsDataURL(file);
+          });
+        });
+      }
+
+      // Drag and drop onto dropzone
+      if (dropzone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropzone.style.borderColor = '#2563eb';
+            dropzone.style.background = '#eff6ff';
+          });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropzone.style.borderColor = '';
+            dropzone.style.background = '';
+          });
+        });
+        dropzone.addEventListener('drop', (e) => {
+          if (e.dataTransfer?.files?.length && fileInput) {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+          }
+        });
+      }
+
+      // 4. Form submission & saving to master catalog
+      const form = document.querySelector('#im-add-item-form');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
+
+        const model = document.querySelector('#add-model').value.trim();
+        const vendorItem = document.querySelector('#add-vendor-item').value.trim() || 'VND-' + Math.floor(100000 + Math.random() * 900000);
+        let brand = brandSelect.value === '__NEW__' ? brandCustom.value.trim() : brandSelect.value.trim();
+        if (!brand) brand = 'Sony';
+        const upc = document.querySelector('#add-upc').value.trim() || '0' + Math.floor(10000000000 + Math.random() * 90000000000);
+        const title = document.querySelector('#add-title').value.trim();
+        const status = document.querySelector('#add-status').value;
+        const desc = document.querySelector('#add-desc').value.trim();
+
+        const features = [
+          document.querySelector('#add-feat-1').value.trim(),
+          document.querySelector('#add-feat-2').value.trim(),
+          document.querySelector('#add-feat-3').value.trim(),
+          document.querySelector('#add-feat-4').value.trim(),
+          document.querySelector('#add-feat-5').value.trim(),
+          document.querySelector('#add-feat-6').value.trim()
+        ].filter(Boolean);
+
+        const price = Number(document.querySelector('#add-price').value) || 199.00;
+        const cost = Number(document.querySelector('#add-cost').value) || 120.00;
+        const origin = document.querySelector('#add-origin').value;
+        const hsCode = document.querySelector('#add-hscode').value.trim() || '851830';
+        const moq = Number(document.querySelector('#add-moq').value) || 100;
+        const leadTime = document.querySelector('#add-leadtime').value.trim() || '4-6 weeks';
+
+        const customerFeeds = [...tagBox.querySelectorAll('.im-add-tag')].map(t => t.getAttribute('data-cust') || t.textContent.replace('×', '').trim());
+
+        const measurements = {
+          length: Number(document.querySelector('#add-dim-l').value) || 7.3,
+          width: Number(document.querySelector('#add-dim-w').value) || 6.8,
+          height: Number(document.querySelector('#add-dim-h').value) || 3.2,
+          weight: Number(document.querySelector('#add-dim-wt').value) || 0.25,
+          units: document.querySelector('#add-dim-units').value
+        };
+
+        const sku = (brand.toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + model.toUpperCase().replace(/[^A-Z0-9]/g, '')).slice(0, 18);
+
+        // Load existing catalog from localStorage
+        const STORAGE_KEY = 'stark-item-master-catalog';
+        let items = [];
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) items = JSON.parse(raw);
+        } catch(err) {}
+
+        const newItem = {
+          sku,
+          model,
+          vendorItem,
+          brand,
+          upc,
+          title,
+          description: desc,
+          status,
+          standardPrice: price,
+          cost,
+          countryOfOrigin: origin,
+          hsCode,
+          moq,
+          leadTime,
+          customerFeeds,
+          measurements,
+          features,
+          tags: [brand, 'Audio', 'Electronics'],
+          onOrder: 120,
+          poNumber: 'PO-' + Math.floor(38400 + Math.random() * 900),
+          onHold: 10,
+          totalATS: 150,
+          uploadedAt: new Date().toISOString(),
+          uploadSource: 'Manual Item Entry',
+          warehouses: [
+            { name: 'Sarasota DC', ats: 90 },
+            { name: 'Demo_3PL', ats: 40 },
+            { name: 'TX DC', ats: 20 }
+          ]
+        };
+
+        items.unshift(newItem);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        } catch(err) {}
+
+        sessionStorage.setItem('stark-toast-msg', `Item ${model} (${brand}) successfully created and added to master catalog.`);
+        window.location.href = 'item-master.html';
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1334,113 +1334,414 @@
   }
 
   function openAddItemModal() {
+    document.querySelector('#im-add-modal-overlay')?.remove();
+
     const brands = getBrandList(getItemMasterRecords()).map(([b]) => b);
-    const body = `
-      <form class="im-form" id="im-add-form">
-        <div class="im-form-row">
-          <label class="im-form-field">
-            <span>Model # (Identifier) *</span>
-            <input type="text" id="add-model" required placeholder="e.g. WH-1000XM6, AF-300, KB-88">
-          </label>
-          <label class="im-form-field">
-            <span>Brand *</span>
-            <input type="text" id="add-brand" list="add-brand-list" required placeholder="e.g. Sony, Apple, Bose">
-            <datalist id="add-brand-list">
-              ${brands.map(b => `<option value="${esc(b)}">`).join('')}
-            </datalist>
-          </label>
+    const existingBrandsHtml = brands.map(b => `<option value="${esc(b)}"${b === 'Sony' ? ' selected' : ''}>${esc(b)}</option>`).join('');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'im-add-modal-overlay';
+    overlay.id = 'im-add-modal-overlay';
+
+    overlay.innerHTML = `
+      <div class="im-add-modal-card" role="dialog" aria-modal="true" aria-labelledby="im-add-title">
+        <!-- Header -->
+        <div class="im-add-modal-header">
+          <div class="im-add-modal-header-left">
+            <div class="im-add-modal-icon-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="im-add-modal-title" id="im-add-title">Add New Catalog Item to Master</h2>
+              <p class="im-add-modal-subtitle">Create a new master item with catalog, pricing, supplier, and distribution details.</p>
+            </div>
+          </div>
+          <button type="button" class="im-add-modal-close" id="im-add-modal-close" aria-label="Close dialog">×</button>
         </div>
 
-        <label class="im-form-field full">
-          <span>Product Title / Description *</span>
-          <input type="text" id="add-title" required placeholder="e.g. Premium Noise Canceling Wireless Headphones">
-        </label>
+        <form id="im-new-item-form" class="im-add-modal-form">
+          <!-- Section 1: Basic Item Info -->
+          <section class="im-add-section">
+            <div class="im-add-sec-head">
+              <span class="im-add-badge">1</span>
+              <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              <div>
+                <h3 class="im-add-sec-title">Basic Item Info</h3>
+                <p class="im-add-sec-desc">Core identification details for this catalog item.</p>
+              </div>
+            </div>
+            <div class="im-add-grid-4">
+              <label class="im-add-field">
+                <span>Model # (Identifier) <b class="req">*</b></span>
+                <input type="text" id="add-model" required placeholder="e.g. WH-1000XM6">
+              </label>
+              <label class="im-add-field">
+                <span>Vendor Item #</span>
+                <input type="text" id="add-vendor-item" placeholder="e.g. VND-778899">
+              </label>
+              <label class="im-add-field">
+                <span>Brand <b class="req">*</b></span>
+                <select id="add-brand" required>
+                  ${existingBrandsHtml}
+                  <option value="__NEW__">+ Custom Brand...</option>
+                </select>
+                <input type="text" id="add-brand-custom" placeholder="Enter new brand name" style="display:none;margin-top:6px;">
+              </label>
+              <label class="im-add-field">
+                <span>UPC</span>
+                <input type="text" id="add-upc" placeholder="e.g. 027242923882">
+              </label>
+            </div>
+          </section>
 
-        <div class="im-form-row three">
-          <label class="im-form-field">
-            <span>Catalog Status *</span>
-            <select id="add-status">
-              <option value="Live">Live</option>
-              <option value="fashion">Fashion</option>
-              <option value="internal use">Internal Use</option>
-              <option value="presentation">Presentation</option>
-            </select>
-          </label>
-          <label class="im-form-field">
-            <span>Standard Price ($) *</span>
-            <input type="number" id="add-price" step="0.01" min="0" value="199.00" required>
-          </label>
-          <label class="im-form-field">
-            <span>Unit Cost ($)</span>
-            <input type="number" id="add-cost" step="0.01" min="0" value="120.00">
-          </label>
-        </div>
+          <!-- Section 2: Product Details -->
+          <section class="im-add-section">
+            <div class="im-add-sec-head">
+              <span class="im-add-badge">2</span>
+              <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              <div>
+                <h3 class="im-add-sec-title">Product Details</h3>
+                <p class="im-add-sec-desc">Provide the product title and detailed description.</p>
+              </div>
+            </div>
+            <div class="im-add-grid-split">
+              <label class="im-add-field">
+                <span>Product Title <b class="req">*</b></span>
+                <input type="text" id="add-title" required placeholder="e.g. WH-1000XM6 Premium Noise Canceling Wireless Headphones">
+              </label>
+              <label class="im-add-field">
+                <span>Catalog Status <b class="req">*</b></span>
+                <select id="add-status" required>
+                  <option value="Live" selected>Live</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="internal use">Internal Use</option>
+                  <option value="presentation">Presentation</option>
+                </select>
+              </label>
+            </div>
+            <label class="im-add-field" style="margin-top: 10px;">
+              <span>Description <b class="req">*</b></span>
+              <textarea id="add-desc" rows="3" required placeholder="e.g. Premium wireless noise canceling headphones with industry-leading sound quality, 30-hour battery life, and fast USB-C charging..."></textarea>
+            </label>
+          </section>
 
-        <div class="im-form-row three">
-          <label class="im-form-field">
-            <span>Available (ATS)</span>
-            <input type="number" id="add-ats" min="0" step="1" value="50">
-          </label>
-          <label class="im-form-field">
-            <span>On Order</span>
-            <input type="number" id="add-onorder" min="0" step="1" value="100">
-          </label>
-          <label class="im-form-field">
-            <span>PO Number</span>
-            <input type="text" id="add-ponum" value="PO-38550" placeholder="e.g. PO-38550">
-          </label>
-        </div>
-      </form>
+          <!-- Section 3: Features -->
+          <section class="im-add-section">
+            <div class="im-add-sec-head">
+              <span class="im-add-badge">3</span>
+              <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+              <div>
+                <h3 class="im-add-sec-title">Features</h3>
+                <p class="im-add-sec-desc">Enter key product features (up to 6).</p>
+              </div>
+            </div>
+            <div class="im-add-features-grid">
+              <div class="im-add-feat-item">
+                <span class="im-add-feat-lbl">Feature 1</span>
+                <input type="text" id="add-feat-1" placeholder="e.g. Active Noise Cancellation">
+              </div>
+              <div class="im-add-feat-item">
+                <span class="im-add-feat-lbl">Feature 4</span>
+                <input type="text" id="add-feat-4" placeholder="e.g. USB-C charging">
+              </div>
+              <div class="im-add-feat-item">
+                <span class="im-add-feat-lbl">Feature 2</span>
+                <input type="text" id="add-feat-2" placeholder="e.g. Bluetooth 5.3">
+              </div>
+              <div class="im-add-feat-item">
+                <span class="im-add-feat-lbl">Feature 5</span>
+                <input type="text" id="add-feat-5" placeholder="e.g. Lightweight and comfortable">
+              </div>
+              <div class="im-add-feat-item">
+                <span class="im-add-feat-lbl">Feature 3</span>
+                <input type="text" id="add-feat-3" placeholder="e.g. 30-hour battery life">
+              </div>
+              <div class="im-add-feat-item">
+                <span class="im-add-feat-lbl">Feature 6</span>
+                <input type="text" id="add-feat-6" placeholder="e.g. Built-in microphone">
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 4: Commercial Details -->
+          <section class="im-add-section">
+            <div class="im-add-sec-head">
+              <span class="im-add-badge">4</span>
+              <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+              <div>
+                <h3 class="im-add-sec-title">Commercial Details</h3>
+                <p class="im-add-sec-desc">Pricing, sourcing, and manufacturing information.</p>
+              </div>
+            </div>
+            <div class="im-add-grid-6">
+              <label class="im-add-field">
+                <span>Standard Price ($) <b class="req">*</b></span>
+                <input type="number" id="add-price" step="0.01" min="0" required placeholder="e.g. 199.00">
+              </label>
+              <label class="im-add-field">
+                <span>Unit Cost ($) <b class="req">*</b></span>
+                <input type="number" id="add-cost" step="0.01" min="0" required placeholder="e.g. 120.00">
+              </label>
+              <label class="im-add-field">
+                <span>Country of Origin <b class="req">*</b></span>
+                <select id="add-origin" required>
+                  <option value="China" selected>e.g. China</option>
+                  <option value="United States">United States</option>
+                  <option value="Vietnam">Vietnam</option>
+                  <option value="Taiwan">Taiwan</option>
+                  <option value="Japan">Japan</option>
+                  <option value="Mexico">Mexico</option>
+                  <option value="Germany">Germany</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+              <label class="im-add-field">
+                <span>HS Code <span class="im-info-tip" title="Harmonized System tariff code">ⓘ</span></span>
+                <input type="text" id="add-hscode" placeholder="e.g. 851830">
+              </label>
+              <label class="im-add-field">
+                <span>MOQ</span>
+                <input type="number" id="add-moq" min="1" step="1" placeholder="e.g. 100">
+              </label>
+              <label class="im-add-field">
+                <span>Lead Time</span>
+                <input type="text" id="add-leadtime" placeholder="e.g. 4-6 weeks">
+              </label>
+            </div>
+          </section>
+
+          <!-- Bottom Row: 5 Customer Feed & 6 Item Measurements -->
+          <div class="im-add-bottom-row">
+            <!-- Section 5: Customer Feed -->
+            <section class="im-add-section">
+              <div class="im-add-sec-head">
+                <span class="im-add-badge">5</span>
+                <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <div>
+                  <h3 class="im-add-sec-title">Customer Feed</h3>
+                  <p class="im-add-sec-desc">Select which customers will receive this item in their catalog feed.</p>
+                </div>
+              </div>
+              <div class="im-add-field">
+                <span>Select Customers to Feed This Item <b class="req">*</b></span>
+                <div class="im-add-tag-box" id="im-add-tag-box">
+                  <span class="im-add-tag" data-cust="Amazon">Amazon <span class="im-add-tag-remove">&times;</span></span>
+                  <span class="im-add-tag" data-cust="Best Buy">Best Buy <span class="im-add-tag-remove">&times;</span></span>
+                  <span class="im-add-tag" data-cust="Walmart">Walmart <span class="im-add-tag-remove">&times;</span></span>
+                  <span class="im-add-tag" data-cust="Target">Target <span class="im-add-tag-remove">&times;</span></span>
+                  <span class="im-add-tag-chevron">⌄</span>
+                </div>
+                <input type="text" class="im-add-tag-input" id="add-customer-feed" placeholder="e.g. Amazon, Best Buy, Walmart, Target (press Enter to add)...">
+              </div>
+            </section>
+
+            <!-- Section 6: Item Measurements -->
+            <section class="im-add-section">
+              <div class="im-add-sec-head">
+                <span class="im-add-badge">6</span>
+                <svg class="im-add-sec-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+                <div>
+                  <h3 class="im-add-sec-title">Item Measurements</h3>
+                  <p class="im-add-sec-desc">Physical dimensions and weight.</p>
+                </div>
+              </div>
+              <div class="im-add-measure-grid">
+                <label class="im-add-field">
+                  <span>Length</span>
+                  <input type="number" id="add-dim-l" step="0.1" placeholder="e.g. 7.3">
+                </label>
+                <label class="im-add-field">
+                  <span>Width</span>
+                  <input type="number" id="add-dim-w" step="0.1" placeholder="e.g. 6.8">
+                </label>
+                <label class="im-add-field">
+                  <span>Height</span>
+                  <input type="number" id="add-dim-h" step="0.1" placeholder="e.g. 3.2">
+                </label>
+                <label class="im-add-field">
+                  <span>Weight</span>
+                  <input type="number" id="add-dim-wt" step="0.01" placeholder="e.g. 0.25">
+                </label>
+                <label class="im-add-field">
+                  <span>Units</span>
+                  <select id="add-dim-units">
+                    <option value="in / lb (Imperial)" selected>in / lb (Imperial)</option>
+                    <option value="cm / kg (Metric)">cm / kg (Metric)</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+          </div>
+
+          <!-- Footer Buttons -->
+          <div class="im-add-modal-footer">
+            <button type="button" class="im-add-btn-cancel" id="im-add-btn-cancel">Cancel</button>
+            <button type="submit" class="im-add-btn-create" id="im-add-btn-create">Create Item</button>
+          </div>
+        </form>
+      </div>
     `;
 
-    window.StarkSystemUI.dialog('Add New Catalog Item to Master', body, () => {
-      const form = document.querySelector('#im-add-form');
-      if (!form.reportValidity()) return false;
+    document.body.appendChild(overlay);
 
-      const model = document.querySelector('#add-model').value.trim();
-      const brand = document.querySelector('#add-brand').value.trim();
-      const title = document.querySelector('#add-title').value.trim();
-      const status = document.querySelector('#add-status').value;
-      const price = Number(document.querySelector('#add-price').value) || 0;
-      const cost = Number(document.querySelector('#add-cost').value) || 0;
-      const ats = Number(document.querySelector('#add-ats').value) || 0;
-      const onOrder = Number(document.querySelector('#add-onorder').value) || 0;
-      const poNumber = document.querySelector('#add-ponum').value.trim() || 'PO: —';
+    const close = () => {
+      overlay.remove();
+      document.removeEventListener('keydown', handleKey);
+    };
 
-      if (!model || !brand || !title) {
-        notice('Please fill in all required fields.', true);
-        return false;
+    const handleKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('keydown', handleKey);
+
+    overlay.querySelector('#im-add-modal-close').onclick = close;
+    overlay.querySelector('#im-add-btn-cancel').onclick = close;
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+
+    // Brand custom input toggle
+    const brandSelect = overlay.querySelector('#add-brand');
+    const brandCustom = overlay.querySelector('#add-brand-custom');
+    brandSelect.onchange = () => {
+      if (brandSelect.value === '__NEW__') {
+        brandCustom.style.display = 'block';
+        brandCustom.required = true;
+        brandCustom.focus();
+      } else {
+        brandCustom.style.display = 'none';
+        brandCustom.required = false;
       }
+    };
+
+    // Customer feed tag removal & addition
+    const tagBox = overlay.querySelector('#im-add-tag-box');
+    const tagInput = overlay.querySelector('#add-customer-feed');
+
+    const bindTagRemoves = () => {
+      tagBox.querySelectorAll('.im-add-tag-remove').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          btn.closest('.im-add-tag')?.remove();
+        };
+      });
+    };
+    bindTagRemoves();
+
+    tagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = tagInput.value.trim();
+        if (val) {
+          const tag = document.createElement('span');
+          tag.className = 'im-add-tag';
+          tag.setAttribute('data-cust', val);
+          tag.innerHTML = `${esc(val)} <span class="im-add-tag-remove">&times;</span>`;
+          tagBox.insertBefore(tag, tagBox.querySelector('.im-add-tag-chevron'));
+          tagInput.value = '';
+          bindTagRemoves();
+        }
+      }
+    });
+
+    // Form submission
+    const form = overlay.querySelector('#im-new-item-form');
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const model = overlay.querySelector('#add-model').value.trim();
+      const vendorItem = overlay.querySelector('#add-vendor-item').value.trim() || 'VND-' + Math.floor(100000 + Math.random() * 900000);
+      let brand = brandSelect.value === '__NEW__' ? brandCustom.value.trim() : brandSelect.value.trim();
+      if (!brand) brand = 'Sony';
+      const upc = overlay.querySelector('#add-upc').value.trim() || '0' + Math.floor(10000000000 + Math.random() * 90000000000);
+      const title = overlay.querySelector('#add-title').value.trim();
+      const status = overlay.querySelector('#add-status').value;
+      const desc = overlay.querySelector('#add-desc').value.trim();
+
+      const features = [
+        overlay.querySelector('#add-feat-1').value.trim(),
+        overlay.querySelector('#add-feat-2').value.trim(),
+        overlay.querySelector('#add-feat-3').value.trim(),
+        overlay.querySelector('#add-feat-4').value.trim(),
+        overlay.querySelector('#add-feat-5').value.trim(),
+        overlay.querySelector('#add-feat-6').value.trim()
+      ].filter(Boolean);
+
+      const price = Number(overlay.querySelector('#add-price').value) || 199.00;
+      const cost = Number(overlay.querySelector('#add-cost').value) || 120.00;
+      const origin = overlay.querySelector('#add-origin').value;
+      const hsCode = overlay.querySelector('#add-hscode').value.trim() || '851830';
+      const moq = Number(overlay.querySelector('#add-moq').value) || 100;
+      const leadTime = overlay.querySelector('#add-leadtime').value.trim() || '4-6 weeks';
+
+      const customerFeeds = [...tagBox.querySelectorAll('.im-add-tag')].map(t => t.getAttribute('data-cust') || t.textContent.replace('×', '').trim());
+
+      const measurements = {
+        length: Number(overlay.querySelector('#add-dim-l').value) || 7.3,
+        width: Number(overlay.querySelector('#add-dim-w').value) || 6.8,
+        height: Number(overlay.querySelector('#add-dim-h').value) || 3.2,
+        weight: Number(overlay.querySelector('#add-dim-wt').value) || 0.25,
+        units: overlay.querySelector('#add-dim-units').value
+      };
 
       const sku = (brand.toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + model.toUpperCase().replace(/[^A-Z0-9]/g, '')).slice(0, 18);
       const items = getItemMasterRecords();
-      items.unshift({
+
+      const newItem = {
         sku,
         model,
+        vendorItem,
         brand,
+        upc,
         title,
+        description: desc,
+        status,
         standardPrice: price,
         cost,
-        status,
-        tags: ['General'],
-        onOrder,
-        poNumber,
+        countryOfOrigin: origin,
+        hsCode,
+        moq,
+        leadTime,
+        customerFeeds,
+        measurements,
+        features,
+        tags: [brand, 'Catalog'],
+        onOrder: 100,
+        poNumber: 'PO-' + Math.floor(38000 + Math.random() * 900),
         onHold: 0,
-        totalATS: ats,
+        totalATS: 50,
         uploadedAt: new Date().toISOString(),
-        uploadSource: 'Manual Item Entry',
+        uploadSource: 'Manual Entry',
         warehouses: [
-          { name: 'Sarasota DC', ats: Math.round(ats * 0.7) },
-          { name: 'Demo_3PL', ats: Math.round(ats * 0.2) },
-          { name: 'TX DC', ats: Math.max(0, ats - Math.round(ats * 0.7) - Math.round(ats * 0.2)) }
+          { name: 'Sarasota DC', ats: 30 },
+          { name: 'Demo_3PL', ats: 15 },
+          { name: 'TX DC', ats: 5 }
         ]
-      });
+      };
 
+      items.unshift(newItem);
       saveCatalog(items);
-      notice(`Item ${model} (${brand}) added to Item Master.`);
+      close();
+      notice(`Item ${model} (${brand}) added to master catalog successfully.`);
       render();
-      return true;
-    }, 'Create Item', { system: true });
+    };
   }
 
   function openEditItemModal(item) {
@@ -2066,7 +2367,7 @@
 
     // Add item button
     const addBtn = document.querySelector('#im-btn-add');
-    if (addBtn) addBtn.onclick = openAddItemModal;
+    if (addBtn) addBtn.onclick = () => { window.location.href = 'add-item.html'; };
 
     // ATS Upload button
     const atsUploadBtn = document.querySelector('#im-btn-ats-upload');
@@ -2097,6 +2398,14 @@
 
   // Initialization & URL action trigger
   document.addEventListener('DOMContentLoaded', () => {
+    try {
+      const toastMsg = sessionStorage.getItem('stark-toast-msg');
+      if (toastMsg) {
+        sessionStorage.removeItem('stark-toast-msg');
+        setTimeout(() => notice(toastMsg), 250);
+      }
+    } catch (err) {}
+
     render();
 
     // NEVER auto-open any action modal on page refresh / reload
