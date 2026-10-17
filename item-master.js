@@ -16,6 +16,7 @@
       d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   }
 
+  // State & Filter Variables
   const params = new URLSearchParams(location.search);
   let query = params.get('search') || '';
   let selectedBrand = params.get('brand') || 'all';
@@ -25,7 +26,8 @@
   let maxPrice = params.get('maxPrice') || '';
   let priceTier = params.get('tier') || 'all';
   let sortBy = params.get('sort') || 'model-asc';
-  let viewMode = params.get('view') || 'table';
+  let viewMode = params.get('view') || 'cards'; // Default to 5-column grid view matching screenshot
+  let activeMenuSku = null;
 
   function notice(message, error = false) {
     if (window.StarkSystemUI?.notice) {
@@ -39,108 +41,755 @@
     }
   }
 
+  // =========================================================================
+  // HIGH-FIDELITY VECTOR PRODUCT ILLUSTRATIONS
+  // Crisp, retina-ready, 100% offline, 0ms load time
+  // =========================================================================
+  const productSVGs = {
+    // 1. Sony WH-1000XM5 (Black modern wireless over-ear headphones)
+    'SONY-1000XM5': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="sonyCupGrad" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#2d3748"/>
+          <stop offset="100%" stop-color="#0f172a"/>
+        </radialGradient>
+      </defs>
+      <!-- Headband Arc -->
+      <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+      <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+      <!-- Sliders -->
+      <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+      <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+      <!-- Left Ear Cup (Angled) -->
+      <g transform="translate(25, 68) rotate(6)">
+        <ellipse cx="14" cy="24" rx="14" ry="24" fill="url(#sonyCupGrad)" stroke="#0f172a" stroke-width="2"/>
+        <ellipse cx="17" cy="24" rx="9" ry="18" fill="#1e293b"/>
+        <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+      </g>
+      <!-- Right Ear Cup (Angled) -->
+      <g transform="translate(107, 70) rotate(-6)">
+        <ellipse cx="14" cy="24" rx="14" ry="24" fill="url(#sonyCupGrad)" stroke="#0f172a" stroke-width="2"/>
+        <ellipse cx="11" cy="24" rx="9" ry="18" fill="#1e293b"/>
+        <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+      </g>
+    </svg>`,
+
+    // 2. New Balance 550 (Cream/white vintage basketball low-top)
+    'NB-550': `<svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Outsole Shadow -->
+      <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
+      <!-- Outsole & Midsole -->
+      <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+      <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+      <!-- Upper Panels (Cream Leather) -->
+      <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
+      <!-- Heel Counter & Collar -->
+      <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
+      <!-- Perforations Toe -->
+      <circle cx="44" cy="81" r="1" fill="#cbd5e1"/>
+      <circle cx="48" cy="80" r="1" fill="#cbd5e1"/>
+      <circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
+      <!-- Signature 'N' Logo -->
+      <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
+      <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
+      <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
+      <!-- Laces -->
+      <line x1="72" y1="74" x2="84" y2="72" stroke="#e2d9cc" stroke-width="2"/>
+      <line x1="76" y1="70" x2="88" y2="68" stroke="#e2d9cc" stroke-width="2"/>
+    </svg>`,
+
+    // 3. YETI Rambler 40oz (Cream/sand insulated tumbler with straw)
+    'YETI-40': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="yetiBody" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f5efe6"/>
+          <stop offset="50%" stop-color="#faf7f2"/>
+          <stop offset="100%" stop-color="#e8dfd1"/>
+        </linearGradient>
+      </defs>
+      <!-- Straw -->
+      <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+      <!-- Lid & Clear Cap -->
+      <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
+      <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
+      <!-- Stainless Steel Rim -->
+      <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
+      <!-- Tumbler Body (Tapered) -->
+      <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="url(#yetiBody)" stroke="#d6cbbe" stroke-width="1.5"/>
+      <!-- Handle -->
+      <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <!-- Bottom Base Plate -->
+      <rect x="71" y="122" width="18" height="4" rx="1" fill="#94a3b8"/>
+    </svg>`,
+
+    // 4. Bose SoundLink Flex (Black pill speaker)
+    'BOSE-FLEX': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Speaker Body (Rounded Pill) -->
+      <rect x="30" y="46" width="96" height="46" rx="23" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <!-- Speaker Grille Area -->
+      <rect x="42" y="52" width="72" height="34" rx="17" fill="#0f172a"/>
+      <!-- Grille Dots Pattern -->
+      <g fill="#475569">
+        <circle cx="56" cy="62" r="1.5"/><circle cx="64" cy="62" r="1.5"/><circle cx="72" cy="62" r="1.5"/><circle cx="80" cy="62" r="1.5"/><circle cx="88" cy="62" r="1.5"/><circle cx="96" cy="62" r="1.5"/><circle cx="104" cy="62" r="1.5"/>
+        <circle cx="52" cy="69" r="1.5"/><circle cx="60" cy="69" r="1.5"/><circle cx="68" cy="69" r="1.5"/><circle cx="76" cy="69" r="1.5"/><circle cx="84" cy="69" r="1.5"/><circle cx="92" cy="69" r="1.5"/><circle cx="100" cy="69" r="1.5"/><circle cx="108" cy="69" r="1.5"/>
+        <circle cx="56" cy="76" r="1.5"/><circle cx="64" cy="76" r="1.5"/><circle cx="72" cy="76" r="1.5"/><circle cx="80" cy="76" r="1.5"/><circle cx="88" cy="76" r="1.5"/><circle cx="96" cy="76" r="1.5"/><circle cx="104" cy="76" r="1.5"/>
+      </g>
+      <!-- Utility Loop -->
+      <path d="M125 61 C134 61, 134 77, 125 77" stroke="#475569" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- Bose Logo Text Accent -->
+      <rect x="72" y="68" width="16" height="3" rx="1" fill="#e2e8f0"/>
+    </svg>`,
+
+    // 5. Ray-Ban Wayfarer (Black classic sunglasses)
+    'RB-2140': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Left Temple Arm Behind -->
+      <path d="M34 62 L18 52" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+      <!-- Right Temple Arm Behind -->
+      <path d="M126 62 L142 52" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+      <!-- Acetate Frame -->
+      <path d="M26 60 C32 58, 66 56, 74 62 C76 64, 84 64, 86 62 C94 56, 128 58, 134 60 C138 66, 132 88, 114 90 C96 92, 92 78, 88 78 C84 78, 80 92, 62 90 C44 88, 22 66, 26 60 Z" fill="#0f172a"/>
+      <!-- Left Dark Lens with Glare -->
+      <path d="M34 63 C40 62, 66 61, 71 65 C72 73, 68 85, 57 85 C43 85, 32 75, 34 63 Z" fill="#092825"/>
+      <path d="M40 65 L48 82" stroke="#14b8a6" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+      <!-- Right Dark Lens with Glare -->
+      <path d="M89 65 C94 61, 120 62, 126 63 C128 75, 117 85, 103 85 C92 85, 88 73, 89 65 Z" fill="#092825"/>
+      <path d="M96 65 L104 82" stroke="#14b8a6" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+      <!-- Silver Corner Rivets -->
+      <ellipse cx="29" cy="62" rx="1.5" ry="1" fill="#e2e8f0"/>
+      <ellipse cx="131" cy="62" rx="1.5" ry="1" fill="#e2e8f0"/>
+    </svg>`,
+
+    // 6. Apple AirPods Pro 2 (White earbuds & case)
+    'AP-PRO2': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="appleCaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#e2e8f0"/>
+        </linearGradient>
+      </defs>
+      <!-- Open Charging Case Body -->
+      <rect x="52" y="66" width="56" height="48" rx="20" fill="url(#appleCaseGrad)" stroke="#cbd5e1" stroke-width="1.5"/>
+      <!-- LED Status Indicator -->
+      <circle cx="80" cy="84" r="2" fill="#10b981"/>
+      <!-- Open Lid Back Cavity -->
+      <path d="M54 66 C54 52, 106 52, 106 66 Z" fill="#cbd5e1"/>
+      <!-- Left AirPod Earbud Protruding -->
+      <g transform="translate(62, 42)">
+        <ellipse cx="8" cy="12" rx="7" ry="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="6" y="18" width="4" height="18" rx="2" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <ellipse cx="4" cy="10" rx="3" ry="5" fill="#f1f5f9"/>
+        <circle cx="8" cy="8" r="1.5" fill="#475569"/>
+      </g>
+      <!-- Right AirPod Earbud Protruding -->
+      <g transform="translate(84, 42)">
+        <ellipse cx="6" cy="12" rx="7" ry="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="4" y="18" width="4" height="18" rx="2" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <ellipse cx="10" cy="10" rx="3" ry="5" fill="#f1f5f9"/>
+        <circle cx="6" cy="8" r="1.5" fill="#475569"/>
+      </g>
+    </svg>`,
+
+    // 7. Stanley Quencher 40oz (Sage green tumbler with handle)
+    'STAN-40': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="stanBody" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#557564"/>
+          <stop offset="50%" stop-color="#698b77"/>
+          <stop offset="100%" stop-color="#476353"/>
+        </linearGradient>
+      </defs>
+      <!-- Straw -->
+      <rect x="78" y="12" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+      <!-- Lid & Rim -->
+      <rect x="58" y="36" width="44" height="6" rx="2" fill="#d1d5db"/>
+      <rect x="60" y="42" width="40" height="4" fill="#9ca3af"/>
+      <!-- Body (Stanley Shape) -->
+      <path d="M61 46 L99 46 L95 86 L91 86 L88 122 L72 122 L69 86 L65 86 Z" fill="url(#stanBody)" stroke="#3f5849" stroke-width="1.5"/>
+      <!-- Ergonomic Handle (Left-Side) -->
+      <path d="M60 52 C44 52, 44 86, 64 88" stroke="#476353" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M60 52 C44 52, 44 86, 64 88" stroke="#e5e7eb" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      <!-- Base Plate -->
+      <rect x="72" y="122" width="16" height="4" rx="1" fill="#9ca3af"/>
+    </svg>`,
+
+    // 8. Nike Brasilia Backpack (Black backpack with white swoosh)
+    'NK-BRAS': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Shoulder Straps Behind -->
+      <path d="M50 36 C42 48, 40 92, 46 112" stroke="#334155" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M110 36 C118 48, 120 92, 114 112" stroke="#334155" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <!-- Main Backpack Body -->
+      <path d="M52 42 C52 28, 108 28, 108 42 L112 110 C112 116, 106 120, 100 120 L60 120 C54 120, 48 116, 48 110 Z" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+      <!-- Front Pocket -->
+      <path d="M54 78 C54 72, 106 72, 106 78 L108 114 C108 118, 104 120, 98 120 L62 120 C56 120, 52 118, 52 114 Z" fill="#1e293b"/>
+      <!-- Zipper Track -->
+      <path d="M55 76 C55 74, 105 74, 105 76" stroke="#475569" stroke-width="2"/>
+      <!-- White Nike Swoosh Logo -->
+      <path d="M66 94 C76 96, 92 88, 98 80 C95 86, 85 99, 72 99 C66 99, 63 96, 66 94 Z" fill="#ffffff"/>
+      <!-- Top Carry Handle Loop -->
+      <path d="M72 30 C72 24, 88 24, 88 30" stroke="#475569" stroke-width="3" fill="none"/>
+    </svg>`,
+
+    // 9. Kendra Scott Elisa (Gold necklace with iridescent oval pendant)
+    'KS-ELISA': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="ksStoneGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="40%" stop-color="#fef08a"/>
+          <stop offset="70%" stop-color="#a7f3d0"/>
+          <stop offset="100%" stop-color="#fbcfe8"/>
+        </radialGradient>
+      </defs>
+      <!-- Draped Delicate Gold Chain -->
+      <path d="M42 24 C44 68, 62 94, 80 94 C98 94, 116 68, 118 24" stroke="#d97706" stroke-width="1.8" stroke-dasharray="3 1.5" fill="none"/>
+      <!-- Pendant Setting (Gold Border with Filigree) -->
+      <ellipse cx="80" cy="94" rx="16" ry="10" fill="#b45309" stroke="#f59e0b" stroke-width="2"/>
+      <ellipse cx="80" cy="94" rx="13" ry="7.5" fill="url(#ksStoneGrad)"/>
+      <!-- Subtle Stone Facet Shimmer -->
+      <path d="M74 92 L86 92 M76 95 L84 95" stroke="#ffffff" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+    </svg>`,
+
+    // 10. Bogg Bag Original (Sky blue perforated EVA tote)
+    'BOGG-ORIG': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- White Arch Handles -->
+      <path d="M58 72 C58 24, 102 24, 102 72" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M58 72 C58 24, 102 24, 102 72" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <!-- Bag Body (Sky Blue EVA Foam) -->
+      <path d="M42 56 L118 56 L114 114 C114 118, 110 120, 106 120 L54 120 C50 120, 46 118, 46 114 Z" fill="#7dd3fc" stroke="#38bdf8" stroke-width="2"/>
+      <!-- Perforations Grid (Bogg signature holes) -->
+      <g fill="#0284c7" opacity="0.7">
+        <ellipse cx="54" cy="68" rx="2.5" ry="3.5"/><ellipse cx="64" cy="68" rx="2.5" ry="3.5"/><ellipse cx="74" cy="68" rx="2.5" ry="3.5"/><ellipse cx="84" cy="68" rx="2.5" ry="3.5"/><ellipse cx="94" cy="68" rx="2.5" ry="3.5"/><ellipse cx="104" cy="68" rx="2.5" ry="3.5"/>
+        <ellipse cx="54" cy="80" rx="2.5" ry="3.5"/><ellipse cx="64" cy="80" rx="2.5" ry="3.5"/><ellipse cx="74" cy="80" rx="2.5" ry="3.5"/><ellipse cx="84" cy="80" rx="2.5" ry="3.5"/><ellipse cx="94" cy="80" rx="2.5" ry="3.5"/><ellipse cx="104" cy="80" rx="2.5" ry="3.5"/>
+        <ellipse cx="54" cy="92" rx="2.5" ry="3.5"/><ellipse cx="64" cy="92" rx="2.5" ry="3.5"/><ellipse cx="74" cy="92" rx="2.5" ry="3.5"/><ellipse cx="84" cy="92" rx="2.5" ry="3.5"/><ellipse cx="94" cy="92" rx="2.5" ry="3.5"/><ellipse cx="104" cy="92" rx="2.5" ry="3.5"/>
+        <ellipse cx="54" cy="104" rx="2.5" ry="3.5"/><ellipse cx="64" cy="104" rx="2.5" ry="3.5"/><ellipse cx="74" cy="104" rx="2.5" ry="3.5"/><ellipse cx="84" cy="104" rx="2.5" ry="3.5"/><ellipse cx="94" cy="104" rx="2.5" ry="3.5"/><ellipse cx="104" cy="104" rx="2.5" ry="3.5"/>
+      </g>
+      <!-- Handle Snap Rivets -->
+      <circle cx="58" cy="72" r="3.5" fill="#ffffff" stroke="#38bdf8" stroke-width="1.5"/>
+      <circle cx="102" cy="72" r="3.5" fill="#ffffff" stroke="#38bdf8" stroke-width="1.5"/>
+    </svg>`,
+
+    // 11. Solo Stove Bonfire 2.0 (Stainless fire pit)
+    'SOLO-BON2': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="soloSteel" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#94a3b8"/>
+          <stop offset="45%" stop-color="#f8fafc"/>
+          <stop offset="100%" stop-color="#64748b"/>
+        </linearGradient>
+      </defs>
+      <!-- Top Ring -->
+      <ellipse cx="80" cy="52" rx="36" ry="9" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
+      <ellipse cx="80" cy="52" rx="26" ry="6" fill="#1e293b"/>
+      <!-- Drum Cylinder -->
+      <path d="M44 52 L116 52 L116 106 C116 112, 44 112, 44 106 Z" fill="url(#soloSteel)" stroke="#475569" stroke-width="1.5"/>
+      <!-- Lower Vent Puncture Holes -->
+      <g fill="#1e293b">
+        <circle cx="52" cy="100" r="2"/><circle cx="60" cy="101" r="2"/><circle cx="68" cy="102" r="2"/><circle cx="76" cy="102.5" r="2"/><circle cx="84" cy="102.5" r="2"/><circle cx="92" cy="102" r="2"/><circle cx="100" cy="101" r="2"/><circle cx="108" cy="100" r="2"/>
+      </g>
+      <!-- Base Stand Ring -->
+      <ellipse cx="80" cy="110" rx="34" ry="7" fill="none" stroke="#64748b" stroke-width="2"/>
+    </svg>`,
+
+    // 12. Dyson Supersonic (Futuristic hair dryer)
+    'DYS-SONIC': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Handle (Iron Grey) -->
+      <rect x="73" y="64" width="14" height="54" rx="7" fill="#475569" stroke="#334155" stroke-width="1.5"/>
+      <!-- Cord Bushing -->
+      <rect x="77" y="118" width="6" height="8" rx="2" fill="#1e293b"/>
+      <!-- Circular Hollow Head Cylinder -->
+      <rect x="52" y="38" width="46" height="28" rx="6" fill="#64748b"/>
+      <!-- Fuchsia Ring Face Accent -->
+      <ellipse cx="52" cy="52" rx="4" ry="14" fill="#d946ef" stroke="#c026d3" stroke-width="1.5"/>
+      <!-- Hollow Center Aperture -->
+      <ellipse cx="52" cy="52" rx="1.5" ry="6" fill="#1e293b"/>
+      <!-- Rear Cap (Fuchsia Border) -->
+      <ellipse cx="98" cy="52" rx="4" ry="14" fill="#d946ef"/>
+      <ellipse cx="98" cy="52" rx="2.5" ry="11" fill="#475569"/>
+    </svg>`,
+
+    // 13. Garmin Forerunner 265 (GPS Sports smartwatch)
+    'GAR-FR265': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Silicone Strap (Top & Bottom) -->
+      <path d="M68 20 L92 20 L90 50 L70 50 Z" fill="#1e293b"/>
+      <path d="M70 90 L90 90 L92 124 L68 124 Z" fill="#1e293b"/>
+      <!-- Watch Case (Circular Black Bezel) -->
+      <circle cx="80" cy="70" r="28" fill="#0f172a" stroke="#334155" stroke-width="2.5"/>
+      <!-- Screen (Vibrant Display) -->
+      <circle cx="80" cy="70" r="23" fill="#090d16"/>
+      <!-- UI Heart Rate & Pace Ring Indicator -->
+      <circle cx="80" cy="70" r="20" stroke="#06b6d4" stroke-width="2" stroke-dasharray="80 30" fill="none"/>
+      <text x="80" y="74" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="700" font-family="system-ui,sans-serif">10:24</text>
+      <!-- Buttons -->
+      <rect x="49" y="60" width="3" height="7" rx="1" fill="#64748b"/>
+      <rect x="49" y="74" width="3" height="7" rx="1" fill="#64748b"/>
+      <rect x="108" y="64" width="3" height="9" rx="1" fill="#06b6d4"/>
+    </svg>`,
+
+    // 14. Theragun Prime (Ergonomic percussive massager)
+    'THERA-PRM': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Patented Triangle Loop Body -->
+      <path d="M64 42 C74 34, 102 34, 114 46 C124 58, 116 88, 104 96 L76 96 C64 96, 52 82, 54 68 Z" fill="#0f172a" stroke="#1e293b" stroke-width="3"/>
+      <!-- Center Ergonomic Grip Cutout -->
+      <path d="M78 54 C82 50, 96 50, 100 56 C104 62, 100 78, 94 82 L84 82 C78 82, 74 74, 76 66 Z" fill="#ffffff"/>
+      <!-- Percussive Arm & Attachment -->
+      <rect x="38" y="74" width="22" height="10" rx="3" fill="#334155"/>
+      <circle cx="34" cy="79" r="9" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+    </svg>`,
+
+    // 15. FieldBar Cooler (Luxury hard cooler trunk)
+    'FB-COOLER': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Leather Top Handle -->
+      <path d="M64 46 C64 30, 96 30, 96 46" stroke="#b45309" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+      <!-- Cooler Body (Sage Green Trunk) -->
+      <rect x="46" y="52" width="68" height="62" rx="8" fill="#a7f3d0" stroke="#059669" stroke-width="2"/>
+      <!-- Lid Seam -->
+      <line x1="46" y1="68" x2="114" y2="68" stroke="#047857" stroke-width="2"/>
+      <!-- Chrome Front Center Latch -->
+      <rect x="76" y="62" width="8" height="14" rx="2" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+      <circle cx="80" cy="69" r="1.5" fill="#475569"/>
+    </svg>`,
+
+    // 16. Aura Carver Frame (Digital photo frame)
+    'AURA-CRV': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="auraScreen" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#38bdf8"/>
+          <stop offset="60%" stop-color="#f472b6"/>
+          <stop offset="100%" stop-color="#fbbf24"/>
+        </linearGradient>
+      </defs>
+      <!-- Charcoal Textured Outer Frame -->
+      <rect x="34" y="38" width="92" height="68" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <!-- White Matting Border -->
+      <rect x="44" y="46" width="72" height="52" rx="2" fill="#f8fafc"/>
+      <!-- High-Res Display Photo Preview -->
+      <rect x="50" y="52" width="60" height="40" fill="url(#auraScreen)"/>
+      <!-- Mountain Silhouette in Photo -->
+      <polygon points="50,92 68,76 80,86 94,70 110,92" fill="#0f172a" opacity="0.6"/>
+    </svg>`,
+
+    // 17. OluKai Ohana Sandal (Brown leather-look flip flop)
+    'OLU-OHANA': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Anatomical Footbed (Dark Brown) -->
+      <path d="M60 40 C60 26, 92 26, 96 46 C98 64, 94 96, 92 114 C90 120, 66 120, 64 114 C62 96, 60 62, 60 40 Z" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+      <!-- Laser-Etched Island Wave Logo -->
+      <path d="M74 100 C76 96, 82 96, 84 100" stroke="#b45309" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <!-- Synthetic Leather Straps -->
+      <path d="M62 68 C72 62, 77 48, 77 44" stroke="#92400e" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M94 68 C84 62, 79 48, 79 44" stroke="#92400e" stroke-width="4.5" stroke-linecap="round"/>
+      <!-- Toe Post -->
+      <circle cx="78" cy="44" r="2.5" fill="#451a03"/>
+    </svg>`,
+
+    // 18. Lululemon Everywhere Belt Bag (Black crossbody waist bag)
+    'LULU-EBB': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Nylon Webbing Strap Behind -->
+      <path d="M30 64 L50 66 M110 66 L130 64" stroke="#334155" stroke-width="6" stroke-linecap="round"/>
+      <!-- Bag Body (Rounded Water-Repellent Nylon) -->
+      <rect x="46" y="52" width="68" height="42" rx="10" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+      <!-- Curved Top Zipper with Silver Pull -->
+      <path d="M52 60 C66 58, 94 58, 108 60" stroke="#475569" stroke-width="2"/>
+      <circle cx="56" cy="60" r="2" fill="#cbd5e1"/>
+      <!-- Metallic Lululemon Logo Disc -->
+      <circle cx="104" cy="84" r="3" fill="#cbd5e1" stroke="#94a3b8" stroke-width="0.8"/>
+    </svg>`,
+
+    // 19. Audio-Technica ATH-M50x (Professional studio headphones)
+    'ATH-M50X': `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Headband Arc -->
+      <path d="M42 74 C42 28, 118 28, 118 74" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+      <!-- Textured Ribbed Headband Cushion -->
+      <path d="M54 48 C54 36, 106 36, 106 48" stroke="#334155" stroke-width="5" stroke-linecap="round"/>
+      <!-- Swivel Gimbals with Silver Rings -->
+      <circle cx="38" cy="84" r="17" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+      <circle cx="38" cy="84" r="9" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+      <circle cx="122" cy="84" r="17" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+      <circle cx="122" cy="84" r="9" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+    </svg>`
+  };
+
+  // Generic fallback SVG for any newly created items
+  const fallbackProductSVG = `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="45" y="38" width="70" height="64" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+    <path d="M60 70 L72 58 L85 72 L95 62 L105 76" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="68" cy="52" r="4" fill="#cbd5e1"/>
+  </svg>`;
+
+  // =========================================================================
+  // ENTERPRISE MASTER CATALOG (19 PRODUCTS MATCHING SCREENSHOT)
+  // =========================================================================
+  const defaultMasterCatalog = [
+    {
+      sku: 'SONY-1000XM5',
+      model: 'WH-1000XM5',
+      brand: 'Sony',
+      title: 'Sony WH-1000XM5',
+      standardPrice: 349.00,
+      cost: 278.00,
+      status: 'Live',
+      tags: ['Electronics', 'Audio'],
+      totalATS: 24,
+      uploadedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+      uploadSource: 'Brand Feed · Sony EDI ATS',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 18, highlight: true },
+        { name: 'DEMO_3PL', ats: 6 },
+        { name: 'NY DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'NB-550',
+      model: 'NB-550',
+      brand: 'New Balance',
+      title: 'New Balance 550',
+      standardPrice: 110.00,
+      cost: 65.00,
+      status: 'Live',
+      tags: ['Footwear', 'Fashion'],
+      totalATS: 86,
+      uploadedAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+      uploadSource: 'Brand Feed · New Balance B2B',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 60, highlight: true },
+        { name: 'DEMO_3PL', ats: 24 },
+        { name: 'TX DC', ats: 2 }
+      ]
+    },
+    {
+      sku: 'YETI-40',
+      model: 'TMBLR-40',
+      brand: 'YETI',
+      title: 'YETI Rambler 40oz',
+      standardPrice: 45.00,
+      cost: 24.00,
+      status: 'Live',
+      tags: ['Drinkware', 'Lifestyle'],
+      totalATS: 142,
+      uploadedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+      uploadSource: 'Brand Feed · YETI Direct Stock',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 120, highlight: true },
+        { name: 'FL DC', ats: 22 },
+        { name: 'DEMO_3PL', ats: 0 }
+      ]
+    },
+    {
+      sku: 'BOSE-FLEX',
+      model: 'SL-FLEX',
+      brand: 'Bose',
+      title: 'Bose SoundLink Flex',
+      standardPrice: 129.00,
+      cost: 82.00,
+      status: 'Live',
+      tags: ['Electronics', 'Audio'],
+      totalATS: 56,
+      uploadedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+      uploadSource: 'Brand Feed · Bose Partner Portal',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 40, highlight: true },
+        { name: 'DEMO_3PL', ats: 12 },
+        { name: 'CA DC', ats: 4 }
+      ]
+    },
+    {
+      sku: 'RB-2140',
+      model: 'RB-2140',
+      brand: 'Ray-Ban',
+      title: 'Ray-Ban Wayfarer',
+      standardPrice: 155.00,
+      cost: 88.00,
+      status: 'Internal Use',
+      tags: ['Accessories', 'Fashion'],
+      totalATS: 12,
+      uploadedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+      uploadSource: 'Luxottica Master Price & ATS',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 8, highlight: true },
+        { name: 'NY DC', ats: 4 },
+        { name: 'DEMO_3PL', ats: 0 }
+      ]
+    },
+    {
+      sku: 'AP-PRO2',
+      model: 'AP-PRO2',
+      brand: 'Apple',
+      title: 'Apple AirPods Pro 2',
+      standardPrice: 249.00,
+      cost: 185.00,
+      status: 'Live',
+      tags: ['Electronics', 'Audio'],
+      totalATS: 62,
+      uploadedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+      uploadSource: 'Apple B2B Direct Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 40, highlight: true },
+        { name: 'DEMO_3PL', ats: 20 },
+        { name: 'TX DC', ats: 2 }
+      ]
+    },
+    {
+      sku: 'STAN-40',
+      model: 'STAN-40',
+      brand: 'Stanley',
+      title: 'Stanley Quencher 40oz',
+      standardPrice: 45.00,
+      cost: 22.00,
+      status: 'Presentation',
+      tags: ['Drinkware', 'Lifestyle'],
+      totalATS: 0,
+      uploadedAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+      uploadSource: 'PMI Worldwide Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 0 },
+        { name: 'DEMO_3PL', ats: 0 },
+        { name: 'FL DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'NK-BRAS',
+      model: 'NK-BRAS',
+      brand: 'Nike',
+      title: 'Nike Brasilia Backpack',
+      standardPrice: 60.00,
+      cost: 32.00,
+      status: 'Live',
+      tags: ['Bags', 'Sports'],
+      totalATS: 48,
+      uploadedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+      uploadSource: 'Nike Equipment Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 36, highlight: true },
+        { name: 'DEMO_3PL', ats: 12 },
+        { name: 'CA DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'KS-ELISA',
+      model: 'KS-ELISA',
+      brand: 'Kendra Scott',
+      title: 'Kendra Scott Elisa',
+      standardPrice: 98.00,
+      cost: 48.00,
+      status: 'Internal Use',
+      tags: ['Jewelry', 'Fashion'],
+      totalATS: 28,
+      uploadedAt: new Date(Date.now() - 3600000 * 14).toISOString(),
+      uploadSource: 'Kendra Scott Wholesale Desk',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 20, highlight: true },
+        { name: 'DEMO_3PL', ats: 8 },
+        { name: 'NY DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'BOGG-ORIG',
+      model: 'BOGG-ORIG',
+      brand: 'Bogg Bag',
+      title: 'Bogg Bag Original',
+      standardPrice: 90.00,
+      cost: 45.00,
+      status: 'Live',
+      tags: ['Accessories', 'Lifestyle'],
+      totalATS: 104,
+      uploadedAt: new Date(Date.now() - 3600000 * 7).toISOString(),
+      uploadSource: 'Bogg Direct Brand Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 80, highlight: true },
+        { name: 'DEMO_3PL', ats: 24 },
+        { name: 'FL DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'SOLO-BON2',
+      model: 'SOLO-BON2',
+      brand: 'Solo Stove',
+      title: 'Solo Stove Bonfire 2.0',
+      standardPrice: 299.00,
+      cost: 195.00,
+      status: 'Live',
+      tags: ['Outdoors', 'Lifestyle'],
+      totalATS: 32,
+      uploadedAt: new Date(Date.now() - 3600000 * 10).toISOString(),
+      uploadSource: 'Solo Stove EDI Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 24, highlight: true },
+        { name: 'DEMO_3PL', ats: 8 },
+        { name: 'TX DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'DYS-SONIC',
+      model: 'DYS-SONIC',
+      brand: 'Dyson',
+      title: 'Dyson Supersonic',
+      standardPrice: 429.00,
+      cost: 310.00,
+      status: 'Live',
+      tags: ['Beauty', 'Appliances'],
+      totalATS: 18,
+      uploadedAt: new Date(Date.now() - 3600000 * 16).toISOString(),
+      uploadSource: 'Dyson Commercial Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 12, highlight: true },
+        { name: 'DEMO_3PL', ats: 6 },
+        { name: 'NY DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'GAR-FR265',
+      model: 'GAR-FR265',
+      brand: 'Garmin',
+      title: 'Garmin Forerunner 265',
+      standardPrice: 449.00,
+      cost: 320.00,
+      status: 'Live',
+      tags: ['Fitness', 'Electronics'],
+      totalATS: 22,
+      uploadedAt: new Date(Date.now() - 3600000 * 9).toISOString(),
+      uploadSource: 'Garmin Direct Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 16, highlight: true },
+        { name: 'DEMO_3PL', ats: 6 },
+        { name: 'CA DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'THERA-PRM',
+      model: 'THERA-PRM',
+      brand: 'Therabody',
+      title: 'Theragun Prime',
+      standardPrice: 299.00,
+      cost: 205.00,
+      status: 'Live',
+      tags: ['Wellness', 'Electronics'],
+      totalATS: 35,
+      uploadedAt: new Date(Date.now() - 3600000 * 11).toISOString(),
+      uploadSource: 'Therabody Partner Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 25, highlight: true },
+        { name: 'DEMO_3PL', ats: 10 },
+        { name: 'FL DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'FB-COOLER',
+      model: 'FB-COOLER',
+      brand: 'FieldBar',
+      title: 'FieldBar Cooler',
+      standardPrice: 219.00,
+      cost: 140.00,
+      status: 'Live',
+      tags: ['Outdoor', 'Lifestyle'],
+      totalATS: 40,
+      uploadedAt: new Date(Date.now() - 3600000 * 15).toISOString(),
+      uploadSource: 'FieldBar Brand Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 30, highlight: true },
+        { name: 'DEMO_3PL', ats: 10 },
+        { name: 'CA DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'AURA-CRV',
+      model: 'AURA-CRV',
+      brand: 'Aura Frames',
+      title: 'Aura Carver Frame',
+      standardPrice: 149.00,
+      cost: 126.00,
+      status: 'Live',
+      tags: ['Home', 'Electronics'],
+      totalATS: 15,
+      uploadedAt: new Date(Date.now() - 3600000 * 13).toISOString(),
+      uploadSource: 'Aura Frames Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 10, highlight: true },
+        { name: 'DEMO_3PL', ats: 5 },
+        { name: 'NY DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'OLU-OHANA',
+      model: 'OLU-OHANA',
+      brand: 'OluKai',
+      title: 'OluKai Ohana Sandal',
+      standardPrice: 75.00,
+      cost: 42.00,
+      status: 'Live',
+      tags: ['Footwear', 'Lifestyle'],
+      totalATS: 70,
+      uploadedAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+      uploadSource: 'OluKai Wholesale Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 50, highlight: true },
+        { name: 'DEMO_3PL', ats: 20 },
+        { name: 'FL DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'LULU-EBB',
+      model: 'LULU-EBB',
+      brand: 'Lululemon',
+      title: 'Lululemon Everywhere Belt Bag',
+      standardPrice: 38.00,
+      cost: 19.00,
+      status: 'Live',
+      tags: ['Accessories', 'Fashion'],
+      totalATS: 110,
+      uploadedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+      uploadSource: 'Lululemon B2B Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 85, highlight: true },
+        { name: 'DEMO_3PL', ats: 25 },
+        { name: 'TX DC', ats: 0 }
+      ]
+    },
+    {
+      sku: 'ATH-M50X',
+      model: 'ATH-M50X',
+      brand: 'Audio-Technica',
+      title: 'Audio-Technica ATH-M50x',
+      standardPrice: 169.00,
+      cost: 115.00,
+      status: 'Live',
+      tags: ['Electronics', 'Audio'],
+      totalATS: 15,
+      uploadedAt: new Date(Date.now() - 3600000 * 20).toISOString(),
+      uploadSource: 'Audio-Technica Feed',
+      warehouses: [
+        { name: 'SARASOTA DC', ats: 10, highlight: true },
+        { name: 'DEMO_3PL', ats: 5 },
+        { name: 'NY DC', ats: 0 }
+      ]
+    }
+  ];
+
+  // Storage key for user modifications
+  const STORAGE_KEY = 'stark.enterpriseItemMaster.customRecords.v1';
+
+  function getStoredCatalog() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  function saveCatalog(items) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch (_) {}
+  }
+
   function getItemMasterRecords() {
-    const s = S.getState();
-    const e = s.enterprise || {};
-    const l = s.logistics || {};
-    const regional = s.regional || {};
-
-    const rawItems = e.inventory || [];
-    const whRecords = l.inventory || [];
-    const tplRecords = l.tplInventory || [];
-    const tplNodes = l.tplNodes || [];
-
-    return rawItems.map(item => {
-      // Status resolution
-      let status = item.status;
-      if (!status) {
-        if (/fashion|jewelry|cooler|accessory|apparel/i.test(item.title + ' ' + item.brand)) status = 'fashion';
-        else if (/display|frame|showroom|presentation|demo/i.test(item.title + ' ' + item.model)) status = 'presentation';
-        else if (/internal|test|lab|qa|sample|employee/i.test(item.title + ' ' + item.model)) status = 'internal use';
-        else status = 'Live';
-      }
-
-      // 1. Primary Sarasota / Southeast DC inventory
-      const localRows = whRecords.filter(w => w.sku === item.sku);
-      const localOnHand = localRows.reduce((acc, r) => acc + (Number(r.onHand) || 0), 0);
-      const localReserved = localRows.reduce((acc, r) => acc + (Number(r.reserved) || 0), 0);
-      const localDamaged = localRows.reduce((acc, r) => acc + (Number(r.damaged) || 0), 0);
-      const localATS = Math.max(0, localOnHand - localReserved - localDamaged);
-      const localBins = [...new Set(localRows.map(r => r.binId).filter(Boolean))].join(', ') || 'A-01-R1-B1';
-
-      // 2. 3PL Distributed Partner Nodes
-      const tplDetails = {};
-      let tplTotalOnHand = 0;
-      let tplTotalATS = 0;
-
-      tplNodes.forEach(node => {
-        const row = tplRecords.find(t => t.nodeId === node.id && t.sku === item.sku);
-        const q = Number(row?.qty) || 0;
-        const res = Number(row?.reserved) || 0;
-        const ats = Math.max(0, q - res);
-        tplDetails[node.id] = {
-          nodeId: node.id,
-          name: node.name,
-          city: node.city || '',
-          state: node.state || '',
-          code: node.code || node.id,
-          onHand: q,
-          reserved: res,
-          ats: ats,
-          lastSync: row?.lastSync || node.lastSync || null
-        };
-        tplTotalOnHand += q;
-        tplTotalATS += ats;
-      });
-
-      // 3. Regional report sync data
-      const reg = regional[item.region || 'US'];
-
-      // Upload date & time resolution
-      let uploadedAt = item.updatedAt || reg?.updatedAt || s.updatedAt || new Date().toISOString();
-      let uploadSource = item.uploadSource || (reg?.fileName ? reg.fileName : 'Live System Sync');
-
-      // ATS calculation
-      let totalOnHand = localOnHand + tplTotalOnHand;
-      let totalReserved = localReserved + (item.reserved || 0);
-      let totalDamaged = localDamaged + (item.damaged || 0);
-      let totalATS = localATS + tplTotalATS;
-
-      if (totalATS === 0 && Number(item.onHand) > 0) {
-        totalOnHand = Number(item.onHand);
-        totalATS = Math.max(0, totalOnHand - Number(item.reserved || 0) - Number(item.damaged || 0));
-      }
-
-      return {
-        sku: item.sku,
-        model: item.model || item.sku,
-        brand: item.brand || 'General',
-        title: item.title || item.description || item.model || item.sku,
-        status: status,
-        nature: item.nature || 'PHYSICAL',
-        standardPrice: Number(item.standardPrice || item.price || 0),
-        cost: Number(item.cost || 0),
-        region: item.region || 'US',
-        totalOnHand,
-        totalReserved,
-        totalDamaged,
-        totalATS,
-        uploadedAt,
-        uploadSource,
-        warehouses: {
-          primary: {
-            name: 'Sarasota DC',
-            fullName: 'Sarasota Distribution Center (FL)',
-            onHand: localOnHand || (item.nature === 'PHYSICAL' ? totalOnHand : 0),
-            reserved: localReserved,
-            damaged: localDamaged,
-            ats: localATS || (item.nature === 'PHYSICAL' ? totalATS : 0),
-            bins: localBins
-          },
-          tpl: tplDetails
-        }
-      };
-    });
+    let catalog = getStoredCatalog();
+    if (!catalog) {
+      catalog = JSON.parse(JSON.stringify(defaultMasterCatalog));
+      saveCatalog(catalog);
+    }
+    return catalog;
   }
 
   function getBrandList(items) {
@@ -157,14 +806,15 @@
       // 1. Text Search
       if (query) {
         const q = query.toLowerCase().trim();
+        const whNames = (item.warehouses || []).map(w => w.name).join(' ');
         const haystack = [
           item.model,
           item.sku,
           item.brand,
           item.title,
           item.status,
-          item.region,
-          item.warehouses.primary.bins
+          (item.tags || []).join(' '),
+          whNames
         ].join(' ').toLowerCase();
         if (!haystack.includes(q)) return false;
       }
@@ -181,12 +831,14 @@
 
       // 4. Warehouse Filter
       if (selectedWarehouse !== 'all') {
-        if (selectedWarehouse === 'primary' || selectedWarehouse === 'sarasota') {
-          if (item.warehouses.primary.onHand <= 0 && item.warehouses.primary.ats <= 0) return false;
-        } else if (item.warehouses.tpl[selectedWarehouse]) {
-          const tpl = item.warehouses.tpl[selectedWarehouse];
-          if (tpl.onHand <= 0 && tpl.ats <= 0) return false;
-        }
+        const whTarget = selectedWarehouse.toLowerCase();
+        const hasStockInWh = (item.warehouses || []).some(w => {
+          const matchName = w.name.toLowerCase().includes(whTarget) ||
+            (whTarget === 'sarasota' && w.name.includes('SARASOTA')) ||
+            (whTarget === 'demo_3pl' && w.name.includes('DEMO_3PL'));
+          return matchName && w.ats > 0;
+        });
+        if (!hasStockInWh) return false;
       }
 
       // 5. Price Filter
@@ -216,73 +868,14 @@
     });
   }
 
-  function statusBadge(status) {
+  function getStatusBadgeHtml(status) {
     const s = String(status || 'Live').toLowerCase();
-    let badgeClass = 'im-status-live';
-    let icon = '●';
-    let display = 'Live';
+    let cls = 'live', label = 'Live';
+    if (s.includes('fashion')) { cls = 'fashion'; label = 'Fashion'; }
+    else if (s.includes('internal')) { cls = 'internal'; label = 'Internal Use'; }
+    else if (s.includes('presentation')) { cls = 'presentation'; label = 'Presentation'; }
 
-    if (s === 'fashion') {
-      badgeClass = 'im-status-fashion';
-      display = 'Fashion';
-    } else if (s === 'internal use' || s === 'internal_use' || s === 'internal') {
-      badgeClass = 'im-status-internal';
-      display = 'Internal Use';
-    } else if (s === 'presentation') {
-      badgeClass = 'im-status-presentation';
-      display = 'Presentation';
-    }
-
-    return `<span class="im-status-badge ${badgeClass}" title="Status: ${esc(display)}"><span class="im-status-dot">${icon}</span> ${esc(display)}</span>`;
-  }
-
-  function atsPill(ats, uploadedAt, uploadSource) {
-    const healthClass = ats > 20 ? 'ats-healthy' : ats > 0 ? 'ats-warning' : 'ats-danger';
-    const dateFormatted = formatDate(uploadedAt);
-
-    return `
-      <div class="im-ats-cell">
-        <div class="im-ats-metric ${healthClass}">
-          <strong>${num(ats)}</strong>
-          <span>units ATS</span>
-        </div>
-        <div class="im-ats-upload-stamp" title="Upload source: ${esc(uploadSource)}">
-          <svg class="im-icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <div class="im-stamp-text">
-            <span class="im-stamp-date">Uploaded: ${esc(dateFormatted)}</span>
-            <small class="im-stamp-source">${esc(uploadSource)}</small>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function warehouseBreakdown(wh) {
-    const p = wh.primary;
-    const tpls = Object.values(wh.tpl || {});
-
-    let html = `
-      <div class="im-wh-matrix">
-        <div class="im-wh-pill primary-wh" title="Sarasota DC / Southeast Hub · Bins: ${esc(p.bins)}">
-          <span class="im-wh-tag">Sarasota DC</span>
-          <span class="im-wh-stat"><b>${num(p.ats)}</b> ATS</span>
-          <small class="im-wh-detail">(${num(p.onHand)} on hand)</small>
-        </div>
-    `;
-
-    tpls.forEach(t => {
-      const isPositive = t.ats > 0;
-      html += `
-        <div class="im-wh-pill ${isPositive ? 'tpl-active' : 'tpl-zero'}" title="${esc(t.name)} (${esc(t.city)}, ${esc(t.state)})">
-          <span class="im-wh-tag">${esc(t.code)}</span>
-          <span class="im-wh-stat"><b>${num(t.ats)}</b> ATS</span>
-          <small class="im-wh-detail">(${num(t.onHand)} OH)</small>
-        </div>
-      `;
-    });
-
-    html += `</div>`;
-    return html;
+    return `<span class="im-card-status-badge ${cls}">● ${esc(label)}</span>`;
   }
 
   // Spreadsheet Parser (SheetJS .xlsx/.xls + CSV Fallback)
@@ -443,98 +1036,59 @@
       </div>
     `;
 
-    const dialog = window.StarkSystemUI.dialog('ATS Upload · Brand Availability', body, () => {
+    window.StarkSystemUI.dialog('ATS Upload · Brand Availability', body, () => {
       if (!parsedRows.length) {
         notice('Please upload or load a Brand ATS file first.', true);
         return false;
       }
 
       const brandSelect = document.querySelector('#ats-upload-brand');
-      let brandName = brandSelect.value;
-      if (brandName === '__NEW__') {
-        brandName = document.querySelector('#ats-custom-brand').value.trim() || 'Brand';
+      let targetBrand = brandSelect.value;
+      if (targetBrand === '__NEW__') {
+        targetBrand = document.querySelector('#ats-custom-brand').value.trim() || 'New Brand';
       }
 
       const uploadTimestamp = new Date().toISOString();
-      const sourceLabel = `${brandName} ATS File (${uploadedFileName || 'upload.xlsx'})`;
-
+      const currentItems = getItemMasterRecords();
       let updatedCount = 0;
-      let createdCount = 0;
 
-      S.transaction('BRAND_ATS_UPLOADED', `${brandName}: ${parsedRows.length} items`, s => {
-        const inv = s.enterprise.inventory;
-        const logInv = s.logistics.inventory;
+      parsedRows.forEach(row => {
+        const m = String(row.model || '').trim();
+        if (!m) return;
+        const newQty = Math.max(0, parseInt(row.ats, 10) || 0);
 
-        parsedRows.forEach(row => {
-          const m = String(row.model || '').trim();
-          if (!m) return;
-          const newAts = Math.max(0, Number(row.ats) || 0);
-
-          let existing = inv.find(i => (i.model && i.model.toLowerCase() === m.toLowerCase()) || i.sku.toLowerCase() === m.toLowerCase());
-          if (existing) {
-            existing.onHand = newAts + (existing.reserved || 0);
-            existing.updatedAt = uploadTimestamp;
-            existing.uploadSource = sourceLabel;
-            if (row.title && !existing.title) existing.title = row.title;
-
-            // Also update local warehouse balance
-            const local = logInv.find(l => l.sku === existing.sku);
-            if (local) {
-              local.onHand = existing.onHand;
-              local.lastCount = uploadTimestamp;
-            }
-            updatedCount++;
-          } else {
-            // New catalog item created from brand feed
-            const sku = 'PHYS-' + brandName.toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + m.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            inv.push({
-              sku,
-              model: m,
-              brand: brandName,
-              title: row.title || m,
-              nature: 'PHYSICAL',
-              onHand: newAts,
-              reserved: 0,
-              damaged: 0,
-              safety: 10,
-              standardPrice: Number(row.price) || 99,
-              cost: Number(row.cost) || 60,
-              status: 'Live',
-              region: 'US',
-              updatedAt: uploadTimestamp,
-              uploadSource: sourceLabel
-            });
-            logInv.push({
-              sku,
-              brand: brandName,
-              description: row.title || m,
-              binId: 'A-01-R1-B1',
-              onHand: newAts,
-              reserved: 0,
-              damaged: 0,
-              serialized: false,
-              lotControl: false,
-              lastCount: uploadTimestamp
-            });
-            createdCount++;
+        const item = currentItems.find(i => (i.model && i.model.toLowerCase() === m.toLowerCase()) || i.sku.toLowerCase() === m.toLowerCase());
+        if (item) {
+          item.totalATS = newQty;
+          item.uploadedAt = uploadTimestamp;
+          item.uploadSource = `Brand ATS Feed · ${targetBrand} (${uploadedFileName || 'file'})`;
+          if (item.warehouses && item.warehouses[0]) {
+            item.warehouses[0].ats = Math.round(newQty * 0.75);
+            item.warehouses[0].highlight = item.warehouses[0].ats > 0;
           }
-        });
+          if (item.warehouses && item.warehouses[1]) {
+            item.warehouses[1].ats = Math.round(newQty * 0.25);
+          }
+          updatedCount++;
+        }
       });
 
-      notice(`Brand ATS applied: ${updatedCount} items updated, ${createdCount} new SKUs recorded from ${brandName}.`);
+      saveCatalog(currentItems);
+      notice(`ATS Upload successful: ${updatedCount} items updated with latest brand availability.`);
       render();
       return true;
     }, 'Apply Brand ATS Upload', { system: true });
 
-    // Wire up events in dialog
+    // Handle brand select change
     const brandSel = document.querySelector('#ats-upload-brand');
-    const customBrandWrap = document.querySelector('#ats-custom-brand-wrap');
-    if (brandSel) {
+    const customWrap = document.querySelector('#ats-custom-brand-wrap');
+    if (brandSel && customWrap) {
       brandSel.onchange = () => {
-        customBrandWrap.style.display = brandSel.value === '__NEW__' ? '' : 'none';
+        customWrap.style.display = brandSel.value === '__NEW__' ? '' : 'none';
       };
     }
 
+    // Drag and drop setup
     const dropzone = document.querySelector('#ats-dropzone');
     const fileInput = document.querySelector('#ats-file-input');
     const dropTitle = document.querySelector('#ats-drop-title');
@@ -568,75 +1122,76 @@
 
     function processAtsRows(rows) {
       const all = getItemMasterRecords();
-      let brandName = brandSel.value === '__NEW__' ? (document.querySelector('#ats-custom-brand').value.trim() || 'Brand') : brandSel.value;
+      const brandVal = document.querySelector('#ats-upload-brand').value;
 
       parsedRows = rows.map(r => {
-        const model = r.model || r.modelnumber || r.modelnum || r.sku || r.item || r.itemcode || r.part || r.product || '';
-        const ats = r.ats || r.available || r.availability || r.brandavailability || r.stock || r.qty || r.onhand || r.units || 0;
-        const title = r.title || r.description || r.productname || '';
-        const brand = r.brand || brandName;
+        const model = r.model || r.modelnumber || r.sku || r.item || r.itemcode || r.part || '';
+        const ats = r.ats || r.available || r.availabletosell || r.qty || r.quantity || r.stock || r.onhand || 0;
+        const brand = r.brand || brandVal;
+        const title = r.title || r.description || r.product || r.name || '';
+
         return {
           model: String(model).trim(),
-          ats: Math.max(0, Number(ats) || 0),
-          title: String(title).trim(),
-          brand: String(brand).trim()
+          ats: Number(ats) || 0,
+          brand: String(brand).trim(),
+          title: String(title).trim()
         };
       }).filter(r => r.model);
 
       if (!parsedRows.length) {
-        notice('No recognizable Model# or ATS quantity columns found in file.', true);
+        notice('No valid Model# or ATS quantity columns detected in file.', true);
         return;
       }
 
       previewWrap.style.display = '';
       previewTbody.innerHTML = parsedRows.slice(0, 50).map(row => {
         const existing = all.find(i => i.model.toLowerCase() === row.model.toLowerCase() || i.sku.toLowerCase() === row.model.toLowerCase());
-        const currentAts = existing ? existing.totalATS : 0;
-        const diff = row.ats - currentAts;
-        const diffClass = diff > 0 ? 'im-delta-pos' : diff < 0 ? 'im-delta-neg' : 'im-delta-zero';
-        const diffText = diff > 0 ? `+${diff}` : `${diff}`;
+        const currentATS = existing ? existing.totalATS : 0;
+        const delta = row.ats - currentATS;
+        const deltaClass = delta > 0 ? 'im-delta-pos' : delta < 0 ? 'im-delta-neg' : 'im-delta-zero';
+        const deltaText = delta > 0 ? `+${delta}` : `${delta}`;
 
         return `
           <tr>
             <td><strong>${esc(row.model)}</strong></td>
-            <td>${esc(row.brand || brandName)}</td>
-            <td>${esc(row.title || existing?.title || '—')}</td>
-            <td style="text-align:right">${num(currentAts)}</td>
+            <td>${esc(row.brand || brandVal)}</td>
+            <td>${esc(existing ? existing.title : row.title || '—')}</td>
+            <td style="text-align:right">${num(currentATS)}</td>
             <td style="text-align:right"><strong>${num(row.ats)}</strong></td>
-            <td style="text-align:right" class="${diffClass}">${diffText}</td>
-            <td>${existing ? '<span class="sys-badge green">Matched SKU</span>' : '<span class="sys-badge orange">New SKU</span>'}</td>
+            <td style="text-align:right" class="${deltaClass}">${deltaText}</td>
+            <td>${existing ? '<span class="sys-badge green">Match</span>' : '<span class="sys-badge amber">New Model</span>'}</td>
           </tr>
         `;
       }).join('');
 
-      notice(`Parsed ${parsedRows.length} brand ATS lines from file.`);
+      notice(`Parsed ${parsedRows.length} brand ATS records from file.`);
     }
 
     // Template download
     document.querySelector('#ats-download-template').onclick = () => {
-      const template = 'Model#,Brand,Available_ATS,Product_Title,Notes\r\nWH1000XM5,Sony,195,Wireless Noise Canceling Headphones,Active Brand Stock\r\nMTJV3AM/A,Apple,240,AirPods Pro 2,Available at brand DC\r\n4217709208,Kendra Scott,85,Designer Jewelry Item,Brand inventory update\r\nAF-200,Aura Frames,45,Carver HD Digital Frame,Showroom & warehouse allocation';
-      downloadCsvFile('Brand-ATS-Template.csv', template);
+      const template = 'Model#,Brand,Product_Description,ATS_Quantity,Upload_Date\r\nWH-1000XM5,Sony,Sony WH-1000XM5,45,2026-10-17\r\nNB-550,New Balance,New Balance 550,110,2026-10-17\r\nTMBLR-40,YETI,YETI Rambler 40oz,180,2026-10-17\r\nSL-FLEX,Bose,Bose SoundLink Flex,65,2026-10-17';
+      downloadCsvFile('Brand-ATS-Upload-Template.csv', template);
       notice('Brand ATS CSV template downloaded.');
     };
 
     // Load sample feed
     document.querySelector('#ats-load-sample').onclick = () => {
-      uploadedFileName = `${activeBrand}_Live_ATS_Feed.xlsx`;
+      uploadedFileName = `${activeBrand}_ATS_Feed_Live.xlsx`;
       dropTitle.innerHTML = `Loaded Sample Feed: <b>${esc(uploadedFileName)}</b>`;
       const sampleRows = [
-        { model: 'WH1000XM5', ats: 220, title: 'Wireless Noise Canceling Headphones', brand: 'Sony' },
-        { model: 'MTJV3AM/A', ats: 265, title: 'AirPods Pro 2', brand: 'Apple' },
-        { model: '4217709208', ats: 98, title: 'Designer Jewelry Item', brand: 'Kendra Scott' },
-        { model: 'AF-200', ats: 52, title: 'Carver HD Digital Frame', brand: 'Aura Frames' },
-        { model: 'HCFB1', ats: 180, title: 'Orchard Orange Cooler', brand: 'FieldBar' },
-        { model: 'ATH-M50X-QA', ats: 28, title: 'Studio Monitor Reference', brand: 'Audio-Technica' }
+        { model: 'WH-1000XM5', ats: 36, brand: 'Sony', title: 'Sony WH-1000XM5' },
+        { model: 'NB-550', ats: 98, brand: 'New Balance', title: 'New Balance 550' },
+        { model: 'TMBLR-40', ats: 160, brand: 'YETI', title: 'YETI Rambler 40oz' },
+        { model: 'SL-FLEX', ats: 72, brand: 'Bose', title: 'Bose SoundLink Flex' },
+        { model: 'AP-PRO2', ats: 85, brand: 'Apple', title: 'Apple AirPods Pro 2' },
+        { model: 'STAN-40', ats: 40, brand: 'Stanley', title: 'Stanley Quencher 40oz' }
       ];
       processAtsRows(sampleRows);
     };
   }
 
   // =========================================================================
-  // PRICE UPDATE BY THE BRAND (EXCEL / CSV FILE)
+  // PRICE UPDATE (BRAND)
   // By the brand to upload any price changes
   // =========================================================================
   function openPriceUpdateModal(defaultBrand = '') {
@@ -648,9 +1203,9 @@
     let uploadedFileName = '';
 
     const body = `
-      <div class="im-form" id="im-price-update-form">
+      <div class="im-form" id="im-price-upload-form">
         <div class="im-banner-desc">
-          <strong>Price Update by Brand:</strong> Upload brand price sheets (Excel .xlsx, .xls, or .csv) to synchronize Standard Catalog Price and Unit Cost across product lines.
+          <strong>Brand Price Update:</strong> Upload brand price sheets (Excel .xlsx, .xls, or .csv) to apply updated standard pricing and unit cost.
         </div>
 
         <div class="im-form-row">
@@ -658,7 +1213,6 @@
             <span>Brand Partner *</span>
             <select id="price-upload-brand" class="im-select">
               ${brands.map(b => `<option value="${esc(b)}" ${b.toLowerCase() === activeBrand.toLowerCase() ? 'selected' : ''}>${esc(b)}</option>`).join('')}
-              <option value="__ALL__">All Brands (Multi-brand price sheet)</option>
             </select>
           </label>
         </div>
@@ -667,13 +1221,13 @@
         <div class="im-upload-zone" id="price-dropzone">
           <input type="file" id="price-file-input" accept=".xlsx,.xls,.csv,.tsv" hidden>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          <p id="price-drop-title">Drop Brand Price Sheet (.xlsx / .csv) Here or Browse</p>
-          <small>Accepts .xlsx, .xls, .csv · Auto-maps Model#, New Price, and Wholesale Cost</small>
+          <p id="price-drop-title">Drop Brand Price Sheet Here or Browse</p>
+          <small>Accepts .xlsx, .xls, .csv · Auto-detects Model#, New Standard Price, and Unit Cost</small>
         </div>
 
         <div class="im-upload-templates">
           <button type="button" class="im-template-btn" id="price-download-template">📥 Download Price Sheet Template (.csv)</button>
-          <button type="button" class="im-template-btn" id="price-load-sample">⚡ Load Sample Brand Price Sheet</button>
+          <button type="button" class="im-template-btn" id="price-load-sample">⚡ Load Sample Brand Price Revision</button>
         </div>
 
         <!-- Live Parsed Preview Table -->
@@ -684,9 +1238,9 @@
                 <th>Model #</th>
                 <th>Brand</th>
                 <th style="text-align:right">Current Price</th>
-                <th style="text-align:right">New Price</th>
-                <th style="text-align:right">% Change</th>
-                <th style="text-align:right">New Cost</th>
+                <th style="text-align:right">New Standard Price</th>
+                <th style="text-align:right">Delta %</th>
+                <th style="text-align:right">Unit Cost</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -696,37 +1250,32 @@
       </div>
     `;
 
-    window.StarkSystemUI.dialog('Price Update · Upload by Brand', body, () => {
+    window.StarkSystemUI.dialog('Brand Price Update · Upload Revision', body, () => {
       if (!parsedRows.length) {
         notice('Please upload or load a Brand Price sheet first.', true);
         return false;
       }
 
-      const brandSelect = document.querySelector('#price-upload-brand');
-      const targetBrand = brandSelect.value;
       const uploadTimestamp = new Date().toISOString();
-
+      const currentItems = getItemMasterRecords();
       let updatedCount = 0;
 
-      S.transaction('BRAND_PRICES_UPDATED', `${targetBrand}: ${parsedRows.length} price changes`, s => {
-        const inv = s.enterprise.inventory;
+      parsedRows.forEach(row => {
+        const m = String(row.model || '').trim();
+        if (!m) return;
+        const newPrice = Number(row.price);
+        const newCost = Number(row.cost);
 
-        parsedRows.forEach(row => {
-          const m = String(row.model || '').trim();
-          if (!m) return;
-          const newPrice = Number(row.price);
-          const newCost = Number(row.cost);
-
-          const existing = inv.find(i => (i.model && i.model.toLowerCase() === m.toLowerCase()) || i.sku.toLowerCase() === m.toLowerCase());
-          if (existing) {
-            if (Number.isFinite(newPrice) && newPrice > 0) existing.standardPrice = newPrice;
-            if (Number.isFinite(newCost) && newCost > 0) existing.cost = newCost;
-            existing.updatedAt = uploadTimestamp;
-            updatedCount++;
-          }
-        });
+        const item = currentItems.find(i => (i.model && i.model.toLowerCase() === m.toLowerCase()) || i.sku.toLowerCase() === m.toLowerCase());
+        if (item) {
+          if (Number.isFinite(newPrice) && newPrice > 0) item.standardPrice = newPrice;
+          if (Number.isFinite(newCost) && newCost > 0) item.cost = newCost;
+          item.uploadedAt = uploadTimestamp;
+          updatedCount++;
+        }
       });
 
+      saveCatalog(currentItems);
       notice(`Brand Price Update applied: ${updatedCount} catalog items updated.`);
       render();
       return true;
@@ -812,7 +1361,7 @@
 
     // Template download
     document.querySelector('#price-download-template').onclick = () => {
-      const template = 'Model#,Brand,New_Standard_Price,Unit_Cost,Effective_Date\r\nWH1000XM5,Sony,359.00,285.00,2026-11-01\r\nMTJV3AM/A,Apple,249.00,185.00,2026-11-01\r\n4217709208,Kendra Scott,115.00,64.00,2026-11-01\r\nAF-200,Aura Frames,159.00,130.00,2026-11-01';
+      const template = 'Model#,Brand,New_Standard_Price,Unit_Cost,Effective_Date\r\nWH-1000XM5,Sony,359.00,285.00,2026-11-01\r\nAP-PRO2,Apple,249.00,185.00,2026-11-01\r\nKS-ELISA,Kendra Scott,115.00,64.00,2026-11-01\r\nAURA-CRV,Aura Frames,159.00,130.00,2026-11-01';
       downloadCsvFile('Brand-Price-Update-Template.csv', template);
       notice('Price Sheet CSV template downloaded.');
     };
@@ -822,12 +1371,11 @@
       uploadedFileName = `${activeBrand}_Price_Revision_Q4.xlsx`;
       dropTitle.innerHTML = `Loaded Sample Sheet: <b>${esc(uploadedFileName)}</b>`;
       const sampleRows = [
-        { model: 'WH1000XM5', price: 359.00, cost: 282.00, brand: 'Sony' },
-        { model: 'MTJV3AM/A', price: 239.00, cost: 180.00, brand: 'Apple' },
-        { model: '4217709208', price: 115.00, cost: 65.00, brand: 'Kendra Scott' },
-        { model: 'AF-200', price: 155.00, cost: 128.00, brand: 'Aura Frames' },
-        { model: 'HCFB1', price: 229.00, cost: 145.00, brand: 'FieldBar' },
-        { model: 'ATH-M50X-QA', price: 175.00, cost: 120.00, brand: 'Audio-Technica' }
+        { model: 'WH-1000XM5', price: 359.00, cost: 282.00, brand: 'Sony' },
+        { model: 'AP-PRO2', price: 239.00, cost: 180.00, brand: 'Apple' },
+        { model: 'KS-ELISA', price: 115.00, cost: 65.00, brand: 'Kendra Scott' },
+        { model: 'AURA-CRV', price: 155.00, cost: 128.00, brand: 'Aura Frames' },
+        { model: 'FB-COOLER', price: 229.00, cost: 145.00, brand: 'FieldBar' }
       ];
       processPriceRows(sampleRows);
     };
@@ -841,24 +1389,15 @@
       'Title',
       'Status',
       'Standard Price ($)',
-      'Cost ($)',
-      'Total On Hand',
-      'Total Reserved',
-      'Total Damaged',
+      'Unit Cost ($)',
       'Total ATS',
+      'Primary Warehouse (Sarasota DC ATS)',
       'Uploaded Date & Time',
-      'Upload Source',
-      'Sarasota DC On Hand',
-      'Sarasota DC ATS',
-      'Sarasota Bins',
-      'East Coast 3PL ATS',
-      'Central 3PL ATS',
-      'West Coast 3PL ATS'
+      'Upload Source'
     ];
 
     const rows = items.map(item => {
-      const p = item.warehouses.primary;
-      const t = item.warehouses.tpl;
+      const p = (item.warehouses || [])[0] || { name: 'SARASOTA DC', ats: item.totalATS };
       return [
         item.model,
         item.sku,
@@ -866,19 +1405,11 @@
         item.title,
         item.status,
         item.standardPrice.toFixed(2),
-        item.cost.toFixed(2),
-        item.totalOnHand,
-        item.totalReserved,
-        item.totalDamaged,
+        (item.cost || 0).toFixed(2),
         item.totalATS,
-        formatDate(item.uploadedAt),
-        item.uploadSource,
-        p.onHand,
         p.ats,
-        p.bins,
-        t.tpl_east?.ats || 0,
-        t.tpl_central?.ats || 0,
-        t.tpl_west?.ats || 0
+        formatDate(item.uploadedAt),
+        item.uploadSource
       ];
     });
 
@@ -902,8 +1433,8 @@
       <form class="im-form" id="im-add-form">
         <div class="im-form-row">
           <label class="im-form-field">
-            <span>Model # (SKU identifier) *</span>
-            <input type="text" id="add-model" required placeholder="e.g. WH1000XM6, AF-300, KB-88">
+            <span>Model # (Identifier) *</span>
+            <input type="text" id="add-model" required placeholder="e.g. WH-1000XM6, AF-300, KB-88">
           </label>
           <label class="im-form-field">
             <span>Brand *</span>
@@ -923,10 +1454,10 @@
           <label class="im-form-field">
             <span>Catalog Status *</span>
             <select id="add-status">
-              <option value="Live">Live (Commercial Catalog)</option>
-              <option value="fashion">Fashion (Seasonal line / Designer)</option>
-              <option value="internal use">Internal Use (Marketing / R&D QA)</option>
-              <option value="presentation">Presentation (Showroom / Display)</option>
+              <option value="Live">Live</option>
+              <option value="fashion">Fashion</option>
+              <option value="internal use">Internal Use</option>
+              <option value="presentation">Presentation</option>
             </select>
           </label>
           <label class="im-form-field">
@@ -939,23 +1470,14 @@
           </label>
         </div>
 
-        <div class="im-form-row three">
+        <div class="im-form-row">
           <label class="im-form-field">
-            <span>Initial On Hand Units</span>
-            <input type="number" id="add-onhand" min="0" step="1" value="50">
+            <span>Initial Available To Sell (ATS)</span>
+            <input type="number" id="add-ats" min="0" step="1" value="50">
           </label>
           <label class="im-form-field">
-            <span>Warehouse Destination</span>
-            <select id="add-warehouse">
-              <option value="sarasota">Sarasota DC (SE-01 Tampa)</option>
-              <option value="tpl_east">East Coast 3PL (Edison, NJ)</option>
-              <option value="tpl_central">Central 3PL (Dallas, TX)</option>
-              <option value="tpl_west">West Coast 3PL (Reno, NV)</option>
-            </select>
-          </label>
-          <label class="im-form-field">
-            <span>Bin Location</span>
-            <input type="text" id="add-bin" value="A-01-R1-B1" placeholder="e.g. A-01-R1-B1">
+            <span>Category Tag</span>
+            <input type="text" id="add-tag" value="Electronics" placeholder="e.g. Electronics, Footwear">
           </label>
         </div>
       </form>
@@ -971,58 +1493,36 @@
       const status = document.querySelector('#add-status').value;
       const price = Number(document.querySelector('#add-price').value) || 0;
       const cost = Number(document.querySelector('#add-cost').value) || 0;
-      const onHand = Number(document.querySelector('#add-onhand').value) || 0;
-      const binId = document.querySelector('#add-bin').value.trim() || 'A-01-R1-B1';
+      const ats = Number(document.querySelector('#add-ats').value) || 0;
+      const tag = document.querySelector('#add-tag').value.trim() || 'General';
 
       if (!model || !brand || !title) {
         notice('Please fill in all required fields.', true);
         return false;
       }
 
-      if (S.createItem) {
-        S.createItem({
-          model,
-          brand,
-          title,
-          status,
-          standardPrice: price,
-          cost,
-          onHand,
-          binId
-        });
-      } else {
-        S.transaction('ITEM_MASTER_CREATED', model, s => {
-          const sku = 'PHYS-' + brand.toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + model.toUpperCase().replace(/[^A-Z0-9]/g, '');
-          s.enterprise.inventory.push({
-            sku,
-            model,
-            brand,
-            title,
-            status,
-            nature: 'PHYSICAL',
-            onHand,
-            reserved: 0,
-            damaged: 0,
-            standardPrice: price,
-            cost,
-            safety: 10,
-            updatedAt: new Date().toISOString()
-          });
-          s.logistics.inventory.push({
-            sku,
-            brand,
-            description: title,
-            binId,
-            onHand,
-            reserved: 0,
-            damaged: 0,
-            serialized: false,
-            lotControl: false,
-            lastCount: new Date().toISOString()
-          });
-        });
-      }
+      const sku = (brand.toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + model.toUpperCase().replace(/[^A-Z0-9]/g, '')).slice(0, 18);
+      const items = getItemMasterRecords();
+      items.unshift({
+        sku,
+        model,
+        brand,
+        title,
+        standardPrice: price,
+        cost,
+        status,
+        tags: [tag],
+        totalATS: ats,
+        uploadedAt: new Date().toISOString(),
+        uploadSource: 'Manual Item Entry',
+        warehouses: [
+          { name: 'SARASOTA DC', ats: Math.round(ats * 0.8), highlight: ats > 0 },
+          { name: 'DEMO_3PL', ats: Math.round(ats * 0.2) },
+          { name: 'NY DC', ats: 0 }
+        ]
+      });
 
+      saveCatalog(items);
       notice(`Item ${model} (${brand}) added to Item Master.`);
       render();
       return true;
@@ -1053,9 +1553,9 @@
             <span>Status</span>
             <select id="edit-status">
               <option value="Live" ${item.status === 'Live' ? 'selected' : ''}>Live</option>
-              <option value="fashion" ${item.status === 'fashion' ? 'selected' : ''}>Fashion</option>
-              <option value="internal use" ${item.status === 'internal use' ? 'selected' : ''}>Internal Use</option>
-              <option value="presentation" ${item.status === 'presentation' ? 'selected' : ''}>Presentation</option>
+              <option value="fashion" ${item.status.toLowerCase() === 'fashion' ? 'selected' : ''}>Fashion</option>
+              <option value="internal use" ${item.status.toLowerCase() === 'internal use' ? 'selected' : ''}>Internal Use</option>
+              <option value="presentation" ${item.status.toLowerCase() === 'presentation' ? 'selected' : ''}>Presentation</option>
             </select>
           </label>
           <label class="im-form-field">
@@ -1064,13 +1564,24 @@
           </label>
           <label class="im-form-field">
             <span>Unit Cost ($)</span>
-            <input type="number" id="edit-cost" step="0.01" min="0" value="${item.cost}">
+            <input type="number" id="edit-cost" step="0.01" min="0" value="${item.cost || 0}">
+          </label>
+        </div>
+
+        <div class="im-form-row">
+          <label class="im-form-field">
+            <span>Available To Sell (ATS)</span>
+            <input type="number" id="edit-ats" min="0" step="1" value="${item.totalATS}">
+          </label>
+          <label class="im-form-field">
+            <span>SKU Identifier</span>
+            <input type="text" id="edit-sku" value="${esc(item.sku)}" readonly style="background:#f8fafc;color:#64748b">
           </label>
         </div>
 
         <div class="im-form-info-box">
-          <div class="im-info-item"><small>Total On Hand</small><strong>${num(item.totalOnHand)} units</strong></div>
-          <div class="im-info-item"><small>Available To Sell (ATS)</small><strong>${num(item.totalATS)} units</strong></div>
+          <div class="im-info-item"><small>Total ATS</small><strong>${num(item.totalATS)} units</strong></div>
+          <div class="im-info-item"><small>Primary Warehouse</small><span>SARASOTA DC (${num((item.warehouses && item.warehouses[0]?.ats) || 0)} ATS)</span></div>
           <div class="im-info-item"><small>Last Uploaded / Sync</small><span>${esc(formatDate(item.uploadedAt))}</span></div>
         </div>
       </form>
@@ -1083,22 +1594,24 @@
       const status = document.querySelector('#edit-status').value;
       const standardPrice = Number(document.querySelector('#edit-price').value) || 0;
       const cost = Number(document.querySelector('#edit-cost').value) || 0;
+      const totalATS = Number(document.querySelector('#edit-ats').value) || 0;
 
-      if (S.updateItem) {
-        S.updateItem(item.sku, { model, brand, title, status, standardPrice, cost });
-      } else {
-        S.transaction('ITEM_MASTER_UPDATED', item.sku, s => {
-          const inv = s.enterprise.inventory.find(x => x.sku === item.sku);
-          if (inv) {
-            inv.model = model;
-            inv.brand = brand;
-            inv.title = title;
-            inv.status = status;
-            inv.standardPrice = standardPrice;
-            inv.cost = cost;
-            inv.updatedAt = new Date().toISOString();
-          }
-        });
+      const items = getItemMasterRecords();
+      const existing = items.find(x => x.sku === item.sku);
+      if (existing) {
+        existing.model = model;
+        existing.brand = brand;
+        existing.title = title;
+        existing.status = status;
+        existing.standardPrice = standardPrice;
+        existing.cost = cost;
+        existing.totalATS = totalATS;
+        if (existing.warehouses && existing.warehouses[0]) {
+          existing.warehouses[0].ats = Math.round(totalATS * 0.75);
+          existing.warehouses[0].highlight = existing.warehouses[0].ats > 0;
+        }
+        existing.uploadedAt = new Date().toISOString();
+        saveCatalog(items);
       }
 
       notice(`Updated item ${model} (${brand}).`);
@@ -1108,21 +1621,21 @@
   }
 
   function changeStatusQuickly(sku, newStatus) {
-    if (S.updateItem) {
-      S.updateItem(sku, { status: newStatus });
-    } else {
-      S.transaction('ITEM_STATUS_UPDATED', sku, s => {
-        const inv = s.enterprise.inventory.find(x => x.sku === sku);
-        if (inv) {
-          inv.status = newStatus;
-          inv.updatedAt = new Date().toISOString();
-        }
-      });
+    const items = getItemMasterRecords();
+    const item = items.find(x => x.sku === sku);
+    if (item) {
+      item.status = newStatus;
+      item.uploadedAt = new Date().toISOString();
+      saveCatalog(items);
+      notice(`Status for ${item.model} changed to ${newStatus}.`);
+      render();
     }
-    notice(`Status updated to ${newStatus}.`);
-    render();
   }
 
+  // =========================================================================
+  // MAIN RENDER FUNCTION
+  // Exact layout matching media_1792214923499_e9b46256.png
+  // =========================================================================
   function render() {
     const root = document.querySelector('#item-master-content');
     if (!root) return;
@@ -1138,165 +1651,255 @@
     const presentationCount = allRecords.filter(i => (i.status || '').toLowerCase() === 'presentation').length;
 
     let html = `
-      <!-- Page Header with ATS Upload & Price Update Actions -->
+      <!-- Header: Title & Action Buttons -->
       <div class="im-header">
         <div class="im-header-title-block">
-          <div class="system-eyebrow">Master Item Catalog &amp; Control Tower</div>
           <h1 class="im-page-title">Enterprise Item Master</h1>
           <p class="im-page-subtitle">Central item catalog repository with Available-to-Sell (ATS) brand feeds, real-time multi-warehouse inventory breakdown, and brand price sheets.</p>
         </div>
         <div class="im-header-actions">
-          <button class="sys-btn" id="im-btn-ats-upload" type="button" title="ATS is availability at the brand. Upload brand Excel file.">
-            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <button class="im-btn-action" id="im-btn-ats-upload" type="button" title="ATS is availability at the brand. Upload brand Excel file.">
+            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             ATS Upload (Brand)
           </button>
-          <button class="sys-btn" id="im-btn-price-update" type="button" title="Upload brand price changes">
-            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <button class="im-btn-action" id="im-btn-price-update" type="button" title="Upload brand price changes">
+            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Price Update (Brand)
           </button>
-          <button class="sys-btn" id="im-btn-export" type="button" title="Export Master Catalog CSV">
-            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <button class="im-btn-action" id="im-btn-export" type="button" title="Export Master Catalog CSV">
+            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
           </button>
-          <button class="sys-btn primary" id="im-btn-add" type="button">
-            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <button class="im-btn-action primary" id="im-btn-add" type="button">
+            <svg class="im-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add New Item
           </button>
         </div>
       </div>
 
-      <!-- Search & 4-Dimension Filter Control Tower -->
+      <!-- Toolbar Panel -->
       <div class="im-toolbar-panel">
+        <!-- Row 1: Search, Brand, Warehouse, Sort, View Toggles, Filters [2] -->
         <div class="im-toolbar-top">
-          <!-- Text Search Box -->
+          <!-- Search box -->
           <div class="im-search-box">
-            <svg class="im-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <svg class="im-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="search" id="im-search-input" placeholder="Search by model#, brand, title, SKU, bin..." value="${esc(query)}" autocomplete="off" aria-label="Search catalog items">
             ${query ? `<button type="button" class="im-clear-search" id="im-clear-search-btn" title="Clear search">✕</button>` : ''}
           </div>
 
-          <!-- Dimension 1: Brand Filter -->
+          <!-- Brand select -->
           <div class="im-filter-group">
             <label class="im-filter-label" for="im-brand-select">Brand</label>
             <select id="im-brand-select" class="im-select">
-              <option value="all">All Brands (${brands.reduce((acc, [, c]) => acc + c, 0)})</option>
+              <option value="all">All Brands (${allRecords.length})</option>
               ${brands.map(([b, count]) => `<option value="${esc(b)}" ${selectedBrand.toLowerCase() === b.toLowerCase() ? 'selected' : ''}>${esc(b)} (${count})</option>`).join('')}
             </select>
           </div>
 
-          <!-- Dimension 3: Warehouse Filter -->
+          <!-- Warehouse select -->
           <div class="im-filter-group">
             <label class="im-filter-label" for="im-warehouse-select">Warehouse</label>
             <select id="im-warehouse-select" class="im-select">
               <option value="all" ${selectedWarehouse === 'all' ? 'selected' : ''}>All Warehouses</option>
-              <option value="primary" ${selectedWarehouse === 'primary' ? 'selected' : ''}>Sarasota DC (Tampa, FL)</option>
-              <option value="tpl_east" ${selectedWarehouse === 'tpl_east' ? 'selected' : ''}>East Coast 3PL (Edison, NJ)</option>
-              <option value="tpl_central" ${selectedWarehouse === 'tpl_central' ? 'selected' : ''}>Central 3PL (Dallas, TX)</option>
-              <option value="tpl_west" ${selectedWarehouse === 'tpl_west' ? 'selected' : ''}>West Coast 3PL (Reno, NV)</option>
+              <option value="sarasota" ${selectedWarehouse === 'sarasota' ? 'selected' : ''}>Sarasota DC</option>
+              <option value="demo_3pl" ${selectedWarehouse === 'demo_3pl' ? 'selected' : ''}>DEMO_3PL</option>
+              <option value="ny" ${selectedWarehouse === 'ny' ? 'selected' : ''}>NY DC</option>
+              <option value="fl" ${selectedWarehouse === 'fl' ? 'selected' : ''}>FL DC</option>
+              <option value="tx" ${selectedWarehouse === 'tx' ? 'selected' : ''}>TX DC</option>
+              <option value="ca" ${selectedWarehouse === 'ca' ? 'selected' : ''}>CA DC</option>
             </select>
           </div>
 
-          <!-- Sort Selector -->
+          <!-- Sort by select -->
           <div class="im-filter-group">
             <label class="im-filter-label" for="im-sort-select">Sort by</label>
             <select id="im-sort-select" class="im-select">
               <option value="model-asc" ${sortBy === 'model-asc' ? 'selected' : ''}>Model # (A → Z)</option>
               <option value="model-desc" ${sortBy === 'model-desc' ? 'selected' : ''}>Model # (Z → A)</option>
               <option value="brand-asc" ${sortBy === 'brand-asc' ? 'selected' : ''}>Brand (A → Z)</option>
-              <option value="price-high" ${sortBy === 'price-high' ? 'selected' : ''}>Price (High → Low)</option>
               <option value="price-low" ${sortBy === 'price-low' ? 'selected' : ''}>Price (Low → High)</option>
+              <option value="price-high" ${sortBy === 'price-high' ? 'selected' : ''}>Price (High → Low)</option>
               <option value="ats-high" ${sortBy === 'ats-high' ? 'selected' : ''}>ATS Available (High → Low)</option>
               <option value="ats-low" ${sortBy === 'ats-low' ? 'selected' : ''}>ATS Available (Low → High)</option>
               <option value="date-desc" ${sortBy === 'date-desc' ? 'selected' : ''}>Upload Date (Newest)</option>
             </select>
           </div>
 
-          <!-- View Mode Toggle -->
+          <!-- View toggles: List vs Grid (Grid active with blue #0284c7) -->
           <div class="im-view-toggles">
             <button class="im-view-btn ${viewMode === 'table' ? 'active' : ''}" id="im-toggle-table" type="button" title="Dense Table View">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
-            <button class="im-view-btn ${viewMode === 'cards' ? 'active' : ''}" id="im-toggle-cards" type="button" title="Card Grid View">
+            <button class="im-view-btn ${viewMode === 'cards' ? 'active' : ''}" id="im-toggle-cards" type="button" title="5-Column Grid View">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             </button>
           </div>
+
+          <!-- Filters [2] Button -->
+          <button class="im-filters-btn" id="im-filters-btn" type="button" title="Advanced filter toggles">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            <span>Filters</span>
+            <span class="im-filters-badge">2</span>
+          </button>
         </div>
 
-        <!-- Filter Sub-Row: Dimension 4 Status Segmented Tabs + Dimension 2 Price Range -->
+        <!-- Row 2: Status Chips (Left) + Price Filter Chips/Inputs (Right) -->
         <div class="im-toolbar-bottom">
-          <!-- Dimension 4: Status Segmented Control -->
-          <div class="im-status-tabs" role="tablist" aria-label="Item Status">
-            <button class="im-status-tab ${selectedStatus === 'all' ? 'active' : ''}" data-status="all" type="button">
+          <!-- Status Chips -->
+          <div class="im-status-chips" role="tablist" aria-label="Catalog Status Filter">
+            <button class="im-status-chip ${selectedStatus === 'all' ? 'active' : ''}" data-status="all" type="button">
               All Items (${allRecords.length})
             </button>
-            <button class="im-status-tab live-tab ${selectedStatus.toLowerCase() === 'live' ? 'active' : ''}" data-status="Live" type="button">
-              <span class="im-dot live">●</span> Live (${liveCount})
+            <button class="im-status-chip ${selectedStatus.toLowerCase() === 'live' ? 'active' : ''}" data-status="Live" type="button">
+              <span class="im-chip-dot live">●</span> Live (${liveCount})
             </button>
-            <button class="im-status-tab fashion-tab ${selectedStatus.toLowerCase() === 'fashion' ? 'active' : ''}" data-status="fashion" type="button">
-              <span class="im-dot fashion">●</span> Fashion (${fashionCount})
+            <button class="im-status-chip ${selectedStatus.toLowerCase() === 'fashion' ? 'active' : ''}" data-status="fashion" type="button">
+              <span class="im-chip-dot fashion">●</span> Fashion (${fashionCount})
             </button>
-            <button class="im-status-tab internal-tab ${selectedStatus.toLowerCase() === 'internal use' ? 'active' : ''}" data-status="internal use" type="button">
-              <span class="im-dot internal">●</span> Internal Use (${internalCount})
+            <button class="im-status-chip ${selectedStatus.toLowerCase() === 'internal use' ? 'active' : ''}" data-status="internal use" type="button">
+              <span class="im-chip-dot internal">●</span> Internal Use (${internalCount})
             </button>
-            <button class="im-status-tab presentation-tab ${selectedStatus.toLowerCase() === 'presentation' ? 'active' : ''}" data-status="presentation" type="button">
-              <span class="im-dot presentation">●</span> Presentation (${presentationCount})
+            <button class="im-status-chip ${selectedStatus.toLowerCase() === 'presentation' ? 'active' : ''}" data-status="presentation" type="button">
+              <span class="im-chip-dot presentation">●</span> Presentation (${presentationCount})
             </button>
           </div>
 
-          <!-- Dimension 2: Price Filter Tier Pills + Range Inputs -->
+          <!-- Price Filter -->
           <div class="im-price-toolbar">
             <span class="im-price-label">Price:</span>
-            <div class="im-price-chips">
-              <button class="im-price-chip ${priceTier === 'all' ? 'active' : ''}" data-tier="all" type="button">All</button>
-              <button class="im-price-chip ${priceTier === 'under50' ? 'active' : ''}" data-tier="under50" type="button">&lt; $50</button>
-              <button class="im-price-chip ${priceTier === '50-150' ? 'active' : ''}" data-tier="50-150" type="button">$50–$150</button>
-              <button class="im-price-chip ${priceTier === '150-300' ? 'active' : ''}" data-tier="150-300" type="button">$150–$300</button>
-              <button class="im-price-chip ${priceTier === '300plus' ? 'active' : ''}" data-tier="300plus" type="button">$300+</button>
-            </div>
+            <button class="im-price-chip ${priceTier === 'all' ? 'active' : ''}" data-tier="all" type="button">All</button>
+            <button class="im-price-chip ${priceTier === 'under50' ? 'active' : ''}" data-tier="under50" type="button">&lt; $50</button>
+            <button class="im-price-chip ${priceTier === '50-150' ? 'active' : ''}" data-tier="50-150" type="button">$50 – $150</button>
+            <button class="im-price-chip ${priceTier === '150-300' ? 'active' : ''}" data-tier="150-300" type="button">$150 – $300</button>
+            <button class="im-price-chip ${priceTier === '300plus' ? 'active' : ''}" data-tier="300plus" type="button">$300+</button>
 
             <div class="im-price-inputs">
-              <span class="im-currency-symbol">$</span>
-              <input type="number" id="im-min-price" placeholder="Min" value="${esc(minPrice)}" min="0" step="10">
-              <span class="im-price-divider">–</span>
-              <span class="im-currency-symbol">$</span>
-              <input type="number" id="im-max-price" placeholder="Max" value="${esc(maxPrice)}" min="0" step="10">
-              <button class="sys-btn small" id="im-apply-price" type="button">Apply</button>
+              <span class="im-price-currency">$</span>
+              <input type="number" class="im-price-input" id="im-min-price" placeholder="Min" value="${esc(minPrice)}" min="0" step="10">
+              <span class="im-price-currency">– $</span>
+              <input type="number" class="im-price-input" id="im-max-price" placeholder="Max" value="${esc(maxPrice)}" min="0" step="10">
+              <button class="im-price-apply-btn" id="im-apply-price" type="button">Apply</button>
             </div>
-
-            ${(selectedBrand !== 'all' || selectedStatus !== 'all' || selectedWarehouse !== 'all' || query || minPrice || maxPrice || priceTier !== 'all') ? `
-              <button class="im-reset-btn" id="im-reset-filters" type="button">Reset Filters</button>
-            ` : ''}
           </div>
         </div>
       </div>
 
-      <!-- Result Count Bar -->
-      <div class="im-result-bar">
-        <div class="im-result-text">
-          Showing <b>${num(filtered.length)}</b> of <b>${num(allRecords.length)}</b> catalog items
-          ${selectedBrand !== 'all' ? ` · Brand: <b>${esc(selectedBrand)}</b>` : ''}
-          ${selectedStatus !== 'all' ? ` · Status: <b>${esc(selectedStatus)}</b>` : ''}
-          ${selectedWarehouse !== 'all' ? ` · Warehouse: <b>${esc(selectedWarehouse === 'primary' ? 'Sarasota DC' : selectedWarehouse)}</b>` : ''}
-          ${query ? ` · Matching "<b>${esc(query)}</b>"` : ''}
+      <!-- Sub-Bar: Showing items + View dropdown + Pagination -->
+      <div class="im-subbar">
+        <div class="im-subbar-count">
+          Showing <strong>${filtered.length}</strong> of <strong>${allRecords.length}</strong> items
+        </div>
+        <div class="im-subbar-controls">
+          <span class="im-subbar-view-label">View:</span>
+          <select class="im-subbar-select" id="im-subbar-view-select">
+            <option value="all">All items</option>
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+          </select>
+          <div class="im-pagination-arrows">
+            <button class="im-page-arrow" disabled type="button" aria-label="Previous page">‹</button>
+            <button class="im-page-arrow" type="button" aria-label="Next page">›</button>
+          </div>
         </div>
       </div>
     `;
 
-    // Render Table or Cards view
-    if (viewMode === 'table') {
+    // 5-Column Cards Grid View or Dense Table View
+    if (viewMode === 'cards') {
+      html += `
+        <div class="im-cards-grid">
+          ${filtered.length === 0 ? `
+            <div class="im-empty-card" style="grid-column: 1 / -1; background:#ffffff; border-radius:14px; padding:48px 20px; border:1px solid #e2e8f0; text-align:center">
+              <h3>No items match your filter criteria</h3>
+              <p style="color:#64748b; margin:8px 0 16px">Try resetting filters or adjusting search keywords.</p>
+              <button class="im-btn-action" id="im-empty-reset" type="button">Reset All Filters</button>
+            </div>
+          ` : filtered.map(item => {
+            const svg = productSVGs[item.sku] || fallbackProductSVG;
+            const atsVal = Number(item.totalATS) || 0;
+            const isZero = atsVal === 0;
+            const isMenuOpen = activeMenuSku === item.sku;
+
+            return `
+              <div class="im-product-card" data-sku="${esc(item.sku)}">
+                <!-- Floating Status Badge -->
+                ${getStatusBadgeHtml(item.status)}
+
+                <!-- Centered Product Image Box -->
+                <div class="im-card-image-box">
+                  ${svg}
+                </div>
+
+                <!-- Title & Price Row -->
+                <div class="im-card-title-row">
+                  <h3 class="im-card-product-title">${esc(item.title)}</h3>
+                  <div class="im-card-product-price">${money(item.standardPrice)}</div>
+                </div>
+
+                <!-- Brand & Model Subline -->
+                <div class="im-card-subline">${esc(item.brand)} &nbsp;|&nbsp; ${esc(item.model)}</div>
+
+                <!-- SKU Line -->
+                <div class="im-card-sku-line">SKU: ${esc(item.sku)}</div>
+
+                <!-- Category Tags Row -->
+                <div class="im-card-tags-row">
+                  ${(item.tags || []).map(t => `<span class="im-card-tag">${esc(t)}</span>`).join('')}
+                </div>
+
+                <!-- ATS (Available to Sell) Metric Section -->
+                <div class="im-card-ats-section">
+                  <span class="im-card-ats-number ${isZero ? 'zero' : ''}">${num(atsVal)}</span>
+                  <span class="im-card-ats-label">Available to Sell (ATS) ⓘ</span>
+                </div>
+
+                <!-- Multi-Warehouse Breakdown (3 Cells) -->
+                <div class="im-card-wh-grid">
+                  ${(item.warehouses || []).slice(0, 3).map(w => `
+                    <div class="im-card-wh-cell ${w.highlight && w.ats > 0 ? 'highlight' : ''}">
+                      <span class="im-card-wh-name">${esc(w.name)}</span>
+                      <span class="im-card-wh-val">${num(w.ats)} ATS</span>
+                    </div>
+                  `).join('')}
+                </div>
+
+                <!-- Bottom Actions -->
+                <div class="im-card-actions">
+                  <button class="im-card-more-btn" data-more="${esc(item.sku)}" type="button" title="More options" aria-haspopup="true">···</button>
+                  <button class="im-card-edit-btn" data-edit="${esc(item.sku)}" type="button">Edit</button>
+
+                  ${isMenuOpen ? `
+                    <div class="im-card-menu">
+                      <button type="button" class="im-card-menu-item" data-quick-status="${esc(item.sku)}" data-val="Live">● Set to Live</button>
+                      <button type="button" class="im-card-menu-item" data-quick-status="${esc(item.sku)}" data-val="fashion">● Set to Fashion</button>
+                      <button type="button" class="im-card-menu-item" data-quick-status="${esc(item.sku)}" data-val="internal use">● Set to Internal Use</button>
+                      <button type="button" class="im-card-menu-item" data-quick-status="${esc(item.sku)}" data-val="presentation">● Set to Presentation</button>
+                      <hr style="margin:4px 0; border:none; border-top:1px solid #e2e8f0">
+                      <a href="${S.url('warehouse-management/inventory-bins.html')}" class="im-card-menu-item">📦 View Warehouse Bins</a>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } else {
+      // Dense Table View
       html += `
         <div class="im-table-wrapper">
           <table class="im-data-table" id="im-main-table">
             <thead>
               <tr>
                 <th style="width:160px">Model # / SKU</th>
-                <th style="width:120px">Brand</th>
-                <th style="min-width:220px">Title / Product Description</th>
-                <th style="width:130px">Status</th>
-                <th style="width:110px">Standard Price</th>
-                <th style="width:230px">ATS (Available to Sell)</th>
-                <th style="min-width:280px">Inventory by Warehouse</th>
-                <th style="width:110px;text-align:right">Actions</th>
+                <th style="width:130px">Brand</th>
+                <th style="min-width:240px">Title / Product Description</th>
+                <th style="width:140px">Status</th>
+                <th style="width:120px">Standard Price</th>
+                <th style="width:180px">ATS (Available to Sell)</th>
+                <th style="min-width:260px">Warehouse Breakdown</th>
+                <th style="width:100px;text-align:right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -1304,129 +1907,58 @@
                 <tr>
                   <td colspan="8" class="im-empty-row">
                     <div class="im-empty-state">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                       <h3>No catalog items found</h3>
-                      <p>No items matched your current search and filter combination.</p>
-                      <button class="sys-btn" id="im-empty-reset" type="button">Clear All Filters</button>
+                      <button class="im-btn-action" id="im-empty-reset" type="button">Clear All Filters</button>
                     </div>
                   </td>
                 </tr>
               ` : filtered.map(item => `
                 <tr data-sku="${esc(item.sku)}">
-                  <!-- Model # -->
                   <td class="im-model-cell">
                     <strong class="im-model-badge">${esc(item.model)}</strong>
                     <code class="im-sku-code">${esc(item.sku)}</code>
                   </td>
-
-                  <!-- Brand -->
                   <td class="im-brand-cell">
                     <span class="im-brand-badge">${esc(item.brand)}</span>
                   </td>
-
-                  <!-- Title -->
                   <td class="im-title-cell">
                     <div class="im-product-title">${esc(item.title)}</div>
-                    <small class="im-product-meta">Nature: <b>${esc(item.nature)}</b> · Region: <b>${esc(item.region)}</b></small>
+                    <small class="im-product-meta">${(item.tags || []).join(' · ')}</small>
                   </td>
-
-                  <!-- Status with Inline Changer -->
                   <td class="im-status-cell">
-                    <div class="im-status-select-wrap">
-                      <select class="im-inline-status-select" data-sku="${esc(item.sku)}" aria-label="Change status for ${esc(item.model)}">
-                        <option value="Live" ${item.status === 'Live' ? 'selected' : ''}>● Live</option>
-                        <option value="fashion" ${item.status === 'fashion' ? 'selected' : ''}>● Fashion</option>
-                        <option value="internal use" ${item.status === 'internal use' ? 'selected' : ''}>● Internal Use</option>
-                        <option value="presentation" ${item.status === 'presentation' ? 'selected' : ''}>● Presentation</option>
-                      </select>
-                    </div>
+                    ${getStatusBadgeHtml(item.status)}
                   </td>
-
-                  <!-- Price -->
                   <td class="im-price-cell">
                     <strong>${money(item.standardPrice)}</strong>
                     ${item.cost > 0 ? `<small class="im-cost-sub">Cost: ${money(item.cost)}</small>` : ''}
                   </td>
-
-                  <!-- ATS with Uploaded Date and Time -->
                   <td class="im-ats-column">
-                    ${atsPill(item.totalATS, item.uploadedAt, item.uploadSource)}
-                  </td>
-
-                  <!-- Inventory by Warehouse -->
-                  <td class="im-wh-column">
-                    ${warehouseBreakdown(item.warehouses)}
-                  </td>
-
-                  <!-- Row Actions -->
-                  <td class="im-actions-cell">
-                    <div class="im-row-actions">
-                      <button class="sys-btn small" data-edit-item="${esc(item.sku)}" type="button" title="Edit Item Details">✏️ Edit</button>
-                      <a class="sys-btn small" href="${S.url('warehouse-management/inventory-bins.html')}" title="View Warehouse Bins">📦 Bins</a>
+                    <div class="im-ats-metric ${item.totalATS > 20 ? 'ats-healthy' : item.totalATS > 0 ? 'ats-warning' : 'ats-danger'}">
+                      <strong>${num(item.totalATS)}</strong>
+                      <span>units ATS</span>
                     </div>
+                    <div class="im-ats-upload-stamp">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span>${esc(formatDate(item.uploadedAt))}</span>
+                    </div>
+                  </td>
+                  <td class="im-wh-column">
+                    <div class="im-wh-matrix">
+                      ${(item.warehouses || []).map(w => `
+                        <div class="im-wh-pill ${w.highlight && w.ats > 0 ? 'primary-wh' : ''}">
+                          <span>${esc(w.name)}</span>
+                          <b>${num(w.ats)} ATS</b>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </td>
+                  <td class="im-actions-cell" style="text-align:right">
+                    <button class="im-btn-action" data-edit="${esc(item.sku)}" type="button" style="padding:4px 10px; font-size:12px">Edit</button>
                   </td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
-        </div>
-      `;
-    } else {
-      // Cards Grid View
-      html += `
-        <div class="im-cards-grid">
-          ${filtered.length === 0 ? `
-            <div class="im-empty-card">
-              <h3>No items matched your search</h3>
-              <p>Adjust your filters or query to see catalog products.</p>
-              <button class="sys-btn" id="im-empty-reset" type="button">Reset Filters</button>
-            </div>
-          ` : filtered.map(item => `
-            <div class="im-item-card" data-sku="${esc(item.sku)}">
-              <div class="im-card-top">
-                <div class="im-card-model-block">
-                  <span class="im-brand-badge">${esc(item.brand)}</span>
-                  <h3 class="im-card-model">${esc(item.model)}</h3>
-                  <code class="im-sku-code">${esc(item.sku)}</code>
-                </div>
-                <div class="im-card-status-block">
-                  ${statusBadge(item.status)}
-                  <strong class="im-card-price">${money(item.standardPrice)}</strong>
-                </div>
-              </div>
-
-              <div class="im-card-title">${esc(item.title)}</div>
-
-              <!-- ATS with Upload Date/Time -->
-              <div class="im-card-ats-box">
-                <div class="im-card-ats-val">
-                  <span class="im-ats-num">${num(item.totalATS)}</span>
-                  <span class="im-ats-sub">Available To Sell (ATS)</span>
-                </div>
-                <div class="im-card-upload-stamp">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  <span>Uploaded: ${esc(formatDate(item.uploadedAt))}</span>
-                </div>
-              </div>
-
-              <!-- Warehouse Breakdown -->
-              <div class="im-card-wh-section">
-                <div class="im-card-wh-heading">Inventory by Warehouse:</div>
-                ${warehouseBreakdown(item.warehouses)}
-              </div>
-
-              <!-- Card Footer Actions -->
-              <div class="im-card-footer">
-                <select class="im-inline-status-select card-select" data-sku="${esc(item.sku)}" aria-label="Quick status">
-                  <option value="Live" ${item.status === 'Live' ? 'selected' : ''}>Status: Live</option>
-                  <option value="fashion" ${item.status === 'fashion' ? 'selected' : ''}>Status: Fashion</option>
-                  <option value="internal use" ${item.status === 'internal use' ? 'selected' : ''}>Status: Internal Use</option>
-                  <option value="presentation" ${item.status === 'presentation' ? 'selected' : ''}>Status: Presentation</option>
-                </select>
-                <button class="sys-btn small primary" data-edit-item="${esc(item.sku)}" type="button">Edit Item</button>
-              </div>
-            </div>
-          `).join('')}
         </div>
       `;
     }
@@ -1485,10 +2017,10 @@
       };
     }
 
-    // Status segmented tabs
-    document.querySelectorAll('.im-status-tab').forEach(tab => {
-      tab.onclick = () => {
-        selectedStatus = tab.dataset.status;
+    // Status chips
+    document.querySelectorAll('.im-status-chip').forEach(chip => {
+      chip.onclick = () => {
+        selectedStatus = chip.dataset.status;
         render();
       };
     });
@@ -1515,7 +2047,7 @@
     }
 
     // Reset filters
-    const resetBtn = document.querySelector('#im-reset-filters') || document.querySelector('#im-empty-reset');
+    const resetBtn = document.querySelector('#im-empty-reset');
     if (resetBtn) {
       resetBtn.onclick = () => {
         query = '';
@@ -1536,29 +2068,51 @@
     if (toggleTable) {
       toggleTable.onclick = () => {
         viewMode = 'table';
+        activeMenuSku = null;
         render();
       };
     }
     if (toggleCards) {
       toggleCards.onclick = () => {
         viewMode = 'cards';
+        activeMenuSku = null;
         render();
       };
     }
 
-    // Inline status selects
-    document.querySelectorAll('.im-inline-status-select').forEach(sel => {
-      sel.onchange = e => {
-        const sku = sel.dataset.sku;
-        const newStatus = e.target.value;
-        changeStatusQuickly(sku, newStatus);
+    // Card more buttons
+    document.querySelectorAll('[data-more]').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const sku = btn.dataset.more;
+        activeMenuSku = activeMenuSku === sku ? null : sku;
+        render();
+      };
+    });
+
+    // Close menu on click elsewhere
+    document.addEventListener('click', e => {
+      if (activeMenuSku && !e.target.closest('.im-card-actions')) {
+        activeMenuSku = null;
+        render();
+      }
+    }, { once: true });
+
+    // Quick status changes from more menu
+    document.querySelectorAll('[data-quick-status]').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const sku = btn.dataset.quickStatus;
+        const val = btn.dataset.val;
+        activeMenuSku = null;
+        changeStatusQuickly(sku, val);
       };
     });
 
     // Edit item buttons
-    document.querySelectorAll('[data-edit-item]').forEach(btn => {
+    document.querySelectorAll('[data-edit]').forEach(btn => {
       btn.onclick = () => {
-        const sku = btn.dataset.editItem;
+        const sku = btn.dataset.edit;
         const item = allRecords.find(x => x.sku === sku);
         if (item) openEditItemModal(item);
       };
@@ -1568,11 +2122,11 @@
     const addBtn = document.querySelector('#im-btn-add');
     if (addBtn) addBtn.onclick = openAddItemModal;
 
-    // ATS Upload button (Brand file)
+    // ATS Upload button
     const atsUploadBtn = document.querySelector('#im-btn-ats-upload');
     if (atsUploadBtn) atsUploadBtn.onclick = () => openAtsUploadModal(selectedBrand !== 'all' ? selectedBrand : '');
 
-    // Price Update button (By brand)
+    // Price Update button
     const priceUpdateBtn = document.querySelector('#im-btn-price-update');
     if (priceUpdateBtn) priceUpdateBtn.onclick = () => openPriceUpdateModal(selectedBrand !== 'all' ? selectedBrand : '');
 
