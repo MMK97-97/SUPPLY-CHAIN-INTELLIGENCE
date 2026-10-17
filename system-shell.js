@@ -51,10 +51,13 @@
   function groups() {
     const region = S.getRegion(), suffix = region.toLowerCase();
     return [
+      ['itemMaster','Item Master','Master Catalog · ATS Feeds · Price Updates','#0284c7',[
+        ['item-master.html','Item master catalog'],
+        ['item-master.html?action=ats-upload','ATS upload (Brand)'],
+        ['item-master.html?action=price-update','Price update (Brand)']
+      ],'item-master.html',{label:'+ ATS upload',path:'item-master.html?action=ats-upload'}],
+
       ['planning','Inventory & Planning','Replenishment · Reorder · Demand','#10b981',[
-        ['item-master.html','Item master'],
-        ['item-master.html?action=ats-upload','ATS upload'],
-        ['item-master.html?action=price-update','Price update'],
         [`inventory-dashboard-${suffix}.html`,'Inventory dashboard'],
         [`decision-intelligence-${suffix}.html`,'Decision intelligence'],
         [`raw-report-${suffix}.html`,'Raw report & upload'],
@@ -63,13 +66,12 @@
         ...(region==='EU'?[['ats-eu.html','Available to sell']]:[]),
         ['sales-analysis.html?region='+region,'Sales analysis'],
         ['procurement-planning.html','Reorder to purchase order']
-      ],`inventory-dashboard-${suffix}.html`,{label:'+ ATS upload',path:'item-master.html?action=ats-upload'}],
+      ],`inventory-dashboard-${suffix}.html`,{label:'+ Reorder report',path:`reorder-report-${suffix}.html`}],
 
       ['crm','Customers & CRM','Accounts · Programs · Catalogs','#3b82f6',[
         ['crm/index.html','CRM dashboard'],
         ['crm/accounts.html','Accounts & programs'],
         ['crm/catalog.html','Catalog & pricing'],
-        ['item-master.html','Item master'],
         ['crm/partner-portal.html','Partner portal']
       ],'crm/index.html',{label:'+ Add account',path:'crm/accounts.html'}],
 
@@ -176,7 +178,7 @@
     const subBar = document.querySelector('#system-submodule-bar');
     if (!subBar) return;
 
-    const isHome = active('workspace.html') || active('index.html') || active('item-master.html') || targetId === 'home';
+    const isHome = active('workspace.html') || active('index.html') || targetId === 'home';
     if (isHome) {
       subBar.hidden = true;
       subBar.style.display = 'none';
@@ -384,7 +386,7 @@
     subnav.className = 'system-submodule-bar';
     subnav.setAttribute('aria-label', 'Active Module Navigation');
 
-    const isHomePage = active('workspace.html') || active('index.html') || active('item-master.html');
+    const isHomePage = active('workspace.html') || active('index.html');
     if (isHomePage) {
       subnav.hidden = true;
       subnav.style.display = 'none';

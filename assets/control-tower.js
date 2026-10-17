@@ -54,6 +54,23 @@
 
   function bannerSvg(id, color) {
     const banners = {
+      itemMaster: `
+        <svg viewBox="0 0 360 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="bg-im" x1="0" y1="0" x2="360" y2="88" gradientUnits="userSpaceOnUse"><stop stop-color="#082338"/><stop offset="1" stop-color="#0c4a6e"/></linearGradient></defs>
+          <rect width="360" height="88" fill="url(#bg-im)"/>
+          <path d="M0 22h360M0 44h360M0 66h360" stroke="#0ea5e9" stroke-opacity="0.08" stroke-width="1"/>
+          <g transform="translate(35,20)" stroke="#0ea5e9" stroke-width="1.4" fill="#0369a1">
+            <rect width="52" height="48" rx="4"/>
+            <circle cx="26" cy="24" r="12" fill="#0284c7" stroke="#38bdf8" stroke-width="1.6"/>
+            <path d="M21 24 L25 28 L32 20" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          </g>
+          <rect x="110" y="24" width="130" height="12" rx="3" fill="#0284c7"/>
+          <rect x="110" y="42" width="85" height="10" rx="2" fill="#0369a1"/>
+          <rect x="110" y="56" width="105" height="8" rx="2" fill="#075985"/>
+          <circle cx="280" cy="42" r="14" fill="#0284c7" stroke="#38bdf8" stroke-width="1.8"/>
+          <path d="M280 33 v10 l7 5" stroke="#bae6fd" stroke-width="2" stroke-linecap="round"/>
+          <text x="342" y="76" text-anchor="end" fill="#bae6fd" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">MASTER CATALOG &amp; BRAND ATS</text>
+        </svg>`,
       planning: `
         <svg viewBox="0 0 360 88" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
