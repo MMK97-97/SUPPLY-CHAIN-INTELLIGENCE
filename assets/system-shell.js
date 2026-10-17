@@ -97,10 +97,10 @@
 
       ['procurement','Procurement','Purchase Orders · Receiving · PO Lifecycle','#f59e0b',[
         ['procurement/index.html','Open vendor PO management'],
-        ['procurement/new-po.html','Create vendor PO'],
+        ['create-vendor-po.html','Create vendor PO'],
         ['vendor-po-management.html','Event / dropship POs'],
         ['vendor-management/procurement.html','Procurement & receiving']
-      ],'procurement/index.html',{label:'+ Create vendor PO',path:'procurement/new-po.html'}],
+      ],'procurement/index.html',{label:'+ Create vendor PO',path:'create-vendor-po.html'}],
 
       ['shipping','Shipping','Dispatch · Sarasota Operations','#ef4444',[
         ['shipping/index.html','Ship orders · Sarasota'],

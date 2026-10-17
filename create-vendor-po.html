@@ -1,0 +1,1309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+    html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}
+    html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}
+    @keyframes stark-navigation-progress{to{background-position:-200% 0}}
+    @media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}
+  </style>
+  <script data-stark-navigation-boot>
+    document.documentElement.classList.add('stark-page-loading');
+    window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);
+  </script>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261012-2" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create Vendor PO · Supply Chain Intelligence</title>
+  <meta name="description" content="Create a purchase order for inventory, event or dropship items. Add vendor details, items, shipping method and instructions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-5">
+  <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
+
+  <script src="assets/system-shell.js?v=20261017-3" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+  <script src="assets/fulfillment-core.js?v=20261012-2" defer></script>
+</head>
+<body data-system-page="procurement">
+  <main class="system-page vpo-page-container" aria-label="Create Vendor PO">
+    <!-- Breadcrumb -->
+    <nav class="vpo-breadcrumb" aria-label="Breadcrumb">
+      <a href="vendor-management/index.html" class="vpo-bc-link">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Vendor Management
+      </a>
+      <span class="vpo-bc-sep">&gt;</span>
+      <span class="vpo-bc-current">Create Vendor PO</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="vpo-header">
+      <h1 class="vpo-page-title">Create Vendor PO</h1>
+      <p class="vpo-page-subtitle">Create a purchase order for inventory, event or dropship items. Add vendor details, items, shipping method and instructions.</p>
+    </div>
+
+    <!-- Main Grid Form -->
+    <form id="vpo-form" autocomplete="off">
+      <div class="vpo-main-grid">
+        <!-- Left: Form Sections -->
+        <div class="vpo-main-col">
+          <!-- 1. PO Details -->
+          <section class="vpo-section-card" aria-label="PO Details">
+            <div class="vpo-sec-head">
+              <div class="vpo-sec-head-left">
+                <span class="vpo-step-badge">1</span>
+                <div class="vpo-sec-title-wrap">
+                  <h2 class="vpo-sec-title">PO Details</h2>
+                  <p class="vpo-sec-subtitle">Basic purchase order information</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 1: PO type, Vendor, PO number, Company name -->
+            <div class="vpo-grid-4">
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-type">PO type <span class="vpo-req">*</span></label>
+                <select class="vpo-select" id="vpo-type" name="poType" required>
+                  <option value="Inventory PO" selected>Inventory PO</option>
+                  <option value="Dropship PO">Dropship PO</option>
+                  <option value="Event PO">Event PO</option>
+                  <option value="Sample PO">Sample PO</option>
+                </select>
+              </div>
+
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-vendor">Vendor <span class="vpo-req">*</span></label>
+                <div class="vpo-input-icon-wrap">
+                  <input type="text" class="vpo-input" id="vpo-vendor" name="vendor" value="ABC Manufacturing Co." placeholder="Select vendor" required>
+                  <button type="button" class="vpo-input-icon-btn" id="vpo-btn-vendor-search" title="Search vendor catalog">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-number">PO number <span class="vpo-req">*</span></label>
+                <input type="text" class="vpo-input" id="vpo-number" name="poNumber" value="Auto-generate" placeholder="Auto-generate" readonly>
+              </div>
+
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-company">Company name (Buyer) <span class="vpo-req">*</span></label>
+                <input type="text" class="vpo-input" id="vpo-company" name="companyName" value="ABC Company" required>
+              </div>
+            </div>
+
+            <!-- Row 2: Payment terms, Requested ship date, Expected arrival date, Ship to warehouse -->
+            <div class="vpo-grid-4">
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-payment-terms">Payment terms <span class="vpo-req">*</span></label>
+                <select class="vpo-select" id="vpo-payment-terms" name="paymentTerms" required>
+                  <option value="Net 30" selected>Net 30</option>
+                  <option value="Net 15">Net 15</option>
+                  <option value="Net 45">Net 45</option>
+                  <option value="Net 60">Net 60</option>
+                  <option value="Prepaid">Prepaid</option>
+                  <option value="Due on Receipt">Due on Receipt</option>
+                </select>
+              </div>
+
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-ship-date">Requested ship date <span class="vpo-req">*</span></label>
+                <div class="vpo-input-icon-wrap">
+                  <input type="text" class="vpo-input" id="vpo-ship-date" name="requestedShipDate" value="10/28/2026" required>
+                  <span class="vpo-input-icon-static" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </span>
+                </div>
+              </div>
+
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-arrival-date">Expected arrival date</label>
+                <div class="vpo-input-icon-wrap">
+                  <input type="text" class="vpo-input" id="vpo-arrival-date" name="expectedArrivalDate" placeholder="mm/dd/yyyy">
+                  <span class="vpo-input-icon-static" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </span>
+                </div>
+              </div>
+
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-warehouse-select">Ship to warehouse <span class="vpo-req">*</span></label>
+                <div class="vpo-warehouse-inline">
+                  <select class="vpo-select" id="vpo-warehouse-select" name="warehouse" required>
+                    <option value="Sarasota" selected>Sarasota</option>
+                    <option value="Demo_3PL">Demo_3PL</option>
+                    <option value="TX DC">TX DC</option>
+                    <option value="NY DC">NY DC</option>
+                    <option value="CA DC">CA DC</option>
+                  </select>
+                  <button type="button" class="vpo-edit-btn" id="vpo-btn-edit-wh" title="Edit delivery address">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    Edit Address
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. Ship To Address (Dynamically updated based on warehouse selection) -->
+          <section class="vpo-section-card" aria-label="Ship To Address">
+            <div class="vpo-sec-head">
+              <div class="vpo-sec-head-left">
+                <span class="vpo-step-badge">2</span>
+                <div class="vpo-sec-title-wrap">
+                  <h2 class="vpo-sec-title">Ship To Address</h2>
+                  <p class="vpo-sec-subtitle">Delivery address for this purchase order</p>
+                </div>
+              </div>
+              <button type="button" class="vpo-edit-btn" id="vpo-btn-edit-addr" title="Edit address details">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Edit Address
+              </button>
+            </div>
+
+            <!-- Address Card Body -->
+            <div class="vpo-address-box" id="vpo-address-display">
+              <div class="vpo-address-name" id="vpo-addr-wh-name">Stark Warehouse - Sarasota</div>
+              <div id="vpo-addr-line1">1234 Distribution Way</div>
+              <div id="vpo-addr-citystate">Sarasota, FL 34240</div>
+              <div id="vpo-addr-country">United States</div>
+            </div>
+          </section>
+
+          <!-- 3. Shipping Details -->
+          <section class="vpo-section-card" aria-label="Shipping Details">
+            <div class="vpo-sec-head">
+              <div class="vpo-sec-head-left">
+                <span class="vpo-step-badge">3</span>
+                <div class="vpo-sec-title-wrap">
+                  <h2 class="vpo-sec-title">Shipping Details</h2>
+                  <p class="vpo-sec-subtitle">Shipping method and instructions</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="vpo-grid-shipping">
+              <!-- Shipping Method Custom Selector -->
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-ship-method-input">Shipping method <span class="vpo-req">*</span></label>
+                <div class="vpo-ship-select-box">
+                  <div class="vpo-ship-select-btn" id="vpo-ship-select-toggle" tabindex="0" role="button" aria-haspopup="true">
+                    <span id="vpo-ship-selected-label">Select shipping method</span>
+                    <span style="color:#64748b; font-size:11px;">⌄</span>
+                  </div>
+
+                  <!-- Dropdown Menu matching screenshot -->
+                  <div class="vpo-ship-menu" id="vpo-ship-menu" style="display:none;">
+                    <div class="vpo-ship-menu-item" data-val="FedEx Ground">
+                      <div class="vpo-ship-menu-left">
+                        <span class="vpo-carrier-badge vpo-carrier-fedex">Fx</span>
+                        <span>FedEx Methods</span>
+                      </div>
+                      <span style="color:#94a3b8; font-size:11px;">›</span>
+                    </div>
+                    <div class="vpo-ship-menu-item" data-val="UPS Ground">
+                      <div class="vpo-ship-menu-left">
+                        <span class="vpo-carrier-badge vpo-carrier-ups">UPS</span>
+                        <span>UPS Methods</span>
+                      </div>
+                      <span style="color:#94a3b8; font-size:11px;">›</span>
+                    </div>
+                    <div class="vpo-ship-menu-item" data-val="LTL (Freight)">
+                      <div class="vpo-ship-menu-left">
+                        <span class="vpo-carrier-badge vpo-carrier-ltl">🚚</span>
+                        <span>LTL (Freight)</span>
+                      </div>
+                    </div>
+                    <div class="vpo-ship-menu-item" data-val="Pickup">
+                      <div class="vpo-ship-menu-left">
+                        <span class="vpo-carrier-badge vpo-carrier-pickup">🏢</span>
+                        <span>Pickup</span>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="vpo-ship-method-val" name="shippingMethod" value="UPS Ground">
+                </div>
+              </div>
+
+              <!-- 3rd Party Shipping Option -->
+              <div class="vpo-form-group">
+                <div class="vpo-toggle-wrap">
+                  <span class="vpo-label" style="margin-bottom:0;">3rd party shipping (optional)</span>
+                  <label class="vpo-toggle-switch" aria-label="Toggle 3rd party shipping">
+                    <input type="checkbox" id="vpo-toggle-3rdparty">
+                    <span class="vpo-toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="vpo-3rd-inputs">
+                  <input type="text" class="vpo-input" id="vpo-3rd-acct" placeholder="Enter account number">
+                  <input type="text" class="vpo-input" id="vpo-3rd-zip" placeholder="Enter ZIP code">
+                </div>
+              </div>
+
+              <!-- Special Instructions -->
+              <div class="vpo-form-group">
+                <label class="vpo-label" for="vpo-special-instructions">Special instructions</label>
+                <textarea class="vpo-textarea" id="vpo-special-instructions" maxlength="500" placeholder="e.g. Packing, labeling, appointment, etc."></textarea>
+                <div class="vpo-char-counter" id="vpo-special-counter">0/500</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. Line Items -->
+          <section class="vpo-section-card" aria-label="Line Items">
+            <div class="vpo-sec-head">
+              <div class="vpo-sec-head-left">
+                <span class="vpo-step-badge">4</span>
+                <div class="vpo-sec-title-wrap">
+                  <h2 class="vpo-sec-title">Line Items</h2>
+                  <p class="vpo-sec-subtitle">Add items from vendor catalog or enter manually</p>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="vpo-edit-btn" id="vpo-btn-add-item" style="color:#2563eb;">
+                  <span style="font-weight:700;">+</span> Add Item
+                </button>
+                <button type="button" class="vpo-edit-btn" id="vpo-btn-bulk-add" style="color:#334155;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2563eb" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Bulk Add
+                </button>
+                <button type="button" class="vpo-edit-btn" id="vpo-btn-import-excel" style="color:#334155;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2563eb" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Import from Excel
+                </button>
+              </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="vpo-items-search-wrap">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="vpo-items-search-icon" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" class="vpo-items-search-input" id="vpo-item-search" placeholder="Search by model#, vendor item#, title, etc...">
+            </div>
+
+            <!-- Table -->
+            <div class="vpo-table-responsive">
+              <table class="vpo-table" id="vpo-items-table">
+                <thead>
+                  <tr>
+                    <th class="vpo-th-center" style="width: 36px;">#</th>
+                    <th class="vpo-th-center" style="width: 54px;"></th>
+                    <th style="width: 140px;">Model / SKU <span class="vpo-req">*</span></th>
+                    <th style="width: 130px;">Vendor Item #</th>
+                    <th>Description</th>
+                    <th style="width: 80px;">Qty <span class="vpo-req">*</span></th>
+                    <th style="width: 65px;">MOQ</th>
+                    <th style="width: 100px;">Unit Cost ($) <span class="vpo-req">*</span></th>
+                    <th class="vpo-th-right" style="width: 120px;">Line Total ($)</th>
+                    <th style="width: 120px;">ETA</th>
+                    <th class="vpo-th-center" style="width: 44px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="vpo-items-tbody">
+                  <!-- Row 1: Sony WH-1000XM5 -->
+                  <tr data-row-idx="1">
+                    <td class="vpo-td-center">1</td>
+                    <td>
+                      <div class="vpo-img-thumb" title="Sony Wireless Headphones">
+                        <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+                          <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+                          <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+                          <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+                          <g transform="translate(25, 68) rotate(6)">
+                            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                            <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
+                            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+                          </g>
+                          <g transform="translate(107, 70) rotate(-6)">
+                            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                            <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
+                            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+                          </g>
+                        </svg>
+                      </div>
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-sku" value="WH-1000XM5" required>
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-vendor-item" value="WH-1000XM5-BK">
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-desc" value="Sony Wireless Headphones">
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-qty" value="200" min="1" step="1" required>
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-moq" value="50" min="0" step="1">
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-cost" value="75.00" min="0" step="0.01" required>
+                    </td>
+                    <td class="vpo-td-right">
+                      <strong class="vpo-row-total" style="color:#0f172a;">$15,000.00</strong>
+                    </td>
+                    <td>
+                      <div class="vpo-input-icon-wrap">
+                        <input type="text" class="vpo-input vpo-row-eta" value="11/27/2026">
+                        <span class="vpo-input-icon-static" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="vpo-td-center">
+                      <button type="button" class="vpo-trash-btn" title="Delete row" aria-label="Delete row">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 2: New Balance 550 -->
+                  <tr data-row-idx="2">
+                    <td class="vpo-td-center">2</td>
+                    <td>
+                      <div class="vpo-img-thumb" title="New Balance 550 Sneakers">
+                        <svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
+                          <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+                          <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                          <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
+                          <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
+                          <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
+                          <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
+                          <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
+                          <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
+                        </svg>
+                      </div>
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-sku" value="NB-550" required>
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-vendor-item" value="NB550-CRM">
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-desc" value="New Balance 550 Sneakers">
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-qty" value="300" min="1" step="1" required>
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-moq" value="100" min="0" step="1">
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-cost" value="42.00" min="0" step="0.01" required>
+                    </td>
+                    <td class="vpo-td-right">
+                      <strong class="vpo-row-total" style="color:#0f172a;">$12,600.00</strong>
+                    </td>
+                    <td>
+                      <div class="vpo-input-icon-wrap">
+                        <input type="text" class="vpo-input vpo-row-eta" value="11/27/2026">
+                        <span class="vpo-input-icon-static" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="vpo-td-center">
+                      <button type="button" class="vpo-trash-btn" title="Delete row" aria-label="Delete row">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 3: YETI Rambler 40oz -->
+                  <tr data-row-idx="3">
+                    <td class="vpo-td-center">3</td>
+                    <td>
+                      <div class="vpo-img-thumb" title="YETI Rambler 40oz">
+                        <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+                          <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
+                          <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
+                          <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
+                          <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
+                          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
+                          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                          <rect x="70" y="74" width="20" height="8" rx="1.5" fill="#e2e8f0"/>
+                          <text x="80" y="80.5" text-anchor="middle" fill="#64748b" font-size="5" font-family="sans-serif" font-weight="700">YETI</text>
+                        </svg>
+                      </div>
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-sku" value="TMBLR-40" required>
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-vendor-item" value="YT-40-BLK">
+                    </td>
+                    <td>
+                      <input type="text" class="vpo-input vpo-row-desc" value="YETI Rambler 40oz">
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-qty" value="150" min="1" step="1" required>
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-moq" value="50" min="0" step="1">
+                    </td>
+                    <td>
+                      <input type="number" class="vpo-input vpo-row-cost" value="28.00" min="0" step="0.01" required>
+                    </td>
+                    <td class="vpo-td-right">
+                      <strong class="vpo-row-total" style="color:#0f172a;">$4,200.00</strong>
+                    </td>
+                    <td>
+                      <div class="vpo-input-icon-wrap">
+                        <input type="text" class="vpo-input vpo-row-eta" value="11/27/2026">
+                        <span class="vpo-input-icon-static" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </span>
+                      </div>
+                    </td>
+                    <td class="vpo-td-center">
+                      <button type="button" class="vpo-trash-btn" title="Delete row" aria-label="Delete row">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- 5. Attachments -->
+          <section class="vpo-section-card" aria-label="Attachments">
+            <div class="vpo-sec-head">
+              <div class="vpo-sec-head-left">
+                <span class="vpo-step-badge">5</span>
+                <div class="vpo-sec-title-wrap">
+                  <h2 class="vpo-sec-title">Attachments</h2>
+                  <p class="vpo-sec-subtitle">Attach quote, specification sheet or any relevant documents</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="vpo-dropzone" id="vpo-file-dropzone" tabindex="0" role="button">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#2563eb" stroke-width="1.8" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <div>
+                <div style="font-size:13px; font-weight:600; color:#0f172a;">
+                  Drag and drop files here or <span style="color:#2563eb; text-decoration:underline;">click to upload</span>
+                </div>
+                <div style="font-size:11.5px; color:#64748b; margin-top:2px;">
+                  PDF, DOC, XLS, JPG (Max 10 MB each)
+                </div>
+              </div>
+              <input type="file" id="vpo-file-input" style="display:none;" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png">
+            </div>
+            <div id="vpo-file-list" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+          </section>
+        </div>
+
+        <!-- Right: PO Summary Card -->
+        <aside class="vpo-side-col" aria-label="PO Summary">
+          <div class="vpo-summary-card">
+            <div class="vpo-sum-header">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <line x1="3" y1="9" x2="21" y2="9"/>
+                  <line x1="3" y1="15" x2="21" y2="15"/>
+                  <line x1="9" y1="3" x2="9" y2="21"/>
+                  <line x1="15" y1="3" x2="15" y2="21"/>
+                </svg>
+                <h2 style="font-size:16px; font-weight:700; color:#0f172a; margin:0;">PO Summary</h2>
+              </div>
+              <span class="vpo-sum-badge-draft">Draft</span>
+            </div>
+
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Vendor</span>
+              <span class="vpo-sum-val" id="sum-vendor">ABC Manufacturing Co.</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">PO type</span>
+              <span class="vpo-sum-val" id="sum-po-type">Inventory PO</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">PO number</span>
+              <span class="vpo-sum-val" id="sum-po-num">PO-2026-00125</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Company name</span>
+              <span class="vpo-sum-val" id="sum-company">ABC Company</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Payment terms</span>
+              <span class="vpo-sum-val" id="sum-terms">Net 30</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Ship to</span>
+              <div class="vpo-sum-val address-block" id="sum-ship-to">
+                <div><strong>Sarasota Warehouse</strong></div>
+                <div>1234 Distribution Way</div>
+                <div>Sarasota, FL 34240</div>
+                <div>United States</div>
+              </div>
+            </div>
+
+            <hr class="vpo-sum-divider">
+
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Items</span>
+              <span class="vpo-sum-val" id="sum-items-count">3</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Subtotal</span>
+              <span class="vpo-sum-val" id="sum-subtotal">$31,800.00</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Shipping (Est.)</span>
+              <span class="vpo-sum-val" id="sum-shipping">$350.00</span>
+            </div>
+            <div class="vpo-sum-row">
+              <span class="vpo-sum-label">Tax (Est.)</span>
+              <span class="vpo-sum-val" id="sum-tax">$520.00</span>
+            </div>
+
+            <hr class="vpo-sum-divider">
+
+            <div class="vpo-sum-total-row">
+              <span class="vpo-sum-total-label">Total PO Value</span>
+              <span class="vpo-sum-total-val" id="sum-total-val">$32,670.00</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Bottom Action Bar -->
+      <div class="vpo-bottom-actions">
+        <button type="button" class="oo-btn-outline" id="vpo-btn-draft">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Save as Draft
+        </button>
+        <button type="button" class="oo-btn-outline" id="vpo-btn-preview">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
+          </svg>
+          Preview PO
+        </button>
+        <button type="submit" class="oo-btn-primary" id="vpo-btn-create-pdf">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Create PDF
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // Preset Warehouse Addresses - ship to address updates dynamically based on warehouse selection
+      const WAREHOUSE_ADDRESSES = {
+        'Sarasota': {
+          title: 'Stark Warehouse - Sarasota',
+          summaryTitle: 'Sarasota Warehouse',
+          line1: '1234 Distribution Way',
+          cityState: 'Sarasota, FL 34240',
+          country: 'United States'
+        },
+        'Demo_3PL': {
+          title: 'Stark Logistics - Demo 3PL',
+          summaryTitle: 'Demo 3PL Partner Facility',
+          line1: '8800 Commerce Parkway',
+          cityState: 'Atlanta, GA 30336',
+          country: 'United States'
+        },
+        'TX DC': {
+          title: 'Stark Texas Distribution Center',
+          summaryTitle: 'Texas DC Facility',
+          line1: '4500 Alliance Gateway Fwy',
+          cityState: 'Fort Worth, TX 76177',
+          country: 'United States'
+        },
+        'NY DC': {
+          title: 'Stark Northeast Hub',
+          summaryTitle: 'Northeast Hub',
+          line1: '100 Logistics Blvd',
+          cityState: 'Newburgh, NY 12550',
+          country: 'United States'
+        },
+        'CA DC': {
+          title: 'Stark Pacific DC',
+          summaryTitle: 'Pacific DC Facility',
+          line1: '2200 E Francis St',
+          cityState: 'Ontario, CA 91761',
+          country: 'United States'
+        }
+      };
+
+      // Vector SVGs
+      const SVGS = {
+        sony: `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+          <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+          <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+          <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+          <g transform="translate(25, 68) rotate(6)">
+            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+            <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
+            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+          </g>
+          <g transform="translate(107, 70) rotate(-6)">
+            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+            <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
+            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+          </g>
+        </svg>`,
+        nb: `<svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
+          <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+          <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+          <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
+          <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
+          <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
+          <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
+          <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
+          <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
+        </svg>`,
+        yeti: `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+          <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
+          <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
+          <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
+          <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
+          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <rect x="70" y="74" width="20" height="8" rx="1.5" fill="#e2e8f0"/>
+          <text x="80" y="80.5" text-anchor="middle" fill="#64748b" font-size="5" font-family="sans-serif" font-weight="700">YETI</text>
+        </svg>`,
+        default: `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" width="22" height="22">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>`
+      };
+
+      function notice(message, error = false) {
+        if (window.StarkSystemUI?.notice) {
+          window.StarkSystemUI.notice(message, error);
+        } else {
+          const toast = document.createElement('div');
+          toast.className = 'system-toast' + (error ? ' error' : '');
+          toast.textContent = message;
+          document.body.append(toast);
+          setTimeout(() => toast.remove(), 4000);
+        }
+      }
+
+      function formatMoney(n) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(n) || 0);
+      }
+
+      // Warehouse selection updates Section 2 address and PO Summary Ship to
+      function updateWarehouseAddress(whKey) {
+        const addr = WAREHOUSE_ADDRESSES[whKey] || WAREHOUSE_ADDRESSES['Sarasota'];
+
+        // Update Section 2: Ship To Address Card
+        const titleEl = document.querySelector('#vpo-addr-wh-name');
+        const line1El = document.querySelector('#vpo-addr-line1');
+        const cityStateEl = document.querySelector('#vpo-addr-citystate');
+        const countryEl = document.querySelector('#vpo-addr-country');
+
+        if (titleEl) titleEl.textContent = addr.title;
+        if (line1El) line1El.textContent = addr.line1;
+        if (cityStateEl) cityStateEl.textContent = addr.cityState;
+        if (countryEl) countryEl.textContent = addr.country;
+
+        // Update PO Summary: Ship To Block
+        const sumShipTo = document.querySelector('#sum-ship-to');
+        if (sumShipTo) {
+          sumShipTo.innerHTML = `
+            <div><strong>${addr.summaryTitle}</strong></div>
+            <div>${addr.line1}</div>
+            <div>${addr.cityState}</div>
+            <div>${addr.country}</div>
+          `;
+        }
+      }
+
+      // Recalculate totals
+      function recalculate() {
+        const rows = document.querySelectorAll('#vpo-items-tbody tr');
+        let subtotal = 0;
+        let validItemCount = 0;
+
+        rows.forEach((row, idx) => {
+          row.querySelector('td:first-child').textContent = String(idx + 1);
+          const sku = row.querySelector('.vpo-row-sku')?.value.trim();
+          const qty = Number(row.querySelector('.vpo-row-qty')?.value) || 0;
+          const cost = Number(row.querySelector('.vpo-row-cost')?.value) || 0;
+          const lineTotal = qty * cost;
+
+          const totalEl = row.querySelector('.vpo-row-total');
+          if (totalEl) totalEl.textContent = formatMoney(lineTotal);
+
+          if (sku && qty > 0) {
+            subtotal += lineTotal;
+            validItemCount++;
+          }
+        });
+
+        const estShipping = subtotal > 0 ? 350.00 : 0.00;
+        const estTax = subtotal > 0 ? 520.00 : 0.00;
+        const totalValue = subtotal + estShipping + estTax;
+
+        document.querySelector('#sum-items-count').textContent = String(validItemCount);
+        document.querySelector('#sum-subtotal').textContent = formatMoney(subtotal);
+        document.querySelector('#sum-shipping').textContent = formatMoney(estShipping);
+        document.querySelector('#sum-tax').textContent = formatMoney(estTax);
+        document.querySelector('#sum-total-val').textContent = formatMoney(totalValue);
+      }
+
+      // Synchronize PO Summary values with form
+      function syncSummary() {
+        const vendor = document.querySelector('#vpo-vendor')?.value.trim() || 'ABC Manufacturing Co.';
+        const poType = document.querySelector('#vpo-type')?.value || 'Inventory PO';
+        const poNum = document.querySelector('#vpo-number')?.value.trim() || 'Auto-generate';
+        const company = document.querySelector('#vpo-company')?.value.trim() || 'ABC Company';
+        const terms = document.querySelector('#vpo-payment-terms')?.value || 'Net 30';
+
+        document.querySelector('#sum-vendor').textContent = vendor;
+        document.querySelector('#sum-po-type').textContent = poType;
+        document.querySelector('#sum-po-num').textContent = poNum === 'Auto-generate' ? 'PO-2026-00125' : poNum;
+        document.querySelector('#sum-company').textContent = company;
+        document.querySelector('#sum-terms').textContent = terms;
+      }
+
+      // Bind row listeners
+      function bindRow(row) {
+        const qtyInp = row.querySelector('.vpo-row-qty');
+        const costInp = row.querySelector('.vpo-row-cost');
+        const skuInp = row.querySelector('.vpo-row-sku');
+        const descInp = row.querySelector('.vpo-row-desc');
+        const vendorItemInp = row.querySelector('.vpo-row-vendor-item');
+        const trashBtn = row.querySelector('.vpo-trash-btn');
+
+        [qtyInp, costInp, skuInp].forEach(inp => {
+          if (inp) {
+            inp.addEventListener('input', recalculate);
+            inp.addEventListener('change', recalculate);
+          }
+        });
+
+        if (skuInp) {
+          skuInp.addEventListener('change', () => {
+            const s = skuInp.value.trim().toUpperCase();
+            const thumb = row.querySelector('.vpo-img-thumb');
+            if (thumb) {
+              if (s.includes('1000XM') || s.includes('WH-1000')) {
+                thumb.innerHTML = SVGS.sony;
+                if (descInp && !descInp.value) descInp.value = 'Sony Wireless Headphones';
+                if (vendorItemInp && !vendorItemInp.value) vendorItemInp.value = 'WH-1000XM5-BK';
+                if (costInp && Number(costInp.value) === 0) costInp.value = '75.00';
+              } else if (s.includes('550') || s.includes('NB-550')) {
+                thumb.innerHTML = SVGS.nb;
+                if (descInp && !descInp.value) descInp.value = 'New Balance 550 Sneakers';
+                if (vendorItemInp && !vendorItemInp.value) vendorItemInp.value = 'NB550-CRM';
+                if (costInp && Number(costInp.value) === 0) costInp.value = '42.00';
+              } else if (s.includes('TMBLR') || s.includes('YETI') || s.includes('40')) {
+                thumb.innerHTML = SVGS.yeti;
+                if (descInp && !descInp.value) descInp.value = 'YETI Rambler 40oz';
+                if (vendorItemInp && !vendorItemInp.value) vendorItemInp.value = 'YT-40-BLK';
+                if (costInp && Number(costInp.value) === 0) costInp.value = '28.00';
+              } else {
+                thumb.innerHTML = SVGS.default;
+              }
+            }
+            recalculate();
+          });
+        }
+
+        if (trashBtn) {
+          trashBtn.addEventListener('click', () => {
+            const tbody = document.querySelector('#vpo-items-tbody');
+            if (tbody.querySelectorAll('tr').length > 1) {
+              row.remove();
+            } else {
+              if (skuInp) skuInp.value = '';
+              if (vendorItemInp) vendorItemInp.value = '';
+              if (descInp) descInp.value = '';
+              if (qtyInp) qtyInp.value = '1';
+              if (costInp) costInp.value = '0.00';
+              const thumb = row.querySelector('.vpo-img-thumb');
+              if (thumb) thumb.innerHTML = SVGS.default;
+            }
+            recalculate();
+          });
+        }
+      }
+
+      function addNewRow(sku = '', vendorItem = '', desc = '', qty = 100, moq = 50, cost = 0.00) {
+        const tbody = document.querySelector('#vpo-items-tbody');
+        const newIdx = tbody.querySelectorAll('tr').length + 1;
+        const tr = document.createElement('tr');
+        tr.dataset.rowIdx = String(newIdx);
+
+        let svgIcon = SVGS.default;
+        const s = sku.toUpperCase();
+        if (s.includes('1000XM') || s.includes('WH-1000')) svgIcon = SVGS.sony;
+        else if (s.includes('550') || s.includes('NB-550')) svgIcon = SVGS.nb;
+        else if (s.includes('TMBLR') || s.includes('YETI') || s.includes('40')) svgIcon = SVGS.yeti;
+
+        tr.innerHTML = `
+          <td class="vpo-td-center">${newIdx}</td>
+          <td>
+            <div class="vpo-img-thumb" title="${desc || 'Product Image'}">
+              ${svgIcon}
+            </div>
+          </td>
+          <td>
+            <input type="text" class="vpo-input vpo-row-sku" value="${sku}" placeholder="Model / SKU" required>
+          </td>
+          <td>
+            <input type="text" class="vpo-input vpo-row-vendor-item" value="${vendorItem}" placeholder="Vendor Item #">
+          </td>
+          <td>
+            <input type="text" class="vpo-input vpo-row-desc" value="${desc}" placeholder="Description">
+          </td>
+          <td>
+            <input type="number" class="vpo-input vpo-row-qty" value="${qty}" min="1" step="1" required>
+          </td>
+          <td>
+            <input type="number" class="vpo-input vpo-row-moq" value="${moq}" min="0" step="1">
+          </td>
+          <td>
+            <input type="number" class="vpo-input vpo-row-cost" value="${Number(cost).toFixed(2)}" min="0" step="0.01" required>
+          </td>
+          <td class="vpo-td-right">
+            <strong class="vpo-row-total" style="color:#0f172a;">${formatMoney(qty * cost)}</strong>
+          </td>
+          <td>
+            <div class="vpo-input-icon-wrap">
+              <input type="text" class="vpo-input vpo-row-eta" value="11/27/2026">
+              <span class="vpo-input-icon-static" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </span>
+            </div>
+          </td>
+          <td class="vpo-td-center">
+            <button type="button" class="vpo-trash-btn" title="Delete row" aria-label="Delete row">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+        bindRow(tr);
+        recalculate();
+      }
+
+      // Modals
+      function openEditAddressModal() {
+        const currentWh = document.querySelector('#vpo-warehouse-select').value;
+        const currentAddr = WAREHOUSE_ADDRESSES[currentWh] || WAREHOUSE_ADDRESSES['Sarasota'];
+
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 500px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Edit Delivery Address</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <p style="color:#64748b; font-size:12.5px; margin:0 0 14px 0;">Customize destination facility name and delivery address for this purchase order.</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#334155; margin-bottom:4px; display:block;">Facility / Recipient Name</label>
+                <input type="text" id="modal-addr-name" class="vpo-input" value="${currentAddr.title}">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#334155; margin-bottom:4px; display:block;">Address Line 1</label>
+                <input type="text" id="modal-addr-line1" class="vpo-input" value="${currentAddr.line1}">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#334155; margin-bottom:4px; display:block;">City, State, ZIP</label>
+                <input type="text" id="modal-addr-citystate" class="vpo-input" value="${currentAddr.cityState}">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#334155; margin-bottom:4px; display:block;">Country</label>
+                <input type="text" id="modal-addr-country" class="vpo-input" value="${currentAddr.country}">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+              <button type="button" class="sys-btn primary" id="modal-addr-save">Save Address</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelector('#modal-addr-save').onclick = () => {
+          const name = modal.querySelector('#modal-addr-name').value;
+          const l1 = modal.querySelector('#modal-addr-line1').value;
+          const cs = modal.querySelector('#modal-addr-citystate').value;
+          const ctry = modal.querySelector('#modal-addr-country').value;
+
+          document.querySelector('#vpo-addr-wh-name').textContent = name;
+          document.querySelector('#vpo-addr-line1').textContent = l1;
+          document.querySelector('#vpo-addr-citystate').textContent = cs;
+          document.querySelector('#vpo-addr-country').textContent = ctry;
+
+          document.querySelector('#sum-ship-to').innerHTML = `
+            <div><strong>${name}</strong></div>
+            <div>${l1}</div>
+            <div>${cs}</div>
+            <div>${ctry}</div>
+          `;
+          notice('Delivery address updated for this purchase order.');
+          modal.remove();
+        };
+      }
+
+      function openVendorModal() {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 540px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Select Vendor</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div class="vpo-vendor-opt" data-name="ABC Manufacturing Co." data-terms="Net 30" style="padding:12px; border:1px solid #bfdbfe; background:#eff6ff; border-radius:8px; cursor:pointer;">
+                <strong style="color:#1e3a8a;">ABC Manufacturing Co.</strong> (Selected)
+                <div style="font-size:12px; color:#475569; margin-top:2px;">Primary Supplier · Electronic & Lifestyle Assemblies · Terms: Net 30</div>
+              </div>
+              <div class="vpo-vendor-opt" data-name="Sony Electronics US" data-terms="Net 45" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                <strong style="color:#0f172a;">Sony Electronics US</strong>
+                <div style="font-size:12px; color:#64748b; margin-top:2px;">Audio & Video Hardware Direct · Terms: Net 45</div>
+              </div>
+              <div class="vpo-vendor-opt" data-name="New Balance Athletic" data-terms="Net 30" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                <strong style="color:#0f172a;">New Balance Athletic</strong>
+                <div style="font-size:12px; color:#64748b; margin-top:2px;">Footwear & Apparel Logistics · Terms: Net 30</div>
+              </div>
+              <div class="vpo-vendor-opt" data-name="YETI Coolers LLC" data-terms="Net 30" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                <strong style="color:#0f172a;">YETI Coolers LLC</strong>
+                <div style="font-size:12px; color:#64748b; margin-top:2px;">Premium Drinkware & Outdoor Gear · Terms: Net 30</div>
+              </div>
+            </div>
+            <div style="margin-top:20px; text-align:right;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelectorAll('.vpo-vendor-opt').forEach(opt => {
+          opt.onclick = () => {
+            const v = opt.dataset.name;
+            const t = opt.dataset.terms;
+            document.querySelector('#vpo-vendor').value = v;
+            document.querySelector('#vpo-payment-terms').value = t;
+            syncSummary();
+            notice(`Selected vendor ${v}`);
+            modal.remove();
+          };
+        });
+      }
+
+      function openBulkAddModal() {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 520px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Bulk Add PO Items</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <p style="color:#64748b; font-size:12.5px; margin:0 0 10px 0;">Enter items in format: <code>SKU, VendorItem#, Description, Qty, Cost</code> (one per line):</p>
+            <textarea id="vpo-bulk-txt" style="width:100%; height:120px; font-family:monospace; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box;" placeholder="WH-1000XM5, WH-1000XM5-BK, Sony Wireless Headphones, 200, 75.00&#10;NB-550, NB550-CRM, New Balance 550, 300, 42.00"></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+              <button type="button" class="sys-btn primary" id="vpo-bulk-confirm">Add Lines</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelector('#vpo-bulk-confirm').onclick = () => {
+          const txt = modal.querySelector('#vpo-bulk-txt').value.trim();
+          if (txt) {
+            const lines = txt.split('\n');
+            lines.forEach(l => {
+              const p = l.split(',').map(s => s.trim());
+              if (p[0]) {
+                addNewRow(p[0], p[1] || '', p[2] || '', Number(p[3]) || 100, 50, Number(p[4]) || 0);
+              }
+            });
+            notice(`Bulk added ${lines.length} items to purchase order.`);
+          }
+          modal.remove();
+        };
+      }
+
+      function openImportExcelModal() {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 500px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Import PO Lines from Excel / CSV</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <div style="border:2px dashed #cbd5e1; border-radius:8px; padding:32px 20px; text-align:center; background:#f8fafc; cursor:pointer;" id="vpo-excel-drop">
+              <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#2563eb" stroke-width="2" style="margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <div style="font-weight:600; color:#0f172a;">Click to browse or drag Excel / CSV file here</div>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">Supports .xlsx, .xls, .csv up to 10MB</div>
+              <input type="file" id="vpo-excel-input" accept=".xlsx,.xls,.csv" style="display:none;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+              <button type="button" class="sys-btn" data-close>Close</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        const drop = modal.querySelector('#vpo-excel-drop');
+        const fileInp = modal.querySelector('#vpo-excel-input');
+        drop.onclick = () => fileInp.click();
+        fileInp.onchange = () => {
+          if (fileInp.files[0]) {
+            notice(`Parsed file ${fileInp.files[0].name}: 3 items loaded.`);
+            modal.remove();
+          }
+        };
+      }
+
+      function openPreviewModal() {
+        const v = document.querySelector('#sum-vendor').textContent;
+        const p = document.querySelector('#sum-po-num').textContent;
+        const tot = document.querySelector('#sum-total-val').textContent;
+        const wh = document.querySelector('#vpo-addr-wh-name').textContent;
+
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 640px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Purchase Order Preview · ${p}</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px; font-size:13px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div><span style="color:#64748b;">Vendor:</span> <strong>${v}</strong></div>
+                <div><span style="color:#64748b;">PO Number:</span> <strong>${p}</strong></div>
+                <div><span style="color:#64748b;">Destination:</span> <strong>${wh}</strong></div>
+                <div><span style="color:#64748b;">Payment Terms:</span> <strong>${document.querySelector('#vpo-payment-terms').value}</strong></div>
+                <div><span style="color:#64748b;">Ship Method:</span> <strong>${document.querySelector('#vpo-ship-selected-label').textContent}</strong></div>
+                <div><span style="color:#64748b;">Total Value:</span> <strong style="color:#2563eb; font-size:15px;">${tot}</strong></div>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button type="button" class="sys-btn" data-close>Close</button>
+              <button type="button" class="sys-btn primary" id="vpo-preview-print">Print / PDF</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+        modal.querySelector('#vpo-preview-print').onclick = () => {
+          modal.remove();
+          window.print();
+        };
+      }
+
+      function submitPO(isPdf = false) {
+        const form = document.querySelector('#vpo-form');
+        if (!form.reportValidity()) return;
+
+        const vendor = document.querySelector('#vpo-vendor').value.trim();
+        const poNum = 'PO-2026-00125';
+        const wh = document.querySelector('#vpo-warehouse-select').value;
+        const total = document.querySelector('#sum-total-val').textContent;
+
+        sessionStorage.setItem('stark-toast-msg', `Purchase Order ${poNum} for ${vendor} (${wh}) ${isPdf ? 'generated as PDF' : 'saved as Draft'} successfully.`);
+
+        if (isPdf) {
+          window.print();
+        } else {
+          notice(`Purchase Order ${poNum} saved as Draft.`);
+          setTimeout(() => {
+            window.location.href = 'procurement/index.html';
+          }, 600);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Bind initial rows
+        document.querySelectorAll('#vpo-items-tbody tr').forEach(bindRow);
+
+        // Warehouse selection change listener - updates Section 2 and PO Summary!
+        const whSelect = document.querySelector('#vpo-warehouse-select');
+        if (whSelect) {
+          whSelect.addEventListener('change', () => {
+            updateWarehouseAddress(whSelect.value);
+            notice(`Updated ship-to address for ${whSelect.value} warehouse.`);
+          });
+        }
+
+        // Edit Address buttons
+        document.querySelector('#vpo-btn-edit-wh')?.addEventListener('click', openEditAddressModal);
+        document.querySelector('#vpo-btn-edit-addr')?.addEventListener('click', openEditAddressModal);
+
+        // Vendor search modal
+        document.querySelector('#vpo-btn-vendor-search')?.addEventListener('click', openVendorModal);
+
+        // Sync inputs with PO Summary
+        ['#vpo-vendor', '#vpo-type', '#vpo-company', '#vpo-payment-terms'].forEach(sel => {
+          const el = document.querySelector(sel);
+          if (el) {
+            el.addEventListener('input', syncSummary);
+            el.addEventListener('change', syncSummary);
+          }
+        });
+
+        // Shipping method dropdown
+        const shipToggle = document.querySelector('#vpo-ship-select-toggle');
+        const shipMenu = document.querySelector('#vpo-ship-menu');
+        const shipLabel = document.querySelector('#vpo-ship-selected-label');
+        const shipInput = document.querySelector('#vpo-ship-method-val');
+
+        if (shipToggle && shipMenu) {
+          shipToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            shipMenu.style.display = shipMenu.style.display === 'none' ? 'block' : 'none';
+          });
+
+          document.addEventListener('click', () => {
+            shipMenu.style.display = 'none';
+          });
+
+          shipMenu.querySelectorAll('.vpo-ship-menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const val = item.dataset.val;
+              shipLabel.textContent = val;
+              shipInput.value = val;
+              shipMenu.style.display = 'none';
+              notice(`Shipping method set to ${val}`);
+            });
+          });
+        }
+
+        // Special instructions counter
+        const specInp = document.querySelector('#vpo-special-instructions');
+        const specCount = document.querySelector('#vpo-special-counter');
+        if (specInp && specCount) {
+          specInp.addEventListener('input', () => {
+            specCount.textContent = `${specInp.value.length}/500`;
+          });
+        }
+
+        // Section 4 actions
+        document.querySelector('#vpo-btn-add-item')?.addEventListener('click', () => addNewRow());
+        document.querySelector('#vpo-btn-bulk-add')?.addEventListener('click', openBulkAddModal);
+        document.querySelector('#vpo-btn-import-excel')?.addEventListener('click', openImportExcelModal);
+
+        // Filter Line Items table
+        const searchInp = document.querySelector('#vpo-item-search');
+        if (searchInp) {
+          searchInp.addEventListener('input', () => {
+            const q = searchInp.value.toLowerCase().trim();
+            document.querySelectorAll('#vpo-items-tbody tr').forEach(r => {
+              const text = r.textContent.toLowerCase();
+              r.style.display = (!q || text.includes(q)) ? '' : 'none';
+            });
+          });
+        }
+
+        // Section 5 Attachments Dropzone
+        const dropzone = document.querySelector('#vpo-file-dropzone');
+        const fileInput = document.querySelector('#vpo-file-input');
+        const fileList = document.querySelector('#vpo-file-list');
+
+        if (dropzone && fileInput) {
+          dropzone.addEventListener('click', () => fileInput.click());
+          ['dragenter', 'dragover'].forEach(ev => {
+            dropzone.addEventListener(ev, e => {
+              e.preventDefault();
+              dropzone.style.background = '#eff6ff';
+              dropzone.style.borderColor = '#2563eb';
+            });
+          });
+          ['dragleave', 'drop'].forEach(ev => {
+            dropzone.addEventListener(ev, e => {
+              e.preventDefault();
+              dropzone.style.background = '#f8fafc';
+              dropzone.style.borderColor = '#cbd5e1';
+            });
+          });
+          dropzone.addEventListener('drop', e => {
+            if (e.dataTransfer?.files?.length) {
+              fileInput.files = e.dataTransfer.files;
+              fileInput.dispatchEvent(new Event('change'));
+            }
+          });
+
+          fileInput.addEventListener('change', () => {
+            if (fileInput.files?.length && fileList) {
+              fileList.innerHTML = Array.from(fileInput.files).map(f => `
+                <span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; padding:4px 10px; border-radius:12px;">
+                  📄 ${f.name} (${(f.size/1024).toFixed(0)} KB)
+                </span>
+              `).join('');
+              notice(`Attached ${fileInput.files.length} document(s).`);
+            }
+          });
+        }
+
+        // Bottom actions
+        document.querySelector('#vpo-btn-draft')?.addEventListener('click', () => submitPO(false));
+        document.querySelector('#vpo-btn-preview')?.addEventListener('click', openPreviewModal);
+        document.querySelector('#vpo-form')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          submitPO(true);
+        });
+
+        // Initialize warehouse and totals
+        updateWarehouseAddress('Sarasota');
+        recalculate();
+        syncSummary();
+      });
+    })();
+  </script>
+</body>
+</html>
