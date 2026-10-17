@@ -618,74 +618,6 @@
         </div>
       </div>
 
-      <!-- KPI Metrics Overview -->
-      <div class="im-kpis">
-        <div class="im-kpi-card">
-          <div class="im-kpi-header">
-            <span class="im-kpi-label">Master Catalog</span>
-            <span class="im-kpi-icon" style="--kpi-accent:#0284c7">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            </span>
-          </div>
-          <strong class="im-kpi-value">${num(totalSKUs)}</strong>
-          <small class="im-kpi-sub">Total active SKUs</small>
-        </div>
-
-        <div class="im-kpi-card">
-          <div class="im-kpi-header">
-            <span class="im-kpi-label">Available To Sell (ATS)</span>
-            <span class="im-kpi-icon" style="--kpi-accent:#10b981">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>
-          </div>
-          <strong class="im-kpi-value">${num(totalATS)}</strong>
-          <small class="im-kpi-sub">Units across all nodes</small>
-        </div>
-
-        <div class="im-kpi-card" data-filter-status="Live" role="button" tabindex="0" title="Click to filter by Live items">
-          <div class="im-kpi-header">
-            <span class="im-kpi-label">Live Commercial</span>
-            <span class="im-kpi-icon" style="--kpi-accent:#059669">
-              <span class="im-kpi-dot">●</span>
-            </span>
-          </div>
-          <strong class="im-kpi-value">${num(liveCount)}</strong>
-          <small class="im-kpi-sub">Active catalog</small>
-        </div>
-
-        <div class="im-kpi-card" data-filter-status="fashion" role="button" tabindex="0" title="Click to filter by Fashion items">
-          <div class="im-kpi-header">
-            <span class="im-kpi-label">Fashion Line</span>
-            <span class="im-kpi-icon" style="--kpi-accent:#c026d3">
-              <span class="im-kpi-dot">●</span>
-            </span>
-          </div>
-          <strong class="im-kpi-value">${num(fashionCount)}</strong>
-          <small class="im-kpi-sub">Designer / Seasonal</small>
-        </div>
-
-        <div class="im-kpi-card" data-filter-status="internal use" role="button" tabindex="0" title="Click to filter by Internal Use items">
-          <div class="im-kpi-header">
-            <span class="im-kpi-label">Internal Use</span>
-            <span class="im-kpi-icon" style="--kpi-accent:#d97706">
-              <span class="im-kpi-dot">●</span>
-            </span>
-          </div>
-          <strong class="im-kpi-value">${num(internalCount)}</strong>
-          <small class="im-kpi-sub">Marketing / Samples</small>
-        </div>
-
-        <div class="im-kpi-card" data-filter-status="presentation" role="button" tabindex="0" title="Click to filter by Presentation items">
-          <div class="im-kpi-header">
-            <span class="im-kpi-label">Presentation</span>
-            <span class="im-kpi-icon" style="--kpi-accent:#2563eb">
-              <span class="im-kpi-dot">●</span>
-            </span>
-          </div>
-          <strong class="im-kpi-value">${num(presentationCount)}</strong>
-          <small class="im-kpi-sub">Showroom / Display</small>
-        </div>
-      </div>
 
       <!-- Search & 4-Dimension Filter Control Tower -->
       <div class="im-toolbar-panel">
@@ -1016,13 +948,6 @@
       };
     });
 
-    // KPI card status shortcuts
-    document.querySelectorAll('[data-filter-status]').forEach(card => {
-      card.onclick = () => {
-        selectedStatus = card.dataset.filterStatus;
-        render();
-      };
-    });
 
     // Price tier chips
     document.querySelectorAll('.im-price-chip').forEach(chip => {
