@@ -19,7 +19,7 @@
     orders:[['order-management/index.html','All open orders'],['order-management/issues.html','Order issues'],['order-management/unvalidated.html','Unvalidated'],['order-management/cancelled.html','Cancelled'],['order-management/new-order.html','Create customer order']],
     tpl:[['3pl-management/index.html','Overview'],['3pl-management/order-history.html','Order history & API'],['3pl-management/shipment-requests.html','Shipment requests'],['3pl-management/orders.html','Manage 3PL orders'],['3pl-management/ship-orders.html','Ship 3PL orders'],['3pl-management/upload-shipments.html','Upload shipments']],
     shipping:[['shipping/index.html','Ship orders · Sarasota'],['shipping/daily-report.html','Daily shipment report']],
-    procurement:[['procurement/index.html','Open vendor PO management'],['create-vendor-po.html','Create vendor PO'],['dropship-po.html','Event / dropship POs']],
+    procurement:[['procurement/index.html','Open vendor POs'],['create-vendor-po.html','Create vendor PO']],
     transportation:[['transportation/index.html','Overview'],['freight-estimator.html','Freight estimator'],['freight-consolidate.html','Freight consolidation'],['shipment-tracking.html','Shipment tracking']]
   };
   function localDay(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const get=k=>parts.find(p=>p.type===k).value;return get('year')+'-'+get('month')+'-'+get('day');}
