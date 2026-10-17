@@ -29,6 +29,21 @@
   let viewMode = params.get('view') || 'cards'; // Enhanced 4-column card view
   let activeMenuSku = null;
 
+  // Cache initial action and immediately sanitize URL so refreshing never re-triggers modals
+  const initialAction = params.get('action');
+  const initialActionBrand = params.get('brand') || '';
+  if (params.has('action')) {
+    try {
+      const cleanParams = new URLSearchParams(location.search);
+      cleanParams.delete('action');
+      const cleanSearch = cleanParams.toString();
+      const cleanUrl = location.pathname + (cleanSearch ? '?' + cleanSearch : '') + location.hash;
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, document.title, cleanUrl);
+      }
+    } catch (err) {}
+  }
+
   function notice(message, error = false) {
     if (window.StarkSystemUI?.notice) {
       window.StarkSystemUI.notice(message, error);
@@ -2074,17 +2089,60 @@
     if (exportBtn) exportBtn.onclick = () => exportCSV(filtered);
   }
 
+  // Helper to reliably detect browser page reload / refresh
+  function isPageReload() {
+    try {
+      const navEntries = performance.getEntriesByType('navigation');
+      if (navEntries && navEntries.length > 0) {
+        return navEntries[0].type === 'reload';
+      }
+      if (window.performance && window.performance.navigation) {
+        return window.performance.navigation.type === 1;
+      }
+    } catch (err) {}
+    return false;
+  }
+
   // Initialization & URL action trigger
   document.addEventListener('DOMContentLoaded', () => {
     render();
 
-    const action = params.get('action');
-    if (action === 'new') {
-      setTimeout(openAddItemModal, 300);
-    } else if (action === 'ats-upload') {
-      setTimeout(() => openAtsUploadModal(params.get('brand') || ''), 300);
-    } else if (action === 'price-update') {
-      setTimeout(() => openPriceUpdateModal(params.get('brand') || ''), 300);
+    // NEVER auto-open any action modal on page refresh / reload
+    if (isPageReload()) {
+      try {
+        sessionStorage.removeItem('stark-action-intent');
+      } catch (err) {}
+      return;
+    }
+
+    // Only open if there was an explicit intent or fresh unconsumed action
+    if (initialAction) {
+      const consumedKey = 'stark-action-consumed:' + initialAction;
+      let hasIntent = false;
+      try {
+        const intent = sessionStorage.getItem('stark-action-intent');
+        sessionStorage.removeItem('stark-action-intent');
+        hasIntent = intent === initialAction;
+      } catch (err) {}
+
+      let alreadyConsumed = false;
+      try {
+        alreadyConsumed = !!sessionStorage.getItem(consumedKey);
+      } catch (err) {}
+
+      if (hasIntent || !alreadyConsumed) {
+        try {
+          sessionStorage.setItem(consumedKey, '1');
+        } catch (err) {}
+
+        if (initialAction === 'new') {
+          setTimeout(openAddItemModal, 300);
+        } else if (initialAction === 'ats-upload') {
+          setTimeout(() => openAtsUploadModal(initialActionBrand), 300);
+        } else if (initialAction === 'price-update') {
+          setTimeout(() => openPriceUpdateModal(initialActionBrand), 300);
+        }
+      }
     }
   });
 

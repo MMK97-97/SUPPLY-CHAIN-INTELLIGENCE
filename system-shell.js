@@ -469,6 +469,31 @@
       }
     });
 
+    // Intercept navigation links for ATS upload and Price update
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href*="action=ats-upload"], a[href*="action=price-update"]');
+      if (link) {
+        const href = link.getAttribute('href') || '';
+        const isAts = href.includes('action=ats-upload');
+        const isPrice = href.includes('action=price-update');
+        const isItemMasterPage = location.pathname.endsWith('item-master.html') || document.body.dataset.systemPage === 'item-master';
+
+        if (isItemMasterPage && window.StarkItemMaster) {
+          e.preventDefault();
+          if (isAts && window.StarkItemMaster.openAtsUploadModal) {
+            window.StarkItemMaster.openAtsUploadModal();
+          } else if (isPrice && window.StarkItemMaster.openPriceUpdateModal) {
+            window.StarkItemMaster.openPriceUpdateModal();
+          }
+          return;
+        }
+
+        try {
+          sessionStorage.setItem('stark-action-intent', isAts ? 'ats-upload' : 'price-update');
+        } catch(err) {}
+      }
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeAllDropdowns();
