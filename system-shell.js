@@ -216,11 +216,6 @@
           </a>
         `).join('')}
       </div>
-      ${quickAction ? `
-        <a href="${S.url(quickAction.path)}" class="system-subnav-quick" style="--mod-accent:${color}">
-          ${escape(quickAction.label)}
-        </a>
-      ` : ''}
     `;
   }
 
