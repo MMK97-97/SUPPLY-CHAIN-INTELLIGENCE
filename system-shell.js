@@ -217,8 +217,8 @@
   }
 
   function closeAllDropdowns() {
-    document.querySelectorAll('.system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
-    document.querySelectorAll('.system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    document.querySelectorAll('.system-region-menu, .system-account-menu').forEach(el => el.hidden = true);
+    document.querySelectorAll('.system-region-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
   }
 
   function renderNavigation() {
@@ -347,37 +347,6 @@
           <span class="system-alert-count" id="system-alert-count">12</span>
         </a>
 
-        <!-- Create New Teal Button -->
-        <div class="system-create-picker" id="system-create-picker">
-          <button type="button" class="system-create-btn" id="system-create-btn" aria-haspopup="menu" aria-expanded="false">
-            <span class="system-create-plus">+</span>
-            <span>Create new</span>
-            <span class="system-caret">▾</span>
-          </button>
-          <div class="system-create-menu" id="system-create-menu" hidden role="menu">
-            <a href="${S.url('order-management/new-order.html')}" class="system-create-item" role="menuitem">
-              <span class="system-create-item-icon" style="background:#fff7ed;color:#ea580c">${glyph('orders')}</span>
-              <div><strong>Customer Order</strong><small>New customer sale &amp; reservation</small></div>
-            </a>
-            <a href="${S.url('procurement/new-po.html')}" class="system-create-item" role="menuitem">
-              <span class="system-create-item-icon" style="background:#fef3c7;color:#d97706">${glyph('procurement')}</span>
-              <div><strong>Vendor PO</strong><small>Replenishment purchase order</small></div>
-            </a>
-            <a href="${S.url('warehouse-management/receiving.html')}" class="system-create-item" role="menuitem">
-              <span class="system-create-item-icon" style="background:#e0f2fe;color:#0284c7">${glyph('warehouse')}</span>
-              <div><strong>Warehouse Inbound</strong><small>Receive &amp; putaway stock</small></div>
-            </a>
-            <a href="${S.url('3pl-management/ship-orders.html')}" class="system-create-item" role="menuitem">
-              <span class="system-create-item-icon" style="background:#ecfdf5;color:#059669">${glyph('tpl')}</span>
-              <div><strong>3PL Shipment</strong><small>Dispatch partner order</small></div>
-            </a>
-            <a href="${S.url('crm/catalog.html')}" class="system-create-item" role="menuitem">
-              <span class="system-create-item-icon" style="background:#eff6ff;color:#2563eb">${glyph('crm')}</span>
-              <div><strong>Product / SKU</strong><small>Catalog and price books</small></div>
-            </a>
-          </div>
-        </div>
-
         <!-- User Avatar Circle -->
         <div class="system-account-picker" id="system-account-picker">
           <button type="button" class="system-account-btn" id="system-account-btn" aria-haspopup="menu" aria-expanded="false" aria-label="User Profile &amp; Workspace">
@@ -469,22 +438,6 @@
       });
     }
 
-    // Setup Create New Menu
-    const createBtn = header.querySelector('#system-create-btn');
-    const createMenu = header.querySelector('#system-create-menu');
-    if (createBtn && createMenu) {
-      createBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const open = createMenu.hidden;
-        closeAllDropdowns();
-        if (open) {
-          createMenu.hidden = false;
-          createBtn.setAttribute('aria-expanded', 'true');
-        }
-      };
-    }
-
     // Setup Account Menu
     const accountBtn = header.querySelector('#system-account-btn');
     const accountMenu = header.querySelector('#system-account-menu');
@@ -503,7 +456,7 @@
 
     // Close all menus on outside click or Escape
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
+      if (!e.target.closest('.system-region-picker, .system-account-picker, .system-search')) {
         closeAllDropdowns();
         const searchResults = header.querySelector('#system-search-results');
         if (searchResults) searchResults.hidden = true;

@@ -404,6 +404,10 @@ body.stark-system.is-home .system-submodule-bar {
   box-sizing: border-box;
 }
 
+.system-create-picker {
+  display: none !important;
+}
+
 .system-create-btn {
   display: inline-flex;
   align-items: center;
