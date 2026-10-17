@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+    html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}
+    html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}
+    @keyframes stark-navigation-progress{to{background-position:-200% 0}}
+    @media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}
+  </style>
+  <script data-stark-navigation-boot>
+    document.documentElement.classList.add('stark-page-loading');
+    window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);
+  </script>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261012-2" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dropship POs · Supply Chain Intelligence</title>
+  <meta name="description" content="Auto-generated purchase orders for dropship brands via EDI when customer orders are received.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-6">
+  <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
+
+  <script src="assets/system-shell.js?v=20261017-3" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+  <script src="assets/fulfillment-core.js?v=20261012-2" defer></script>
+</head>
+<body data-system-page="procurement">
+  <main class="system-page dpo-page-container" aria-label="Dropship POs Management">
+    <!-- Subnavigation Tab Bar (Matching Image 2) -->
+    <nav class="dpo-subnav-bar" aria-label="Procurement Modules">
+      <a href="procurement/index.html" class="dpo-subnav-link">Open vendor PO management</a>
+      <a href="create-vendor-po.html" class="dpo-subnav-link">Create vendor PO</a>
+      <a href="dropship-po.html" class="dpo-subnav-link active" aria-current="page">Event / dropship POs</a>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <nav class="dpo-breadcrumb" aria-label="Breadcrumb">
+      <a href="vendor-management/index.html" class="dpo-bc-link">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Vendor Management
+      </a>
+      <span class="dpo-bc-sep">&gt;</span>
+      <span class="dpo-bc-current">Dropship POs</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="dpo-header">
+      <h1 class="dpo-page-title">Dropship POs</h1>
+      <p class="dpo-page-subtitle">Auto-generated purchase orders for dropship brands via EDI when customer orders are received.</p>
+    </div>
+
+    <!-- Filter Toolbar Card -->
+    <section class="dpo-toolbar-card" aria-label="Filter Controls">
+      <div class="dpo-filter-grid">
+        <!-- Search -->
+        <div class="dpo-form-group">
+          <label class="dpo-label" for="dpo-filter-search">Search</label>
+          <div class="dpo-input-wrap">
+            <span class="dpo-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input type="text" class="dpo-input has-icon" id="dpo-filter-search" placeholder="Search by PO#, order#, customer, model#, vendor...">
+          </div>
+        </div>
+
+        <!-- Brand -->
+        <div class="dpo-form-group">
+          <label class="dpo-label" for="dpo-filter-brand">Brand</label>
+          <select class="dpo-select" id="dpo-filter-brand">
+            <option value="all" selected>All brands</option>
+            <option value="Sony">Sony</option>
+            <option value="New Balance">New Balance</option>
+            <option value="YETI">YETI</option>
+            <option value="Kendra Scott">Kendra Scott</option>
+            <option value="Coach">Coach</option>
+            <option value="Nike">Nike</option>
+            <option value="Under Armour">Under Armour</option>
+            <option value="Bose">Bose</option>
+            <option value="Stanley">Stanley</option>
+            <option value="Apple">Apple</option>
+          </select>
+        </div>
+
+        <!-- Vendor -->
+        <div class="dpo-form-group">
+          <label class="dpo-label" for="dpo-filter-vendor">Vendor</label>
+          <select class="dpo-select" id="dpo-filter-vendor">
+            <option value="all" selected>All vendors</option>
+            <option value="Sony Electronics">Sony Electronics</option>
+            <option value="New Balance">New Balance</option>
+            <option value="YETI">YETI</option>
+            <option value="Kendra Scott">Kendra Scott</option>
+            <option value="Coach">Coach</option>
+            <option value="Nike">Nike</option>
+            <option value="Under Armour">Under Armour</option>
+            <option value="Bose">Bose</option>
+            <option value="Stanley">Stanley</option>
+            <option value="Apple">Apple</option>
+          </select>
+        </div>
+
+        <!-- Status -->
+        <div class="dpo-form-group">
+          <label class="dpo-label" for="dpo-filter-status">Status</label>
+          <select class="dpo-select" id="dpo-filter-status">
+            <option value="all" selected>All statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Sent">Sent</option>
+            <option value="Acknowledged">Acknowledged</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <!-- Date range -->
+        <div class="dpo-form-group">
+          <label class="dpo-label" for="dpo-filter-date">Date range</label>
+          <div class="dpo-input-wrap">
+            <span class="dpo-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <input type="text" class="dpo-input has-icon" id="dpo-filter-date" placeholder="mm/dd/yyyy - mm/dd/yyyy">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Status Filter Pills -->
+    <div class="dpo-status-pills" role="tablist" aria-label="Filter dropship POs by status">
+      <button type="button" class="dpo-pill-btn active" data-status="all">
+        All Dropship POs <span class="dpo-pill-badge" id="count-all">128</span>
+      </button>
+      <button type="button" class="dpo-pill-btn" data-status="Pending">
+        Pending <span class="dpo-pill-badge" id="count-pending">8</span>
+      </button>
+      <button type="button" class="dpo-pill-btn" data-status="Sent">
+        Sent <span class="dpo-pill-badge" id="count-sent">92</span>
+      </button>
+      <button type="button" class="dpo-pill-btn" data-status="Acknowledged">
+        Acknowledged <span class="dpo-pill-badge" id="count-acknowledged">15</span>
+      </button>
+      <button type="button" class="dpo-pill-btn" data-status="Shipped">
+        Shipped <span class="dpo-pill-badge" id="count-shipped">10</span>
+      </button>
+      <button type="button" class="dpo-pill-btn" data-status="Cancelled">
+        Cancelled <span class="dpo-pill-badge" id="count-cancelled">3</span>
+      </button>
+    </div>
+
+    <!-- Main Split View: Left Table + Right Detail Drawer -->
+    <div class="dpo-split-layout" id="dpo-split-container">
+      <!-- Left: Table Card -->
+      <section class="dpo-table-card" aria-label="Dropship PO Register">
+        <div class="dpo-table-wrap">
+          <table class="dpo-table" id="dpo-main-table">
+            <thead>
+              <tr>
+                <th style="width: 32px;"><input type="checkbox" id="dpo-th-check" aria-label="Select all dropship POs"></th>
+                <th style="width: 36px;">#</th>
+                <th style="width: 140px;">Dropship PO #</th>
+                <th style="width: 105px;">Customer PO #</th>
+                <th>Customer</th>
+                <th style="width: 110px;">Brand</th>
+                <th>Vendor</th>
+                <th style="width: 95px;">Order date</th>
+                <th style="width: 95px;">In-hands date</th>
+                <th style="width: 95px; text-align: center;">Status</th>
+                <th style="width: 60px; text-align: center;">Items</th>
+                <th style="width: 36px; text-align: center;"></th>
+              </tr>
+            </thead>
+            <tbody id="dpo-tbody">
+              <!-- Dynamically populated or rendered -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="dpo-pagination-bar">
+          <div>Showing <span id="dpo-pag-start">1</span> to <span id="dpo-pag-end">10</span> of <span id="dpo-pag-total">128</span> dropship POs</div>
+          <div class="dpo-page-controls">
+            <span style="font-size:12px; margin-right:8px;">Rows per page</span>
+            <select class="dpo-select" style="width: auto; height: 28px; padding: 2px 22px 2px 8px; font-size: 12px; margin-right: 12px;" id="dpo-page-size">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+
+            <button type="button" class="dpo-page-btn" aria-label="First page">«</button>
+            <button type="button" class="dpo-page-btn" aria-label="Previous page">‹</button>
+            <button type="button" class="dpo-page-btn active">1</button>
+            <button type="button" class="dpo-page-btn">2</button>
+            <button type="button" class="dpo-page-btn">3</button>
+            <button type="button" class="dpo-page-btn">4</button>
+            <button type="button" class="dpo-page-btn">5</button>
+            <span style="color:#94a3b8; font-size:12px; padding:0 4px;">…</span>
+            <button type="button" class="dpo-page-btn">13</button>
+            <button type="button" class="dpo-page-btn" aria-label="Next page">›</button>
+            <button type="button" class="dpo-page-btn" aria-label="Last page">»</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Dropship PO Details Drawer Panel -->
+      <aside class="dpo-detail-card" id="dpo-detail-drawer" aria-label="Dropship PO Details">
+        <div class="dpo-detail-head">
+          <div class="dpo-detail-title-wrap">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <h2 class="dpo-detail-title">Dropship PO Details</h2>
+          </div>
+          <button type="button" class="dpo-detail-close-btn" id="dpo-detail-close" title="Close details panel" aria-label="Close details panel">✕</button>
+        </div>
+
+        <!-- PO Number & Top Status Badge -->
+        <div class="dpo-po-id-row">
+          <h3 class="dpo-po-num" id="dpo-panel-po-num">DSPO-2026-00125</h3>
+          <span class="dpo-po-badge-top" id="dpo-panel-top-badge">Sent</span>
+        </div>
+
+        <!-- Progress Stepper -->
+        <div class="dpo-stepper-wrap" id="dpo-stepper">
+          <div class="dpo-stepper-line"></div>
+          <div class="dpo-stepper-progress" id="dpo-stepper-bar" style="width: 25%;"></div>
+
+          <div class="dpo-step-node completed" data-step="created">
+            <div class="dpo-step-circle"></div>
+            <span class="dpo-step-name">Created</span>
+            <span class="dpo-step-date" id="step-date-created">10/24</span>
+          </div>
+
+          <div class="dpo-step-node current" data-step="sent">
+            <div class="dpo-step-circle"></div>
+            <span class="dpo-step-name">Sent</span>
+            <span class="dpo-step-date" id="step-date-sent">10/24</span>
+          </div>
+
+          <div class="dpo-step-node" data-step="acknowledged">
+            <div class="dpo-step-circle"></div>
+            <span class="dpo-step-name">Acknowledged</span>
+            <span class="dpo-step-date"></span>
+          </div>
+
+          <div class="dpo-step-node" data-step="shipped">
+            <div class="dpo-step-circle"></div>
+            <span class="dpo-step-name">Shipped</span>
+            <span class="dpo-step-date"></span>
+          </div>
+
+          <div class="dpo-step-node" data-step="completed">
+            <div class="dpo-step-circle"></div>
+            <span class="dpo-step-name">Completed</span>
+            <span class="dpo-step-date"></span>
+          </div>
+        </div>
+
+        <!-- Panel Tabs -->
+        <div class="dpo-panel-tabs" role="tablist">
+          <button type="button" class="dpo-panel-tab active" data-tab="overview">Overview</button>
+          <button type="button" class="dpo-panel-tab" data-tab="items" id="tab-items-label">Items (3)</button>
+          <button type="button" class="dpo-panel-tab" data-tab="cust-order">Customer Order</button>
+          <button type="button" class="dpo-panel-tab" data-tab="shipping">Shipping</button>
+          <button type="button" class="dpo-panel-tab" data-tab="comms">Communications</button>
+          <button type="button" class="dpo-panel-tab" data-tab="history">History</button>
+        </div>
+
+        <!-- Tab Body: Overview -->
+        <div id="dpo-tab-content-overview">
+          <!-- 2-Column Meta Grid -->
+          <div class="dpo-kv-grid">
+            <div class="dpo-kv-col">
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Dropship PO #</span>
+                <span class="dpo-kv-v" id="dpo-kv-po">DSPO-2026-00125</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Customer PO #</span>
+                <span class="dpo-kv-v" id="dpo-kv-cust-po">315980</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Customer</span>
+                <span class="dpo-kv-v" id="dpo-kv-cust">ABC Company</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Brand</span>
+                <span class="dpo-kv-v" id="dpo-kv-brand">Sony</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Vendor</span>
+                <span class="dpo-kv-v" id="dpo-kv-vendor">Sony Electronics</span>
+              </div>
+            </div>
+
+            <div class="dpo-kv-col">
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Order date</span>
+                <span class="dpo-kv-v" id="dpo-kv-order-date">10/24/2026</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">In-hands date</span>
+                <span class="dpo-kv-v" id="dpo-kv-inhands">10/28/2026</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Status</span>
+                <span class="dpo-kv-v" id="dpo-kv-status" style="color:#2563eb;">Sent</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Created by</span>
+                <span class="dpo-kv-v" id="dpo-kv-creator">EDI (Auto)</span>
+              </div>
+              <div class="dpo-kv-row">
+                <span class="dpo-kv-k">Created at</span>
+                <span class="dpo-kv-v" id="dpo-kv-created-at">10/24/2026 09:12 AM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side-by-Side: Ship To (Customer Address) + Shipping Info -->
+          <div class="dpo-address-grid">
+            <div class="dpo-info-box">
+              <div class="dpo-info-box-title">Ship To (Customer Address)</div>
+              <div id="dpo-addr-name" style="font-weight:600; color:#0f172a;">ABC Company</div>
+              <div id="dpo-addr-line1">1234 Main St, Suite 500</div>
+              <div id="dpo-addr-citystate">Tampa, FL 33602</div>
+              <div id="dpo-addr-country">United States</div>
+            </div>
+
+            <div class="dpo-info-box">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span style="color:#64748b;">Shipping method</span>
+                <strong id="dpo-ship-method">UPS Ground</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span style="color:#64748b;">Customer shipping account #</span>
+                <strong id="dpo-ship-acct">123456</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span style="color:#64748b;">Customer ZIP code</span>
+                <strong id="dpo-ship-zip">33073</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;">In-hands date</span>
+                <strong id="dpo-ship-inhands">10/28/2026</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items (3) Table -->
+          <div style="margin-bottom: 12px;">
+            <div style="font-size:13px; font-weight:700; color:#0f172a; margin-bottom:8px;" id="dpo-items-title">Items (3)</div>
+            <table class="dpo-panel-items-table">
+              <thead>
+                <tr>
+                  <th style="width: 24px;">#</th>
+                  <th>Model / SKU</th>
+                  <th>Description</th>
+                  <th style="width: 40px; text-align: center;">Qty</th>
+                  <th style="width: 70px; text-align: right;">Unit Price</th>
+                  <th style="width: 80px; text-align: right;">Line Total</th>
+                </tr>
+              </thead>
+              <tbody id="dpo-items-tbody">
+                <tr>
+                  <td>1</td>
+                  <td><strong>WH-1000XM6</strong></td>
+                  <td>Sony Wireless Headphones</td>
+                  <td style="text-align: center;">10</td>
+                  <td style="text-align: right;">$349.00</td>
+                  <td style="text-align: right; font-weight: 600;">$3,490.00</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td><strong>NB-550</strong></td>
+                  <td>New Balance 550 Sneakers</td>
+                  <td style="text-align: center;">20</td>
+                  <td style="text-align: right;">$110.00</td>
+                  <td style="text-align: right; font-weight: 600;">$2,200.00</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td><strong>TMBLR-40</strong></td>
+                  <td>YETI Rambler 40oz</td>
+                  <td style="text-align: center;">15</td>
+                  <td style="text-align: right;">$45.00</td>
+                  <td style="text-align: right; font-weight: 600;">$675.00</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Special Instructions & Total -->
+            <div class="dpo-items-footer-bar">
+              <div class="dpo-items-instructions">
+                <span class="dpo-items-instructions-label">Special Instructions</span>
+                <span class="dpo-items-instructions-val" id="dpo-special-instructions">Ship ASAP. Label cartons with PO number.</span>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 11px; color: #64748b;">Total (USD)</div>
+                <div class="dpo-items-total-val" id="dpo-total-val">$6,365.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Documents Section -->
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#0f172a; margin-bottom:8px;">Documents</div>
+            <div class="dpo-docs-list" id="dpo-docs-list">
+              <div class="dpo-doc-pill" data-doc="Dropship PO.pdf" title="Download Dropship PO.pdf">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#ef4444" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>Dropship PO.pdf</span>
+              </div>
+              <div class="dpo-doc-pill" data-doc="Order 315980.pdf" title="Download Order 315980.pdf">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#ef4444" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>Order 315980.pdf</span>
+              </div>
+              <div class="dpo-doc-pill" data-doc="Shipping Label.pdf" title="Download Shipping Label.pdf">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#ef4444" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span>Shipping Label.pdf</span>
+              </div>
+              <button type="button" class="dpo-doc-pill" style="padding: 4px 8px; color:#64748b;" title="More documents">···</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Other Tab Content Placeholders -->
+        <div id="dpo-tab-content-other" style="display:none; padding:16px 8px; font-size:12.5px; color:#475569;"></div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // Full Dataset matching Screenshot
+      const DROPSHIP_DATA = [
+        {
+          id: 'dspo_1',
+          dspo: 'DSPO-2026-00125',
+          custPo: '315980',
+          customer: 'ABC Company',
+          brand: 'Sony',
+          brandClass: 'dpo-brand-sony',
+          vendor: 'Sony Electronics',
+          orderDate: '10/24/2026',
+          inHandsDate: '10/28/2026',
+          status: 'Pending',
+          statusClass: 'dpo-status-pending',
+          itemCount: 3,
+          stepperStatus: 'Sent',
+          createdDate: '10/24',
+          sentDate: '10/24',
+          createdAt: '10/24/2026 09:12 AM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'ABC Company',
+            line1: '1234 Main St, Suite 500',
+            cityState: 'Tampa, FL 33602',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            account: '123456',
+            zip: '33073',
+            inHands: '10/28/2026'
+          },
+          items: [
+            { idx: 1, sku: 'WH-1000XM6', desc: 'Sony Wireless Headphones', qty: 10, price: 349.00, total: 3490.00 },
+            { idx: 2, sku: 'NB-550', desc: 'New Balance 550 Sneakers', qty: 20, price: 110.00, total: 2200.00 },
+            { idx: 3, sku: 'TMBLR-40', desc: 'YETI Rambler 40oz', qty: 15, price: 45.00, total: 675.00 }
+          ],
+          specialInstructions: 'Ship ASAP. Label cartons with PO number.',
+          totalValue: 6365.00,
+          docs: ['Dropship PO.pdf', 'Order 315980.pdf', 'Shipping Label.pdf']
+        },
+        {
+          id: 'dspo_2',
+          dspo: 'DSPO-2026-00124',
+          custPo: '315979',
+          customer: 'XYZ Retail',
+          brand: 'New Balance',
+          brandClass: 'dpo-brand-nb',
+          vendor: 'New Balance',
+          orderDate: '10/23/2026',
+          inHandsDate: '10/27/2026',
+          status: 'Sent',
+          statusClass: 'dpo-status-sent',
+          itemCount: 5,
+          stepperStatus: 'Sent',
+          createdDate: '10/23',
+          sentDate: '10/23',
+          createdAt: '10/23/2026 11:40 AM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'XYZ Retail Logistics',
+            line1: '789 Commerce Blvd',
+            cityState: 'Dallas, TX 75201',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'FedEx 2Day',
+            account: '998877',
+            zip: '75201',
+            inHands: '10/27/2026'
+          },
+          items: [
+            { idx: 1, sku: 'NB-550-WHT', desc: 'New Balance 550 White/Grey', qty: 40, price: 110.00, total: 4400.00 },
+            { idx: 2, sku: 'NB-990-GRY', desc: 'New Balance 990v5 Grey', qty: 25, price: 185.00, total: 4625.00 }
+          ],
+          specialInstructions: 'Direct dispatch to regional distribution dock 4.',
+          totalValue: 9025.00,
+          docs: ['Dropship PO.pdf', 'Order 315979.pdf']
+        },
+        {
+          id: 'dspo_3',
+          dspo: 'DSPO-2026-00123',
+          custPo: '315978',
+          customer: 'Cozy Earth',
+          brand: 'YETI',
+          brandClass: 'dpo-brand-yeti',
+          vendor: 'YETI',
+          orderDate: '10/22/2026',
+          inHandsDate: '10/25/2026',
+          status: 'Shipped',
+          statusClass: 'dpo-status-shipped',
+          itemCount: 2,
+          stepperStatus: 'Shipped',
+          createdDate: '10/22',
+          sentDate: '10/22',
+          createdAt: '10/22/2026 08:15 AM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'Cozy Earth Fulfillment',
+            line1: '400 North Lake St',
+            cityState: 'Salt Lake City, UT 84101',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            account: '344556',
+            zip: '84101',
+            inHands: '10/25/2026'
+          },
+          items: [
+            { idx: 1, sku: 'TMBLR-30', desc: 'YETI Rambler 30oz Navy', qty: 50, price: 38.00, total: 1900.00 },
+            { idx: 2, sku: 'TMBLR-40', desc: 'YETI Rambler 40oz Black', qty: 40, price: 45.00, total: 1800.00 }
+          ],
+          specialInstructions: 'Include branded packing slip inside master carton.',
+          totalValue: 3700.00,
+          docs: ['Dropship PO.pdf', 'Order 315978.pdf', 'Tracking Manifest.pdf']
+        },
+        {
+          id: 'dspo_4',
+          dspo: 'DSPO-2026-00122',
+          custPo: '315977',
+          customer: 'Kendra Scott',
+          brand: 'Kendra Scott',
+          brandClass: 'dpo-brand-kendra',
+          vendor: 'Kendra Scott',
+          orderDate: '10/22/2026',
+          inHandsDate: '10/26/2026',
+          status: 'Acknowledged',
+          statusClass: 'dpo-status-acknowledged',
+          itemCount: 4,
+          stepperStatus: 'Acknowledged',
+          createdDate: '10/22',
+          sentDate: '10/22',
+          createdAt: '10/22/2026 02:45 PM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'Kendra Scott Corporate Hub',
+            line1: '3800 N Lamar Blvd',
+            cityState: 'Austin, TX 78756',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'FedEx Ground',
+            account: '811223',
+            zip: '78756',
+            inHands: '10/26/2026'
+          },
+          items: [
+            { idx: 1, sku: 'KS-ELISA-GLD', desc: 'Elisa Gold Pendant Necklace', qty: 60, price: 65.00, total: 3900.00 }
+          ],
+          specialInstructions: 'Fragile handling required.',
+          totalValue: 3900.00,
+          docs: ['Dropship PO.pdf', 'Order 315977.pdf']
+        },
+        {
+          id: 'dspo_5',
+          dspo: 'DSPO-2026-00121',
+          custPo: '315976',
+          customer: 'BDA',
+          brand: 'Coach',
+          brandClass: 'dpo-brand-coach',
+          vendor: 'Coach',
+          orderDate: '10/21/2026',
+          inHandsDate: '10/24/2026',
+          status: 'Sent',
+          statusClass: 'dpo-status-sent',
+          itemCount: 1,
+          stepperStatus: 'Sent',
+          createdDate: '10/21',
+          sentDate: '10/21',
+          createdAt: '10/21/2026 10:30 AM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'BDA Promotions DC',
+            line1: '15525 Woodinville-Redmond Rd',
+            cityState: 'Woodinville, WA 98072',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS 2nd Day Air',
+            account: '445566',
+            zip: '98072',
+            inHands: '10/24/2026'
+          },
+          items: [
+            { idx: 1, sku: 'CCH-TOTE-SIG', desc: 'Coach Signature Leather Tote', qty: 25, price: 295.00, total: 7375.00 }
+          ],
+          specialInstructions: 'Individual dust covers on all items.',
+          totalValue: 7375.00,
+          docs: ['Dropship PO.pdf', 'Order 315976.pdf']
+        },
+        {
+          id: 'dspo_6',
+          dspo: 'DSPO-2026-00120',
+          custPo: '315975',
+          customer: 'Smith & Nephew',
+          brand: 'Nike',
+          brandClass: 'dpo-brand-nike',
+          vendor: 'Nike',
+          orderDate: '10/21/2026',
+          inHandsDate: '10/23/2026',
+          status: 'Pending',
+          statusClass: 'dpo-status-pending',
+          itemCount: 6,
+          stepperStatus: 'Created',
+          createdDate: '10/21',
+          sentDate: '',
+          createdAt: '10/21/2026 04:12 PM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'Smith & Nephew Corporate Store',
+            line1: '1450 Brooks Rd',
+            cityState: 'Memphis, TN 38116',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            account: '778899',
+            zip: '38116',
+            inHands: '10/23/2026'
+          },
+          items: [
+            { idx: 1, sku: 'NK-POLO-DRY', desc: 'Nike Dri-FIT Tech Polo', qty: 100, price: 42.00, total: 4200.00 }
+          ],
+          specialInstructions: 'Awaiting supplier confirmation on size breakdown.',
+          totalValue: 4200.00,
+          docs: ['Dropship PO.pdf', 'Order 315975.pdf']
+        },
+        {
+          id: 'dspo_7',
+          dspo: 'DSPO-2026-00119',
+          custPo: '315974',
+          customer: 'XYZ Retail',
+          brand: 'Under Armour',
+          brandClass: 'dpo-brand-ua',
+          vendor: 'Under Armour',
+          orderDate: '10/20/2026',
+          inHandsDate: '10/23/2026',
+          status: 'Shipped',
+          statusClass: 'dpo-status-shipped',
+          itemCount: 3,
+          stepperStatus: 'Shipped',
+          createdDate: '10/20',
+          sentDate: '10/20',
+          createdAt: '10/20/2026 09:05 AM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'XYZ Retail East Gateway',
+            line1: '100 Terminal Way',
+            cityState: 'Newark, NJ 07114',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'FedEx Ground',
+            account: '112233',
+            zip: '07114',
+            inHands: '10/23/2026'
+          },
+          items: [
+            { idx: 1, sku: 'UA-FLEECE-HD', desc: 'UA Armour Fleece Hoodie', qty: 50, price: 55.00, total: 2750.00 }
+          ],
+          specialInstructions: 'Delivered to Cross-dock bay 12.',
+          totalValue: 2750.00,
+          docs: ['Dropship PO.pdf', 'Order 315974.pdf', 'Carrier BOL.pdf']
+        },
+        {
+          id: 'dspo_8',
+          dspo: 'DSPO-2026-00118',
+          custPo: '315973',
+          customer: 'Acme Gifts',
+          brand: 'Bose',
+          brandClass: 'dpo-brand-bose',
+          vendor: 'Bose',
+          orderDate: '10/20/2026',
+          inHandsDate: '10/22/2026',
+          status: 'Sent',
+          statusClass: 'dpo-status-sent',
+          itemCount: 2,
+          stepperStatus: 'Sent',
+          createdDate: '10/20',
+          sentDate: '10/20',
+          createdAt: '10/20/2026 11:20 AM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'Acme Corporate Storehouse',
+            line1: '900 Industrial Ave',
+            cityState: 'Chicago, IL 60607',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Next Day Air',
+            account: '556677',
+            zip: '60607',
+            inHands: '10/22/2026'
+          },
+          items: [
+            { idx: 1, sku: 'BOSE-QC45-BLK', desc: 'Bose QuietComfort 45 Headphones', qty: 30, price: 279.00, total: 8370.00 }
+          ],
+          specialInstructions: 'High-value security tape on cartons.',
+          totalValue: 8370.00,
+          docs: ['Dropship PO.pdf', 'Order 315973.pdf']
+        },
+        {
+          id: 'dspo_9',
+          dspo: 'DSPO-2026-00117',
+          custPo: '315972',
+          customer: 'Global Brands',
+          brand: 'Stanley',
+          brandClass: 'dpo-brand-stanley',
+          vendor: 'Stanley',
+          orderDate: '10/19/2026',
+          inHandsDate: '10/22/2026',
+          status: 'Acknowledged',
+          statusClass: 'dpo-status-acknowledged',
+          itemCount: 4,
+          stepperStatus: 'Acknowledged',
+          createdDate: '10/19',
+          sentDate: '10/19',
+          createdAt: '10/19/2026 01:10 PM',
+          creator: 'EDI (Auto)',
+          shipTo: {
+            name: 'Global Brands West',
+            line1: '2020 West Valley Blvd',
+            cityState: 'Pomona, CA 91768',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            account: '667788',
+            zip: '91768',
+            inHands: '10/22/2026'
+          },
+          items: [
+            { idx: 1, sku: 'STN-QUENCH-40', desc: 'Stanley Quencher H2.0 FlowState 40oz', qty: 75, price: 32.00, total: 2400.00 }
+          ],
+          specialInstructions: 'Standard palletized delivery.',
+          totalValue: 2400.00,
+          docs: ['Dropship PO.pdf', 'Order 315972.pdf']
+        },
+        {
+          id: 'dspo_10',
+          dspo: 'DSPO-2026-00116',
+          custPo: '315971',
+          customer: 'Wellness Co.',
+          brand: 'Apple',
+          brandClass: 'dpo-brand-apple',
+          vendor: 'Apple',
+          orderDate: '10/19/2026',
+          inHandsDate: '10/21/2026',
+          status: 'Cancelled',
+          statusClass: 'dpo-status-cancelled',
+          itemCount: 1,
+          stepperStatus: 'Cancelled',
+          createdDate: '10/19',
+          sentDate: '',
+          createdAt: '10/19/2026 03:00 PM',
+          creator: 'Customer Cancelled',
+          shipTo: {
+            name: 'Wellness Co. HQ',
+            line1: '500 Tech Parkway',
+            cityState: 'San Jose, CA 95110',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'FedEx Priority',
+            account: '334455',
+            zip: '95110',
+            inHands: '10/21/2026'
+          },
+          items: [
+            { idx: 1, sku: 'APL-WATCH-S9', desc: 'Apple Watch Series 9 GPS 45mm', qty: 10, price: 399.00, total: 3990.00 }
+          ],
+          specialInstructions: 'Order cancelled per customer request before transmission.',
+          totalValue: 3990.00,
+          docs: ['Dropship PO.pdf', 'Cancellation Notice.pdf']
+        }
+      ];
+
+      let selectedId = 'dspo_1';
+      let activePill = 'all';
+
+      function notice(message, error = false) {
+        if (window.StarkSystemUI?.notice) {
+          window.StarkSystemUI.notice(message, error);
+        } else {
+          const toast = document.createElement('div');
+          toast.className = 'system-toast' + (error ? ' error' : '');
+          toast.textContent = message;
+          document.body.append(toast);
+          setTimeout(() => toast.remove(), 4000);
+        }
+      }
+
+      function formatMoney(n) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(n) || 0);
+      }
+
+      function renderTable() {
+        const tbody = document.querySelector('#dpo-tbody');
+        if (!tbody) return;
+
+        const q = (document.querySelector('#dpo-filter-search')?.value || '').toLowerCase().trim();
+        const brandFilter = document.querySelector('#dpo-filter-brand')?.value || 'all';
+        const vendorFilter = document.querySelector('#dpo-filter-vendor')?.value || 'all';
+        const statusFilter = document.querySelector('#dpo-filter-status')?.value || 'all';
+
+        const filtered = DROPSHIP_DATA.filter(item => {
+          // Status pill filter
+          if (activePill !== 'all' && item.status !== activePill) return false;
+          // Dropdowns
+          if (brandFilter !== 'all' && item.brand !== brandFilter) return false;
+          if (vendorFilter !== 'all' && item.vendor !== vendorFilter) return false;
+          if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+          // Search string
+          if (q) {
+            const haystack = `${item.dspo} ${item.custPo} ${item.customer} ${item.brand} ${item.vendor} ${item.status}`.toLowerCase();
+            if (!haystack.includes(q)) return false;
+          }
+          return true;
+        });
+
+        tbody.innerHTML = '';
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:32px; color:#64748b;">No dropship POs found matching your filters.</td></tr>`;
+          document.querySelector('#dpo-pag-start').textContent = '0';
+          document.querySelector('#dpo-pag-end').textContent = '0';
+          document.querySelector('#dpo-pag-total').textContent = '0';
+          return;
+        }
+
+        document.querySelector('#dpo-pag-start').textContent = '1';
+        document.querySelector('#dpo-pag-end').textContent = String(filtered.length);
+        document.querySelector('#dpo-pag-total').textContent = String(filtered.length === 10 ? 128 : filtered.length);
+
+        filtered.forEach((row, i) => {
+          const tr = document.createElement('tr');
+          if (row.id === selectedId) tr.className = 'is-selected';
+          tr.dataset.id = row.id;
+
+          tr.innerHTML = `
+            <td><input type="checkbox" class="dpo-row-checkbox" aria-label="Select row ${i + 1}"></td>
+            <td>${i + 1}</td>
+            <td><a class="dpo-link" data-action="select">${row.dspo}</a></td>
+            <td>${row.custPo}</td>
+            <td>${row.customer}</td>
+            <td><span class="dpo-brand-badge ${row.brandClass}">${row.brand}</span></td>
+            <td>${row.vendor}</td>
+            <td>${row.orderDate}</td>
+            <td>${row.inHandsDate}</td>
+            <td style="text-align: center;"><span class="dpo-status-badge ${row.statusClass}">${row.status}</span></td>
+            <td style="text-align: center;">${row.itemCount}</td>
+            <td style="text-align: center;">
+              <button type="button" class="dpo-row-menu-btn" title="Actions for ${row.dspo}" aria-label="Row menu">⋮</button>
+            </td>
+          `;
+
+          // Row click selects PO and opens drawer
+          tr.addEventListener('click', (e) => {
+            if (e.target.closest('.dpo-row-checkbox') || e.target.closest('.dpo-row-menu-btn')) return;
+            selectRow(row.id);
+          });
+
+          // Menu button
+          const menuBtn = tr.querySelector('.dpo-row-menu-btn');
+          if (menuBtn) {
+            menuBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openRowMenu(row, menuBtn);
+            });
+          }
+
+          tbody.appendChild(tr);
+        });
+
+        // Ensure currently selected row is synced with details panel
+        const currentItem = DROPSHIP_DATA.find(d => d.id === selectedId) || filtered[0];
+        if (currentItem) updateDetailPanel(currentItem);
+      }
+
+      function selectRow(id) {
+        selectedId = id;
+        document.querySelectorAll('#dpo-tbody tr').forEach(r => {
+          if (r.dataset.id === id) r.classList.add('is-selected');
+          else r.classList.remove('is-selected');
+        });
+
+        const item = DROPSHIP_DATA.find(d => d.id === id);
+        if (item) {
+          updateDetailPanel(item);
+          // Show drawer if closed
+          const split = document.querySelector('#dpo-split-container');
+          const drawer = document.querySelector('#dpo-detail-drawer');
+          if (split && drawer) {
+            split.classList.remove('is-fullwidth');
+            drawer.style.display = 'block';
+          }
+        }
+      }
+
+      function updateDetailPanel(item) {
+        // PO Number & Top Badge
+        const poNumEl = document.querySelector('#dpo-panel-po-num');
+        const badgeEl = document.querySelector('#dpo-panel-top-badge');
+        if (poNumEl) poNumEl.textContent = item.dspo;
+        if (badgeEl) {
+          badgeEl.textContent = item.stepperStatus || item.status;
+          badgeEl.className = 'dpo-po-badge-top';
+          if (item.status === 'Cancelled') {
+            badgeEl.style.background = '#fee2e2';
+            badgeEl.style.color = '#ef4444';
+          } else {
+            badgeEl.style.background = '#dcfce7';
+            badgeEl.style.color = '#16a34a';
+          }
+        }
+
+        // Stepper Progress Bar
+        const bar = document.querySelector('#dpo-stepper-bar');
+        const nodes = document.querySelectorAll('#dpo-stepper .dpo-step-node');
+        const s = item.stepperStatus || item.status;
+
+        let activeIdx = 1;
+        if (s === 'Created') activeIdx = 0;
+        else if (s === 'Sent') activeIdx = 1;
+        else if (s === 'Acknowledged') activeIdx = 2;
+        else if (s === 'Shipped') activeIdx = 3;
+        else if (s === 'Completed') activeIdx = 4;
+        else if (s === 'Cancelled') activeIdx = 0;
+
+        if (bar) bar.style.width = (activeIdx * 25) + '%';
+
+        nodes.forEach((n, idx) => {
+          n.classList.remove('completed', 'current');
+          if (idx < activeIdx) n.classList.add('completed');
+          else if (idx === activeIdx) n.classList.add('current');
+        });
+
+        document.querySelector('#step-date-created').textContent = item.createdDate || '10/24';
+        document.querySelector('#step-date-sent').textContent = item.sentDate || (activeIdx >= 1 ? '10/24' : '');
+
+        // Tab label items count
+        const tabItems = document.querySelector('#tab-items-label');
+        if (tabItems) tabItems.textContent = `Items (${item.items?.length || item.itemCount})`;
+        const titleItems = document.querySelector('#dpo-items-title');
+        if (titleItems) titleItems.textContent = `Items (${item.items?.length || item.itemCount})`;
+
+        // Key-Value Grid
+        document.querySelector('#dpo-kv-po').textContent = item.dspo;
+        document.querySelector('#dpo-kv-cust-po').textContent = item.custPo;
+        document.querySelector('#dpo-kv-cust').textContent = item.customer;
+        document.querySelector('#dpo-kv-brand').textContent = item.brand;
+        document.querySelector('#dpo-kv-vendor').textContent = item.vendor;
+
+        document.querySelector('#dpo-kv-order-date').textContent = item.orderDate;
+        document.querySelector('#dpo-kv-inhands').textContent = item.inHandsDate;
+        const statusKv = document.querySelector('#dpo-kv-status');
+        if (statusKv) {
+          statusKv.textContent = item.stepperStatus || item.status;
+          statusKv.style.color = item.status === 'Cancelled' ? '#ef4444' : '#2563eb';
+        }
+        document.querySelector('#dpo-kv-creator').textContent = item.creator || 'EDI (Auto)';
+        document.querySelector('#dpo-kv-created-at').textContent = item.createdAt || `${item.orderDate} 09:12 AM`;
+
+        // Address & Shipping
+        document.querySelector('#dpo-addr-name').textContent = item.shipTo.name;
+        document.querySelector('#dpo-addr-line1').textContent = item.shipTo.line1;
+        document.querySelector('#dpo-addr-citystate').textContent = item.shipTo.cityState;
+        document.querySelector('#dpo-addr-country').textContent = item.shipTo.country;
+
+        document.querySelector('#dpo-ship-method').textContent = item.shipping.method;
+        document.querySelector('#dpo-ship-acct').textContent = item.shipping.account;
+        document.querySelector('#dpo-ship-zip').textContent = item.shipping.zip;
+        document.querySelector('#dpo-ship-inhands').textContent = item.shipping.inHands;
+
+        // Items Table
+        const itemsTbody = document.querySelector('#dpo-items-tbody');
+        if (itemsTbody && item.items) {
+          itemsTbody.innerHTML = item.items.map(it => `
+            <tr>
+              <td>${it.idx}</td>
+              <td><strong>${it.sku}</strong></td>
+              <td>${it.desc}</td>
+              <td style="text-align: center;">${it.qty}</td>
+              <td style="text-align: right;">${formatMoney(it.price)}</td>
+              <td style="text-align: right; font-weight: 600;">${formatMoney(it.total)}</td>
+            </tr>
+          `).join('');
+        }
+
+        // Special instructions and total
+        document.querySelector('#dpo-special-instructions').textContent = item.specialInstructions || 'Ship ASAP.';
+        document.querySelector('#dpo-total-val').textContent = formatMoney(item.totalValue);
+
+        // Documents list
+        const docsEl = document.querySelector('#dpo-docs-list');
+        if (docsEl && item.docs) {
+          docsEl.innerHTML = item.docs.map(doc => `
+            <div class="dpo-doc-pill" data-doc="${doc}" title="Download ${doc}">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#ef4444" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>${doc}</span>
+            </div>
+          `).join('') + `<button type="button" class="dpo-doc-pill" style="padding: 4px 8px; color:#64748b;" title="More documents">···</button>`;
+
+          docsEl.querySelectorAll('.dpo-doc-pill[data-doc]').forEach(btn => {
+            btn.onclick = () => notice(`Preparing download for ${btn.dataset.doc}…`);
+          });
+        }
+      }
+
+      function openRowMenu(row, anchor) {
+        document.querySelectorAll('.sys-row-dropdown').forEach(d => d.remove());
+
+        const dd = document.createElement('div');
+        dd.className = 'sys-row-dropdown';
+        dd.style.position = 'fixed';
+        dd.style.zIndex = '9999';
+        dd.style.background = '#ffffff';
+        dd.style.border = '1px solid #cbd5e1';
+        dd.style.borderRadius = '8px';
+        dd.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.12)';
+        dd.style.padding = '6px';
+        dd.style.minWidth = '170px';
+        dd.style.display = 'flex';
+        dd.style.flexDirection = 'column';
+        dd.style.gap = '2px';
+
+        const rect = anchor.getBoundingClientRect();
+        dd.style.top = (rect.bottom + 4) + 'px';
+        dd.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
+
+        dd.innerHTML = `
+          <button type="button" class="dpo-menu-item" data-op="view" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
+            🔍 View details
+          </button>
+          <button type="button" class="dpo-menu-item" data-op="print" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
+            📄 Print packing slip
+          </button>
+          <button type="button" class="dpo-menu-item" data-op="dispatch" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#087f78; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
+            🚚 Supplier dispatch
+          </button>
+        `;
+
+        document.body.appendChild(dd);
+
+        const closeMenu = (e) => {
+          if (!dd.contains(e.target) && e.target !== anchor) {
+            dd.remove();
+            document.removeEventListener('click', closeMenu);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', closeMenu), 10);
+
+        dd.querySelector('[data-op="view"]').onclick = () => {
+          selectRow(row.id);
+          dd.remove();
+        };
+        dd.querySelector('[data-op="print"]').onclick = () => {
+          notice(`Printing Packing Slip for ${row.dspo}`);
+          dd.remove();
+          window.print();
+        };
+        dd.querySelector('[data-op="dispatch"]').onclick = () => {
+          notice(`Dispatched supplier dropship PO ${row.dspo}`);
+          row.status = 'Shipped';
+          row.stepperStatus = 'Shipped';
+          row.statusClass = 'dpo-status-shipped';
+          renderTable();
+          dd.remove();
+        };
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Initial table render
+        renderTable();
+
+        // Search and filter listeners
+        ['#dpo-filter-search', '#dpo-filter-brand', '#dpo-filter-vendor', '#dpo-filter-status', '#dpo-filter-date'].forEach(sel => {
+          const el = document.querySelector(sel);
+          if (el) {
+            el.addEventListener('input', renderTable);
+            el.addEventListener('change', renderTable);
+          }
+        });
+
+        // Status filter pills
+        document.querySelectorAll('.dpo-pill-btn').forEach(pill => {
+          pill.addEventListener('click', () => {
+            document.querySelectorAll('.dpo-pill-btn').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            activePill = pill.dataset.status;
+            renderTable();
+          });
+        });
+
+        // Close drawer button
+        document.querySelector('#dpo-detail-close')?.addEventListener('click', () => {
+          const split = document.querySelector('#dpo-split-container');
+          const drawer = document.querySelector('#dpo-detail-drawer');
+          if (split && drawer) {
+            split.classList.add('is-fullwidth');
+            drawer.style.display = 'none';
+          }
+        });
+
+        // Drawer Tabs switching
+        document.querySelectorAll('.dpo-panel-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.dpo-panel-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const tabName = tab.dataset.tab;
+            const overviewEl = document.querySelector('#dpo-tab-content-overview');
+            const otherEl = document.querySelector('#dpo-tab-content-other');
+
+            if (tabName === 'overview') {
+              overviewEl.style.display = 'block';
+              otherEl.style.display = 'none';
+            } else {
+              overviewEl.style.display = 'none';
+              otherEl.style.display = 'block';
+              const cur = DROPSHIP_DATA.find(d => d.id === selectedId);
+              if (tabName === 'items') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px;">Line Items for ${cur.dspo}</h4>
+                  <p style="color:#64748b;">All items are verified against catalog SKUs and supplier EDI feeds.</p>
+                  <table class="dpo-panel-items-table">
+                    <thead><tr><th>SKU</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
+                    <tbody>${cur.items.map(it => `<tr><td><b>${it.sku}</b></td><td>${it.desc}</td><td>${it.qty}</td><td>${formatMoney(it.price)}</td><td><b>${formatMoney(it.total)}</b></td></tr>`).join('')}</tbody>
+                  </table>
+                `;
+              } else if (tabName === 'cust-order') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px;">Linked Customer Order #${cur.custPo}</h4>
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:12px;">
+                    <div>Customer: <strong>${cur.customer}</strong></div>
+                    <div style="margin-top:4px;">In-hands Target: <strong>${cur.inHandsDate}</strong></div>
+                    <div style="margin-top:4px;">Allocation: <strong>Direct Supplier Dropship</strong></div>
+                    <div style="margin-top:8px;"><a href="all-open-orders.html" class="dpo-link">Open Customer Order #${cur.custPo} &rarr;</a></div>
+                  </div>
+                `;
+              } else if (tabName === 'shipping') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px;">Shipping & Carrier Details</h4>
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:12px;">
+                    <div>Carrier: <strong>${cur.shipping.method}</strong></div>
+                    <div style="margin-top:4px;">Billing Account: <strong>${cur.shipping.account}</strong></div>
+                    <div style="margin-top:4px;">Destination ZIP: <strong>${cur.shipping.zip}</strong></div>
+                    <div style="margin-top:4px;">Status: <span class="dpo-status-badge ${cur.statusClass}">${cur.status}</span></div>
+                  </div>
+                `;
+              } else if (tabName === 'comms') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px;">Supplier Communications</h4>
+                  <p style="color:#64748b;">EDI 850 Purchase Order sent automatically to ${cur.vendor}.</p>
+                  <div style="border-left:3px solid #2563eb; background:#eff6ff; padding:8px 12px; border-radius:4px; font-size:12px;">
+                    <strong>EDI Confirmation #850-${cur.dspo.slice(-5)}</strong> received from ${cur.vendor} gateway on ${cur.orderDate}.
+                  </div>
+                `;
+              } else if (tabName === 'history') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px;">Audit Trail & Event Log</h4>
+                  <ul style="padding-left:18px; margin:0; font-size:12px; color:#475569; line-height:1.8;">
+                    <li><strong>${cur.createdAt}</strong> &middot; Order #${cur.custPo} routed to ${cur.brand} dropship channel.</li>
+                    <li><strong>${cur.createdAt}</strong> &middot; EDI 850 PO generated and transmitted to ${cur.vendor}.</li>
+                    <li><strong>${cur.orderDate} 10:04 AM</strong> &middot; Functional acknowledgment (997) received.</li>
+                  </ul>
+                `;
+              }
+            }
+          });
+        });
+
+        // Select All Checkbox
+        const thCheck = document.querySelector('#dpo-th-check');
+        if (thCheck) {
+          thCheck.addEventListener('change', () => {
+            document.querySelectorAll('.dpo-row-checkbox').forEach(cb => cb.checked = thCheck.checked);
+          });
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

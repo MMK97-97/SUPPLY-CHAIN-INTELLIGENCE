@@ -5266,3 +5266,774 @@ body.stark-system.is-home .system-submodule-bar {
     grid-template-columns: 1fr !important;
   }
 }
+/* ==========================================================================
+   DROPSHIP PO MANAGEMENT MODULE (SPLIT VIEW & DETAILS DRAWER)
+   ========================================================================== */
+.dpo-page-container {
+  max-width: 1680px !important;
+  margin: 0 auto !important;
+  padding: 20px 28px 48px !important;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  color: #0f172a !important;
+}
+
+.dpo-subnav-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 10px 0 16px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  margin-bottom: 18px !important;
+}
+
+.dpo-subnav-link {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  text-decoration: none !important;
+  padding: 6px 14px !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.dpo-subnav-link:hover {
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+}
+
+.dpo-subnav-link.active {
+  border: 1.5px solid #0d9488 !important;
+  color: #087f78 !important;
+  background: rgba(13, 148, 136, 0.05) !important;
+  font-weight: 600 !important;
+}
+
+.dpo-breadcrumb {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 13px !important;
+  color: #64748b !important;
+  margin-bottom: 10px !important;
+}
+
+.dpo-bc-link {
+  color: #64748b !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.dpo-bc-link:hover {
+  color: #2563eb !important;
+}
+
+.dpo-bc-sep {
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+}
+
+.dpo-bc-current {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.dpo-header {
+  margin-bottom: 18px !important;
+}
+
+.dpo-page-title {
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  color: #102c53 !important;
+  margin: 0 0 4px !important;
+  letter-spacing: -0.02em !important;
+}
+
+.dpo-page-subtitle {
+  font-size: 13px !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Toolbar Card */
+.dpo-toolbar-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 14px 18px !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.dpo-filter-grid {
+  display: grid !important;
+  grid-template-columns: minmax(240px, 1.8fr) repeat(3, minmax(130px, 1fr)) minmax(180px, 1.2fr) !important;
+  gap: 12px !important;
+  align-items: flex-end !important;
+}
+
+.dpo-form-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+
+.dpo-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+}
+
+.dpo-input-wrap {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.dpo-input-icon {
+  position: absolute !important;
+  left: 10px !important;
+  color: #94a3b8 !important;
+  pointer-events: none !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.dpo-input {
+  width: 100% !important;
+  height: 36px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-size: 12.5px !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.dpo-input.has-icon {
+  padding-left: 32px !important;
+}
+
+.dpo-input:focus, .dpo-select:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.dpo-select {
+  width: 100% !important;
+  height: 36px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  padding: 6px 28px 6px 12px !important;
+  font-size: 12.5px !important;
+  color: #0f172a !important;
+  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center !important;
+  appearance: none !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  cursor: pointer !important;
+}
+
+/* Status Filter Pills */
+.dpo-status-pills {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 16px !important;
+  overflow-x: auto !important;
+  padding-bottom: 4px !important;
+}
+
+.dpo-pill-btn {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid transparent !important;
+  border-radius: 20px !important;
+  padding: 6px 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+.dpo-pill-btn:hover {
+  background: #e2e8f0 !important;
+}
+
+.dpo-pill-btn.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.dpo-pill-badge {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-radius: 12px !important;
+  padding: 1.5px 7px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+.dpo-pill-btn.active .dpo-pill-badge {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+/* Split View Layout */
+.dpo-split-layout {
+  display: grid !important;
+  grid-template-columns: 1fr 490px !important;
+  gap: 18px !important;
+  align-items: start !important;
+  transition: all 0.2s ease !important;
+}
+
+.dpo-split-layout.is-fullwidth {
+  grid-template-columns: 1fr !important;
+}
+
+/* Left Table Card */
+.dpo-table-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+.dpo-table-wrap {
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+.dpo-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  text-align: left !important;
+  font-size: 12.5px !important;
+}
+
+.dpo-table th {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  padding: 10px 12px !important;
+  white-space: nowrap !important;
+  font-size: 11.5px !important;
+  user-select: none !important;
+}
+
+.dpo-table td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #1e293b !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.dpo-table tbody tr {
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+}
+
+.dpo-table tbody tr:hover {
+  background: #f8fafc !important;
+}
+
+.dpo-table tbody tr.is-selected {
+  background: #f0f7ff !important;
+  border-left: 3px solid #2563eb !important;
+}
+
+.dpo-table tbody tr.is-selected td:first-child {
+  padding-left: 9px !important;
+}
+
+.dpo-link {
+  color: #2563eb !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+
+.dpo-link:hover {
+  text-decoration: underline !important;
+}
+
+/* Brand badges */
+.dpo-brand-badge {
+  display: inline-block !important;
+  padding: 2.5px 8px !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+
+.dpo-brand-sony { background: #dbeafe !important; color: #1e40af !important; }
+.dpo-brand-nb { background: #ffe4e6 !important; color: #e11d48 !important; }
+.dpo-brand-yeti { background: #dcfce7 !important; color: #15803d !important; }
+.dpo-brand-kendra { background: #ede9fe !important; color: #7c3aed !important; }
+.dpo-brand-coach { background: #e0e7ff !important; color: #4338ca !important; }
+.dpo-brand-nike { background: #fef3c7 !important; color: #b45309 !important; }
+.dpo-brand-ua { background: #e0f2fe !important; color: #0284c7 !important; }
+.dpo-brand-bose { background: #fee2e2 !important; color: #e11d48 !important; }
+.dpo-brand-stanley { background: #dcfce7 !important; color: #15803d !important; }
+.dpo-brand-apple { background: #ede9fe !important; color: #7c3aed !important; }
+
+/* Status Badges */
+.dpo-status-badge {
+  display: inline-block !important;
+  padding: 3px 10px !important;
+  border-radius: 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+}
+
+.dpo-status-pending { background: #fef3c7 !important; color: #d97706 !important; }
+.dpo-status-sent { background: #dbeafe !important; color: #2563eb !important; }
+.dpo-status-shipped { background: #dcfce7 !important; color: #16a34a !important; }
+.dpo-status-acknowledged { background: #ede9fe !important; color: #7c3aed !important; }
+.dpo-status-cancelled { background: #fee2e2 !important; color: #ef4444 !important; }
+
+/* Row menu button */
+.dpo-row-menu-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  padding: 4px 6px !important;
+  border-radius: 4px !important;
+  line-height: 1 !important;
+}
+
+.dpo-row-menu-btn:hover {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+/* Pagination */
+.dpo-pagination-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 12px 18px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  font-size: 12.5px !important;
+  color: #64748b !important;
+  background: #ffffff !important;
+}
+
+.dpo-page-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.dpo-page-btn {
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 6px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.12s ease !important;
+}
+
+.dpo-page-btn:hover {
+  border-color: #94a3b8 !important;
+  background: #f8fafc !important;
+}
+
+.dpo-page-btn.active {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Right Detail Card */
+.dpo-detail-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+  position: sticky !important;
+  top: 16px !important;
+}
+
+.dpo-detail-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 14px !important;
+}
+
+.dpo-detail-title-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.dpo-detail-title {
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+}
+
+.dpo-detail-close-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #64748b !important;
+  font-size: 15px !important;
+  cursor: pointer !important;
+  padding: 4px 6px !important;
+  border-radius: 4px !important;
+  line-height: 1 !important;
+}
+
+.dpo-detail-close-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.dpo-po-id-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 16px !important;
+}
+
+.dpo-po-num {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.dpo-po-badge-top {
+  background: #dcfce7 !important;
+  color: #16a34a !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  padding: 3.5px 12px !important;
+}
+
+/* Stepper Progress Bar */
+.dpo-stepper-wrap {
+  position: relative !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  margin-bottom: 18px !important;
+  padding: 0 6px !important;
+}
+
+.dpo-stepper-line {
+  position: absolute !important;
+  top: 9px !important;
+  left: 18px !important;
+  right: 18px !important;
+  height: 2px !important;
+  background: #e2e8f0 !important;
+  z-index: 1 !important;
+}
+
+.dpo-stepper-progress {
+  position: absolute !important;
+  top: 9px !important;
+  left: 18px !important;
+  height: 2px !important;
+  background: #2563eb !important;
+  z-index: 2 !important;
+  transition: width 0.25s ease !important;
+}
+
+.dpo-step-node {
+  position: relative !important;
+  z-index: 3 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.dpo-step-circle {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 2px solid #cbd5e1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.dpo-step-node.completed .dpo-step-circle {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+.dpo-step-node.completed .dpo-step-circle::after {
+  content: "" !important;
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+}
+
+.dpo-step-node.current .dpo-step-circle {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+.dpo-step-node.current .dpo-step-circle::after {
+  content: "" !important;
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #2563eb !important;
+}
+
+.dpo-step-name {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+}
+
+.dpo-step-node.completed .dpo-step-name,
+.dpo-step-node.current .dpo-step-name {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.dpo-step-date {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+}
+
+/* Panel Tabs */
+.dpo-panel-tabs {
+  display: flex !important;
+  gap: 16px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  margin-bottom: 14px !important;
+  overflow-x: auto !important;
+}
+
+.dpo-panel-tab {
+  background: none !important;
+  border: none !important;
+  padding: 8px 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  border-bottom: 2px solid transparent !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+}
+
+.dpo-panel-tab:hover {
+  color: #0f172a !important;
+}
+
+.dpo-panel-tab.active {
+  color: #2563eb !important;
+  font-weight: 600 !important;
+  border-bottom-color: #2563eb !important;
+}
+
+/* Key Value 2-Column Grid */
+.dpo-kv-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px 14px !important;
+  font-size: 12px !important;
+  margin-bottom: 14px !important;
+  background: #f8fafc !important;
+  border: 1px solid #f1f5f9 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+}
+
+.dpo-kv-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  padding: 2.5px 0 !important;
+}
+
+.dpo-kv-k {
+  color: #64748b !important;
+}
+
+.dpo-kv-v {
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  text-align: right !important;
+}
+
+/* Side-by-side Ship To and Shipping details */
+.dpo-address-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  margin-bottom: 14px !important;
+}
+
+.dpo-info-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.dpo-info-box-title {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-bottom: 6px !important;
+}
+
+/* Panel Items Table */
+.dpo-panel-items-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 11.5px !important;
+  margin-bottom: 10px !important;
+}
+
+.dpo-panel-items-table th {
+  background: #f1f5f9 !important;
+  padding: 6px 8px !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.dpo-panel-items-table td {
+  padding: 6px 8px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+.dpo-items-footer-bar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-end !important;
+  padding: 10px 12px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  margin-bottom: 14px !important;
+}
+
+.dpo-items-instructions {
+  font-size: 11px !important;
+}
+
+.dpo-items-instructions-label {
+  color: #64748b !important;
+  display: block !important;
+  margin-bottom: 2px !important;
+}
+
+.dpo-items-instructions-val {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.dpo-items-total-val {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+/* Documents row */
+.dpo-docs-list {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.dpo-doc-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  font-size: 11.5px !important;
+  color: #2563eb !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+.dpo-doc-pill:hover {
+  border-color: #bfdbfe !important;
+  background: #eff6ff !important;
+}
+
+@media (max-width: 1200px) {
+  .dpo-split-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .dpo-detail-card {
+    position: static !important;
+    margin-top: 20px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dpo-page-container {
+    padding: 14px !important;
+  }
+  .dpo-filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .dpo-address-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .dpo-kv-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

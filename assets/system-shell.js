@@ -98,7 +98,7 @@
       ['procurement','Procurement','Purchase Orders · Receiving · PO Lifecycle','#f59e0b',[
         ['procurement/index.html','Open vendor PO management'],
         ['create-vendor-po.html','Create vendor PO'],
-        ['vendor-po-management.html','Event / dropship POs'],
+        ['dropship-po.html','Event / dropship POs'],
         ['vendor-management/procurement.html','Procurement & receiving']
       ],'procurement/index.html',{label:'+ Create vendor PO',path:'create-vendor-po.html'}],
 
