@@ -70,6 +70,22 @@ body.stark-system:has(.portfolio-demo-ribbon) {
   padding-top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px) + var(--sys-subnav-h, 38px) + 34px) !important;
 }
 
+body.stark-system.is-home {
+  padding-top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px)) !important;
+}
+
+body.stark-system.is-home:has(.portfolio-demo-ribbon) {
+  padding-top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px) + 34px) !important;
+}
+
+body.stark-system.is-home .portfolio-demo-ribbon {
+  top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px)) !important;
+}
+
+body.stark-system.is-home .system-submodule-bar {
+  display: none !important;
+}
+
 /* Header Row 1 */
 .system-header {
   position: fixed;
@@ -769,24 +785,9 @@ body.stark-system:has(.portfolio-demo-ribbon) {
 }
 
 /* ==========================================================================
-   Module Click Dropdown Panels
+   Module Click Dropdown Panels (Removed per request)
    ========================================================================== */
-.system-module-dropdown {
-  position: fixed !important;
-  top: auto;
-  left: auto;
-  min-width: 320px !important;
-  max-width: 380px !important;
-  background: #ffffff !important;
-  border: 1px solid var(--sys-slate-200) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.08) !important;
-  z-index: 10000 !important;
-  padding: 10px !important;
-  animation: dropdownSlide 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.system-module-dropdown[hidden] {
+.system-module-dropdown, .system-tab-caret {
   display: none !important;
 }
 

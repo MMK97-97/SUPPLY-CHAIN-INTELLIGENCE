@@ -170,33 +170,28 @@
     const subBar = document.querySelector('#system-submodule-bar');
     if (!subBar) return;
 
-    const all = groups();
-    let group = all.find(([id]) => id === targetId);
-
-    if (targetId === 'home' || !group) {
-      subBar.innerHTML = `
-        <div class="system-subnav-badge" style="--mod-accent:#0f766e">
-          <span class="system-tab-icon" style="--tab-color:#0f766e">${glyph('home')}</span>
-          <span>Home Overview</span>
-        </div>
-        <span class="system-subnav-divider"></span>
-        <div class="system-subnav-list">
-          <a href="${S.url('workspace.html')}" class="system-subnav-item ${active('workspace.html') || active('index.html') ? 'active' : ''}" ${active('workspace.html') || active('index.html') ? 'aria-current="page"' : ''}>
-            <span>Executive Control Tower</span>
-          </a>
-          <a href="${S.url('business-operations.html')}" class="system-subnav-item ${active('business-operations.html') ? 'active' : ''}">
-            <span>Business Operations</span>
-          </a>
-          ${all.map(([id, label, , color, , primaryUrl]) => `
-            <a href="${S.url(primaryUrl)}" class="system-subnav-item">
-              <span class="system-subnav-dot" style="background:${color}"></span>
-              <span>${escape(label)}</span>
-            </a>
-          `).join('')}
-        </div>
-      `;
+    const isHome = active('workspace.html') || active('index.html') || targetId === 'home';
+    if (isHome) {
+      subBar.hidden = true;
+      subBar.style.display = 'none';
+      subBar.innerHTML = '';
+      document.body.classList.add('is-home');
       return;
     }
+
+    const all = groups();
+    let group = all.find(([id]) => id === targetId);
+    if (!group) {
+      subBar.hidden = true;
+      subBar.style.display = 'none';
+      subBar.innerHTML = '';
+      document.body.classList.add('is-home');
+      return;
+    }
+
+    document.body.classList.remove('is-home');
+    subBar.hidden = false;
+    subBar.style.display = '';
 
     const [id, label, subtitle, color, items, primaryUrl, quickAction] = group;
     subBar.innerHTML = `
@@ -222,14 +217,13 @@
   }
 
   function closeAllDropdowns() {
-    document.querySelectorAll('.system-module-dropdown, .system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
-    document.querySelectorAll('.system-module-tab, .system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
-    renderSubnav(currentActiveModuleId);
+    document.querySelectorAll('.system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
+    document.querySelectorAll('.system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
   }
 
   function renderNavigation() {
     const nav = document.querySelector('#system-navigation');
-    const homeActive = active('workspace.html') || active('business-operations.html') || active('index.html');
+    const homeActive = active('workspace.html') || active('index.html');
     if (nav) {
       nav.innerHTML = `<a class="system-home ${homeActive?'active':''}" ${homeActive?'aria-current="page"':''} href="${S.url('workspace.html')}">${glyph('home')}<span>Overview</span></a>` +
         groups().map(([id, label, , , items]) => `<details data-nav-group="${id}" ${items.some(([path])=>active(path))?'open':''}><summary>${glyph(id)}<span>${label}</span><span class="system-chevron">⌄</span></summary><div class="system-subnav">${items.map(([path,l])=>`<a href="${S.url(path)}" ${active(path)?'class="active" aria-current="page"':''}>${escape(l)}</a>`).join('')}</div></details>`).join('');
@@ -247,139 +241,25 @@
         </div>
       `;
 
-      allGroups.forEach(([id, label, subtitle, color, items, primaryUrl, quickAction]) => {
+      allGroups.forEach(([id, label, subtitle, color, items, primaryUrl]) => {
         const isGroupActive = items.some(([path]) => active(path)) || active(primaryUrl);
         html += `
           <div class="system-module-item" data-module-id="${id}">
-            <button type="button" class="system-module-tab ${isGroupActive ? 'active' : ''}" aria-expanded="false" aria-haspopup="true" data-toggle-dropdown="${id}">
+            <a class="system-module-tab ${isGroupActive ? 'active' : ''}" href="${S.url(primaryUrl)}" aria-label="${escape(label)}">
               <span class="system-tab-icon" style="--tab-color:${color}">${glyph(id)}</span>
               <span class="system-tab-label">${escape(label)}</span>
-              <span class="system-tab-caret">▾</span>
-            </button>
-            <div class="system-module-dropdown" id="dropdown-${id}" hidden role="menu" aria-label="${escape(label)} options">
-              <div class="system-dropdown-head" style="--mod-accent:${color}">
-                <div class="system-dropdown-badge" style="background:${color}">${glyph(id)}</div>
-                <div class="system-dropdown-title-wrap">
-                  <strong class="system-dropdown-title">${escape(label)}</strong>
-                  <small class="system-dropdown-sub">${escape(subtitle)}</small>
-                </div>
-                <a href="${S.url(primaryUrl)}" class="system-dropdown-overview-btn">Dashboard ↗</a>
-              </div>
-              <ul class="system-dropdown-links">
-                ${items.map(([path, itemLabel, isHot]) => `
-                  <li>
-                    <a href="${S.url(path)}" class="system-dropdown-link ${active(path) ? 'active' : ''}">
-                      <span class="system-dropdown-link-bullet" style="background:${color}"></span>
-                      <span class="system-dropdown-link-name">${escape(itemLabel)}</span>
-                      ${isHot ? '<span class="system-dropdown-pill">Active</span>' : ''}
-                      <span class="system-dropdown-arrow">›</span>
-                    </a>
-                  </li>
-                `).join('')}
-              </ul>
-              ${quickAction ? `
-                <div class="system-dropdown-foot">
-                  <a href="${S.url(quickAction.path)}" class="system-dropdown-quick-action" style="--btn-accent:${color}">
-                    ${quickAction.label}
-                  </a>
-                </div>
-              ` : ''}
-            </div>
+            </a>
           </div>
         `;
       });
 
       tabs.innerHTML = html;
-      bindDropdownEvents(tabs);
 
       const activeGroup = allGroups.find(([id, label, subtitle, color, items, primaryUrl]) =>
         items.some(([path]) => active(path)) || active(primaryUrl)
       );
       currentActiveModuleId = activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
       renderSubnav(currentActiveModuleId);
-    }
-  }
-
-  function bindDropdownEvents(tabs) {
-    function positionDropdown(button, dropdown) {
-      dropdown.style.position = 'fixed';
-      dropdown.style.zIndex = '10000';
-      dropdown.style.visibility = 'hidden';
-      dropdown.hidden = false;
-
-      const rect = button.getBoundingClientRect();
-      const dropdownRect = dropdown.getBoundingClientRect();
-      const width = dropdownRect.width || 340;
-
-      const top = Math.round(rect.bottom + 4);
-      let left = Math.round(rect.left);
-
-      // Clamp within viewport horizontally with 12px margin
-      if (left + width > window.innerWidth - 12) {
-        left = Math.max(12, window.innerWidth - width - 12);
-      }
-      if (left < 12) {
-        left = 12;
-      }
-
-      dropdown.style.top = top + 'px';
-      dropdown.style.left = left + 'px';
-      dropdown.style.right = 'auto';
-      dropdown.style.bottom = 'auto';
-      dropdown.style.maxHeight = `calc(100vh - ${top + 16}px)`;
-      dropdown.style.overflowY = 'auto';
-      dropdown.style.visibility = '';
-    }
-
-    tabs.querySelectorAll('[data-toggle-dropdown]').forEach(button => {
-      button.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const id = button.dataset.toggleDropdown;
-        const dropdown = document.getElementById('dropdown-' + id);
-        if (!dropdown) return;
-
-        const isExpanded = button.getAttribute('aria-expanded') === 'true';
-        closeAllDropdowns();
-
-        if (!isExpanded) {
-          button.setAttribute('aria-expanded', 'true');
-          positionDropdown(button, dropdown);
-          renderSubnav(id);
-        } else {
-          renderSubnav(currentActiveModuleId);
-        }
-      };
-    });
-
-    if (!tabs._eventsBound) {
-      tabs._eventsBound = true;
-
-      window.addEventListener('resize', () => {
-        const openBtn = tabs.querySelector('.system-module-tab[aria-expanded="true"]');
-        if (openBtn) {
-          const id = openBtn.dataset.toggleDropdown;
-          const dropdown = document.getElementById('dropdown-' + id);
-          if (dropdown && !dropdown.hidden) {
-            positionDropdown(openBtn, dropdown);
-          }
-        }
-      });
-
-      window.addEventListener('scroll', () => {
-        const openBtn = tabs.querySelector('.system-module-tab[aria-expanded="true"]');
-        if (openBtn) {
-          const id = openBtn.dataset.toggleDropdown;
-          const dropdown = document.getElementById('dropdown-' + id);
-          if (dropdown && !dropdown.hidden) {
-            positionDropdown(openBtn, dropdown);
-          }
-        }
-      }, { passive: true });
-
-      tabs.addEventListener('scroll', () => {
-        closeAllDropdowns();
-      }, { passive: true });
     }
   }
 
@@ -529,6 +409,13 @@
     subnav.className = 'system-submodule-bar';
     subnav.setAttribute('aria-label', 'Active Module Navigation');
 
+    const isHomePage = active('workspace.html') || active('index.html');
+    if (isHomePage) {
+      subnav.hidden = true;
+      subnav.style.display = 'none';
+      document.body.classList.add('is-home');
+    }
+
     const scrim = document.createElement('button');
     scrim.className = 'system-scrim';
     scrim.setAttribute('aria-label', 'Close menu');
@@ -616,7 +503,7 @@
 
     // Close all menus on outside click or Escape
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.system-module-item, .system-module-dropdown, .system-submodule-bar, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
+      if (!e.target.closest('.system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
         closeAllDropdowns();
         const searchResults = header.querySelector('#system-search-results');
         if (searchResults) searchResults.hidden = true;
@@ -769,7 +656,7 @@
 
     window.StarkModuleNavigation = {
       open: (id) => {
-        const btn = document.querySelector(`[data-toggle-dropdown="${id}"]`);
+        const btn = document.querySelector(`.system-module-item[data-module-id="${id}"] .system-module-tab`);
         if (btn) btn.click();
       },
       close: closeAllDropdowns,
