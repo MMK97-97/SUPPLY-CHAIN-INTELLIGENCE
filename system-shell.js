@@ -164,9 +164,67 @@
     return names[code] || 'United States';
   }
 
+  let currentActiveModuleId = 'home';
+
+  function renderSubnav(targetId) {
+    const subBar = document.querySelector('#system-submodule-bar');
+    if (!subBar) return;
+
+    const all = groups();
+    let group = all.find(([id]) => id === targetId);
+
+    if (targetId === 'home' || !group) {
+      subBar.innerHTML = `
+        <div class="system-subnav-badge" style="--mod-accent:#0f766e">
+          <span class="system-tab-icon" style="--tab-color:#0f766e">${glyph('home')}</span>
+          <span>Home Overview</span>
+        </div>
+        <span class="system-subnav-divider"></span>
+        <div class="system-subnav-list">
+          <a href="${S.url('workspace.html')}" class="system-subnav-item ${active('workspace.html') || active('index.html') ? 'active' : ''}" ${active('workspace.html') || active('index.html') ? 'aria-current="page"' : ''}>
+            <span>Executive Control Tower</span>
+          </a>
+          <a href="${S.url('business-operations.html')}" class="system-subnav-item ${active('business-operations.html') ? 'active' : ''}">
+            <span>Business Operations</span>
+          </a>
+          ${all.map(([id, label, , color, , primaryUrl]) => `
+            <a href="${S.url(primaryUrl)}" class="system-subnav-item">
+              <span class="system-subnav-dot" style="background:${color}"></span>
+              <span>${escape(label)}</span>
+            </a>
+          `).join('')}
+        </div>
+      `;
+      return;
+    }
+
+    const [id, label, subtitle, color, items, primaryUrl, quickAction] = group;
+    subBar.innerHTML = `
+      <div class="system-subnav-badge" style="--mod-accent:${color}">
+        <span class="system-tab-icon" style="--tab-color:${color}">${glyph(id)}</span>
+        <span>${escape(label)}</span>
+      </div>
+      <span class="system-subnav-divider"></span>
+      <div class="system-subnav-list">
+        ${items.map(([path, itemLabel, isHot]) => `
+          <a href="${S.url(path)}" class="system-subnav-item ${active(path) ? 'active' : ''}" ${active(path) ? 'aria-current="page"' : ''}>
+            <span>${escape(itemLabel)}</span>
+            ${isHot ? '<span class="system-subnav-pill">Active</span>' : ''}
+          </a>
+        `).join('')}
+      </div>
+      ${quickAction ? `
+        <a href="${S.url(quickAction.path)}" class="system-subnav-quick" style="--mod-accent:${color}">
+          ${escape(quickAction.label)}
+        </a>
+      ` : ''}
+    `;
+  }
+
   function closeAllDropdowns() {
     document.querySelectorAll('.system-module-dropdown, .system-region-menu, .system-create-menu, .system-account-menu').forEach(el => el.hidden = true);
     document.querySelectorAll('.system-module-tab, .system-region-btn, .system-create-btn, .system-account-btn').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    renderSubnav(currentActiveModuleId);
   }
 
   function renderNavigation() {
@@ -233,6 +291,12 @@
 
       tabs.innerHTML = html;
       bindDropdownEvents(tabs);
+
+      const activeGroup = allGroups.find(([id, label, subtitle, color, items, primaryUrl]) =>
+        items.some(([path]) => active(path)) || active(primaryUrl)
+      );
+      currentActiveModuleId = activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
+      renderSubnav(currentActiveModuleId);
     }
   }
 
@@ -281,6 +345,9 @@
         if (!isExpanded) {
           button.setAttribute('aria-expanded', 'true');
           positionDropdown(button, dropdown);
+          renderSubnav(id);
+        } else {
+          renderSubnav(currentActiveModuleId);
         }
       };
     });
@@ -457,6 +524,11 @@
     rail.className = 'system-module-tabs';
     rail.setAttribute('aria-label', 'Enterprise Operations Modules');
 
+    const subnav = document.createElement('nav');
+    subnav.id = 'system-submodule-bar';
+    subnav.className = 'system-submodule-bar';
+    subnav.setAttribute('aria-label', 'Active Module Navigation');
+
     const scrim = document.createElement('button');
     scrim.className = 'system-scrim';
     scrim.setAttribute('aria-label', 'Close menu');
@@ -472,8 +544,8 @@
       skip.href = '#' + main.id;
     }
 
-    // Mount header and top module buttons rail
-    document.body.prepend(skip, header, rail, scrim);
+    // Mount header, top module buttons rail, and sub-options banner
+    document.body.prepend(skip, header, rail, subnav, scrim);
     document.body.classList.add('stark-system');
 
     const footer = document.createElement('footer');
@@ -544,7 +616,7 @@
 
     // Close all menus on outside click or Escape
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.system-module-item, .system-module-dropdown, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
+      if (!e.target.closest('.system-module-item, .system-module-dropdown, .system-submodule-bar, .system-region-picker, .system-create-picker, .system-account-picker, .system-search')) {
         closeAllDropdowns();
         const searchResults = header.querySelector('#system-search-results');
         if (searchResults) searchResults.hidden = true;
