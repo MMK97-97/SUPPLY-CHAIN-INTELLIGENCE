@@ -10,6 +10,7 @@
   const glyph = name => {
     const paths = {
       home: '<path d="M3 10l9-7 9 7v10H3z M9 20v-7h6v7"/>',
+      itemMaster: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
       planning: '<path d="M4 19V9m5 10V5m5 14v-7m5 7V3"/>',
       crm: '<path d="M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3 M16 4a4 4 0 0 1 0 8 M22 21v-3a4 4 0 0 0-3-3 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0"/>',
       orders: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
@@ -31,6 +32,7 @@
 
   function bannerSvg(id, color) {
     const banners = {
+      itemMaster: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#042738"/><path d="M40 20h280M40 40h280M40 60h280" stroke="#0ea5e9" stroke-opacity="0.1"/><circle cx="50" cy="40" r="12" fill="#0369a1"/><circle cx="120" cy="40" r="12" fill="#0284c7"/><circle cx="190" cy="40" r="12" fill="#0ea5e9"/><circle cx="260" cy="40" r="12" fill="#38bdf8"/><text x="342" y="70" text-anchor="end" fill="#bae6fd" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">ENTERPRISE ITEM MASTER &amp; ATS</text></svg>',
       planning: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#042e2b"/><path d="M0 20h360M0 40h360M0 60h360" stroke="#10b981" stroke-opacity="0.08"/><path d="M20 68 Q100 64, 150 44 T260 28 T340 16 L340 80 L20 80 Z" fill="#10b981" fill-opacity="0.2"/><path d="M20 68 Q100 64, 150 44 T260 28 T340 16" stroke="#10b981" stroke-width="2.5"/><circle cx="150" cy="44" r="3.5" fill="#34d399"/><circle cx="260" cy="28" r="3.5" fill="#34d399"/><circle cx="340" cy="16" r="4" fill="#a7f3d0"/><text x="342" y="70" text-anchor="end" fill="#6ee7b7" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">DEMAND &amp; REORDER LAB</text></svg>',
       crm: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#0a1d3d"/><path d="M45 40 L110 22 L190 48 L265 26 L325 44" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="45" cy="40" r="11" fill="#1d4ed8"/><circle cx="110" cy="22" r="9" fill="#1e40af"/><circle cx="190" cy="48" r="13" fill="#2563eb"/><circle cx="265" cy="26" r="10" fill="#1e40af"/><circle cx="325" cy="44" r="9" fill="#1d4ed8"/><text x="342" y="70" text-anchor="end" fill="#93c5fd" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">PARTNER CRM &amp; CATALOGS</text></svg>',
       orders: '<svg viewBox="0 0 360 80" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="360" height="80" fill="#2a140b"/><line x1="20" y1="54" x2="340" y2="54" stroke="#f97316" stroke-width="2"/><rect x="50" y="30" width="26" height="22" rx="2" fill="#431407" stroke="#f97316"/><rect x="110" y="22" width="34" height="30" rx="3" fill="#431407" stroke="#f97316"/><rect x="180" y="32" width="24" height="20" rx="2" fill="#431407" stroke="#f97316"/><rect x="235" y="20" width="38" height="32" rx="3" fill="#431407" stroke="#f97316"/><line x1="254" y1="4" x2="254" y2="52" stroke="#ffedd5" stroke-width="1.8" stroke-dasharray="4 2"/><text x="342" y="70" text-anchor="end" fill="#fed7aa" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">ALLOCATION &amp; PACKAGING</text></svg>',
@@ -49,7 +51,18 @@
   function groups() {
     const region = S.getRegion(), suffix = region.toLowerCase();
     return [
+      ['itemMaster','Item Master','Master Catalog · Inventory · Warehouses','#0284c7',[
+        ['item-master.html','Item master'],
+        ['item-master.html?status=Live','Live catalog'],
+        ['item-master.html?status=fashion','Fashion line'],
+        ['item-master.html?status=internal%20use','Internal use'],
+        ['item-master.html?status=presentation','Presentation'],
+        ['warehouse-management/inventory-bins.html','Warehouse bins & stock'],
+        ['crm/catalog.html','Catalog & pricing']
+      ],'item-master.html',{label:'+ Add item',path:'item-master.html?action=new'}],
+
       ['planning','Inventory & Planning','Replenishment · Reorder · Demand','#10b981',[
+        ['item-master.html','Item master'],
         [`inventory-dashboard-${suffix}.html`,'Inventory dashboard'],
         [`decision-intelligence-${suffix}.html`,'Decision intelligence'],
         [`raw-report-${suffix}.html`,'Raw report & upload'],
@@ -64,6 +77,7 @@
         ['crm/index.html','CRM dashboard'],
         ['crm/accounts.html','Accounts & programs'],
         ['crm/catalog.html','Catalog & pricing'],
+        ['item-master.html','Item master'],
         ['crm/partner-portal.html','Partner portal']
       ],'crm/index.html',{label:'+ Add account',path:'crm/accounts.html'}],
 
@@ -281,7 +295,7 @@
       ...s.enterprise.vendors.map(x => ({ label: x.name, kind: 'Vendor', path: 'vendor-management/vendors.html', hay: x.name + ' ' + x.email })),
       ...s.enterprise.orders.map(x => ({ label: (x.po || x.orderNumber || 'Order') + ' · ' + (x.status || '').replaceAll('_', ' '), kind: 'Customer Order', path: 'order-management/index.html?search=' + encodeURIComponent(x.po), hay: [x.po, x.id, x.orderNumber, x.tracking, x.createdAt, x.inHandsDate, ...x.lines.flatMap(l => [l.model, l.sku])].filter(Boolean).join(' ') })),
       ...s.enterprise.purchaseOrders.map(x => ({ label: x.po + ' · ' + (x.status || ''), kind: 'Vendor PO', path: 'vendor-management/procurement.html', hay: x.po })),
-      ...s.enterprise.inventory.map(x => ({ label: x.model + ' · ' + x.brand, kind: 'SKU · ' + x.region, path: 'crm/catalog.html', hay: x.sku + ' ' + x.model + ' ' + x.brand + ' ' + x.title }))
+      ...s.enterprise.inventory.map(x => ({ label: x.model + ' · ' + x.brand, kind: 'SKU · ' + x.region, path: 'item-master.html?search=' + encodeURIComponent(x.model || x.sku), hay: x.sku + ' ' + x.model + ' ' + x.brand + ' ' + x.title }))
     ].filter(x => String(x.hay).toLowerCase().includes(q));
     return [...routeMatches, ...records].slice(0, 14);
   }

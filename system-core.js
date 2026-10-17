@@ -521,6 +521,64 @@
       po.recordRevision = (Number(po.recordRevision) || 0) + 1;
     });
   }
+  function updateItem(sku, updates) {
+    return transaction('ITEM_MASTER_UPDATED', sku, s => {
+      const item = inventoryItem(s, sku);
+      if (updates.status !== undefined) item.status = String(updates.status || '').trim();
+      if (updates.brand !== undefined) item.brand = String(updates.brand || '').trim();
+      if (updates.title !== undefined) item.title = String(updates.title || '').trim();
+      if (updates.model !== undefined) item.model = String(updates.model || '').trim();
+      if (updates.standardPrice !== undefined) item.standardPrice = Math.max(0, number(updates.standardPrice));
+      if (updates.cost !== undefined) item.cost = Math.max(0, number(updates.cost));
+      if (updates.safety !== undefined) item.safety = Math.max(0, number(updates.safety));
+      item.updatedAt = stamp();
+    });
+  }
+  function createItem(input) {
+    return transaction('ITEM_MASTER_CREATED', input.sku || input.model, s => {
+      const e = s.enterprise, l = s.logistics;
+      const model = String(input.model || '').trim();
+      const sku = String(input.sku || (input.nature === 'DIGITAL' ? 'DIGI-' : 'PHYS-') + model.toUpperCase().replace(/[^A-Z0-9_-]/g, '-')).trim();
+      if (!model) throw new Error('Model number is required.');
+      if (e.inventory.some(x => x.sku.toLowerCase() === sku.toLowerCase())) throw new Error('A product with this SKU or Model already exists.');
+      const nature = input.nature || 'PHYSICAL';
+      const onHand = Math.max(0, number(input.onHand));
+      const newItem = {
+        sku,
+        model,
+        brand: String(input.brand || 'General').trim(),
+        title: String(input.title || model).trim(),
+        nature,
+        onHand,
+        reserved: 0,
+        externalReserved: 0,
+        damaged: 0,
+        safety: Math.max(0, number(input.safety || 10)),
+        cost: Math.max(0, number(input.cost || 0)),
+        standardPrice: Math.max(0, number(input.standardPrice || input.price || 0)),
+        status: input.status || 'Live',
+        region: input.region || 'US',
+        updatedAt: stamp()
+      };
+      e.inventory.push(newItem);
+      if (nature === 'PHYSICAL') {
+        const binId = input.binId || 'A-01-R1-B1';
+        l.inventory.push({
+          sku,
+          brand: newItem.brand,
+          description: newItem.title,
+          binId,
+          onHand,
+          reserved: 0,
+          damaged: 0,
+          serialized: false,
+          lotControl: false,
+          lastCount: stamp()
+        });
+      }
+      return newItem;
+    });
+  }
   function shipDropshipPO(id,tracking){transaction('DROPSHIP_DISPATCHED',id,s=>{const p=s.enterprise.purchaseOrders.find(x=>x.id===id&&x.purpose==='DROPSHIP');if(!p||p.status==='CANCELLED'||p.status==='DISPATCHED')throw new Error('Select an open dropship PO.');if(!tracking?.trim())throw new Error('Supplier tracking is required.');const o=s.enterprise.orders.find(x=>x.id===p.customerOrderId);if(!o||final(o.status))throw new Error('Linked customer order is closed.');p.status='DISPATCHED';p.tracking=tracking.trim();p.dispatchedAt=stamp();o.status='SHIPPED';o.tracking=p.tracking;o.updatedAt=stamp();o.lines.forEach(x=>x.shipped=x.qty);});}
   async function exportBackup() {
     const regionalDatasets = await collectRegional(); const extras = {};
@@ -553,6 +611,6 @@
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});
     return rows;
   }
-  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
+  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
   expireHolds();
 })();

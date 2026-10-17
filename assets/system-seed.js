@@ -19,12 +19,14 @@ function enterprise(){
    {id:'prog_meridian_spot',accountId:'acct_meridian',name:'Spot Recognition',code:'MER-SPOT',start:'2026-09-01',end:'2027-02-28',status:'LIVE'}
   ],
   inventory:[
-   {sku:'PHYS-SONY-WH1000XM5',model:'WH1000XM5',brand:'Sony',title:'Wireless Noise Canceling Headphones',nature:'PHYSICAL',onHand:168,reserved:32,safety:45,cost:278,standardPrice:349},
-   {sku:'PHYS-APPLE-AIRPODS-PRO2',model:'MTJV3AM/A',brand:'Apple',title:'AirPods Pro 2',nature:'PHYSICAL',onHand:212,reserved:36,safety:60,cost:185,standardPrice:249},
-   {sku:'PHYS-KS-4217709208',model:'4217709208',brand:'Kendra Scott',title:'Designer Jewelry Item',nature:'PHYSICAL',onHand:74,reserved:25,safety:30,cost:62,standardPrice:110},
-   {sku:'PHYS-AURA-CARVER',model:'AF-200',brand:'Aura Frames',title:'Carver HD Digital Frame',nature:'PHYSICAL',onHand:31,reserved:16,safety:28,cost:126,standardPrice:149},
-   {sku:'DIGI-AMZ-100',model:'AMZ-100',brand:'Amazon',title:'$100 Digital Reward Code',nature:'DIGITAL',onHand:560,reserved:80,safety:150,cost:98,standardPrice:100},
-   {sku:'DIGI-VISA-50',model:'VISA-50',brand:'Visa',title:'$50 Digital Reward Token',nature:'DIGITAL',onHand:190,reserved:40,safety:120,cost:49.1,standardPrice:50}
+   {sku:'PHYS-SONY-WH1000XM5',model:'WH1000XM5',brand:'Sony',title:'Wireless Noise Canceling Headphones',nature:'PHYSICAL',onHand:168,reserved:32,safety:45,cost:278,standardPrice:349,status:'Live'},
+   {sku:'PHYS-APPLE-AIRPODS-PRO2',model:'MTJV3AM/A',brand:'Apple',title:'AirPods Pro 2',nature:'PHYSICAL',onHand:212,reserved:36,safety:60,cost:185,standardPrice:249,status:'Live'},
+   {sku:'PHYS-KS-4217709208',model:'4217709208',brand:'Kendra Scott',title:'Designer Jewelry Item',nature:'PHYSICAL',onHand:74,reserved:25,safety:30,cost:62,standardPrice:110,status:'fashion'},
+   {sku:'PHYS-AURA-CARVER',model:'AF-200',brand:'Aura Frames',title:'Carver HD Digital Frame',nature:'PHYSICAL',onHand:31,reserved:16,safety:28,cost:126,standardPrice:149,status:'presentation'},
+   {sku:'PHYS-FIELDBAR-HCFB1',model:'HCFB1',brand:'FieldBar',title:'Orchard Orange Cooler',nature:'PHYSICAL',onHand:150,reserved:110,safety:20,cost:140,standardPrice:219,status:'fashion'},
+   {sku:'PHYS-AUDIO-ENG-LAB',model:'ATH-M50X-QA',brand:'Audio-Technica',title:'Studio Monitor (QA Reference Sample)',nature:'PHYSICAL',onHand:15,reserved:0,safety:5,cost:115,standardPrice:169,status:'internal use'},
+   {sku:'DIGI-AMZ-100',model:'AMZ-100',brand:'Amazon',title:'$100 Digital Reward Code',nature:'DIGITAL',onHand:560,reserved:80,safety:150,cost:98,standardPrice:100,status:'Live'},
+   {sku:'DIGI-VISA-50',model:'VISA-50',brand:'Visa',title:'$50 Digital Reward Token',nature:'DIGITAL',onHand:190,reserved:40,safety:120,cost:49.1,standardPrice:50,status:'Live'}
   ],
   priceOverrides:[
    {id:'pb1',accountId:'acct_northstar',sku:'PHYS-SONY-WH1000XM5',price:326,minQty:25,effective:'2026-07-01'},
@@ -90,7 +92,8 @@ function logistics(){
    {sku:'PHYS-APPLE-AIRPODS-PRO2',brand:'Apple',description:'AirPods Pro 2',binId:'A-01-R1-B2',onHand:212,reserved:36,damaged:1,serialized:true,lotControl:false,lastCount:plusDays(-8)},
    {sku:'PHYS-KS-4217709208',brand:'Kendra Scott',description:'Designer Jewelry Item',binId:'SEC-01-R1-B1',onHand:74,reserved:25,damaged:0,serialized:false,lotControl:false,lastCount:plusDays(-14)},
    {sku:'PHYS-AURA-CARVER',brand:'Aura Frames',description:'Carver HD Digital Frame',binId:'B-04-R2-B1',onHand:31,reserved:16,damaged:1,serialized:true,lotControl:false,lastCount:plusDays(-18)},
-   {sku:'PHYS-FIELDBAR-HCFB1',brand:'FieldBar',description:'Orchard Orange Cooler',binId:'B-07-R1-B1',onHand:150,reserved:110,damaged:3,serialized:false,lotControl:false,lastCount:plusDays(-5)}
+   {sku:'PHYS-FIELDBAR-HCFB1',brand:'FieldBar',description:'Orchard Orange Cooler',binId:'B-07-R1-B1',onHand:150,reserved:110,damaged:3,serialized:false,lotControl:false,lastCount:plusDays(-5)},
+   {sku:'PHYS-AUDIO-ENG-LAB',brand:'Audio-Technica',description:'Studio Monitor (QA Reference Sample)',binId:'SEC-01-R1-B1',onHand:15,reserved:0,damaged:0,serialized:false,lotControl:false,lastCount:plusDays(-2)}
   ],
   receipts:[
    {id:'rcv_887411',po:'PO-2026-887411',vendor:'Sony Electronics',asn:'ASN-SONY-887411',appointment:plusHours(3),dock:'D2',carrier:'FedEx Freight',status:'ARRIVED',invoice:'INV-887411',invoiceTotal:13400,poTotal:13400,lines:[{sku:'PHYS-SONY-WH1000XM5',expected:50,received:50,damaged:0,unitCost:268}]},
@@ -128,6 +131,9 @@ function logistics(){
    {nodeId:'tpl_central',sku:'PHYS-SONY-WH1000XM5',qty:67,reserved:8,registryQty:67,lastSync:plusHours(-.7),variation:true},
    {nodeId:'tpl_central',sku:'PHYS-APPLE-AIRPODS-PRO2',qty:140,reserved:18,registryQty:138,lastSync:plusHours(-.7),variation:true},
    {nodeId:'tpl_central',sku:'PHYS-KS-4217709208',qty:56,reserved:11,registryQty:56,lastSync:plusHours(-.7),variation:true},
+   {nodeId:'tpl_east',sku:'PHYS-FIELDBAR-HCFB1',qty:40,reserved:10,registryQty:40,lastSync:plusHours(-.3),variation:false},
+   {nodeId:'tpl_central',sku:'PHYS-FIELDBAR-HCFB1',qty:35,reserved:5,registryQty:35,lastSync:plusHours(-.7),variation:false},
+   {nodeId:'tpl_east',sku:'PHYS-AUDIO-ENG-LAB',qty:5,reserved:0,registryQty:5,lastSync:plusHours(-.3),variation:false},
    {nodeId:'tpl_west',sku:'PHYS-SONY-WH1000XM5',qty:29,reserved:3,registryQty:29,lastSync:plusHours(-1.5),variation:true},
    {nodeId:'tpl_west',sku:'PHYS-APPLE-AIRPODS-PRO2',qty:78,reserved:9,registryQty:76,lastSync:plusHours(-1.5),variation:true},
    {nodeId:'tpl_west',sku:'PHYS-AURA-CARVER',qty:44,reserved:8,registryQty:44,lastSync:plusHours(-1.5),variation:false}
