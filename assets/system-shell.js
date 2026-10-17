@@ -77,7 +77,7 @@
       ],'crm/index.html',{label:'+ Add account',path:'crm/accounts.html'}],
 
       ['orders','Order Management','Orders · Allocation · Exceptions','#f97316',[
-        ['order-management/index.html','All open orders'],
+        ['all-open-orders.html','All open orders'],
         ['create-order.html','Create customer order'],
         ['order-management/issues.html','Order issues'],
         ['order-management/unvalidated.html','Unvalidated orders'],
@@ -86,7 +86,7 @@
         ['order-management/bulk-firm.html','Bulk & firm orders'],
         ['events.html?region='+region,'Event planning'],
         ['events-tv.html?region='+region,'Events display']
-      ],'order-management/index.html',{label:'+ Create customer order',path:'create-order.html'}],
+      ],'all-open-orders.html',{label:'+ Create customer order',path:'create-order.html'}],
 
       ['vendor','Vendor Management','Suppliers · Contracts · Performance','#8b5cf6',[
         ['vendor-management/index.html','Vendor dashboard'],

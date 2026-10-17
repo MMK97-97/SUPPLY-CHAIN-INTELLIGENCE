@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+    html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}
+    html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}
+    @keyframes stark-navigation-progress{to{background-position:-200% 0}}
+    @media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}
+  </style>
+  <script data-stark-navigation-boot>
+    document.documentElement.classList.add('stark-page-loading');
+    window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);
+  </script>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261012-2" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>All Open Orders · Supply Chain Intelligence</title>
+  <meta name="description" content="View, search, and manage all open customer orders. Edit, allocate, ship, or take action as needed.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-4">
+  <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
+
+  <script src="assets/system-shell.js?v=20261017-3" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+  <script src="assets/fulfillment-core.js?v=20261012-2" defer></script>
+</head>
+<body data-system-page="orders">
+  <main class="system-page oo-page-container" aria-label="All Open Orders">
+    <!-- Breadcrumb -->
+    <nav class="oo-breadcrumb" aria-label="Breadcrumb">
+      <a href="all-open-orders.html" class="oo-bc-link">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Order Management
+      </a>
+      <span class="oo-bc-sep">&gt;</span>
+      <span class="oo-bc-current">All Open Orders</span>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="oo-header">
+      <div class="oo-header-left">
+        <h1 class="oo-page-title">All Open Orders</h1>
+        <p class="oo-page-subtitle">View, search, and manage all open customer orders. Edit, allocate, ship, or take action as needed.</p>
+      </div>
+      <div class="oo-header-actions">
+        <button type="button" class="oo-btn-outline" id="oo-btn-export">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export ⌄
+        </button>
+        <button type="button" class="oo-btn-outline" id="oo-btn-columns">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="12" y1="3" x2="12" y2="21"/>
+          </svg>
+          Columns ⌄
+        </button>
+      </div>
+    </div>
+
+    <!-- Search & Filters Card -->
+    <section class="oo-filter-card" aria-label="Order Filters">
+      <!-- Row 1: Search, Customer, Order type, Status -->
+      <div class="oo-filter-row-1">
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-search">Search</label>
+          <div class="oo-input-icon-wrap">
+            <span class="oo-input-icon-left" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input type="text" class="oo-input oo-input-pl" id="oo-filter-search" placeholder="Search by PO#, order#, customer, tracking#, model#...">
+          </div>
+        </div>
+
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-customer">Customer</label>
+          <select class="oo-select" id="oo-filter-customer">
+            <option value="all" selected>All customers</option>
+            <option value="ABC Company">ABC Company</option>
+            <option value="XYZ Retail">XYZ Retail</option>
+            <option value="Cozy Earth">Cozy Earth</option>
+            <option value="Kendra Scott">Kendra Scott</option>
+            <option value="BOA">BOA</option>
+            <option value="Smith & Nephew">Smith &amp; Nephew</option>
+            <option value="Acme Gifts">Acme Gifts</option>
+            <option value="Global Brands">Global Brands</option>
+            <option value="Wellness Co.">Wellness Co.</option>
+          </select>
+        </div>
+
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-type">Order type</label>
+          <select class="oo-select" id="oo-filter-type">
+            <option value="all" selected>All types</option>
+            <option value="Firm PO">Firm PO</option>
+            <option value="Hold PO">Hold PO</option>
+            <option value="Bulk PO">Bulk PO</option>
+            <option value="Event PO">Event PO</option>
+          </select>
+        </div>
+
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-status">Status</label>
+          <select class="oo-select" id="oo-filter-status">
+            <option value="Open" selected>Open</option>
+            <option value="all">All statuses</option>
+            <option value="Allocated">Allocated</option>
+            <option value="Unvalidated">Unvalidated</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 2: Date range, In-hands date, Shipping method, Warehouse, Region, Buttons -->
+      <div class="oo-filter-row-2">
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-daterange">Date range</label>
+          <div class="oo-input-icon-wrap">
+            <span class="oo-input-icon-left" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <input type="text" class="oo-input oo-input-pl" id="oo-filter-daterange" placeholder="mm/dd/yyyy - mm/dd/yyyy">
+          </div>
+        </div>
+
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-inhands">In-hands date</label>
+          <div class="oo-input-icon-wrap">
+            <span class="oo-input-icon-left" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <input type="text" class="oo-input oo-input-pl" id="oo-filter-inhands" placeholder="mm/dd/yyyy - mm/dd/yyyy">
+          </div>
+        </div>
+
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-shipmethod">Shipping method</label>
+          <select class="oo-select" id="oo-filter-shipmethod">
+            <option value="all" selected>All methods</option>
+            <option value="UPS Ground">UPS Ground</option>
+            <option value="FedEx 2Day">FedEx 2Day</option>
+            <option value="Drop Ship">Drop Ship</option>
+            <option value="LTL">LTL</option>
+            <option value="Freight (FTL)">Freight (FTL)</option>
+            <option value="USPS Priority">USPS Priority</option>
+          </select>
+        </div>
+
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-warehouse">Warehouse</label>
+          <select class="oo-select" id="oo-filter-warehouse">
+            <option value="all" selected>All warehouses</option>
+            <option value="Sarasota DC">Sarasota DC</option>
+            <option value="Demo_3PL">Demo_3PL</option>
+            <option value="TX DC">TX DC</option>
+          </select>
+        </div>
+
+        <div class="oo-form-group">
+          <label class="oo-label" for="oo-filter-region">Region</label>
+          <select class="oo-select" id="oo-filter-region">
+            <option value="all" selected>All regions</option>
+            <option value="US">US</option>
+            <option value="EU">EU</option>
+            <option value="CA">CA</option>
+          </select>
+        </div>
+
+        <div class="oo-filter-btns">
+          <button type="button" class="oo-btn-primary" id="oo-btn-search">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search
+          </button>
+          <button type="button" class="oo-btn-reset" id="oo-btn-reset">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabs Bar -->
+    <div class="oo-tabs-bar">
+      <div class="oo-pill-tabs" role="tablist">
+        <button type="button" class="oo-pill-tab active" data-tab="all" role="tab" aria-selected="true">
+          All Open Orders <span class="oo-pill-count">126</span>
+        </button>
+        <button type="button" class="oo-pill-tab" data-tab="firm" role="tab" aria-selected="false">
+          Firm PO <span class="oo-pill-count">77</span>
+        </button>
+        <button type="button" class="oo-pill-tab" data-tab="hold" role="tab" aria-selected="false">
+          Hold PO <span class="oo-pill-count">18</span>
+        </button>
+        <button type="button" class="oo-pill-tab" data-tab="bulk" role="tab" aria-selected="false">
+          Bulk PO <span class="oo-pill-count">26</span>
+        </button>
+        <button type="button" class="oo-pill-tab" data-tab="event" role="tab" aria-selected="false">
+          Event Orders <span class="oo-pill-count">10</span>
+        </button>
+      </div>
+
+      <div class="oo-tab-actions">
+        <button type="button" class="oo-btn-outline" id="oo-btn-refresh">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Refresh
+        </button>
+        <button type="button" class="oo-btn-outline" id="oo-btn-bulk-actions">
+          Bulk Actions ⌄
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Split Layout (Table on left, Details on right) -->
+    <div class="oo-split-layout" id="oo-split-container">
+      <!-- Left: Table Card -->
+      <section class="oo-table-card" aria-label="Open Orders Register">
+        <div class="oo-table-scroll">
+          <table class="oo-table" id="oo-orders-table">
+            <thead>
+              <tr>
+                <th style="width: 32px;"><input type="checkbox" class="oo-checkbox" id="oo-th-checkbox" aria-label="Select all rows"></th>
+                <th style="width: 36px;">#</th>
+                <th style="width: 90px;">Order # <span style="font-size:10px; color:#94a3b8;">▲</span></th>
+                <th style="width: 100px;">Customer PO#</th>
+                <th>Customer</th>
+                <th style="width: 90px;">Order type</th>
+                <th style="width: 100px;">In-hands date</th>
+                <th style="width: 110px;">Shipping method</th>
+                <th style="width: 75px; text-align: center;">Item count</th>
+                <th style="width: 80px; text-align: right;">Total qty</th>
+                <th style="width: 70px; text-align: center;">Status</th>
+                <th style="width: 80px; text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="oo-orders-tbody">
+              <!-- Dynamically rendered or initial rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="oo-pagination-bar">
+          <div>Showing <span id="oo-pag-start">1</span> to <span id="oo-pag-end">10</span> of <span id="oo-pag-total">126</span> orders</div>
+          <div class="oo-page-controls">
+            <span style="font-size:12px; margin-right:8px;">Rows per page</span>
+            <select class="oo-select" style="width: auto; height: 28px; padding: 2px 22px 2px 8px; font-size: 12px; margin-right: 14px;">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+
+            <button type="button" class="oo-page-btn" aria-label="First page">«</button>
+            <button type="button" class="oo-page-btn" aria-label="Previous page">‹</button>
+            <button type="button" class="oo-page-btn active">1</button>
+            <button type="button" class="oo-page-btn">2</button>
+            <button type="button" class="oo-page-btn">3</button>
+            <button type="button" class="oo-page-btn">4</button>
+            <button type="button" class="oo-page-btn">5</button>
+            <span style="color:#94a3b8; font-size:12px; padding:0 4px;">…</span>
+            <button type="button" class="oo-page-btn">13</button>
+            <button type="button" class="oo-page-btn" aria-label="Next page">›</button>
+            <button type="button" class="oo-page-btn" aria-label="Last page">»</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Order Details Drawer Panel -->
+      <aside class="oo-panel-card" id="oo-detail-panel" aria-label="Selected Order Details">
+        <div class="oo-panel-header">
+          <div class="oo-panel-title-wrap">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="3" y1="15" x2="21" y2="15"/>
+              <line x1="9" y1="3" x2="9" y2="21"/>
+              <line x1="15" y1="3" x2="15" y2="21"/>
+            </svg>
+            <h2 class="oo-panel-title">Order Details</h2>
+          </div>
+          <button type="button" class="oo-panel-close" id="oo-panel-close-btn" title="Close details panel" aria-label="Close details panel">✕</button>
+        </div>
+
+        <!-- Order Identity Header -->
+        <div class="oo-panel-order-id-row">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 class="oo-panel-order-num" id="oo-panel-order-num">#315980</h3>
+              <span class="oo-badge-status-open" id="oo-panel-status">Open</span>
+            </div>
+            <div class="oo-panel-cust-po" id="oo-panel-cust-po">Customer PO#: 90080</div>
+          </div>
+          <div class="oo-panel-top-btns">
+            <button type="button" class="oo-panel-edit-btn" id="oo-panel-edit-action" title="Edit Order">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Edit
+            </button>
+            <button type="button" class="oo-action-icon-btn more-btn" title="More options" style="border:1px solid #cbd5e1; border-radius:6px; padding:4px 6px;">⋯</button>
+          </div>
+        </div>
+
+        <!-- Panel Tabs -->
+        <div class="oo-panel-tabs" role="tablist">
+          <button type="button" class="oo-panel-tab active" data-ptab="summary">Summary</button>
+          <button type="button" class="oo-panel-tab" data-ptab="items">Items (3)</button>
+          <button type="button" class="oo-panel-tab" data-ptab="shipping">Shipping</button>
+          <button type="button" class="oo-panel-tab" data-ptab="notes">Notes</button>
+          <button type="button" class="oo-panel-tab" data-ptab="history">History</button>
+        </div>
+
+        <!-- Panel Summary Body -->
+        <div id="oo-panel-content-summary">
+          <div class="oo-panel-kv-list">
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Customer</span>
+              <span class="oo-panel-v" id="oo-p-cust">ABC Company</span>
+            </div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Order type</span>
+              <span class="oo-panel-v" id="oo-p-type">Firm PO</span>
+            </div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Region</span>
+              <span class="oo-panel-v" id="oo-p-reg">US</span>
+            </div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Sales order#</span>
+              <span class="oo-panel-v" id="oo-p-so">Auto-generate</span>
+            </div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">In-hands date</span>
+              <span class="oo-panel-v" id="oo-p-inhands">10/28/2026</span>
+            </div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Hold expiry</span>
+              <span class="oo-panel-v" id="oo-p-expiry">-</span>
+            </div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Program</span>
+              <span class="oo-panel-v" id="oo-p-prog">No program</span>
+            </div>
+          </div>
+
+          <!-- 2-col Shipping & Billing details -->
+          <div class="oo-panel-ship-grid">
+            <div class="oo-panel-ship-col">
+              <div style="color:#64748b; font-size:11px; margin-bottom:2px;">Ship to</div>
+              <strong id="oo-p-ship-company">ABC Company</strong>
+              <div id="oo-p-ship-addr1">1234 Main St, Suite 500</div>
+              <div id="oo-p-ship-citystate">Tampa, FL 33602, USA</div>
+            </div>
+            <div class="oo-panel-ship-col">
+              <div style="color:#64748b; font-size:11px; margin-bottom:2px;">Shipping method</div>
+              <strong id="oo-p-ship-method">UPS Ground</strong>
+              <div style="color:#64748b; font-size:11px; margin-top:6px;">3rd party shipping</div>
+              <strong id="oo-p-3rd-active">Yes</strong>
+              <div style="color:#64748b; font-size:11px; margin-top:4px;">3rd party account #</div>
+              <div id="oo-p-3rd-acct">123456</div>
+              <div style="color:#64748b; font-size:11px; margin-top:4px;">3rd party ZIP code</div>
+              <div id="oo-p-3rd-zip">33073</div>
+            </div>
+          </div>
+
+          <!-- Items section in panel -->
+          <div class="oo-panel-items-head">
+            <span>Items</span>
+            <span class="oo-panel-items-count" id="oo-p-items-count">3 items | Total qty: 120</span>
+          </div>
+
+          <div id="oo-panel-items-list">
+            <!-- Item 1: Sony Headphones -->
+            <div class="oo-panel-item-card">
+              <div class="oo-panel-item-thumb">
+                <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+                  <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+                  <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+                  <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+                  <g transform="translate(25, 68) rotate(6)">
+                    <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                    <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
+                    <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+                  </g>
+                  <g transform="translate(107, 70) rotate(-6)">
+                    <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+                    <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
+                    <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="oo-panel-item-meta">
+                <div class="oo-panel-item-title">WH-1000XM5</div>
+                <div class="oo-panel-item-sub">Sony Wireless Headphones</div>
+              </div>
+              <div class="oo-panel-item-qty">Qty: 50</div>
+            </div>
+
+            <!-- Item 2: New Balance 550 -->
+            <div class="oo-panel-item-card">
+              <div class="oo-panel-item-thumb">
+                <svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
+                  <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+                  <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+                  <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
+                  <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
+                  <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
+                  <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
+                  <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
+                  <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
+                </svg>
+              </div>
+              <div class="oo-panel-item-meta">
+                <div class="oo-panel-item-title">NB-550</div>
+                <div class="oo-panel-item-sub">New Balance 550 Sneakers</div>
+              </div>
+              <div class="oo-panel-item-qty">Qty: 50</div>
+            </div>
+
+            <!-- Item 3: YETI Rambler 40oz -->
+            <div class="oo-panel-item-card">
+              <div class="oo-panel-item-thumb">
+                <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+                  <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
+                  <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
+                  <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
+                  <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
+                  <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
+                  <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                  <rect x="70" y="74" width="20" height="8" rx="1.5" fill="#e2e8f0"/>
+                  <text x="80" y="80.5" text-anchor="middle" fill="#64748b" font-size="5" font-family="sans-serif" font-weight="700">YETI</text>
+                </svg>
+              </div>
+              <div class="oo-panel-item-meta">
+                <div class="oo-panel-item-title">TMBLR-40</div>
+                <div class="oo-panel-item-sub">YETI Rambler 40oz</div>
+              </div>
+              <div class="oo-panel-item-qty">Qty: 20</div>
+            </div>
+          </div>
+
+          <!-- Special instructions -->
+          <div class="oo-panel-instructions">
+            <div class="oo-panel-inst-label">Special instructions</div>
+            <div class="oo-panel-inst-text" id="oo-p-instructions">Deliver before event, call before delivery, inside delivery, etc.</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // Seed Open Orders Dataset matching the screenshot
+      const ORDERS_DATA = [
+        {
+          num: '315980',
+          po: '90080',
+          customer: 'ABC Company',
+          type: 'Firm PO',
+          typeClass: 'oo-badge-firm',
+          inhands: '10/28/2026',
+          shipMethod: 'UPS Ground',
+          itemCount: 3,
+          totalQty: 120,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'Auto-generate',
+          holdExpiry: '-',
+          program: 'No program',
+          shipTo: {
+            company: 'ABC Company',
+            line1: '1234 Main St, Suite 500',
+            cityState: 'Tampa, FL 33602, USA'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            is3rdParty: true,
+            account: '123456',
+            zip: '33073'
+          },
+          items: [
+            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 50, type: 'sony' },
+            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 50, type: 'nb' },
+            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 20, type: 'yeti' }
+          ],
+          instructions: 'Deliver before event, call before delivery, inside delivery, etc.'
+        },
+        {
+          num: '315979',
+          po: '70012',
+          customer: 'XYZ Retail',
+          type: 'Hold PO',
+          typeClass: 'oo-badge-hold',
+          inhands: '11/05/2026',
+          shipMethod: 'FedEx 2Day',
+          itemCount: 5,
+          totalQty: 350,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315979',
+          holdExpiry: '11/04/2026',
+          program: 'VIP Rewards',
+          shipTo: {
+            company: 'XYZ Retail',
+            line1: '880 3rd Avenue, Suite 1200',
+            cityState: 'New York, NY 10022, USA'
+          },
+          shipping: {
+            method: 'FedEx 2Day',
+            is3rdParty: false,
+            account: '-',
+            zip: '-'
+          },
+          items: [
+            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 150, type: 'sony' },
+            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 200, type: 'yeti' }
+          ],
+          instructions: 'Hold stock until branch confirmation.'
+        },
+        {
+          num: '315978',
+          po: '-',
+          customer: 'Cozy Earth',
+          type: 'Firm PO',
+          typeClass: 'oo-badge-firm',
+          inhands: '10/25/2025',
+          shipMethod: 'UPS Ground',
+          itemCount: 7,
+          totalQty: 500,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315978',
+          holdExpiry: '-',
+          program: 'No program',
+          shipTo: {
+            company: 'Cozy Earth HQ',
+            line1: '250 S 100 W',
+            cityState: 'Salt Lake City, UT 84101, USA'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            is3rdParty: true,
+            account: '882910',
+            zip: '84101'
+          },
+          items: [
+            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 500, type: 'nb' }
+          ],
+          instructions: 'Dock delivery only between 8am and 3pm.'
+        },
+        {
+          num: '315977',
+          po: '77431',
+          customer: 'Kendra Scott',
+          type: 'Event PO',
+          typeClass: 'oo-badge-event',
+          inhands: '11/15/2026',
+          shipMethod: 'Drop Ship',
+          itemCount: 4,
+          totalQty: 200,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315977',
+          holdExpiry: '-',
+          program: 'Holiday Gala',
+          shipTo: {
+            company: 'Austin Convention Center',
+            line1: '500 E Cesar Chavez St',
+            cityState: 'Austin, TX 78701, USA'
+          },
+          shipping: {
+            method: 'Drop Ship',
+            is3rdParty: false,
+            account: '-',
+            zip: '-'
+          },
+          items: [
+            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 200, type: 'yeti' }
+          ],
+          instructions: 'Deliver to Exhibit Hall B. Contact on-site rep.'
+        },
+        {
+          num: '315976',
+          po: '-',
+          customer: 'BOA',
+          type: 'Bulk PO',
+          typeClass: 'oo-badge-bulk',
+          inhands: '11/02/2026',
+          shipMethod: 'LTL',
+          itemCount: 6,
+          totalQty: 650,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315976',
+          holdExpiry: '-',
+          program: 'Corporate Gifting',
+          shipTo: {
+            company: 'Bank of America Hub',
+            line1: '100 N Tryon St',
+            cityState: 'Charlotte, NC 28255, USA'
+          },
+          shipping: {
+            method: 'LTL',
+            is3rdParty: true,
+            account: '445920',
+            zip: '28255'
+          },
+          items: [
+            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 350, type: 'sony' },
+            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 300, type: 'nb' }
+          ],
+          instructions: 'Call dispatch 24h prior to delivery.'
+        },
+        {
+          num: '315975',
+          po: '88901',
+          customer: 'Smith & Nephew',
+          type: 'Firm PO',
+          typeClass: 'oo-badge-firm',
+          inhands: '10/30/2026',
+          shipMethod: 'UPS Ground',
+          itemCount: 2,
+          totalQty: 75,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315975',
+          holdExpiry: '-',
+          program: 'No program',
+          shipTo: {
+            company: 'Smith & Nephew Logistics',
+            line1: '1450 Brooks Rd',
+            cityState: 'Memphis, TN 38116, USA'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            is3rdParty: false,
+            account: '-',
+            zip: '-'
+          },
+          items: [
+            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 75, type: 'sony' }
+          ],
+          instructions: 'Deliver before end of business Friday.'
+        },
+        {
+          num: '315974',
+          po: '-',
+          customer: 'XYZ Retail',
+          type: 'Firm PO',
+          typeClass: 'oo-badge-firm',
+          inhands: '11/01/2026',
+          shipMethod: 'FedEx Ground',
+          itemCount: 8,
+          totalQty: 910,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315974',
+          holdExpiry: '-',
+          program: 'Executive Club',
+          shipTo: {
+            company: 'XYZ Regional DC',
+            line1: '400 Logistics Blvd',
+            cityState: 'Dallas, TX 75261, USA'
+          },
+          shipping: {
+            method: 'FedEx Ground',
+            is3rdParty: true,
+            account: '992014',
+            zip: '75261'
+          },
+          items: [
+            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 450, type: 'nb' },
+            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 460, type: 'yeti' }
+          ],
+          instructions: 'Palletized with stretch wrap only.'
+        },
+        {
+          num: '315973',
+          po: '55678',
+          customer: 'Acme Gifts',
+          type: 'Hold PO',
+          typeClass: 'oo-badge-hold',
+          inhands: '11/10/2026',
+          shipMethod: 'UPS Ground',
+          itemCount: 1,
+          totalQty: 30,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315973',
+          holdExpiry: '11/09/2026',
+          program: 'No program',
+          shipTo: {
+            company: 'Acme Fulfillment',
+            line1: '1200 Industrial Way',
+            cityState: 'Phoenix, AZ 85034, USA'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            is3rdParty: false,
+            account: '-',
+            zip: '-'
+          },
+          items: [
+            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 30, type: 'sony' }
+          ],
+          instructions: 'Hold for redemption release.'
+        },
+        {
+          num: '315972',
+          po: '-',
+          customer: 'Global Brands',
+          type: 'Event PO',
+          typeClass: 'oo-badge-event',
+          inhands: '11/05/2026',
+          shipMethod: 'Freight (FTL)',
+          itemCount: 10,
+          totalQty: 1500,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315972',
+          holdExpiry: '-',
+          program: 'Annual Summit',
+          shipTo: {
+            company: 'MGM Grand Convention Hall',
+            line1: '3799 Las Vegas Blvd S',
+            cityState: 'Las Vegas, NV 89109, USA'
+          },
+          shipping: {
+            method: 'Freight (FTL)',
+            is3rdParty: true,
+            account: '772190',
+            zip: '89109'
+          },
+          items: [
+            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 1500, type: 'yeti' }
+          ],
+          instructions: 'Inside delivery to main exhibit floor.'
+        },
+        {
+          num: '315971',
+          po: '22345',
+          customer: 'Wellness Co.',
+          type: 'Firm PO',
+          typeClass: 'oo-badge-firm',
+          inhands: '10/27/2026',
+          shipMethod: 'USPS Priority',
+          itemCount: 4,
+          totalQty: 180,
+          status: 'Open',
+          region: 'US',
+          salesOrder: 'SO-315971',
+          holdExpiry: '-',
+          program: 'Health & Wellness',
+          shipTo: {
+            company: 'Wellness Co. Storefront',
+            line1: '710 Market St',
+            cityState: 'San Francisco, CA 94103, USA'
+          },
+          shipping: {
+            method: 'USPS Priority',
+            is3rdParty: false,
+            account: '-',
+            zip: '-'
+          },
+          items: [
+            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 80, type: 'sony' },
+            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 100, type: 'yeti' }
+          ],
+          instructions: 'Deliver to rear loading entrance.'
+        }
+      ];
+
+      // Product SVG Thumbs
+      const SVGS = {
+        sony: `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
+          <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
+          <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+          <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
+          <g transform="translate(25, 68) rotate(6)">
+            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+            <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
+            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+          </g>
+          <g transform="translate(107, 70) rotate(-6)">
+            <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+            <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
+            <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
+          </g>
+        </svg>`,
+        nb: `<svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
+          <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+          <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+          <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
+          <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
+          <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
+          <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
+          <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
+          <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
+        </svg>`,
+        yeti: `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+          <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
+          <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
+          <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
+          <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
+          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <rect x="70" y="74" width="20" height="8" rx="1.5" fill="#e2e8f0"/>
+          <text x="80" y="80.5" text-anchor="middle" fill="#64748b" font-size="5" font-family="sans-serif" font-weight="700">YETI</text>
+        </svg>`
+      };
+
+      let selectedOrderNum = '315980';
+      let activeTabFilter = 'all';
+
+      function notice(message, error = false) {
+        if (window.StarkSystemUI?.notice) {
+          window.StarkSystemUI.notice(message, error);
+        } else {
+          const toast = document.createElement('div');
+          toast.className = 'system-toast' + (error ? ' error' : '');
+          toast.textContent = message;
+          document.body.append(toast);
+          setTimeout(() => toast.remove(), 4000);
+        }
+      }
+
+      function updatePanel(order) {
+        if (!order) return;
+        selectedOrderNum = order.num;
+
+        document.querySelector('#oo-panel-order-num').textContent = '#' + order.num;
+        document.querySelector('#oo-panel-cust-po').textContent = 'Customer PO#: ' + (order.po !== '-' ? order.po : 'None');
+        document.querySelector('#oo-p-cust').textContent = order.customer;
+        document.querySelector('#oo-p-type').textContent = order.type;
+        document.querySelector('#oo-p-reg').textContent = order.region || 'US';
+        document.querySelector('#oo-p-so').textContent = order.salesOrder || 'Auto-generate';
+        document.querySelector('#oo-p-inhands').textContent = order.inhands;
+        document.querySelector('#oo-p-expiry').textContent = order.holdExpiry || '-';
+        document.querySelector('#oo-p-prog').textContent = order.program || 'No program';
+
+        document.querySelector('#oo-p-ship-company').textContent = order.shipTo?.company || order.customer;
+        document.querySelector('#oo-p-ship-addr1').textContent = order.shipTo?.line1 || '1234 Main St, Suite 500';
+        document.querySelector('#oo-p-ship-citystate').textContent = order.shipTo?.cityState || 'Tampa, FL 33602, USA';
+
+        document.querySelector('#oo-p-ship-method').textContent = order.shipMethod;
+        document.querySelector('#oo-p-3rd-active').textContent = order.shipping?.is3rdParty ? 'Yes' : 'No';
+        document.querySelector('#oo-p-3rd-acct').textContent = order.shipping?.account || '-';
+        document.querySelector('#oo-p-3rd-zip').textContent = order.shipping?.zip || '-';
+
+        document.querySelector('#oo-p-items-count').textContent = `${order.itemCount} items | Total qty: ${order.totalQty.toLocaleString()}`;
+        document.querySelector('#oo-p-instructions').textContent = order.instructions || 'No special instructions.';
+
+        // Render item cards
+        const itemsList = document.querySelector('#oo-panel-items-list');
+        if (itemsList && order.items) {
+          itemsList.innerHTML = order.items.map(it => `
+            <div class="oo-panel-item-card">
+              <div class="oo-panel-item-thumb">
+                ${SVGS[it.type] || SVGS.sony}
+              </div>
+              <div class="oo-panel-item-meta">
+                <div class="oo-panel-item-title">${it.sku}</div>
+                <div class="oo-panel-item-sub">${it.title}</div>
+              </div>
+              <div class="oo-panel-item-qty">Qty: ${it.qty}</div>
+            </div>
+          `).join('');
+        }
+
+        // Highlight selected row in table
+        document.querySelectorAll('#oo-orders-tbody tr').forEach(tr => {
+          tr.classList.toggle('selected', tr.dataset.orderNum === order.num);
+        });
+
+        // Ensure panel is open
+        const container = document.querySelector('#oo-split-container');
+        const panel = document.querySelector('#oo-detail-panel');
+        if (container && panel) {
+          container.classList.remove('no-panel');
+          panel.style.display = 'block';
+        }
+      }
+
+      function renderTable() {
+        const tbody = document.querySelector('#oo-orders-tbody');
+        if (!tbody) return;
+
+        const searchVal = document.querySelector('#oo-filter-search')?.value.toLowerCase().trim() || '';
+        const custVal = document.querySelector('#oo-filter-customer')?.value || 'all';
+        const typeVal = document.querySelector('#oo-filter-type')?.value || 'all';
+        const shipVal = document.querySelector('#oo-filter-shipmethod')?.value || 'all';
+        const regVal = document.querySelector('#oo-filter-region')?.value || 'all';
+
+        const filtered = ORDERS_DATA.filter(o => {
+          if (activeTabFilter === 'firm' && o.type !== 'Firm PO') return false;
+          if (activeTabFilter === 'hold' && o.type !== 'Hold PO') return false;
+          if (activeTabFilter === 'bulk' && o.type !== 'Bulk PO') return false;
+          if (activeTabFilter === 'event' && o.type !== 'Event PO') return false;
+
+          if (custVal !== 'all' && o.customer !== custVal) return false;
+          if (typeVal !== 'all' && o.type !== typeVal) return false;
+          if (shipVal !== 'all' && o.shipMethod !== shipVal) return false;
+          if (regVal !== 'all' && (o.region || 'US') !== regVal) return false;
+
+          if (searchVal) {
+            const rowText = `${o.num} ${o.po} ${o.customer} ${o.type} ${o.shipMethod} ${o.items.map(i=>i.sku).join(' ')}`.toLowerCase();
+            if (!rowText.includes(searchVal)) return false;
+          }
+          return true;
+        });
+
+        tbody.innerHTML = filtered.map((ord, idx) => `
+          <tr data-order-num="${ord.num}" class="${ord.num === selectedOrderNum ? 'selected' : ''}">
+            <td onclick="event.stopPropagation();">
+              <input type="checkbox" class="oo-checkbox" aria-label="Select order ${ord.num}">
+            </td>
+            <td>${idx + 1}</td>
+            <td>
+              <a href="create-order.html?id=${ord.num}" class="oo-order-link" onclick="event.stopPropagation();">${ord.num}</a>
+            </td>
+            <td>${ord.po}</td>
+            <td><strong>${ord.customer}</strong></td>
+            <td>
+              <span class="oo-badge-type ${ord.typeClass}">${ord.type}</span>
+            </td>
+            <td>
+              <span class="oo-badge-date">${ord.inhands}</span>
+            </td>
+            <td>${ord.shipMethod}</td>
+            <td style="text-align: center;">${ord.itemCount}</td>
+            <td style="text-align: right; font-weight:600;">${ord.totalQty.toLocaleString()}</td>
+            <td style="text-align: center;">
+              <span class="oo-badge-status-open">${ord.status}</span>
+            </td>
+            <td style="text-align: center;" onclick="event.stopPropagation();">
+              <div class="oo-row-actions">
+                <button type="button" class="oo-action-icon-btn oo-view-btn" data-num="${ord.num}" title="View Details" aria-label="View Details">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
+                </button>
+                <a href="create-order.html?id=${ord.num}" class="oo-action-icon-btn" title="Edit Order" aria-label="Edit Order">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </a>
+                <button type="button" class="oo-action-icon-btn more-btn" title="More Options" aria-label="More Options">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+        // Row Click Listeners
+        tbody.querySelectorAll('tr').forEach(tr => {
+          tr.onclick = () => {
+            const num = tr.dataset.orderNum;
+            const ord = ORDERS_DATA.find(x => x.num === num);
+            if (ord) updatePanel(ord);
+          };
+        });
+
+        // Action View button click
+        tbody.querySelectorAll('.oo-view-btn').forEach(btn => {
+          btn.onclick = () => {
+            const num = btn.dataset.num;
+            const ord = ORDERS_DATA.find(x => x.num === num);
+            if (ord) updatePanel(ord);
+          };
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Check for toast message from create-order.html
+        try {
+          const toastMsg = sessionStorage.getItem('stark-toast-msg');
+          if (toastMsg) {
+            sessionStorage.removeItem('stark-toast-msg');
+            setTimeout(() => notice(toastMsg), 300);
+          }
+        } catch(e) {}
+
+        renderTable();
+        const initialOrder = ORDERS_DATA.find(o => o.num === selectedOrderNum) || ORDERS_DATA[0];
+        updatePanel(initialOrder);
+
+        // Panel Close Button
+        document.querySelector('#oo-panel-close-btn')?.addEventListener('click', () => {
+          const container = document.querySelector('#oo-split-container');
+          const panel = document.querySelector('#oo-detail-panel');
+          if (container && panel) {
+            container.classList.add('no-panel');
+            panel.style.display = 'none';
+          }
+        });
+
+        // Edit button in Panel
+        document.querySelector('#oo-panel-edit-action')?.addEventListener('click', () => {
+          window.location.href = `create-order.html?id=${selectedOrderNum}`;
+        });
+
+        // Filter Tabs
+        document.querySelectorAll('.oo-pill-tab').forEach(tab => {
+          tab.onclick = () => {
+            document.querySelectorAll('.oo-pill-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            activeTabFilter = tab.dataset.tab;
+            renderTable();
+          };
+        });
+
+        // Search and Select Filters
+        ['#oo-filter-search', '#oo-filter-customer', '#oo-filter-type', '#oo-filter-shipmethod', '#oo-filter-region'].forEach(sel => {
+          document.querySelector(sel)?.addEventListener('input', renderTable);
+          document.querySelector(sel)?.addEventListener('change', renderTable);
+        });
+
+        document.querySelector('#oo-btn-search')?.addEventListener('click', renderTable);
+
+        // Reset Button
+        document.querySelector('#oo-btn-reset')?.addEventListener('click', () => {
+          document.querySelector('#oo-filter-search').value = '';
+          document.querySelector('#oo-filter-customer').value = 'all';
+          document.querySelector('#oo-filter-type').value = 'all';
+          document.querySelector('#oo-filter-shipmethod').value = 'all';
+          document.querySelector('#oo-filter-warehouse').value = 'all';
+          document.querySelector('#oo-filter-region').value = 'all';
+          document.querySelector('#oo-filter-daterange').value = '';
+          document.querySelector('#oo-filter-inhands').value = '';
+          activeTabFilter = 'all';
+          document.querySelectorAll('.oo-pill-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+          renderTable();
+        });
+
+        // Select All Checkbox
+        const thCheck = document.querySelector('#oo-th-checkbox');
+        if (thCheck) {
+          thCheck.onchange = () => {
+            document.querySelectorAll('#oo-orders-tbody .oo-checkbox').forEach(cb => cb.checked = thCheck.checked);
+          };
+        }
+
+        // Refresh Button
+        document.querySelector('#oo-btn-refresh')?.addEventListener('click', () => {
+          renderTable();
+          notice('Order queue refreshed.');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
