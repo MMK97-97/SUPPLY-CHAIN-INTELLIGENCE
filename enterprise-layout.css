@@ -2229,3 +2229,130 @@ body.stark-system.is-home .system-submodule-bar {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ==========================================================================
+   Item Master ATS & Price Upload Styling
+   ========================================================================== */
+.im-upload-zone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 22px 18px;
+  text-align: center;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.im-upload-zone:hover, .im-upload-zone.dragover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+}
+
+.im-upload-zone svg {
+  width: 32px;
+  height: 32px;
+  color: #0284c7;
+  margin-bottom: 6px;
+}
+
+.im-upload-zone p {
+  margin: 4px 0 2px;
+  font-size: 13.5px;
+  color: #1e293b;
+  font-weight: 650;
+}
+
+.im-upload-zone small {
+  color: #64748b;
+  font-size: 11.5px;
+}
+
+.im-upload-templates {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0 14px;
+  flex-wrap: wrap;
+}
+
+.im-template-btn {
+  font-size: 11.5px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.im-template-btn:hover {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.im-upload-preview {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  margin-top: 8px;
+}
+
+.im-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.im-preview-table th {
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-size: 11px;
+}
+
+.im-preview-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.im-delta-pos {
+  color: #16a34a;
+  font-weight: 750;
+}
+
+.im-delta-neg {
+  color: #dc2626;
+  font-weight: 750;
+}
+
+.im-delta-zero {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.im-banner-desc {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: #0369a1;
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.im-banner-desc b {
+  color: #0c4a6e;
+}

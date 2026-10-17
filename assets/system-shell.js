@@ -53,13 +53,11 @@
     return [
       ['itemMaster','Item Master','Master Catalog · Inventory · Warehouses','#0284c7',[
         ['item-master.html','Item master'],
-        ['item-master.html?status=Live','Live catalog'],
-        ['item-master.html?status=fashion','Fashion line'],
-        ['item-master.html?status=internal%20use','Internal use'],
-        ['item-master.html?status=presentation','Presentation'],
+        ['item-master.html?action=ats-upload','ATS upload'],
+        ['item-master.html?action=price-update','Price update'],
         ['warehouse-management/inventory-bins.html','Warehouse bins & stock'],
         ['crm/catalog.html','Catalog & pricing']
-      ],'item-master.html',{label:'+ Add item',path:'item-master.html?action=new'}],
+      ],'item-master.html',{label:'+ ATS upload',path:'item-master.html?action=ats-upload'}],
 
       ['planning','Inventory & Planning','Replenishment · Reorder · Demand','#10b981',[
         ['item-master.html','Item master'],
