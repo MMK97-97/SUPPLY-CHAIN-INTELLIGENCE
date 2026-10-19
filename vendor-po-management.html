@@ -2,13 +2,2439 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Dropship POs · Supply Chain Intelligence</title>
-  <meta http-equiv="refresh" content="0; url=dropship-po.html">
-  <script>
-    window.location.replace('dropship-po.html' + window.location.search + window.location.hash);
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+    html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}
+    html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}
+    @keyframes stark-navigation-progress{to{background-position:-200% 0}}
+    @media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}
+  </style>
+  <script data-stark-navigation-boot>
+    document.documentElement.classList.add('stark-page-loading');
+    window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);
   </script>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261012-2" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vendor PO Management · Supply Chain Intelligence</title>
+  <meta name="description" content="Manage all inventory, confirm and track purchase orders. Monitor shipments and get the latest updates.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-6">
+  <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
+
+  <script src="assets/system-shell.js?v=20261017-3" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+
+  <style>
+    .system-submodule-bar, .dpo-subnav-bar { display: none !important; }
+
+    :root {
+      --vpm-font: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --vpm-primary: #2563eb;
+      --vpm-primary-hover: #1d4ed8;
+      --vpm-primary-light: #eff6ff;
+      --vpm-border: #e2e8f0;
+      --vpm-text-dark: #0f172a;
+      --vpm-text-muted: #64748b;
+    }
+
+    body {
+      font-family: var(--vpm-font);
+      background: #f4f7fc;
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+    }
+
+    .vpm-container {
+      max-width: 1720px;
+      margin: 0 auto;
+      padding: 24px 32px 60px 32px;
+      box-sizing: border-box;
+    }
+
+    /* Breadcrumb */
+    .vpm-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--vpm-text-muted);
+      margin-bottom: 14px;
+    }
+    .vpm-bc-link {
+      color: var(--vpm-text-muted);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .vpm-bc-link:hover {
+      color: var(--vpm-primary);
+    }
+    .vpm-bc-sep {
+      color: #94a3b8;
+    }
+    .vpm-bc-current {
+      color: var(--vpm-text-dark);
+      font-weight: 600;
+    }
+
+    /* Header */
+    .vpm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 22px;
+      gap: 16px;
+    }
+    .vpm-page-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--vpm-text-dark);
+      margin: 0 0 6px 0;
+      letter-spacing: -0.02em;
+    }
+    .vpm-page-subtitle {
+      font-size: 14px;
+      color: var(--vpm-text-muted);
+      margin: 0;
+    }
+    .vpm-btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--vpm-primary);
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .vpm-btn-primary:hover {
+      background: var(--vpm-primary-hover);
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    /* Filter Card */
+    .vpm-filter-card {
+      background: #ffffff;
+      border: 1px solid var(--vpm-border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      margin-bottom: 18px;
+    }
+    .vpm-filter-grid {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr 1fr 1.1fr 1fr 1.3fr;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    @media (max-width: 1300px) {
+      .vpm-filter-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 768px) {
+      .vpm-filter-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .vpm-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .vpm-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+    .vpm-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .vpm-input-icon {
+      position: absolute;
+      left: 12px;
+      color: #94a3b8;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .vpm-input {
+      width: 100%;
+      height: 38px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: var(--vpm-text-dark);
+      background: #ffffff;
+      padding: 0 12px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .vpm-input.has-icon {
+      padding-left: 36px;
+    }
+    .vpm-input:focus, .vpm-select:focus {
+      border-color: var(--vpm-primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .vpm-select {
+      width: 100%;
+      height: 38px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: var(--vpm-text-dark);
+      background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
+      padding: 0 32px 0 12px;
+      box-sizing: border-box;
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    /* Status Pills */
+    .vpm-pills-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .vpm-pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .vpm-pill-btn:hover {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+    }
+    .vpm-pill-btn.active {
+      border-color: var(--vpm-primary);
+      background: var(--vpm-primary-light);
+      color: #1d4ed8;
+    }
+    .vpm-pill-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .vpm-pill-btn.active .vpm-pill-count {
+      background: var(--vpm-primary);
+      color: #ffffff;
+    }
+    .vpm-pill-btn:not(.active) .vpm-pill-count.badge-pending {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .vpm-pill-btn:not(.active) .vpm-pill-count.badge-production {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+    .vpm-pill-btn:not(.active) .vpm-pill-count.badge-shipped {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .vpm-pill-btn:not(.active) .vpm-pill-count.badge-delivered {
+      background: #d1fae5;
+      color: #059669;
+    }
+    .vpm-pill-btn:not(.active) .vpm-pill-count.badge-closed {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    /* Split Container */
+    .vpm-split-layout {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      position: relative;
+    }
+    .vpm-table-panel {
+      flex: 1 1 0%;
+      min-width: 0;
+      background: #ffffff;
+      border: 1px solid var(--vpm-border);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .vpm-split-layout.is-fullwidth .vpm-detail-drawer {
+      display: none;
+    }
+
+    /* Table */
+    .vpm-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .vpm-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .vpm-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--vpm-border);
+      user-select: none;
+    }
+    .vpm-table th.sortable {
+      cursor: pointer;
+    }
+    .vpm-table th.sortable:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .vpm-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+      vertical-align: middle;
+    }
+    .vpm-table tbody tr {
+      transition: background 0.12s ease;
+      cursor: pointer;
+    }
+    .vpm-table tbody tr:hover {
+      background: #f8fafc;
+    }
+    .vpm-table tbody tr.is-selected {
+      background: #f0f7ff !important;
+      border-left: 3px solid var(--vpm-primary);
+    }
+    .vpm-table tbody tr.is-selected td {
+      border-bottom-color: #dbeafe;
+    }
+
+    /* Badges */
+    .vpm-type-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .vpm-type-inventory {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .vpm-type-dropship {
+      background: #ffe4e6;
+      color: #e11d48;
+    }
+    .vpm-type-event {
+      background: #f3e8ff;
+      color: #7e22ce;
+    }
+
+    /* Status Badges */
+    .vpm-status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .vpm-status-shipped {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .vpm-status-inproduction {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .vpm-status-delivered {
+      background: #d1fae5;
+      color: #047857;
+    }
+    .vpm-status-pending {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .vpm-status-confirmed {
+      background: #f3e8ff;
+      color: #7e22ce;
+    }
+    .vpm-status-closed {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    /* Progress bar */
+    .vpm-progress-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .vpm-progress-text {
+      font-weight: 600;
+      font-size: 12.5px;
+      color: #0f172a;
+    }
+    .vpm-progress-track {
+      width: 90px;
+      height: 5px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .vpm-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .vpm-progress-fill.fill-green { background: #10b981; }
+    .vpm-progress-fill.fill-blue { background: #2563eb; }
+    .vpm-progress-fill.fill-gray { background: #cbd5e1; }
+
+    /* Links & Icons */
+    .vpm-link {
+      color: var(--vpm-primary);
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .vpm-link:hover {
+      text-decoration: underline;
+    }
+    .vpm-copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 4px;
+      vertical-align: middle;
+      transition: color 0.15s, background 0.15s;
+    }
+    .vpm-copy-btn:hover {
+      color: var(--vpm-primary);
+      background: #eff6ff;
+    }
+    .vpm-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      color: #64748b;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.15s;
+    }
+    .vpm-action-btn:hover {
+      color: var(--vpm-primary);
+      background: #f1f5f9;
+    }
+
+    /* Pagination */
+    .vpm-pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-top: 1px solid var(--vpm-border);
+      font-size: 13px;
+      color: var(--vpm-text-muted);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .vpm-pag-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .vpm-pag-rows {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .vpm-pag-btns {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .vpm-pag-btn {
+      min-width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      border-radius: 6px;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      padding: 0 6px;
+    }
+    .vpm-pag-btn:hover:not(:disabled) {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+    }
+    .vpm-pag-btn.active {
+      background: var(--vpm-primary);
+      border-color: var(--vpm-primary);
+      color: #ffffff;
+    }
+    .vpm-pag-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Drawer / Side Details */
+    .vpm-detail-drawer {
+      width: 440px;
+      flex-shrink: 0;
+      background: #ffffff;
+      border: 1px solid var(--vpm-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      padding: 20px 24px;
+      box-sizing: border-box;
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    .vpm-drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--vpm-border);
+    }
+    .vpm-drawer-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .vpm-drawer-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: var(--vpm-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .vpm-drawer-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--vpm-text-dark);
+      margin: 0;
+    }
+    .vpm-drawer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .vpm-fixed-panel-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--vpm-primary);
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 16px;
+      padding: 3px 10px;
+      cursor: pointer;
+    }
+    .vpm-close-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #94a3b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 4px;
+    }
+    .vpm-close-btn:hover {
+      color: #0f172a;
+      background: #f1f5f9;
+    }
+
+    /* PO Heading Banner */
+    .vpm-po-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .vpm-drawer-po-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--vpm-text-dark);
+      letter-spacing: -0.01em;
+    }
+
+    /* Drawer Tabs */
+    .vpm-drawer-tabs {
+      display: flex;
+      gap: 18px;
+      border-bottom: 1px solid var(--vpm-border);
+      margin-bottom: 18px;
+    }
+    .vpm-drawer-tab {
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--vpm-text-muted);
+      cursor: pointer;
+      position: relative;
+      background: none;
+      border: none;
+    }
+    .vpm-drawer-tab.active {
+      color: var(--vpm-primary);
+    }
+    .vpm-drawer-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--vpm-primary);
+    }
+
+    /* Drawer Key-Value Grid */
+    .vpm-kv-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 16px;
+      font-size: 12.5px;
+      margin-bottom: 20px;
+    }
+    .vpm-kv-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .vpm-kv-lbl {
+      color: var(--vpm-text-muted);
+    }
+    .vpm-kv-val {
+      color: var(--vpm-text-dark);
+      font-weight: 600;
+    }
+
+    /* Drawer Sections */
+    .vpm-drawer-section {
+      margin-bottom: 22px;
+      border-top: 1px solid var(--vpm-border);
+      padding-top: 16px;
+    }
+    .vpm-section-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .vpm-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--vpm-text-dark);
+      margin: 0;
+    }
+    .vpm-btn-text-edit {
+      background: none;
+      border: none;
+      color: var(--vpm-primary);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0;
+    }
+    .vpm-btn-text-edit:hover {
+      text-decoration: underline;
+    }
+
+    .vpm-address-box {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.5;
+    }
+    .vpm-address-title {
+      font-weight: 700;
+      color: var(--vpm-text-dark);
+      margin-bottom: 2px;
+    }
+
+    .vpm-shipping-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      font-size: 12.5px;
+    }
+
+    /* Recent Updates Timeline */
+    .vpm-timeline {
+      position: relative;
+      padding-left: 20px;
+      margin-top: 8px;
+    }
+    .vpm-timeline::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      bottom: 12px;
+      left: 6px;
+      width: 2px;
+      background: #e2e8f0;
+    }
+    .vpm-timeline-node {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .vpm-timeline-node:last-child {
+      margin-bottom: 0;
+    }
+    .vpm-node-dot {
+      position: absolute;
+      left: -20px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #2563eb;
+    }
+    .vpm-node-dot.dot-green {
+      background: #10b981;
+    }
+    .vpm-node-dot.dot-blue {
+      background: #2563eb;
+    }
+    .vpm-node-meta {
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vpm-node-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--vpm-text-dark);
+    }
+    .vpm-node-desc {
+      font-size: 12px;
+      color: #475569;
+      margin-top: 1px;
+    }
+  </style>
 </head>
-<body>
-  <p>Redirecting to <a href="dropship-po.html">Dropship POs</a>…</p>
+<body data-system-page="procurement">
+  <main class="system-page vpm-container" aria-label="Vendor PO Management">
+
+    <!-- Breadcrumb -->
+    <nav class="vpm-breadcrumb" aria-label="Breadcrumb">
+      <a href="vendor-management/index.html" class="vpm-bc-link">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Vendor Management
+      </a>
+      <span class="vpm-bc-sep">&gt;</span>
+      <span class="vpm-bc-current">Vendor PO Management</span>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="vpm-header">
+      <div>
+        <h1 class="vpm-page-title">Vendor PO Management</h1>
+        <p class="vpm-page-subtitle">Manage all inventory, confirm and track purchase orders. Monitor shipments and get the latest updates.</p>
+      </div>
+      <div>
+        <a href="create-vendor-po.html" class="vpm-btn-primary">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Create Vendor PO
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter Card -->
+    <section class="vpm-filter-card" aria-label="Filters">
+      <div class="vpm-filter-grid">
+        <!-- Search -->
+        <div class="vpm-field-group">
+          <label class="vpm-label" for="vpm-filter-search">Search</label>
+          <div class="vpm-input-wrap">
+            <span class="vpm-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input type="text" class="vpm-input has-icon" id="vpm-filter-search" placeholder="Search by PO#, brand, vendor, tracking#...">
+          </div>
+        </div>
+
+        <!-- PO Type -->
+        <div class="vpm-field-group">
+          <label class="vpm-label" for="vpm-filter-type">PO type</label>
+          <select class="vpm-select" id="vpm-filter-type">
+            <option value="all" selected>All types</option>
+            <option value="Inventory">Inventory</option>
+            <option value="Dropship">Dropship</option>
+            <option value="Event">Event</option>
+          </select>
+        </div>
+
+        <!-- Brand -->
+        <div class="vpm-field-group">
+          <label class="vpm-label" for="vpm-filter-brand">Brand</label>
+          <select class="vpm-select" id="vpm-filter-brand">
+            <option value="all" selected>All brands</option>
+            <option value="Sony">Sony</option>
+            <option value="Nike">Nike</option>
+            <option value="YETI">YETI</option>
+            <option value="Kendra Scott">Kendra Scott</option>
+            <option value="New Balance">New Balance</option>
+            <option value="Coach">Coach</option>
+            <option value="Under Armour">Under Armour</option>
+            <option value="Bose">Bose</option>
+            <option value="Stanley">Stanley</option>
+            <option value="Apple">Apple</option>
+            <option value="Dyson">Dyson</option>
+            <option value="Lululemon">Lululemon</option>
+          </select>
+        </div>
+
+        <!-- Vendor -->
+        <div class="vpm-field-group">
+          <label class="vpm-label" for="vpm-filter-vendor">Vendor</label>
+          <select class="vpm-select" id="vpm-filter-vendor">
+            <option value="all" selected>All vendors</option>
+            <option value="Sony Electronics">Sony Electronics</option>
+            <option value="Nike Inc.">Nike Inc.</option>
+            <option value="YETI">YETI</option>
+            <option value="Kendra Scott">Kendra Scott</option>
+            <option value="New Balance">New Balance</option>
+            <option value="Coach">Coach</option>
+            <option value="Under Armour">Under Armour</option>
+            <option value="Bose">Bose</option>
+            <option value="Stanley">Stanley</option>
+            <option value="Apple">Apple</option>
+          </select>
+        </div>
+
+        <!-- Status -->
+        <div class="vpm-field-group">
+          <label class="vpm-label" for="vpm-filter-status">Status</label>
+          <select class="vpm-select" id="vpm-filter-status">
+            <option value="all" selected>All statuses</option>
+            <option value="Pending Confirmation">Pending Confirmation</option>
+            <option value="In Production">In Production</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Closed">Closed</option>
+            <option value="Confirmed">Confirmed</option>
+          </select>
+        </div>
+
+        <!-- Date Range -->
+        <div class="vpm-field-group">
+          <label class="vpm-label" for="vpm-filter-date">Date range</label>
+          <div class="vpm-input-wrap">
+            <span class="vpm-input-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <input type="text" class="vpm-input has-icon" id="vpm-filter-date" placeholder="mm/dd/yyyy - mm/dd/yyyy">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Status Tabs / Pills -->
+    <div class="vpm-pills-wrap" role="tablist" aria-label="PO Status Filter Pills">
+      <button type="button" class="vpm-pill-btn active" data-status="all">
+        <span>All POs</span>
+        <span class="vpm-pill-count" id="count-all">186</span>
+      </button>
+      <button type="button" class="vpm-pill-btn" data-status="Pending Confirmation">
+        <span>Pending Confirmation</span>
+        <span class="vpm-pill-count badge-pending" id="count-pending">24</span>
+      </button>
+      <button type="button" class="vpm-pill-btn" data-status="In Production">
+        <span>In Production</span>
+        <span class="vpm-pill-count badge-production" id="count-production">36</span>
+      </button>
+      <button type="button" class="vpm-pill-btn" data-status="Shipped">
+        <span>Shipped</span>
+        <span class="vpm-pill-count badge-shipped" id="count-shipped">58</span>
+      </button>
+      <button type="button" class="vpm-pill-btn" data-status="Delivered">
+        <span>Delivered</span>
+        <span class="vpm-pill-count badge-delivered" id="count-delivered">38</span>
+      </button>
+      <button type="button" class="vpm-pill-btn" data-status="Closed">
+        <span>Closed</span>
+        <span class="vpm-pill-count badge-closed" id="count-closed">30</span>
+      </button>
+    </div>
+
+    <!-- Split Screen Layout: Table & PO Details Drawer -->
+    <div class="vpm-split-layout" id="vpm-split-container">
+
+      <!-- Table Panel -->
+      <section class="vpm-table-panel" aria-label="Purchase Orders List">
+        <div class="vpm-table-wrap">
+          <table class="vpm-table" id="vpm-main-table">
+            <thead>
+              <tr>
+                <th style="width: 32px;"><input type="checkbox" id="vpm-th-check" aria-label="Select all rows"></th>
+                <th style="width: 36px;">#</th>
+                <th class="sortable" data-sort="po">PO # ⇅</th>
+                <th>PO Type</th>
+                <th>Brand</th>
+                <th>Vendor</th>
+                <th class="sortable" data-sort="qty">Total Qty ⇅</th>
+                <th>Confirmed</th>
+                <th>Tracking #</th>
+                <th>Status</th>
+                <th class="sortable" data-sort="date">Last Update ⇅</th>
+                <th style="text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vpm-tbody">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="vpm-pagination">
+          <div>
+            Showing <strong id="vpm-pag-start">1</strong> to <strong id="vpm-pag-end">10</strong> of <strong id="vpm-pag-total">186</strong> POs
+          </div>
+          <div class="vpm-pag-controls">
+            <div class="vpm-pag-rows">
+              <span>Rows per page</span>
+              <select class="vpm-select" id="vpm-pag-size" style="width: 74px; height: 32px; padding: 0 24px 0 8px; font-size: 12.5px;">
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+            <div class="vpm-pag-btns" id="vpm-pag-buttons">
+              <!-- Pagination controls populated by script -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Side Details Drawer -->
+      <aside class="vpm-detail-drawer" id="vpm-detail-drawer" aria-label="PO Details Drawer">
+        <!-- Drawer Header -->
+        <div class="vpm-drawer-header">
+          <div class="vpm-drawer-title-wrap">
+            <span class="vpm-drawer-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            </span>
+            <h3 class="vpm-drawer-title">PO Details</h3>
+          </div>
+          <div class="vpm-drawer-actions">
+            <button type="button" class="vpm-fixed-panel-btn" id="vpm-toggle-fixed" title="Toggle fixed layout">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path></svg>
+              Fixed Panel
+            </button>
+            <button type="button" class="vpm-close-btn" id="vpm-detail-close" title="Close drawer" aria-label="Close details">✕</button>
+          </div>
+        </div>
+
+        <!-- Selected PO Number & Badge -->
+        <div class="vpm-po-banner">
+          <div class="vpm-drawer-po-num" id="vpm-drawer-po-num">PO-2026-00125</div>
+          <div class="vpm-status-badge vpm-status-shipped" id="vpm-drawer-status-badge">Shipped</div>
+        </div>
+
+        <!-- Drawer Sub-Navigation Tabs -->
+        <div class="vpm-drawer-tabs" role="tablist">
+          <button type="button" class="vpm-drawer-tab active" data-tab="overview">Overview</button>
+          <button type="button" class="vpm-drawer-tab" data-tab="items" id="tab-items-label">Items (3)</button>
+          <button type="button" class="vpm-drawer-tab" data-tab="tracking">Tracking</button>
+          <button type="button" class="vpm-drawer-tab" data-tab="updates">Updates</button>
+          <button type="button" class="vpm-drawer-tab" data-tab="documents">Documents</button>
+        </div>
+
+        <!-- Drawer Tab Content: Overview -->
+        <div id="vpm-tab-content-overview">
+          <!-- Key Value Info -->
+          <div class="vpm-kv-grid">
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">PO type</span>
+              <span class="vpm-kv-val" id="vpm-kv-type">Inventory PO</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">PO date</span>
+              <span class="vpm-kv-val" id="vpm-kv-podate">10/20/2026</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Brand</span>
+              <span class="vpm-kv-val" id="vpm-kv-brand">Sony</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Expected arrival</span>
+              <span class="vpm-kv-val" id="vpm-kv-arrival">11/27/2026</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Vendor</span>
+              <span class="vpm-kv-val" id="vpm-kv-vendor">Sony Electronics</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Status</span>
+              <span class="vpm-kv-val" id="vpm-kv-status">Shipped</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Total quantity</span>
+              <span class="vpm-kv-val" id="vpm-kv-totalqty">200</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Created by</span>
+              <span class="vpm-kv-val" id="vpm-kv-createdby">ABC Company</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Confirmed quantity</span>
+              <span class="vpm-kv-val" id="vpm-kv-confirmedqty">200 (100%)</span>
+            </div>
+            <div class="vpm-kv-item">
+              <span class="vpm-kv-lbl">Last updated</span>
+              <span class="vpm-kv-val" id="vpm-kv-updated">10/24/2026 09:15 AM</span>
+            </div>
+          </div>
+
+          <!-- Section: Ship To Address -->
+          <div class="vpm-drawer-section">
+            <div class="vpm-section-hdr">
+              <h4 class="vpm-section-title">Ship To Address</h4>
+              <button type="button" class="vpm-btn-text-edit" id="vpm-btn-edit-address">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Edit
+              </button>
+            </div>
+            <div class="vpm-address-box">
+              <div class="vpm-address-title" id="vpm-addr-wh">Sarasota Warehouse</div>
+              <div id="vpm-addr-line1">1234 Distribution Way</div>
+              <div id="vpm-addr-citystate">Sarasota, FL 34240</div>
+              <div id="vpm-addr-country">United States</div>
+            </div>
+          </div>
+
+          <!-- Section: Shipping Details -->
+          <div class="vpm-drawer-section">
+            <div class="vpm-section-hdr">
+              <h4 class="vpm-section-title">Shipping Details</h4>
+            </div>
+            <div class="vpm-shipping-grid">
+              <div>
+                <div class="vpm-kv-lbl">Shipping method</div>
+                <div class="vpm-kv-val" id="vpm-ship-method">UPS Ground</div>
+              </div>
+              <div>
+                <div class="vpm-kv-lbl">Tracking number</div>
+                <div class="vpm-kv-val" style="display:flex; align-items:center; gap:4px;">
+                  <span id="vpm-ship-tracking">1Z4R7832567878</span>
+                  <button type="button" class="vpm-copy-btn" id="vpm-btn-copy-tracking" title="Copy tracking number">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  </button>
+                </div>
+              </div>
+              <div style="margin-top:4px;">
+                <div class="vpm-kv-lbl">Shipped date</div>
+                <div class="vpm-kv-val" id="vpm-ship-date">10/23/2026</div>
+              </div>
+              <div style="margin-top:4px;">
+                <div class="vpm-kv-lbl">Carrier status</div>
+                <div class="vpm-kv-val" id="vpm-ship-status">In transit</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Recent Updates -->
+          <div class="vpm-drawer-section">
+            <div class="vpm-section-hdr">
+              <h4 class="vpm-section-title">Recent Updates</h4>
+              <button type="button" class="vpm-link" id="vpm-btn-view-all-updates" style="font-size:12.5px; background:none; border:none; padding:0;">View All</button>
+            </div>
+            <div class="vpm-timeline" id="vpm-timeline-nodes">
+              <!-- Timeline nodes -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawer Tab Content: Other Tabs (Items, Tracking, Updates, Documents) -->
+        <div id="vpm-tab-content-other" style="display: none;"></div>
+      </aside>
+
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      const S = window.StarkSystem;
+
+      // Notice helper
+      function notice(msg, isErr = false) {
+        if (window.StarkNotice) {
+          window.StarkNotice(msg, isErr);
+          return;
+        }
+        const t = document.createElement('div');
+        t.style.position = 'fixed';
+        t.style.bottom = '24px';
+        t.style.right = '24px';
+        t.style.zIndex = '99999';
+        t.style.background = isErr ? '#dc2626' : '#0f172a';
+        t.style.color = '#ffffff';
+        t.style.padding = '12px 20px';
+        t.style.borderRadius = '8px';
+        t.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
+        t.style.fontSize = '14px';
+        t.style.fontWeight = '500';
+        t.style.transition = 'all 0.2s ease';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => {
+          t.style.opacity = '0';
+          setTimeout(() => t.remove(), 250);
+        }, 3200);
+      }
+
+      // 10 Baseline POs exactly matching the attached screenshot
+      const BASELINE_VENDOR_POS = [
+        {
+          id: 'vpo_0125',
+          po: 'PO-2026-0125',
+          poType: 'Inventory',
+          brand: 'Sony',
+          vendor: 'Sony Electronics',
+          totalQty: 200,
+          confirmedQty: 200,
+          confirmedPct: 100,
+          tracking: '1Z4R7832567878',
+          status: 'Shipped',
+          statusClass: 'vpm-status-shipped',
+          lastUpdateDate: '10/24/2026',
+          lastUpdateDesc: 'In transit',
+          poDate: '10/20/2026',
+          arrivalDate: '11/27/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/24/2026 09:15 AM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            tracking: '1Z4R7832567878',
+            shippedDate: '10/23/2026',
+            status: 'In transit'
+          },
+          items: [
+            { sku: 'WH-1000XM5', title: 'Sony WH-1000XM5 Wireless Headphones', qty: 100, confirmed: 100, cost: 75.00 },
+            { sku: 'WF-1000XM5', title: 'Sony WF-1000XM5 Wireless Earbuds', qty: 60, confirmed: 60, cost: 65.00 },
+            { sku: 'SRS-XB100', title: 'Sony SRS-XB100 Compact Speaker', qty: 40, confirmed: 40, cost: 35.00 }
+          ],
+          updates: [
+            { date: '10/24/2026 09:15 AM', title: 'In transit', desc: 'Arrived at destination facility', dot: 'dot-green' },
+            { date: '10/23/2026 04:20 PM', title: 'Shipped', desc: 'Tracking number generated', dot: 'dot-green' },
+            { date: '10/21/2026 11:30 AM', title: 'Confirmed', desc: 'Vendor confirmed 200 units', dot: 'dot-blue' },
+            { date: '10/20/2026 02:10 PM', title: 'PO Created', desc: 'Purchase order sent to vendor', dot: 'dot-blue' }
+          ]
+        },
+        {
+          id: 'vpo_0124',
+          po: 'PO-2026-0124',
+          poType: 'Dropship',
+          brand: 'Nike',
+          vendor: 'Nike Inc.',
+          totalQty: 150,
+          confirmedQty: 150,
+          confirmedPct: 100,
+          tracking: '1Z6E0123481',
+          status: 'Shipped',
+          statusClass: 'vpm-status-shipped',
+          lastUpdateDate: '10/23/2026',
+          lastUpdateDesc: 'Delivered',
+          poDate: '10/19/2026',
+          arrivalDate: '10/24/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/23/2026 03:40 PM',
+          shipTo: {
+            wh: 'Direct Customer Destination',
+            line1: '782 Industrial Pkwy',
+            cityState: 'Tampa, FL 33602',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'FedEx Express',
+            tracking: '1Z6E0123481',
+            shippedDate: '10/22/2026',
+            status: 'Delivered'
+          },
+          items: [
+            { sku: 'NIKE-AF1-07', title: 'Nike Air Force 1 07 Low', qty: 150, confirmed: 150, cost: 55.00 }
+          ],
+          updates: [
+            { date: '10/23/2026 03:40 PM', title: 'Delivered', desc: 'Delivered to recipient doorstep', dot: 'dot-green' },
+            { date: '10/22/2026 08:15 AM', title: 'Out for delivery', desc: 'Package scanned on delivery van', dot: 'dot-green' },
+            { date: '10/20/2026 01:25 PM', title: 'Confirmed', desc: 'Nike EDI confirmation 855 received', dot: 'dot-blue' }
+          ]
+        },
+        {
+          id: 'vpo_0123',
+          po: 'PO-2026-0123',
+          poType: 'Inventory',
+          brand: 'YETI',
+          vendor: 'YETI',
+          totalQty: 500,
+          confirmedQty: 450,
+          confirmedPct: 90,
+          tracking: '1Z9A01324567890',
+          status: 'In Production',
+          statusClass: 'vpm-status-inproduction',
+          lastUpdateDate: '10/22/2026',
+          lastUpdateDesc: 'At vendor',
+          poDate: '10/18/2026',
+          arrivalDate: '11/05/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/22/2026 11:20 AM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Freight',
+            tracking: '1Z9A01324567890',
+            shippedDate: 'Pending',
+            status: 'Palletizing at facility'
+          },
+          items: [
+            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz Tumbler', qty: 500, confirmed: 450, cost: 28.00 }
+          ],
+          updates: [
+            { date: '10/22/2026 11:20 AM', title: 'In Production', desc: 'Custom laser engraving in progress', dot: 'dot-blue' },
+            { date: '10/19/2026 04:00 PM', title: 'Partial Confirmation', desc: '450 of 500 units confirmed for first wave', dot: 'dot-blue' }
+          ]
+        },
+        {
+          id: 'vpo_0122',
+          po: 'PO-2026-0122',
+          poType: 'Inventory',
+          brand: 'Kendra Scott',
+          vendor: 'Kendra Scott',
+          totalQty: 300,
+          confirmedQty: 300,
+          confirmedPct: 100,
+          tracking: '1Z8F023456789',
+          status: 'Delivered',
+          statusClass: 'vpm-status-delivered',
+          lastUpdateDate: '10/21/2026',
+          lastUpdateDesc: 'Delivered',
+          poDate: '10/15/2026',
+          arrivalDate: '10/21/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/21/2026 01:10 PM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'FedEx 2Day',
+            tracking: '1Z8F023456789',
+            shippedDate: '10/19/2026',
+            status: 'Delivered'
+          },
+          items: [
+            { sku: 'KS-ELISA-GLD', title: 'Kendra Scott Elisa Pendant Gold', qty: 300, confirmed: 300, cost: 32.00 }
+          ],
+          updates: [
+            { date: '10/21/2026 01:10 PM', title: 'Delivered', desc: 'Received at Dock 2 by receiving manager', dot: 'dot-green' },
+            { date: '10/19/2026 10:15 AM', title: 'Shipped', desc: 'Package scanned at Austin hub', dot: 'dot-green' }
+          ]
+        },
+        {
+          id: 'vpo_0121',
+          po: 'PO-2026-0121',
+          poType: 'Dropship',
+          brand: 'New Balance',
+          vendor: 'New Balance',
+          totalQty: 120,
+          confirmedQty: 0,
+          confirmedPct: 0,
+          tracking: '-',
+          status: 'Pending',
+          statusClass: 'vpm-status-pending',
+          lastUpdateDate: '10/21/2026',
+          lastUpdateDesc: 'Awaiting vendor',
+          poDate: '10/21/2026',
+          arrivalDate: '11/10/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/21/2026 09:30 AM',
+          shipTo: {
+            wh: 'Customer Dropship Address',
+            line1: '4040 Northstar Way',
+            cityState: 'Dallas, TX 75201',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            tracking: '-',
+            shippedDate: 'Pending',
+            status: 'Awaiting vendor processing'
+          },
+          items: [
+            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 120, confirmed: 0, cost: 42.00 }
+          ],
+          updates: [
+            { date: '10/21/2026 09:30 AM', title: 'PO Transmitted', desc: 'EDI 850 transmission sent to supplier gateway', dot: 'dot-blue' }
+          ]
+        },
+        {
+          id: 'vpo_0120',
+          po: 'PO-2026-0120',
+          poType: 'Inventory',
+          brand: 'Coach',
+          vendor: 'Coach',
+          totalQty: 400,
+          confirmedQty: 400,
+          confirmedPct: 100,
+          tracking: '1Z7B9234567890',
+          status: 'Shipped',
+          statusClass: 'vpm-status-shipped',
+          lastUpdateDate: '10/20/2026',
+          lastUpdateDesc: 'In transit',
+          poDate: '10/16/2026',
+          arrivalDate: '10/28/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/20/2026 02:45 PM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            tracking: '1Z7B9234567890',
+            shippedDate: '10/20/2026',
+            status: 'In transit'
+          },
+          items: [
+            { sku: 'CCH-WRIST-SIG', title: 'Coach Signature Canvas Wristlet', qty: 400, confirmed: 400, cost: 48.00 }
+          ],
+          updates: [
+            { date: '10/20/2026 02:45 PM', title: 'Shipped', desc: 'Departed Jacksonville distribution hub', dot: 'dot-green' },
+            { date: '10/18/2026 09:10 AM', title: 'Confirmed', desc: 'Supplier order confirmation verified', dot: 'dot-blue' }
+          ]
+        },
+        {
+          id: 'vpo_0119',
+          po: 'PO-2026-0119',
+          poType: 'Inventory',
+          brand: 'Under Armour',
+          vendor: 'Under Armour',
+          totalQty: 600,
+          confirmedQty: 300,
+          confirmedPct: 50,
+          tracking: '1Z73102834',
+          status: 'In Production',
+          statusClass: 'vpm-status-inproduction',
+          lastUpdateDate: '10/20/2026',
+          lastUpdateDesc: 'Production started',
+          poDate: '10/15/2026',
+          arrivalDate: '11/02/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/20/2026 10:14 AM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            tracking: '1Z73102834',
+            shippedDate: 'Pending',
+            status: 'Batch 1 packed'
+          },
+          items: [
+            { sku: 'UA-TECH-TEE', title: 'Under Armour Tech 2.0 Short Sleeve', qty: 600, confirmed: 300, cost: 16.50 }
+          ],
+          updates: [
+            { date: '10/20/2026 10:14 AM', title: 'Production started', desc: 'Batch 1 (300 units) entered embroidery line', dot: 'dot-blue' }
+          ]
+        },
+        {
+          id: 'vpo_0118',
+          po: 'PO-2026-0118',
+          poType: 'Dropship',
+          brand: 'Bose',
+          vendor: 'Bose',
+          totalQty: 75,
+          confirmedQty: 75,
+          confirmedPct: 100,
+          tracking: '1Z948111223',
+          status: 'Delivered',
+          statusClass: 'vpm-status-delivered',
+          lastUpdateDate: '10/19/2026',
+          lastUpdateDesc: 'Delivered',
+          poDate: '10/14/2026',
+          arrivalDate: '10/19/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/19/2026 04:12 PM',
+          shipTo: {
+            wh: 'Apex Corporate HQ',
+            line1: '500 Tech Parkway',
+            cityState: 'Austin, TX 78701',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'FedEx Priority',
+            tracking: '1Z948111223',
+            shippedDate: '10/17/2026',
+            status: 'Delivered'
+          },
+          items: [
+            { sku: 'BOSE-QC-ULTRA', title: 'Bose QuietComfort Ultra Headphones', qty: 75, confirmed: 75, cost: 240.00 }
+          ],
+          updates: [
+            { date: '10/19/2026 04:12 PM', title: 'Delivered', desc: 'Delivered and signed by J. Martinez', dot: 'dot-green' },
+            { date: '10/17/2026 08:30 AM', title: 'Shipped', desc: 'Carrier pickup from Framingham warehouse', dot: 'dot-green' }
+          ]
+        },
+        {
+          id: 'vpo_0117',
+          po: 'PO-2026-0117',
+          poType: 'Inventory',
+          brand: 'Stanley',
+          vendor: 'Stanley',
+          totalQty: 250,
+          confirmedQty: 250,
+          confirmedPct: 100,
+          tracking: '1Z94BC765432198',
+          status: 'Shipped',
+          statusClass: 'vpm-status-shipped',
+          lastUpdateDate: '10/18/2026',
+          lastUpdateDesc: 'In transit',
+          poDate: '10/13/2026',
+          arrivalDate: '10/26/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/18/2026 05:20 PM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            tracking: '1Z94BC765432198',
+            shippedDate: '10/18/2026',
+            status: 'In transit'
+          },
+          items: [
+            { sku: 'STAN-QUENCH-40', title: 'Stanley Quencher H2.0 FlowState 40oz', qty: 250, confirmed: 250, cost: 24.00 }
+          ],
+          updates: [
+            { date: '10/18/2026 05:20 PM', title: 'In transit', desc: 'Departed Nashville hub en route to Sarasota', dot: 'dot-green' },
+            { date: '10/15/2026 11:00 AM', title: 'Confirmed', desc: 'Stanley commercial inventory allocated', dot: 'dot-blue' }
+          ]
+        },
+        {
+          id: 'vpo_0116',
+          po: 'PO-2026-0116',
+          poType: 'Inventory',
+          brand: 'Apple',
+          vendor: 'Apple',
+          totalQty: 1000,
+          confirmedQty: 800,
+          confirmedPct: 80,
+          tracking: '1Z9312456789',
+          status: 'Confirmed',
+          statusClass: 'vpm-status-confirmed',
+          lastUpdateDate: '10/18/2026',
+          lastUpdateDesc: 'Confirmed by vendor',
+          poDate: '10/12/2026',
+          arrivalDate: '11/15/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/18/2026 08:45 AM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Worldwide Saver',
+            tracking: '1Z9312456789',
+            shippedDate: 'Pending',
+            status: 'Staged at origin airport'
+          },
+          items: [
+            { sku: 'APL-AIRPODS-PRO2', title: 'Apple AirPods Pro 2nd Gen USB-C', qty: 1000, confirmed: 800, cost: 185.00 }
+          ],
+          updates: [
+            { date: '10/18/2026 08:45 AM', title: 'Confirmed by vendor', desc: 'Apple B2B portal confirmed 800 units for batch 1', dot: 'dot-blue' },
+            { date: '10/12/2026 09:30 AM', title: 'PO Generated', desc: 'Enterprise corporate purchase order submitted', dot: 'dot-blue' }
+          ]
+        }
+      ];
+
+      // Additional background pool to reach 186 POs count
+      const ADDITIONAL_POS = [];
+      const DEMO_BRANDS = ['Dyson', 'Lululemon', 'Garmin', 'Sony', 'Nike', 'YETI', 'Coach', 'Apple', 'Bose'];
+      const DEMO_VENDORS = ['Dyson Inc.', 'Lululemon B2B', 'Garmin USA', 'Sony Electronics', 'Nike Inc.', 'YETI', 'Coach', 'Apple', 'Bose'];
+      const STATUS_CYCLE = ['Pending Confirmation', 'In Production', 'Shipped', 'Delivered', 'Closed', 'Confirmed'];
+      for (let i = 115; i >= 1; i--) {
+        const numStr = String(i).padStart(4, '0');
+        const st = STATUS_CYCLE[i % STATUS_CYCLE.length];
+        const b = DEMO_BRANDS[i % DEMO_BRANDS.length];
+        const v = DEMO_VENDORS[i % DEMO_VENDORS.length];
+        const tot = 50 + (i * 7) % 450;
+        const conf = st === 'Pending Confirmation' ? 0 : st === 'In Production' ? Math.round(tot * 0.75) : tot;
+        const pct = Math.round((conf / tot) * 100);
+        const isShip = ['Shipped', 'Delivered'].includes(st);
+
+        ADDITIONAL_POS.push({
+          id: `vpo_demo_${numStr}`,
+          po: `PO-2026-${numStr}`,
+          poType: i % 4 === 0 ? 'Dropship' : 'Inventory',
+          brand: b,
+          vendor: v,
+          totalQty: tot,
+          confirmedQty: conf,
+          confirmedPct: pct,
+          tracking: isShip ? `1Z${i}AB${tot}990` : '-',
+          status: st,
+          statusClass: st === 'Shipped' ? 'vpm-status-shipped' : st === 'Delivered' ? 'vpm-status-delivered' : st === 'In Production' ? 'vpm-status-inproduction' : st === 'Pending Confirmation' ? 'vpm-status-pending' : st === 'Confirmed' ? 'vpm-status-confirmed' : 'vpm-status-closed',
+          lastUpdateDate: '10/16/2026',
+          lastUpdateDesc: st === 'Shipped' ? 'In transit' : st === 'Delivered' ? 'Delivered' : st === 'In Production' ? 'Production started' : 'System update',
+          poDate: '10/10/2026',
+          arrivalDate: '11/20/2026',
+          createdBy: 'ABC Company',
+          lastUpdatedFull: '10/16/2026 10:00 AM',
+          shipTo: {
+            wh: 'Sarasota Warehouse',
+            line1: '1234 Distribution Way',
+            cityState: 'Sarasota, FL 34240',
+            country: 'United States'
+          },
+          shipping: {
+            method: 'UPS Ground',
+            tracking: isShip ? `1Z${i}AB${tot}990` : '-',
+            shippedDate: isShip ? '10/15/2026' : 'Pending',
+            status: isShip ? 'In transit' : 'Awaiting processing'
+          },
+          items: [
+            { sku: `${b.toUpperCase().slice(0, 4)}-${tot}`, title: `${b} Commercial Model ${tot}`, qty: tot, confirmed: conf, cost: 45.00 }
+          ],
+          updates: [
+            { date: '10/16/2026 10:00 AM', title: st, desc: `Order marked ${st}`, dot: isShip ? 'dot-green' : 'dot-blue' }
+          ]
+        });
+      }
+
+      // Live Dynamic Fetching & Synchronization
+      function getLiveVendorPOs() {
+        let list = [...BASELINE_VENDOR_POS, ...ADDITIONAL_POS];
+        const seen = new Set(BASELINE_VENDOR_POS.map(p => p.po.toLowerCase()));
+
+        if (S && S.getState) {
+          try {
+            const state = S.getState();
+            const enterprisePOs = state?.enterprise?.purchaseOrders || [];
+            const vendors = state?.enterprise?.vendors || [];
+
+            enterprisePOs.forEach(p => {
+              const poKey = (p.po || '').toLowerCase();
+              if (seen.has(poKey)) {
+                // Update existing baseline entry if live state has newer data
+                const existing = list.find(x => x.po.toLowerCase() === poKey);
+                if (existing) {
+                  if (p.status === 'RECEIVED') {
+                    existing.status = 'Delivered';
+                    existing.statusClass = 'vpm-status-delivered';
+                    existing.confirmedPct = 100;
+                    existing.confirmedQty = existing.totalQty;
+                  } else if (p.status === 'CANCELLED') {
+                    existing.status = 'Closed';
+                    existing.statusClass = 'vpm-status-closed';
+                  } else if (p.status === 'DISPATCHED') {
+                    existing.status = 'Shipped';
+                    existing.statusClass = 'vpm-status-shipped';
+                  }
+                  if (p.tracking) existing.tracking = p.tracking;
+                }
+                return;
+              }
+              seen.add(poKey);
+
+              const vend = vendors.find(v => v.id === p.vendorId);
+              const vendorName = vend?.name || p.vendor || 'Vendor Partner';
+              const brandName = (p.lines?.[0]?.sku || '').split('-')[0] || vendorName.split(' ')[0] || 'Brand';
+              const totalQty = (p.lines || []).reduce((n, l) => n + (l.qty || 1), 0);
+              const receivedQty = (p.lines || []).reduce((n, l) => n + (l.received || 0), 0);
+              const confirmedQty = receivedQty > 0 ? receivedQty : totalQty;
+              const pct = totalQty > 0 ? Math.round((confirmedQty / totalQty) * 100) : 100;
+
+              let st = 'Pending Confirmation';
+              let stClass = 'vpm-status-pending';
+              if (p.status === 'RECEIVED') {
+                st = 'Delivered';
+                stClass = 'vpm-status-delivered';
+              } else if (p.status === 'DISPATCHED') {
+                st = 'Shipped';
+                stClass = 'vpm-status-shipped';
+              } else if (p.status === 'CANCELLED') {
+                st = 'Closed';
+                stClass = 'vpm-status-closed';
+              } else if (p.status === 'PO_ISSUED') {
+                st = 'In Production';
+                stClass = 'vpm-status-inproduction';
+              }
+
+              const newRow = {
+                id: p.id,
+                po: p.po,
+                poType: p.purpose === 'DROPSHIP' ? 'Dropship' : p.purpose === 'EVENT' ? 'Event' : 'Inventory',
+                brand: brandName,
+                vendor: vendorName,
+                totalQty,
+                confirmedQty,
+                confirmedPct: pct,
+                tracking: p.tracking || (st === 'Shipped' ? '1Z99902341234' : '-'),
+                status: st,
+                statusClass: stClass,
+                lastUpdateDate: p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026',
+                lastUpdateDesc: st === 'Shipped' ? 'In transit' : st === 'Delivered' ? 'Delivered' : 'PO Confirmed',
+                poDate: p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026',
+                arrivalDate: p.eta ? p.eta.slice(0, 10) : '11/20/2026',
+                createdBy: 'ABC Company',
+                lastUpdatedFull: `${p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026'} 09:30 AM`,
+                shipTo: {
+                  wh: (p.warehouse || 'Sarasota') + ' Warehouse',
+                  line1: '1234 Distribution Way',
+                  cityState: 'Sarasota, FL 34240',
+                  country: 'United States'
+                },
+                shipping: {
+                  method: p.carrier || 'UPS Ground',
+                  tracking: p.tracking || '-',
+                  shippedDate: p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026',
+                  status: st === 'Shipped' ? 'In transit' : st === 'Delivered' ? 'Delivered' : 'Processing'
+                },
+                items: (p.lines || []).map(l => ({
+                  sku: l.sku,
+                  title: l.title || l.description || l.sku,
+                  qty: l.qty,
+                  confirmed: l.qty,
+                  cost: l.cost || 50.00
+                })),
+                updates: [
+                  { date: `${p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026'} 09:30 AM`, title: st, desc: `Vendor PO created in ERP`, dot: st === 'Shipped' || st === 'Delivered' ? 'dot-green' : 'dot-blue' }
+                ]
+              };
+
+              list.unshift(newRow);
+            });
+          } catch(err) {
+            console.warn('Error reading enterprise purchase orders:', err);
+          }
+        }
+
+        return list;
+      }
+
+      let VENDOR_POS = [];
+      let activePill = 'all';
+      let selectedId = 'vpo_0125';
+      let currentPage = 1;
+      let pageSize = 10;
+      let sortCol = 'none';
+      let sortAsc = true;
+
+      function renderTable() {
+        const tbody = document.querySelector('#vpm-tbody');
+        if (!tbody) return;
+
+        VENDOR_POS = getLiveVendorPOs();
+
+        // Update pill count badges
+        const countAll = VENDOR_POS.length;
+        const countPending = VENDOR_POS.filter(d => d.status === 'Pending' || d.status === 'Pending Confirmation').length;
+        const countProduction = VENDOR_POS.filter(d => d.status === 'In Production').length;
+        const countShipped = VENDOR_POS.filter(d => d.status === 'Shipped').length;
+        const countDelivered = VENDOR_POS.filter(d => d.status === 'Delivered').length;
+        const countClosed = VENDOR_POS.filter(d => d.status === 'Closed' || d.status === 'Cancelled').length;
+
+        document.querySelector('#count-all') && (document.querySelector('#count-all').textContent = countAll);
+        document.querySelector('#count-pending') && (document.querySelector('#count-pending').textContent = countPending);
+        document.querySelector('#count-production') && (document.querySelector('#count-production').textContent = countProduction);
+        document.querySelector('#count-shipped') && (document.querySelector('#count-shipped').textContent = countShipped);
+        document.querySelector('#count-delivered') && (document.querySelector('#count-delivered').textContent = countDelivered);
+        document.querySelector('#count-closed') && (document.querySelector('#count-closed').textContent = countClosed);
+
+        // Filter Inputs
+        const q = (document.querySelector('#vpm-filter-search')?.value || '').toLowerCase().trim();
+        const typeFilter = document.querySelector('#vpm-filter-type')?.value || 'all';
+        const brandFilter = document.querySelector('#vpm-filter-brand')?.value || 'all';
+        const vendorFilter = document.querySelector('#vpm-filter-vendor')?.value || 'all';
+        const statusFilter = document.querySelector('#vpm-filter-status')?.value || 'all';
+
+        let filtered = VENDOR_POS.filter(item => {
+          // Status pill filter
+          if (activePill !== 'all') {
+            if (activePill === 'Pending Confirmation' && (item.status !== 'Pending Confirmation' && item.status !== 'Pending')) return false;
+            else if (activePill !== 'Pending Confirmation' && item.status !== activePill) return false;
+          }
+          // Dropdowns
+          if (typeFilter !== 'all' && item.poType !== typeFilter) return false;
+          if (brandFilter !== 'all' && item.brand !== brandFilter) return false;
+          if (vendorFilter !== 'all' && item.vendor !== vendorFilter) return false;
+          if (statusFilter !== 'all') {
+            if (statusFilter === 'Pending Confirmation' && (item.status !== 'Pending Confirmation' && item.status !== 'Pending')) return false;
+            else if (statusFilter !== 'Pending Confirmation' && item.status !== statusFilter) return false;
+          }
+          // Search string
+          if (q) {
+            const haystack = `${item.po} ${item.brand} ${item.vendor} ${item.tracking} ${item.status}`.toLowerCase();
+            if (!haystack.includes(q)) return false;
+          }
+          return true;
+        });
+
+        // Sorting
+        if (sortCol === 'po') {
+          filtered.sort((a, b) => sortAsc ? a.po.localeCompare(b.po) : b.po.localeCompare(a.po));
+        } else if (sortCol === 'qty') {
+          filtered.sort((a, b) => sortAsc ? a.totalQty - b.totalQty : b.totalQty - a.totalQty);
+        } else if (sortCol === 'date') {
+          filtered.sort((a, b) => sortAsc ? a.lastUpdateDate.localeCompare(b.lastUpdateDate) : b.lastUpdateDate.localeCompare(a.lastUpdateDate));
+        }
+
+        const totalFiltered = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const startIdx = (currentPage - 1) * pageSize;
+        const paged = filtered.slice(startIdx, startIdx + pageSize);
+
+        tbody.innerHTML = '';
+
+        if (paged.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:32px; color:#64748b;">No vendor purchase orders found matching your filters.</td></tr>`;
+          document.querySelector('#vpm-pag-start').textContent = '0';
+          document.querySelector('#vpm-pag-end').textContent = '0';
+          document.querySelector('#vpm-pag-total').textContent = '0';
+          renderPaginationButtons(totalPages);
+          return;
+        }
+
+        document.querySelector('#vpm-pag-start').textContent = String(startIdx + 1);
+        document.querySelector('#vpm-pag-end').textContent = String(startIdx + paged.length);
+        document.querySelector('#vpm-pag-total').textContent = String(totalFiltered);
+
+        paged.forEach((row, i) => {
+          const globalIdx = startIdx + i + 1;
+          const tr = document.createElement('tr');
+          if (row.id === selectedId) tr.className = 'is-selected';
+          tr.dataset.id = row.id;
+
+          const typeClass = row.poType === 'Dropship' ? 'vpm-type-dropship' : row.poType === 'Event' ? 'vpm-type-event' : 'vpm-type-inventory';
+          const fillClass = row.confirmedPct === 100 ? 'fill-green' : row.confirmedPct > 0 ? 'fill-blue' : 'fill-gray';
+
+          tr.innerHTML = `
+            <td><input type="checkbox" class="vpm-row-checkbox" aria-label="Select row ${globalIdx}"></td>
+            <td style="color:#64748b; font-weight:500;">${globalIdx}</td>
+            <td><a class="vpm-link" data-action="select">${row.po}</a></td>
+            <td><span class="vpm-type-badge ${typeClass}">${row.poType}</span></td>
+            <td style="font-weight: 500;">${row.brand}</td>
+            <td style="color: #334155;">${row.vendor}</td>
+            <td style="font-weight: 700;">${row.totalQty.toLocaleString()}</td>
+            <td>
+              <div class="vpm-progress-wrap">
+                <span class="vpm-progress-text">${row.confirmedQty.toLocaleString()} (${row.confirmedPct}%)</span>
+                <div class="vpm-progress-track">
+                  <div class="vpm-progress-fill ${fillClass}" style="width: ${row.confirmedPct}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              ${row.tracking && row.tracking !== '-' ? `
+                <span style="font-family: monospace; font-size: 12px; color: #334155;">${row.tracking}</span>
+                <button type="button" class="vpm-copy-btn" data-copy="${row.tracking}" title="Copy tracking number">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              ` : `<span style="color:#94a3b8;">-</span>`}
+            </td>
+            <td><span class="vpm-status-badge ${row.statusClass}">${row.status}</span></td>
+            <td>
+              <div style="font-weight:600; color:#0f172a; font-size:12px;">${row.lastUpdateDate}</div>
+              <div style="font-size:11.5px; color:#64748b;">${row.lastUpdateDesc}</div>
+            </td>
+            <td style="text-align: center;">
+              <div style="display:inline-flex; align-items:center; gap:2px;">
+                <button type="button" class="vpm-action-btn" data-action="view" title="View PO Details">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+                <button type="button" class="vpm-action-btn" data-action="edit" title="Edit Purchase Order">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button type="button" class="vpm-action-btn" data-action="menu" title="More options">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+                </button>
+              </div>
+            </td>
+          `;
+
+          // Row selection event
+          tr.addEventListener('click', (e) => {
+            if (e.target.closest('.vpm-row-checkbox') || e.target.closest('.vpm-copy-btn') || e.target.closest('.vpm-action-btn')) return;
+            selectRow(row.id);
+          });
+
+          // Copy tracking button
+          const copyBtn = tr.querySelector('.vpm-copy-btn');
+          if (copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              navigator.clipboard?.writeText(copyBtn.dataset.copy);
+              notice(`Copied tracking number ${copyBtn.dataset.copy} to clipboard`);
+            });
+          }
+
+          // Action buttons
+          tr.querySelector('[data-action="view"]')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectRow(row.id);
+          });
+          tr.querySelector('[data-action="edit"]')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEditPOModal(row);
+          });
+          tr.querySelector('[data-action="menu"]')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openRowMenu(row, e.currentTarget);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        renderPaginationButtons(totalPages);
+
+        // Ensure active row details are rendered in drawer
+        const currentItem = VENDOR_POS.find(d => d.id === selectedId) || paged[0];
+        if (currentItem) updateDetailPanel(currentItem);
+      }
+
+      function renderPaginationButtons(totalPages) {
+        const container = document.querySelector('#vpm-pag-buttons');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const createBtn = (text, pageNum, disabled = false, active = false) => {
+          const btn = document.createElement('button');
+          btn.className = `vpm-pag-btn ${active ? 'active' : ''}`;
+          btn.innerHTML = text;
+          btn.disabled = disabled;
+          if (!disabled) {
+            btn.onclick = () => {
+              currentPage = pageNum;
+              renderTable();
+            };
+          }
+          return btn;
+        };
+
+        container.appendChild(createBtn('«', 1, currentPage === 1));
+        container.appendChild(createBtn('‹', currentPage - 1, currentPage === 1));
+
+        // Show window of page numbers
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+        for (let p = startPage; p <= endPage; p++) {
+          container.appendChild(createBtn(String(p), p, false, p === currentPage));
+        }
+
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+            const dots = document.createElement('span');
+            dots.textContent = '...';
+            dots.style.padding = '0 4px';
+            dots.style.color = '#94a3b8';
+            container.appendChild(dots);
+          }
+          container.appendChild(createBtn(String(totalPages), totalPages, false, totalPages === currentPage));
+        }
+
+        container.appendChild(createBtn('›', currentPage + 1, currentPage === totalPages));
+        container.appendChild(createBtn('»', totalPages, currentPage === totalPages));
+      }
+
+      function selectRow(id) {
+        selectedId = id;
+        document.querySelectorAll('#vpm-tbody tr').forEach(r => {
+          if (r.dataset.id === id) r.classList.add('is-selected');
+          else r.classList.remove('is-selected');
+        });
+
+        const item = VENDOR_POS.find(d => d.id === id);
+        if (item) {
+          updateDetailPanel(item);
+          // Show drawer if closed
+          const split = document.querySelector('#vpm-split-container');
+          const drawer = document.querySelector('#vpm-detail-drawer');
+          if (split && drawer) {
+            split.classList.remove('is-fullwidth');
+            drawer.style.display = 'block';
+          }
+        }
+      }
+
+      function updateDetailPanel(item) {
+        // Banner PO number and status badge
+        const poNumEl = document.querySelector('#vpm-drawer-po-num');
+        const badgeEl = document.querySelector('#vpm-drawer-status-badge');
+        if (poNumEl) poNumEl.textContent = item.po;
+        if (badgeEl) {
+          badgeEl.textContent = item.status;
+          badgeEl.className = `vpm-status-badge ${item.statusClass}`;
+        }
+
+        // Tab count
+        const itemsCount = item.items ? item.items.length : 3;
+        const tabItemsEl = document.querySelector('#tab-items-label');
+        if (tabItemsEl) tabItemsEl.textContent = `Items (${itemsCount})`;
+
+        // Key Value Grid
+        document.querySelector('#vpm-kv-type').textContent = `${item.poType} PO`;
+        document.querySelector('#vpm-kv-podate').textContent = item.poDate;
+        document.querySelector('#vpm-kv-brand').textContent = item.brand;
+        document.querySelector('#vpm-kv-arrival').textContent = item.arrivalDate;
+        document.querySelector('#vpm-kv-vendor').textContent = item.vendor;
+        document.querySelector('#vpm-kv-status').textContent = item.status;
+        document.querySelector('#vpm-kv-totalqty').textContent = item.totalQty.toLocaleString();
+        document.querySelector('#vpm-kv-createdby').textContent = item.createdBy || 'ABC Company';
+        document.querySelector('#vpm-kv-confirmedqty').textContent = `${item.confirmedQty.toLocaleString()} (${item.confirmedPct}%)`;
+        document.querySelector('#vpm-kv-updated').textContent = item.lastUpdatedFull || `${item.lastUpdateDate} 09:15 AM`;
+
+        // Ship To Address
+        document.querySelector('#vpm-addr-wh').textContent = item.shipTo.wh;
+        document.querySelector('#vpm-addr-line1').textContent = item.shipTo.line1;
+        document.querySelector('#vpm-addr-citystate').textContent = item.shipTo.cityState;
+        document.querySelector('#vpm-addr-country').textContent = item.shipTo.country;
+
+        // Shipping Details
+        document.querySelector('#vpm-ship-method').textContent = item.shipping.method;
+        document.querySelector('#vpm-ship-tracking').textContent = item.shipping.tracking;
+        document.querySelector('#vpm-ship-date').textContent = item.shipping.shippedDate;
+        document.querySelector('#vpm-ship-status').textContent = item.shipping.status;
+
+        // Copy tracking button
+        const copyBtn = document.querySelector('#vpm-btn-copy-tracking');
+        if (copyBtn) {
+          copyBtn.onclick = () => {
+            if (item.shipping.tracking && item.shipping.tracking !== '-') {
+              navigator.clipboard?.writeText(item.shipping.tracking);
+              notice(`Copied tracking number ${item.shipping.tracking} to clipboard`);
+            } else {
+              notice('No tracking number assigned yet.', true);
+            }
+          };
+        }
+
+        // Timeline Updates
+        const timelineEl = document.querySelector('#vpm-timeline-nodes');
+        if (timelineEl) {
+          const updates = item.updates && item.updates.length ? item.updates : [
+            { date: `${item.lastUpdateDate} 09:15 AM`, title: item.status, desc: item.lastUpdateDesc, dot: 'dot-green' },
+            { date: `${item.poDate} 02:10 PM`, title: 'PO Created', desc: 'Purchase order sent to vendor', dot: 'dot-blue' }
+          ];
+
+          timelineEl.innerHTML = updates.map(u => `
+            <div class="vpm-timeline-node">
+              <span class="vpm-node-dot ${u.dot || 'dot-blue'}"></span>
+              <div class="vpm-node-meta">
+                <span>${u.date}</span>
+                <span class="vpm-node-title">${u.title}</span>
+              </div>
+              <div class="vpm-node-desc">${u.desc}</div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Edit Ship-to Address Modal
+      function openEditAddressModal() {
+        const cur = VENDOR_POS.find(d => d.id === selectedId);
+        if (!cur) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 480px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Edit Delivery Address</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#475569;">Destination Warehouse / Location</label>
+                <select id="vpm-modal-wh" class="vpm-select" style="margin-top:4px;">
+                  <option value="Sarasota Warehouse" ${cur.shipTo.wh.includes('Sarasota') ? 'selected' : ''}>Sarasota Warehouse</option>
+                  <option value="Demo 3PL Fulfillment" ${cur.shipTo.wh.includes('3PL') ? 'selected' : ''}>Demo 3PL Fulfillment Center</option>
+                  <option value="Dallas Texas DC" ${cur.shipTo.wh.includes('Dallas') || cur.shipTo.wh.includes('Texas') ? 'selected' : ''}>Dallas Texas DC</option>
+                  <option value="Direct Customer Destination" ${cur.shipTo.wh.includes('Customer') ? 'selected' : ''}>Direct Customer Destination</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#475569;">Street Address</label>
+                <input type="text" id="vpm-modal-addr" class="vpm-input" value="${cur.shipTo.line1}" style="margin-top:4px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#475569;">City, State ZIP</label>
+                <input type="text" id="vpm-modal-cs" class="vpm-input" value="${cur.shipTo.cityState}" style="margin-top:4px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#475569;">Country</label>
+                <input type="text" id="vpm-modal-country" class="vpm-input" value="${cur.shipTo.country}" style="margin-top:4px;">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+              <button type="button" class="sys-btn primary" id="vpm-modal-save">Save Address</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+
+        modal.querySelector('#vpm-modal-wh').onchange = (e) => {
+          const val = e.target.value;
+          if (val === 'Sarasota Warehouse') {
+            modal.querySelector('#vpm-modal-addr').value = '1234 Distribution Way';
+            modal.querySelector('#vpm-modal-cs').value = 'Sarasota, FL 34240';
+          } else if (val === 'Demo 3PL Fulfillment') {
+            modal.querySelector('#vpm-modal-addr').value = '900 Logistics Blvd, Suite 100';
+            modal.querySelector('#vpm-modal-cs').value = 'Ontario, CA 91761';
+          } else if (val === 'Dallas Texas DC') {
+            modal.querySelector('#vpm-modal-addr').value = '550 Trade Center Drive';
+            modal.querySelector('#vpm-modal-cs').value = 'Fort Worth, TX 76177';
+          }
+        };
+
+        modal.querySelector('#vpm-modal-save').onclick = () => {
+          cur.shipTo.wh = modal.querySelector('#vpm-modal-wh').value;
+          cur.shipTo.line1 = modal.querySelector('#vpm-modal-addr').value.trim();
+          cur.shipTo.cityState = modal.querySelector('#vpm-modal-cs').value.trim();
+          cur.shipTo.country = modal.querySelector('#vpm-modal-country').value.trim();
+          updateDetailPanel(cur);
+          notice(`Delivery address updated for ${cur.po}`);
+          modal.remove();
+        };
+      }
+
+      // Edit PO Modal
+      function openEditPOModal(row) {
+        const modal = document.createElement('div');
+        modal.className = 'sys-modal-backdrop';
+        modal.innerHTML = `
+          <section class="sys-modal" role="dialog" aria-modal="true" style="max-width: 520px; padding: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 style="margin:0; font-size:18px; font-weight:700;">Edit Purchase Order ${row.po}</h3>
+              <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#475569;">PO Status</label>
+                <select id="vpm-edit-status" class="vpm-select" style="margin-top:4px;">
+                  <option value="Pending" ${row.status === 'Pending' || row.status === 'Pending Confirmation' ? 'selected' : ''}>Pending Confirmation</option>
+                  <option value="In Production" ${row.status === 'In Production' ? 'selected' : ''}>In Production</option>
+                  <option value="Shipped" ${row.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                  <option value="Delivered" ${row.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                  <option value="Confirmed" ${row.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                  <option value="Closed" ${row.status === 'Closed' ? 'selected' : ''}>Closed</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#475569;">Carrier Tracking Number</label>
+                <input type="text" id="vpm-edit-tracking" class="vpm-input" value="${row.tracking === '-' ? '' : row.tracking}" placeholder="e.g. 1Z4R7832567878" style="margin-top:4px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:600; color:#475569;">Expected Arrival Date</label>
+                <input type="text" id="vpm-edit-arrival" class="vpm-input" value="${row.arrivalDate}" style="margin-top:4px;">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+              <button type="button" class="sys-btn" data-close>Cancel</button>
+              <button type="button" class="sys-btn primary" id="vpm-edit-save">Save Changes</button>
+            </div>
+          </section>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('[data-close]').forEach(b => b.onclick = () => modal.remove());
+
+        modal.querySelector('#vpm-edit-save').onclick = () => {
+          const st = modal.querySelector('#vpm-edit-status').value;
+          const trk = modal.querySelector('#vpm-edit-tracking').value.trim() || '-';
+          const arr = modal.querySelector('#vpm-edit-arrival').value.trim();
+
+          row.status = st;
+          row.statusClass = st === 'Shipped' ? 'vpm-status-shipped' : st === 'Delivered' ? 'vpm-status-delivered' : st === 'In Production' ? 'vpm-status-inproduction' : st === 'Pending' ? 'vpm-status-pending' : st === 'Confirmed' ? 'vpm-status-confirmed' : 'vpm-status-closed';
+          row.tracking = trk;
+          row.shipping.tracking = trk;
+          if (arr) row.arrivalDate = arr;
+          if (st === 'Shipped' && row.confirmedPct < 100) {
+            row.confirmedPct = 100;
+            row.confirmedQty = row.totalQty;
+          }
+
+          renderTable();
+          if (selectedId === row.id) updateDetailPanel(row);
+          notice(`Updated ${row.po} status to ${st}`);
+          modal.remove();
+        };
+      }
+
+      // Row Dropdown Menu
+      function openRowMenu(row, anchor) {
+        document.querySelectorAll('.sys-row-dropdown').forEach(d => d.remove());
+
+        const dd = document.createElement('div');
+        dd.className = 'sys-row-dropdown';
+        dd.style.position = 'fixed';
+        dd.style.zIndex = '9999';
+        dd.style.background = '#ffffff';
+        dd.style.border = '1px solid #cbd5e1';
+        dd.style.borderRadius = '8px';
+        dd.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.12)';
+        dd.style.padding = '6px';
+        dd.style.minWidth = '175px';
+        dd.style.display = 'flex';
+        dd.style.flexDirection = 'column';
+        dd.style.gap = '2px';
+
+        const rect = anchor.getBoundingClientRect();
+        dd.style.top = (rect.bottom + 4) + 'px';
+        dd.style.left = Math.min(rect.left, window.innerWidth - 185) + 'px';
+
+        dd.innerHTML = `
+          <button type="button" class="sys-btn" style="text-align:left; justify-content:flex-start; border:none; background:none; padding:8px 10px; font-size:12.5px; border-radius:4px;" data-op="view">
+            👁 View PO Details
+          </button>
+          <button type="button" class="sys-btn" style="text-align:left; justify-content:flex-start; border:none; background:none; padding:8px 10px; font-size:12.5px; border-radius:4px;" data-op="print">
+            📄 Print Packing Slip
+          </button>
+          <button type="button" class="sys-btn" style="text-align:left; justify-content:flex-start; border:none; background:none; padding:8px 10px; font-size:12.5px; border-radius:4px;" data-op="receive">
+            📥 Receive in WMS
+          </button>
+          <button type="button" class="sys-btn" style="text-align:left; justify-content:flex-start; border:none; background:none; padding:8px 10px; font-size:12.5px; border-radius:4px; color:#2563eb;" data-op="confirm">
+            ✓ Mark Confirmed
+          </button>
+        `;
+
+        document.body.appendChild(dd);
+
+        const closeMenu = (e) => {
+          if (!dd.contains(e.target) && e.target !== anchor) {
+            dd.remove();
+            document.removeEventListener('click', closeMenu);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', closeMenu), 10);
+
+        dd.querySelector('[data-op="view"]').onclick = () => {
+          selectRow(row.id);
+          dd.remove();
+        };
+        dd.querySelector('[data-op="print"]').onclick = () => {
+          notice(`Printing Purchase Order ${row.po}…`);
+          dd.remove();
+          window.print();
+        };
+        dd.querySelector('[data-op="receive"]').onclick = () => {
+          dd.remove();
+          window.location.href = `warehouse-management/receiving.html?search=${encodeURIComponent(row.po)}`;
+        };
+        dd.querySelector('[data-op="confirm"]').onclick = () => {
+          row.confirmedPct = 100;
+          row.confirmedQty = row.totalQty;
+          row.status = 'Confirmed';
+          row.statusClass = 'vpm-status-confirmed';
+          renderTable();
+          if (selectedId === row.id) updateDetailPanel(row);
+          notice(`Confirmed purchase order ${row.po}`);
+          dd.remove();
+        };
+      }
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        // Initial table render
+        renderTable();
+
+        // Search & Filter Listeners
+        ['#vpm-filter-search', '#vpm-filter-type', '#vpm-filter-brand', '#vpm-filter-vendor', '#vpm-filter-status', '#vpm-filter-date'].forEach(sel => {
+          const el = document.querySelector(sel);
+          if (el) {
+            el.addEventListener('input', () => {
+              currentPage = 1;
+              renderTable();
+            });
+            el.addEventListener('change', () => {
+              currentPage = 1;
+              renderTable();
+            });
+          }
+        });
+
+        // Status Filter Pills
+        document.querySelectorAll('.vpm-pill-btn').forEach(pill => {
+          pill.addEventListener('click', () => {
+            document.querySelectorAll('.vpm-pill-btn').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            activePill = pill.dataset.status;
+            currentPage = 1;
+            renderTable();
+          });
+        });
+
+        // Rows per page
+        document.querySelector('#vpm-pag-size')?.addEventListener('change', (e) => {
+          pageSize = Number(e.target.value) || 10;
+          currentPage = 1;
+          renderTable();
+        });
+
+        // Table Sort Headers
+        document.querySelectorAll('.vpm-table th.sortable').forEach(th => {
+          th.addEventListener('click', () => {
+            const col = th.dataset.sort;
+            if (sortCol === col) {
+              sortAsc = !sortAsc;
+            } else {
+              sortCol = col;
+              sortAsc = true;
+            }
+            renderTable();
+          });
+        });
+
+        // Select All Checkbox
+        const thCheck = document.querySelector('#vpm-th-check');
+        if (thCheck) {
+          thCheck.addEventListener('change', () => {
+            document.querySelectorAll('.vpm-row-checkbox').forEach(cb => cb.checked = thCheck.checked);
+          });
+        }
+
+        // Close Drawer Button
+        document.querySelector('#vpm-detail-close')?.addEventListener('click', () => {
+          const split = document.querySelector('#vpm-split-container');
+          const drawer = document.querySelector('#vpm-detail-drawer');
+          if (split && drawer) {
+            split.classList.add('is-fullwidth');
+            drawer.style.display = 'none';
+          }
+        });
+
+        // Fixed Panel Toggle
+        document.querySelector('#vpm-toggle-fixed')?.addEventListener('click', () => {
+          notice('Panel anchored to screen.');
+        });
+
+        // Edit Ship to Address button
+        document.querySelector('#vpm-btn-edit-address')?.addEventListener('click', openEditAddressModal);
+
+        // View all updates link
+        document.querySelector('#vpm-btn-view-all-updates')?.addEventListener('click', () => {
+          const tabUpdates = document.querySelector('.vpm-drawer-tab[data-tab="updates"]');
+          if (tabUpdates) tabUpdates.click();
+        });
+
+        // Drawer Tabs Switching
+        document.querySelectorAll('.vpm-drawer-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.vpm-drawer-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const tabName = tab.dataset.tab;
+            const overviewEl = document.querySelector('#vpm-tab-content-overview');
+            const otherEl = document.querySelector('#vpm-tab-content-other');
+            const cur = VENDOR_POS.find(d => d.id === selectedId);
+
+            if (tabName === 'overview') {
+              overviewEl.style.display = 'block';
+              otherEl.style.display = 'none';
+            } else {
+              overviewEl.style.display = 'none';
+              otherEl.style.display = 'block';
+
+              if (tabName === 'items') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px; font-weight:700;">Line Items for ${cur.po}</h4>
+                  <p style="color:#64748b; font-size:12px; margin:0 0 12px 0;">All items verified against supplier purchase specifications.</p>
+                  <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                    <thead>
+                      <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; text-align:left;">
+                        <th style="padding:8px 6px;">SKU</th>
+                        <th style="padding:8px 6px;">Description</th>
+                        <th style="padding:8px 6px; text-align:center;">Qty</th>
+                        <th style="padding:8px 6px; text-align:right;">Cost</th>
+                        <th style="padding:8px 6px; text-align:right;">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${(cur.items || []).map(it => `
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                          <td style="padding:8px 6px; font-weight:700;">${it.sku}</td>
+                          <td style="padding:8px 6px;">${it.title}</td>
+                          <td style="padding:8px 6px; text-align:center;"><b>${it.qty}</b></td>
+                          <td style="padding:8px 6px; text-align:right;">$${it.cost.toFixed(2)}</td>
+                          <td style="padding:8px 6px; text-align:right; font-weight:700;">$${(it.qty * it.cost).toFixed(2)}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                `;
+              } else if (tabName === 'tracking') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px; font-weight:700;">Carrier Tracking · ${cur.shipping.method}</h4>
+                  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; font-size:12.5px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                      <span style="color:#64748b;">Tracking Number:</span>
+                      <strong style="font-family:monospace; color:#2563eb;">${cur.shipping.tracking}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                      <span style="color:#64748b;">Status:</span>
+                      <span class="vpm-status-badge ${cur.statusClass}">${cur.shipping.status}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                      <span style="color:#64748b;">Origin Facility:</span>
+                      <strong>${cur.vendor} Logistics Dock</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                      <span style="color:#64748b;">Destination:</span>
+                      <strong>${cur.shipTo.wh}</strong>
+                    </div>
+                  </div>
+                `;
+              } else if (tabName === 'updates') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px; font-weight:700;">Complete Event Audit Log</h4>
+                  <div class="vpm-timeline">
+                    ${(cur.updates || []).map(u => `
+                      <div class="vpm-timeline-node">
+                        <span class="vpm-node-dot ${u.dot || 'dot-blue'}"></span>
+                        <div class="vpm-node-meta">
+                          <span>${u.date}</span>
+                          <span class="vpm-node-title">${u.title}</span>
+                        </div>
+                        <div class="vpm-node-desc">${u.desc}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                `;
+              } else if (tabName === 'documents') {
+                otherEl.innerHTML = `
+                  <h4 style="margin:0 0 10px; font-size:14px; font-weight:700;">Purchase Order Documents</h4>
+                  <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 14px; border-radius:6px; font-size:12.5px;">
+                      <span>📄 ${cur.po}_Purchase_Order.pdf</span>
+                      <button type="button" class="vpm-link" onclick="window.print()">Download</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; padding:10px 14px; border-radius:6px; font-size:12.5px;">
+                      <span>📦 Packing_Slip_${cur.po}.pdf</span>
+                      <button type="button" class="vpm-link" onclick="window.print()">Download</button>
+                    </div>
+                  </div>
+                `;
+              }
+            }
+          });
+        });
+
+        // Cross-tab and focus sync
+        window.addEventListener('storage', () => renderTable());
+        window.addEventListener('focus', () => renderTable());
+      });
+    })();
+  </script>
 </body>
 </html>
