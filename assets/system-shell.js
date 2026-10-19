@@ -154,6 +154,8 @@
       ],'data-center.html',{label:'+ Audit activity',path:'activity.html'}]
     ];
   }
+  window.StarkModuleNavigation = window.StarkModuleNavigation || {};
+  window.StarkModuleNavigation.groups = groups;
 
   const currentPath = location.pathname;
   const initialQuery = new URLSearchParams(location.search);

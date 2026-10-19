@@ -369,8 +369,16 @@
 
     const allGroups = window.StarkModuleNavigation?.groups ? window.StarkModuleNavigation.groups() : [];
 
-    if (viewMode === 'modules' && allGroups.length) {
-      host.innerHTML = renderModuleGrid(allGroups);
+    if (viewMode === 'modules') {
+      if (allGroups.length) {
+        host.innerHTML = renderModuleGrid(allGroups);
+      } else {
+        requestAnimationFrame(() => {
+          const retry = window.StarkModuleNavigation?.groups ? window.StarkModuleNavigation.groups() : [];
+          if (retry.length && viewMode === 'modules') host.innerHTML = renderModuleGrid(retry);
+        });
+        return;
+      }
     } else {
       host.innerHTML = `
         <div class="workspace-overview-header">

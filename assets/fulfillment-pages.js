@@ -2,6 +2,7 @@
   'use strict';
   const S=window.StarkSystem,F=window.StarkFulfillment;if(!S || !F)return;
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num=value=>Number(value||0).toLocaleString('en-US');
   const money=(value,currency='USD')=>new Intl.NumberFormat('en-US',{style:'currency',currency}).format(value || 0);
   const date=value=>value?String(value).slice(0,10):'—';
   const badge=(value,color='')=>`<span class="sys-badge ${color || (/CANCELLED|ISSUES|REJECTED|UNKNOWN/.test(value)?'red':/SHIPPED|DELIVERED|ACKNOWLEDGED|VALIDATED/.test(value)?'green':/UNVALIDATED|QUEUED|REQUESTED/.test(value)?'orange':'')}" >${esc(String(value).replaceAll('_',' '))}</span>`;

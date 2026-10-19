@@ -14,7 +14,7 @@
   const requested = query.get('demo') === '1' ? 'demo' : query.get('workspaceMode') === 'working' ? 'working' : '';
   const mode = requested || read(nativeSession, choiceKey) || 'working';
   const demo = mode === 'demo';
-  try { nativeSession.setItem(choiceKey, mode); } catch (_) {}
+  try { nativeSession.setItem(choiceKey, mode); nativeSession.setItem('stark-session-active', '1'); } catch (_) {}
   const keyFor = key => demo ? prefix + String(key) : String(key);
   
   function scoped(store) {

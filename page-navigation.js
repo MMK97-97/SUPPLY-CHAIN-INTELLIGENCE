@@ -72,6 +72,7 @@
   window.addEventListener('popstate', () => { reset(); ready(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
   function ready() {
+    try { sessionStorage.setItem('stark-session-active', '1'); } catch (_) {}
     // Modules and the shared shell finish their DOMContentLoaded listeners first.
     root.classList.remove('stark-page-loading', 'stark-navigation-pending');
     if (root.dataset.authPublic === 'true' || root.dataset.authEntry === 'true' || window.StarkWorkspace?.isDemo) {

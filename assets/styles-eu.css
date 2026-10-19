@@ -390,8 +390,9 @@ button:disabled { cursor: not-allowed; opacity: .48; transform: none !important;
 }
 
 @view-transition { navigation: auto; }
-::view-transition-old(root) { animation: .16s ease both premium-page-out; }
-::view-transition-new(root) { animation: .34s cubic-bezier(.2,.7,.2,1) both premium-page-in; }
+::view-transition-group(root) { animation-duration: 160ms; }
+::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { animation: stark-document-reveal 160ms ease-out both; mix-blend-mode: normal; }
 
 html { background: #edf4f9; }
 body {
@@ -399,16 +400,19 @@ body {
   background:
     radial-gradient(circle at 92% 4%, rgba(20, 147, 156, .11), transparent 30rem),
     linear-gradient(180deg, #f7fafc 0, #eef4f8 48%, #edf3f7 100%);
-  animation: premium-page-in .34s cubic-bezier(.2,.7,.2,1) both;
 }
-body.page-leaving { animation: premium-page-out .16s ease both; pointer-events: none; }
+
+@keyframes stark-document-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 @keyframes premium-page-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes premium-page-out {
-  to { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 0; }
 }
 
 .inventory-header {

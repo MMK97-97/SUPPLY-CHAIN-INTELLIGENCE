@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><style id="stark-navigation-critical">html{background:#f4f7fc;min-height:100%}@view-transition{navigation:auto}html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}@keyframes stark-navigation-progress{to{background-position:-200% 0}}@media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}</style><script data-stark-navigation-boot>document.documentElement.classList.add('stark-page-loading');window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);</script><script src="assets/workspace-runtime.js?v=20261013-1"></script><script src="assets/page-navigation.js?v=20261008-3" defer></script><script src="assets/system-seed.js?v=20261008-3" defer></script><script src="assets/demo-seed.js?v=20261012-2" defer></script><script src="assets/system-core.js?v=20261012-2" defer></script>
+<head><meta charset="utf-8"><style id="stark-navigation-critical">html{background:#f4f7fc;min-height:100%}@view-transition{navigation:auto}html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}@keyframes stark-navigation-progress{to{background-position:-200% 0}}@media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}</style><script data-stark-navigation-boot>try{if(!sessionStorage.getItem('stark-session-active')&&!sessionStorage.getItem('sci.workspace.mode.v1')&&!document.documentElement.dataset.authEntry){document.documentElement.classList.add('stark-page-loading');window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);}}catch(_){}</script><script src="assets/workspace-runtime.js?v=20261013-1"></script><script src="assets/page-navigation.js?v=20261008-3" defer></script><script src="assets/system-seed.js?v=20261008-3" defer></script><script src="assets/demo-seed.js?v=20261012-2" defer></script><script src="assets/system-core.js?v=20261012-2" defer></script>
   
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Events Control Center | Stark Premium</title>
@@ -981,12 +981,18 @@
       navigation: auto;
     }
 
+    ::view-transition-group(root) {
+      animation-duration: 160ms;
+    }
+
     ::view-transition-old(root) {
-      animation: premium-page-out 0.16s ease both;
+      animation: none;
+      mix-blend-mode: normal;
     }
 
     ::view-transition-new(root) {
-      animation: premium-page-in 0.36s cubic-bezier(0.2, 0.72, 0.2, 1) both;
+      animation: stark-document-reveal 160ms ease-out both;
+      mix-blend-mode: normal;
     }
 
     html {
@@ -1001,7 +1007,6 @@
         radial-gradient(circle at 8% -8%, var(--region-glow), transparent 31rem),
         radial-gradient(circle at 94% 8%, rgba(39, 116, 151, 0.12), transparent 28rem),
         linear-gradient(145deg, #f9fbfd 0%, #edf3f7 58%, #f5f9fb 100%);
-      animation: premium-page-in 0.38s cubic-bezier(0.2, 0.72, 0.2, 1) both;
     }
 
     body::before {
@@ -1018,19 +1023,19 @@
       mask-image: linear-gradient(to bottom, black, transparent 65%);
     }
 
-    body.page-leaving {
-      pointer-events: none;
-      animation: premium-page-out 0.16s ease both;
+    @keyframes stark-document-reveal {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     @keyframes premium-page-in {
-      from { opacity: 0; transform: translateY(9px); }
-      to { opacity: 1; transform: none; }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     @keyframes premium-page-out {
-      from { opacity: 1; transform: none; }
-      to { opacity: 0; transform: translateY(-5px); }
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
 
     .site-header {
