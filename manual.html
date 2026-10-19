@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">html{background:#f4f7fc;min-height:100%}@view-transition{navigation:auto}::view-transition-group(root){animation-duration:160ms}::view-transition-old(root){animation:none;mix-blend-mode:normal}::view-transition-new(root){animation:stark-document-reveal 160ms ease-out both;mix-blend-mode:normal}@keyframes stark-document-reveal{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}@keyframes stark-navigation-progress{to{background-position:-200% 0}}@media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}</style>
+  <script data-stark-navigation-boot>try{if(!sessionStorage.getItem('stark-session-active')&&!sessionStorage.getItem('sci.workspace.mode.v1')&&!document.documentElement.dataset.authEntry){document.documentElement.classList.add('stark-page-loading');window.setTimeout(function(){document.documentElement.classList.remove('stark-page-loading')},12000);}}catch(_){}</script>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261012-2" defer></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>System User Manual · Supply Chain Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <script src="assets/system-shell.js?v=20261013-1" defer></script>
+  <script src="assets/system-connectors.js?v=20261012-2" defer></script>
+  <script src="assets/system-cloud.js?v=20261012-2" defer></script>
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261012-2">
+  <script src="assets/enterprise-ui.js?v=20261013-1" defer></script>
+  <link rel="stylesheet" href="assets/portfolio-mobile.css?v=20261012-2">
+  <script src="assets/portfolio-mobile.js?v=20261012-3" defer></script>
+  <link rel="stylesheet" href="assets/workspace-fixes.css?v=20261013-1">
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+  <style>
+    .manual-layout { display: grid; grid-template-columns: 280px 1fr; gap: 32px; max-width: 1440px; margin: 0 auto; padding: 24px 20px 80px; }
+    .manual-sidebar { position: sticky; top: 88px; max-height: calc(100vh - 110px); overflow-y: auto; background: #fff; border: 1px solid #d8e4ef; border-radius: 12px; padding: 18px 16px; box-shadow: 0 4px 18px rgba(16,44,83,.04); }
+    .manual-sidebar h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #5a738e; margin: 0 0 12px; }
+    .manual-nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+    .manual-nav-list a { display: block; padding: 7px 10px; color: #1e3a5f; text-decoration: none; border-radius: 6px; line-height: 1.4; transition: all .15s; }
+    .manual-nav-list a:hover { background: #f0f6fc; color: #087f78; font-weight: 500; }
+    .manual-nav-list a.active { background: #e6f6f5; color: #087f78; font-weight: 600; border-left: 3px solid #087f78; }
+    
+    .manual-content { background: #fff; border: 1px solid #d8e4ef; border-radius: 14px; padding: 36px 44px; box-shadow: 0 4px 24px rgba(16,44,83,.05); min-width: 0; }
+    .manual-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; border-bottom: 2px solid #eef4f9; padding-bottom: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+    .manual-header-titles h1 { font-size: 28px; color: #102c53; margin: 0 0 8px; font-weight: 700; }
+    .manual-header-titles p { color: #5a738e; margin: 0; font-size: 14.5px; }
+    .manual-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .manual-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: none; border: 1px solid #c8d9e6; background: #f8fafc; color: #102c53; transition: all .15s; }
+    .manual-btn:hover { background: #eaf1f7; border-color: #b0c7db; }
+    .manual-btn.primary { background: #087f78; color: #fff; border-color: #087f78; }
+    .manual-btn.primary:hover { background: #066761; border-color: #066761; }
+
+    .manual-search-box { width: 100%; margin-bottom: 24px; position: relative; }
+    .manual-search-box input { width: 100%; box-sizing: border-box; padding: 12px 16px 12px 38px; border: 1px solid #c2d6e7; border-radius: 9px; font-size: 14px; background: #fdfefe; outline: none; }
+    .manual-search-box input:focus { border-color: #087f78; box-shadow: 0 0 0 3px rgba(8,127,120,.12); }
+    .manual-search-box svg { position: absolute; left: 13px; top: 13px; width: 16px; height: 16px; fill: #6b8299; }
+
+    .manual-section { margin-bottom: 48px; scroll-margin-top: 100px; }
+    .manual-section h2 { font-size: 21px; color: #102c53; border-bottom: 1px solid #e5edf5; padding-bottom: 10px; margin: 0 0 16px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .manual-section h2 span.section-num { font-size: 13px; font-weight: 700; color: #087f78; background: #e6f6f5; padding: 3px 8px; border-radius: 6px; }
+    .manual-section h3 { font-size: 17px; color: #1a3c68; margin: 24px 0 10px; font-weight: 600; }
+    .manual-section p, .manual-section li { font-size: 14.5px; line-height: 1.68; color: #2d4560; }
+    .manual-section ul, .manual-section ol { padding-left: 22px; margin: 10px 0 16px; }
+    .manual-section li { margin-bottom: 6px; }
+    
+    .manual-card { background: #f8fafc; border: 1px solid #e1ecf4; border-radius: 10px; padding: 18px 20px; margin: 16px 0; }
+    .manual-card h4 { margin: 0 0 8px; font-size: 15px; color: #102c53; }
+    
+    .manual-table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid #dce8f2; border-radius: 8px; }
+    .manual-table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
+    .manual-table th { background: #f1f6fa; padding: 10px 14px; font-weight: 600; color: #102c53; border-bottom: 1px solid #dce8f2; }
+    .manual-table td { padding: 10px 14px; border-bottom: 1px solid #edf3f7; color: #243f5e; }
+    .manual-table tr:last-child td { border-bottom: none; }
+    .manual-table code { background: #eef4f9; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #0b4c7b; }
+
+    .manual-badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.3px; }
+    .manual-badge.blue { background: #e6f0fa; color: #0866b0; }
+    .manual-badge.green { background: #e6f7f2; color: #087f78; }
+    .manual-badge.orange { background: #fdf3e7; color: #b45309; }
+    .manual-badge.red { background: #fdeeee; color: #b91c1c; }
+
+    .sop-step { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+    .sop-step-num { width: 28px; height: 28px; border-radius: 50%; background: #087f78; color: #fff; font-weight: 700; font-size: 13px; display: grid; place-items: center; flex-shrink: 0; }
+    .sop-step-content { flex: 1; }
+    .sop-step-content strong { color: #102c53; font-size: 14.5px; }
+    .sop-step-content p { margin: 3px 0 0; font-size: 13.5px; color: #486581; }
+
+    @media (max-width: 960px) {
+      .manual-layout { grid-template-columns: 1fr; }
+      .manual-sidebar { display: none; }
+      .manual-content { padding: 24px 20px; }
+    }
+
+    @media print {
+      body { background: #fff !important; }
+      .system-header, .manual-sidebar, .manual-actions, .manual-search-box { display: none !important; }
+      .manual-layout { display: block; padding: 0; }
+      .manual-content { border: none; box-shadow: none; padding: 0; }
+      .manual-section { page-break-inside: avoid; }
+      h2 { page-break-before: auto; }
+    }
+  </style>
+</head>
+<body data-system-page="data">
+  <div class="manual-layout">
+    <aside class="manual-sidebar" aria-label="Manual Navigation">
+      <h3>Manual Chapters</h3>
+      <ul class="manual-nav-list" id="manual-nav">
+        <li><a href="#ch-1" class="active">1. Architecture & Design</a></li>
+        <li><a href="#ch-2">2. Regions & Workspaces</a></li>
+        <li><a href="#ch-3">3. Enterprise Control Tower</a></li>
+        <li><a href="#ch-4">4. Item Master & ATS Feeds</a></li>
+        <li><a href="#ch-5">5. Customer Order Management</a></li>
+        <li><a href="#ch-6">6. Vendor & SLA Scorecard</a></li>
+        <li><a href="#ch-7">7. Procurement & PO Lifecycle</a></li>
+        <li><a href="#ch-8">8. Warehouse Management (WMS)</a></li>
+        <li><a href="#ch-9">9. Distributed 3PL Logistics</a></li>
+        <li><a href="#ch-10">10. Shipping & Freight</a></li>
+        <li><a href="#ch-11">11. Replenishment Intelligence</a></li>
+        <li><a href="#ch-12">12. Data Center & Backups</a></li>
+        <li><a href="#ch-13">13. MK Brain AI Analyst</a></li>
+        <li><a href="#ch-14">14. Standard Operating Procedures</a></li>
+        <li><a href="#ch-15">15. State Machine Invariants</a></li>
+        <li><a href="#ch-16">16. Recovery & Cloud Sync</a></li>
+      </ul>
+    </aside>
+
+    <main class="manual-content">
+      <div class="manual-header">
+        <div class="manual-header-titles">
+          <h1>Supply Chain Intelligence · Enterprise Operating Manual</h1>
+          <p>Official system handbook, operational workflows, and standard operating procedures (SOPs).</p>
+        </div>
+        <div class="manual-actions">
+          <button type="button" class="manual-btn primary" id="btn-download-md">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Markdown (.md)
+          </button>
+          <button type="button" class="manual-btn" id="btn-print-pdf">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print / Save as PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="manual-search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="manual-search" placeholder="Search operational procedures, module functions, error handling, formulas..." aria-label="Search operating manual">
+      </div>
+
+      <div id="manual-body">
+        <!-- Chapter 1 -->
+        <section class="manual-section" id="ch-1">
+          <h2><span class="section-num">01</span> Executive Platform Architecture</h2>
+          <p>Supply Chain Intelligence (SCI) is a high-availability, unified enterprise execution platform designed for multi-region inventory forecasting, omnichannel order routing, vendor procurement, warehouse management (WMS), and distributed 3PL logistics.</p>
+          <div class="manual-card">
+            <h4>Core Architecture Guarantees</h4>
+            <ul>
+              <li><strong>Single Source of Truth:</strong> One connected state graph connects SKUs, customer orders, allocations, vendor POs, warehouse bins, and 3PL routing across all modules.</li>
+              <li><strong>Atomic Operations &amp; Guardrails:</strong> Inventory mutations (reservations, receiving, pick wave locking, bin transfers, packing, and dispatch) execute with strict transactional invariants to prevent overselling, negative balances, or duplicate fulfillment.</li>
+              <li><strong>Offline-First Browser Execution:</strong> The platform operates with local in-browser persistence (LocalStorage, IndexedDB, SessionStorage) guaranteeing continuous operations during network interruptions.</li>
+              <li><strong>Seamless View Transitions:</strong> Synchronized <code>@view-transition</code> cross-fades and active session tracking eliminate full-screen loading splash screens during in-app navigation.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Chapter 2 -->
+        <section class="manual-section" id="ch-2">
+          <h2><span class="section-num">02</span> Global Regional Operations &amp; Workspace Modes</h2>
+          <p>The platform natively supports three operational regions with localized tax rules, currencies, and warehouse centers:</p>
+          <div class="manual-table-wrap">
+            <table class="manual-table">
+              <thead><tr><th>Region</th><th>Currency</th><th>Primary Fulfillment Center</th><th>Key Capabilities</th></tr></thead>
+              <tbody>
+                <tr><td><strong>United States (US)</strong></td><td>USD ($)</td><td>Sarasota Central Hub (FL)</td><td>Domestic freight estimation, UPS/FedEx tracking, partner 3PL routing.</td></tr>
+                <tr><td><strong>European Union (EU)</strong></td><td>EUR (€)</td><td>Amsterdam Distribution Node</td><td>Cross-border ATS feeds, EU VAT rules, multi-country accounts.</td></tr>
+                <tr><td><strong>Canada (CA)</strong></td><td>CAD ($)</td><td>Toronto Regional Warehouse</td><td>Bilingual SKU compliance, customs declarations, cross-border consolidation.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Workspace Modes</h3>
+          <p><strong>Working Mode:</strong> Production operations with persistent business data, custom catalog additions, purchase orders, and cloud revisions.<br>
+          <strong>Portfolio Demo Mode (<code>demo=1</code>):</strong> Isolated sandbox with isolated key prefixes (<code>sci.demo.v49.*</code>). Can be reset at any time in the Data Center without altering production records.</p>
+        </section>
+
+        <!-- Chapter 3 -->
+        <section class="manual-section" id="ch-3">
+          <h2><span class="section-num">03</span> Enterprise Control Tower (<code>workspace.html</code>)</h2>
+          <p>The Control Tower serves as the unified executive cockpit across all operational groups:</p>
+          <ul>
+            <li><strong>Operational Modules Grid:</strong> Fast-launch command cards for Item Master, Orders, Procurement, WMS, Shipping, 3PL, Transportation, and Analytics. Each card features real-time active indicators and direct shortcuts (e.g. <code>+ Create order</code>, <code>+ Create vendor PO</code>).</li>
+            <li><strong>Telemetry &amp; KPIs View:</strong> Real-time operations metrics displaying Total Orders, On-Time Delivery Rate (%), Available Inventory, Digital Licenses Allocated, Open Vendor Commitments, and Regional Credit Exposure.</li>
+            <li><strong>Demand Trend &amp; Network Topology:</strong> Live orders vs. dispatches trend chart and regional logistics node visualization.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 4 -->
+        <section class="manual-section" id="ch-4">
+          <h2><span class="section-num">04</span> Master Item Catalog &amp; ATS Feeds (<code>item-master.html</code>)</h2>
+          <p>Maintains the multi-region commercial catalog with real-time Available-to-Sell (ATS) stock computation:</p>
+          <div class="manual-card">
+            <h4>Available-to-Sell (ATS) Formula</h4>
+            <p><code>ATS Stock = Physical On-Hand Stock - Active Customer Reservations</code></p>
+          </div>
+          <ul>
+            <li><strong>Catalog Filter &amp; Search:</strong> Filter across Live, Fashion, Backorder, Internal Use, and Feeds Only statuses. Status pills indicate <code>In Stock</code>, <code>Low Stock</code>, and <code>Out of Stock</code>.</li>
+            <li><strong>Add New Catalog Item (<code>add-item.html</code>):</strong> Form to register new SKUs with unique model numbers, brands, categories, costs, wholesale prices, and default warehouse bin slotting.</li>
+            <li><strong>ATS Feed Upload:</strong> Ingest supplier-provided available-to-sell spreadsheets to update vendor availability in bulk without manual entry.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 5 -->
+        <section class="manual-section" id="ch-5">
+          <h2><span class="section-num">05</span> Omnichannel Order Management (<code>all-open-orders.html</code>)</h2>
+          <p>Controls customer commitments from initial order capture to validation, picking, and dispatch.</p>
+          <ul>
+            <li><strong>Order Creation (<code>create-order.html</code>):</strong> Select customer account, input PO number, select line items, and choose fulfillment channel (<code>WAREHOUSE</code>, <code>3PL</code>, <code>DROPSHIP</code>). Evaluates available credit limits before order confirmation.</li>
+            <li><strong>Non-Destructive Allocation:</strong> Orders immediately reserve stock to prevent overselling. <em>Physical on-hand inventory is not deducted until actual warehouse dispatch.</em></li>
+            <li><strong>All Open Orders (<code>all-open-orders.html</code>):</strong> Complete operational table of active orders with line item drawer, packing slip printing, and real-time status pills.</li>
+            <li><strong>Exception Queues:</strong> Specialized pipelines for <code>order-management/issues.html</code> (credit holds, address failures), <code>unvalidated.html</code>, <code>cancelled.html</code>, and <code>hold-redemption.html</code>.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 6 -->
+        <section class="manual-section" id="ch-6">
+          <h2><span class="section-num">06</span> Vendor &amp; Supplier Management (<code>vendor-management/</code>)</h2>
+          <p>Manages supplier records, contractual compliance, and performance ratings:</p>
+          <ul>
+            <li><strong>Vendor Master (<code>vendors.html</code>):</strong> Registry of active suppliers, remit-to addresses, payment terms, and authorized product categories.</li>
+            <li><strong>SLA Scorecard (<code>sla.html</code>):</strong> Tracks On-Time In-Full (OTIF) rates, vendor defect ratios from dock inspections, and contracted lead time variance.</li>
+            <li><strong>Digital Vault (<code>digital-vault.html</code>):</strong> Custody log for digital software keys and tokenized partner rewards.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 7 -->
+        <section class="manual-section" id="ch-7">
+          <h2><span class="section-num">07</span> Procurement &amp; Vendor PO Lifecycle (<code>procurement/</code>)</h2>
+          <p>Directs the inbound replenishment pipeline from PO generation to tracking and dock receipt:</p>
+          <ul>
+            <li><strong>Vendor PO Management (<code>vendor-po-management.html</code>):</strong> Master table of all open supplier POs, ordered vs. shipped quantities, carrier tracking, and dynamic shipping windows with overdue alerts.</li>
+            <li><strong>Interactive PO Details Drawer:</strong> Click any PO number to view line models, vendor part numbers, unit costs, and manage uploaded packing slips (PDF, PNG, JPG).</li>
+            <li><strong>Creating a Vendor PO (<code>create-vendor-po.html</code>):</strong> Wizard to select vendor, receiving warehouse, delivery window, and multiple catalog models.</li>
+            <li><strong>Dropship PO Management (<code>dropship-po.html</code>):</strong> Directly links customer orders to manufacturer dropship POs. When vendor dispatch is confirmed with tracking, the customer order updates to <code>DISPATCHED</code> without touching warehouse inventory.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 8 -->
+        <section class="manual-section" id="ch-8">
+          <h2><span class="section-num">08</span> Warehouse Management System (WMS) (<code>warehouse-management/</code>)</h2>
+          <p>Governs physical dock receiving, bin storage, wave picking, packing benches, and cycle counts:</p>
+          <ul>
+            <li><strong>Receiving &amp; Putaway (<code>receiving.html</code>):</strong> Reconciles inbound deliveries against open Vendor POs. Damaged units are quarantined from ATS sellable stock. Automatically updates PO status idempotently.</li>
+            <li><strong>Inventory &amp; Bins (<code>inventory-bins.html</code>):</strong> Aisle-bay-shelf-bin location mapping. Supports internal bin-to-bin transfers while strictly protecting units reserved for active pick waves.</li>
+            <li><strong>Wave Picking (<code>wave-picking.html</code>):</strong> Groups customer orders into optimized picking waves sequenced by shortest walking path.</li>
+            <li><strong>Packing &amp; Dispatch (<code>packing-dispatch.html</code>):</strong> Verifies cartons, generates tracking numbers, and executes the final atomic on-hand stock deduction upon carrier handover.</li>
+            <li><strong>Cycle Counts (<code>cycle-counts.html</code>):</strong> Periodic blind inventory counts and variance reconciliation audits.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 9 -->
+        <section class="manual-section" id="ch-9">
+          <h2><span class="section-num">09</span> Distributed 3PL Logistics (<code>3pl-management/</code>)</h2>
+          <p>Orchestrates remote third-party logistics fulfillment:</p>
+          <ul>
+            <li><strong>Partner Routing Rules:</strong> Automatically directs customer orders to 3PL partners based on proximity or regional distribution rules.</li>
+            <li><strong>Outbound API Contract:</strong> Formatted to <code>stark.3pl.order.v1</code> with deterministic idempotency keys to eliminate duplicate dispatches.</li>
+            <li><strong>Batch Confirmation Upload (<code>upload-shipments.html</code>):</strong> Ingests partner CSV/Excel shipment tracking confirmations and reconciles open customer orders in bulk.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 10 -->
+        <section class="manual-section" id="ch-10">
+          <h2><span class="section-num">10</span> Shipping, Freight &amp; Transportation (<code>shipping/</code>)</h2>
+          <p>Centralizes carrier pickups, freight rate estimation, and tracking:</p>
+          <ul>
+            <li><strong>Sarasota Hub Operations (<code>shipping/index.html</code>):</strong> Active queue for internal Sarasota packing and carrier handover.</li>
+            <li><strong>Daily Shipment Report (<code>shipping/daily-report.html</code>):</strong> Chronological record of all carrier dispatches, gross weight, and Bills of Lading.</li>
+            <li><strong>Freight Estimator &amp; Consolidator (<code>freight-estimator.html</code>):</strong> Calculates LTL/FTL freight rates across NMFC classes and optimizes multi-order pallet consolidation.</li>
+            <li><strong>Multi-Carrier Tracking (<code>shipment-tracking.html</code>):</strong> Real-time lookup for FedEx, UPS, DHL, and Freight tracking numbers.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 11 -->
+        <section class="manual-section" id="ch-11">
+          <h2><span class="section-num">11</span> Replenishment Intelligence (<code>inventory-dashboard-us.html</code>)</h2>
+          <p>Predictive regional replenishment and inventory optimization:</p>
+          <div class="manual-card">
+            <h4>Enterprise Replenishment Formula</h4>
+            <p><code>Reorder Qty = ⌈ Demand × (Lead Time + Coverage) + Safety Stock + Client Orders - On Hand - Inbound POs ⌉</code></p>
+          </div>
+          <ul>
+            <li><strong>ABC Item Velocity Ranking:</strong> Class A (top 80% volume), Class B (next 15%), Class C (remaining 5%).</li>
+            <li><strong>Active Brands Tuning:</strong> Configure supplier lead times and reorder coverage windows per brand.</li>
+            <li><strong>Reorder to PO Conversion (<code>procurement-planning.html</code>):</strong> Instantly converts calculated replenishment requirements into formal Vendor POs.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 12 -->
+        <section class="manual-section" id="ch-12">
+          <h2><span class="section-num">12</span> Executive Analytics, Audit &amp; Data Center (<code>data-center.html</code>)</h2>
+          <ul>
+            <li><strong>Business Operations (<code>business-operations.html</code>):</strong> Profitability analysis, revenue trends, and category gross margins.</li>
+            <li><strong>Single-File JSON Backup &amp; Restore:</strong> Export full-system snapshots containing all catalog, order, PO, WMS, and audit records. Atomic restore rejects corrupted files prior to state replacement.</li>
+            <li><strong>Audit Activity Stream (<code>activity.html</code>):</strong> Immutable chronological event stream recording all user mutations, bin moves, and order dispatches.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 13 -->
+        <section class="manual-section" id="ch-13">
+          <h2><span class="section-num">13</span> MK Brain AI Analyst (<code>mk-brain.html</code>)</h2>
+          <p>Embedded conversational AI assistant for supply chain diagnostic interrogation:</p>
+          <ul>
+            <li>Ask natural language queries regarding low-stock Class A items, overdue supplier commitments, or customer backorders.</li>
+            <li>Automated anomaly detection alerts for stalled pick waves, aged unvalidated orders, or lead-time slippage.</li>
+          </ul>
+        </section>
+
+        <!-- Chapter 14 -->
+        <section class="manual-section" id="ch-14">
+          <h2><span class="section-num">14</span> Standard Operating Procedures (SOPs)</h2>
+          <div class="manual-card">
+            <h4>SOP 1: Catalog Creation &amp; Initial Stock Putaway</h4>
+            <div class="sop-step"><div class="sop-step-num">1</div><div class="sop-step-content"><strong>Add Item:</strong> Open <code>add-item.html</code>, enter SKU, Model, Brand, Category, Cost, and Wholesale Price. Click Save.</div></div>
+            <div class="sop-step"><div class="sop-step-num">2</div><div class="sop-step-content"><strong>Issue Vendor PO:</strong> Open <code>create-vendor-po.html</code>, select supplier, target warehouse, delivery window, and add item line. Submit PO.</div></div>
+            <div class="sop-step"><div class="sop-step-num">3</div><div class="sop-step-content"><strong>Receive at Dock:</strong> Open <code>receiving.html</code>, enter PO#, verify count, designate warehouse bin, and click Confirm Putaway. Stock is now sellable.</div></div>
+          </div>
+
+          <div class="manual-card">
+            <h4>SOP 2: Fulfilling Customer Orders</h4>
+            <div class="sop-step"><div class="sop-step-num">1</div><div class="sop-step-content"><strong>Create Order:</strong> Open <code>create-order.html</code>, select customer account, PO#, and line items. Stock is reserved automatically.</div></div>
+            <div class="sop-step"><div class="sop-step-num">2</div><div class="sop-step-content"><strong>Pick Wave:</strong> Open <code>wave-picking.html</code>, generate pick wave, and execute physical item retrieval.</div></div>
+            <div class="sop-step"><div class="sop-step-num">3</div><div class="sop-step-content"><strong>Pack &amp; Dispatch:</strong> Open <code>packing-dispatch.html</code>, cartonize items, enter carrier tracking, and click Dispatch Order. Physical stock is deducted.</div></div>
+          </div>
+        </section>
+
+        <!-- Chapter 15 -->
+        <section class="manual-section" id="ch-15">
+          <h2><span class="section-num">15</span> State Machine Invariants</h2>
+          <div class="manual-table-wrap">
+            <table class="manual-table">
+              <thead><tr><th>Entity</th><th>States</th><th>Atomic Invariants</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Customer Order</strong></td><td><code>PENDING</code>, <code>VALIDATED</code>, <code>PICKING</code>, <code>PACKED</code>, <code>DISPATCHED</code>, <code>CANCELLED</code></td><td>Order entry reserves stock without deducting on-hand. Dispatch deducts on-hand exactly once. Cancel releases reservations.</td></tr>
+                <tr><td><strong>Purchase Order</strong></td><td><code>DRAFT</code>, <code>ISSUED</code>, <code>ACKNOWLEDGED</code>, <code>SHIPPED</code>, <code>RECEIVED</code>, <code>CANCELLED</code></td><td>Receipt updates PO balance and increments physical warehouse stock. Idempotent execution.</td></tr>
+                <tr><td><strong>Dropship PO</strong></td><td><code>ISSUED</code>, <code>DISPATCHED</code></td><td>Direct supplier dispatch updates customer order to DISPATCHED with zero warehouse receipt or stock deduction.</td></tr>
+                <tr><td><strong>Bin Transfers</strong></td><td><code>REQUESTED</code>, <code>COMPLETED</code></td><td>Strictly prevents transferring units currently allocated to open customer pick waves.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Chapter 16 -->
+        <section class="manual-section" id="ch-16">
+          <h2><span class="section-num">16</span> Disaster Recovery &amp; Cloud Synchronization</h2>
+          <p><strong>Local Backup Snapshot:</strong> Navigate to <code>data-center.html</code> $\rightarrow$ Click <strong>Export System Backup</strong> to save a complete, offline JSON snapshot.</p>
+          <p><strong>Cloud Concurrency:</strong> Supabase cloud synchronization uses optimistic revision locks (<code>recordRevision</code>). In the event of a concurrent edit from another workstation, the sync pauses safely and prompts reconciliation rather than overwriting newer data.</p>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Live Search Filter
+    const searchInput = document.getElementById('manual-search');
+    const sections = document.querySelectorAll('.manual-section');
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      sections.forEach(sec => {
+        const text = sec.textContent.toLowerCase();
+        sec.style.display = (!q || text.includes(q)) ? 'block' : 'none';
+      });
+    });
+
+    // Active Sidebar Scrollspy
+    const navLinks = document.querySelectorAll('#manual-nav a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 120;
+        if (window.scrollY >= top) current = sec.getAttribute('id');
+      });
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+      });
+    }, { passive: true });
+
+    // Print / PDF Button
+    document.getElementById('btn-print-pdf').addEventListener('click', () => {
+      window.print();
+    });
+
+    // Download Markdown File Button
+    document.getElementById('btn-download-md').addEventListener('click', async () => {
+      try {
+        const res = await fetch('USER-MANUAL.md');
+        let text = '';
+        if (res.ok) {
+          text = await res.text();
+        } else {
+          // Fallback to embedded markdown compilation
+          text = `# Supply Chain Intelligence · Enterprise Operating Manual\n\nDownloaded from Supply Chain Intelligence workspace.\nVisit https://mmk97-97.github.io/SUPPLY-CHAIN-INTELLIGENCE/manual.html for live documentation.`;
+        }
+        const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'SUPPLY-CHAIN-INTELLIGENCE-MANUAL.md';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Could not download manual: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

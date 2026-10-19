@@ -150,8 +150,9 @@
       ['data','System & Data','Data Center · Backups · Audit Activity','#475569',[
         ['data-center.html','Data center & backups'],
         ['activity.html','Audit activity'],
+        ['manual.html','System user manual & SOPs'],
         [`instructions-${suffix}.html`,'Regional instructions']
-      ],'data-center.html',{label:'+ Audit activity',path:'activity.html'}]
+      ],'data-center.html',{label:'+ User manual',path:'manual.html'}]
     ];
   }
   window.StarkModuleNavigation = window.StarkModuleNavigation || {};
