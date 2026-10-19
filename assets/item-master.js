@@ -680,6 +680,7 @@
   ];
 
   const STORAGE_KEY = 'stark.enterpriseItemMaster.customRecords.v2';
+  const ALT_STORAGE_KEY = 'stark-item-master-catalog';
 
   function getStoredCatalog() {
     try {
@@ -696,14 +697,122 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (_) {}
+    try {
+      localStorage.setItem(ALT_STORAGE_KEY, JSON.stringify(items));
+    } catch (_) {}
+
+    // Synchronize updates back to StarkSystem enterprise inventory
+    if (S && S.transaction) {
+      try {
+        S.transaction('ITEM_MASTER_SYNC', 'Catalog updates synced to enterprise inventory.', s => {
+          const e = s.enterprise, l = s.logistics;
+          items.forEach(ci => {
+            let inv = e.inventory.find(x => x.sku.toLowerCase() === ci.sku.toLowerCase() || (ci.model && x.model && x.model.toLowerCase() === ci.model.toLowerCase()));
+            if (inv) {
+              if (ci.standardPrice !== undefined) inv.standardPrice = Number(ci.standardPrice) || inv.standardPrice;
+              if (ci.cost !== undefined) inv.cost = Number(ci.cost) || inv.cost;
+              if (ci.status) inv.status = ci.status;
+              if (ci.title) inv.title = ci.title;
+              if (ci.brand) inv.brand = ci.brand;
+              inv.updatedAt = S.stamp ? S.stamp() : new Date().toISOString();
+            } else if (ci.sku && ci.model) {
+              const newInv = {
+                sku: ci.sku,
+                model: ci.model,
+                brand: ci.brand || 'General',
+                title: ci.title || ci.model,
+                nature: 'PHYSICAL',
+                onHand: Number(ci.totalATS) || 100,
+                reserved: 0,
+                externalReserved: 0,
+                damaged: 0,
+                safety: 10,
+                cost: Number(ci.cost) || 0,
+                standardPrice: Number(ci.standardPrice) || 0,
+                status: ci.status || 'Live',
+                region: 'US',
+                updatedAt: S.stamp ? S.stamp() : new Date().toISOString()
+              };
+              e.inventory.unshift(newInv);
+              if (!l.inventory.some(x => x.sku === ci.sku)) {
+                l.inventory.push({
+                  sku: ci.sku,
+                  brand: newInv.brand,
+                  description: newInv.title,
+                  binId: 'A-01-R1-B1',
+                  onHand: newInv.onHand,
+                  reserved: 0,
+                  damaged: 0,
+                  serialized: false,
+                  lotControl: false,
+                  lastCount: S.stamp ? S.stamp() : new Date().toISOString()
+                });
+              }
+            }
+          });
+        });
+      } catch (err) {
+        console.warn('Sync to StarkSystem failed:', err);
+      }
+    }
   }
 
   function getItemMasterRecords() {
     let catalog = getStoredCatalog();
     if (!catalog) {
       catalog = JSON.parse(JSON.stringify(defaultMasterCatalog));
-      saveCatalog(catalog);
     }
+
+    // Merge any items from ALT_STORAGE_KEY that might not be in catalog
+    try {
+      const altRaw = localStorage.getItem(ALT_STORAGE_KEY);
+      if (altRaw) {
+        const altItems = JSON.parse(altRaw);
+        if (Array.isArray(altItems)) {
+          altItems.forEach(ai => {
+            if (ai && ai.sku && !catalog.some(c => c.sku.toLowerCase() === ai.sku.toLowerCase())) {
+              catalog.unshift(ai);
+            }
+          });
+        }
+      }
+    } catch (_) {}
+
+    // Merge any physical inventory from StarkSystem not yet in catalog
+    if (S && S.getState) {
+      try {
+        const state = S.getState();
+        if (state?.enterprise?.inventory) {
+          state.enterprise.inventory.forEach(inv => {
+            if (inv && inv.sku && !catalog.some(c => c.sku.toLowerCase() === inv.sku.toLowerCase() || (inv.model && c.model && c.model.toLowerCase() === inv.model.toLowerCase()))) {
+              catalog.push({
+                sku: inv.sku,
+                model: inv.model || inv.sku,
+                brand: inv.brand || 'General',
+                title: inv.title || inv.model || inv.sku,
+                standardPrice: inv.standardPrice || 0,
+                cost: inv.cost || 0,
+                status: inv.status || 'Live',
+                tags: [inv.brand || 'General', 'Catalog'],
+                onOrder: 50,
+                poNumber: 'PO-38500',
+                onHold: 0,
+                totalATS: Math.max(0, inv.onHand - inv.reserved),
+                uploadedAt: inv.updatedAt || new Date().toISOString(),
+                uploadSource: 'Enterprise Inventory Sync',
+                warehouses: [
+                  { name: 'Sarasota DC', ats: Math.max(0, inv.onHand - inv.reserved) }
+                ]
+              });
+            }
+          });
+        }
+      } catch (_) {}
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(catalog));
+    } catch (_) {}
     return catalog;
   }
 
@@ -2454,6 +2563,20 @@
   });
 
   window.addEventListener('stark:region-change', render);
+
+  window.addEventListener('storage', e => {
+    if (e.key === STORAGE_KEY || e.key === ALT_STORAGE_KEY || (S && e.key === S.KEY)) {
+      if (!document.querySelector('.sys-modal-backdrop') && !document.querySelector('#im-add-modal-overlay')) {
+        render();
+      }
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (!document.querySelector('.sys-modal-backdrop') && !document.querySelector('#im-add-modal-overlay')) {
+      render();
+    }
+  });
 
   // Global export
   window.StarkItemMaster = {

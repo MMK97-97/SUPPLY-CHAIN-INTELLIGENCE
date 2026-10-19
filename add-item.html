@@ -663,7 +663,7 @@
 
         const sku = (brand.toUpperCase().replace(/[^A-Z0-9]/g, '') + '-' + model.toUpperCase().replace(/[^A-Z0-9]/g, '')).slice(0, 18);
 
-        // Load existing catalog from localStorage
+        // 1. Save to stark-item-master-catalog
         const STORAGE_KEY = 'stark-item-master-catalog';
         let items = [];
         try {
@@ -677,7 +677,7 @@
           vendorItem,
           brand,
           upc,
-          title,
+          title: title || model,
           description: desc,
           status,
           standardPrice: price,
@@ -703,10 +703,77 @@
           ]
         };
 
+        items = items.filter(x => x.sku !== sku);
         items.unshift(newItem);
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
         } catch(err) {}
+
+        // 2. Synchronize to stark.enterpriseItemMaster.customRecords.v2 for item-master.js
+        const MASTER_KEY = 'stark.enterpriseItemMaster.customRecords.v2';
+        try {
+          let masterRecords = [];
+          const rawMaster = localStorage.getItem(MASTER_KEY);
+          if (rawMaster) masterRecords = JSON.parse(rawMaster);
+          masterRecords = masterRecords.filter(x => x.sku !== sku);
+          masterRecords.unshift(newItem);
+          localStorage.setItem(MASTER_KEY, JSON.stringify(masterRecords));
+        } catch(err) {}
+
+        // 3. Synchronize to unified StarkSystem state
+        const S = window.StarkSystem;
+        if (S && S.transaction) {
+          try {
+            S.transaction('ITEM_MASTER_CREATED', sku, s => {
+              const e = s.enterprise, l = s.logistics;
+              let existing = e.inventory.find(x => x.sku.toLowerCase() === sku.toLowerCase());
+              if (!existing) {
+                existing = {
+                  sku,
+                  model,
+                  brand,
+                  title: title || model,
+                  nature: 'PHYSICAL',
+                  onHand: 150,
+                  reserved: 0,
+                  externalReserved: 0,
+                  damaged: 0,
+                  safety: 10,
+                  cost,
+                  standardPrice: price,
+                  status,
+                  region: 'US',
+                  updatedAt: S.stamp ? S.stamp() : new Date().toISOString()
+                };
+                e.inventory.unshift(existing);
+                if (!l.inventory.some(x => x.sku === sku)) {
+                  l.inventory.push({
+                    sku,
+                    brand,
+                    description: existing.title,
+                    binId: 'A-01-R1-B1',
+                    onHand: 150,
+                    reserved: 0,
+                    damaged: 0,
+                    serialized: false,
+                    lotControl: false,
+                    lastCount: S.stamp ? S.stamp() : new Date().toISOString()
+                  });
+                }
+              } else {
+                existing.title = title || model;
+                existing.brand = brand;
+                existing.model = model;
+                existing.standardPrice = price;
+                existing.cost = cost;
+                existing.status = status;
+                existing.updatedAt = S.stamp ? S.stamp() : new Date().toISOString();
+              }
+            });
+          } catch(err) {
+            console.warn('StarkSystem sync error:', err);
+          }
+        }
 
         sessionStorage.setItem('stark-toast-msg', `Item ${model} (${brand}) successfully created and added to master catalog.`);
         window.location.href = 'item-master.html';

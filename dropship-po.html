@@ -448,7 +448,7 @@
       'use strict';
 
       // Full Dataset matching Screenshot
-      const DROPSHIP_DATA = [
+      const BASE_DROPSHIP_DATA = [
         {
           id: 'dspo_1',
           dspo: 'DSPO-2026-00125',
@@ -844,9 +844,129 @@
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(n) || 0);
       }
 
+      const S = window.StarkSystem;
+
+      function getLiveDropshipPOs() {
+        const list = JSON.parse(JSON.stringify(BASE_DROPSHIP_DATA));
+        const seen = new Set(list.map(x => (x.dspo || '').toLowerCase()));
+        list.forEach(x => seen.add((x.custPo || '').toLowerCase()));
+
+        if (S && S.getState) {
+          try {
+            const state = S.getState();
+            const vendors = state?.enterprise?.vendors || [];
+            const accounts = state?.enterprise?.accounts || [];
+            const enterprisePOs = state?.enterprise?.purchaseOrders || [];
+            const enterpriseOrders = state?.enterprise?.orders || [];
+
+            // 1. Enterprise purchase orders with purpose === 'DROPSHIP'
+            enterprisePOs.filter(p => p.purpose === 'DROPSHIP').forEach(p => {
+              const poKey = (p.po || '').toLowerCase();
+              if (seen.has(poKey)) {
+                const match = list.find(x => (x.dspo || '').toLowerCase() === poKey);
+                if (match) {
+                  match.enterpriseId = p.id;
+                  if (p.status === 'DISPATCHED') {
+                    match.status = 'Shipped';
+                    match.stepperStatus = 'Shipped';
+                    match.statusClass = 'dpo-status-shipped';
+                  } else if (p.status === 'CANCELLED') {
+                    match.status = 'Cancelled';
+                    match.stepperStatus = 'Cancelled';
+                    match.statusClass = 'dpo-status-cancelled';
+                  }
+                }
+                return;
+              }
+              seen.add(poKey);
+
+              const vend = vendors.find(v => v.id === p.vendorId);
+              const vendorName = vend?.name || 'Vendor Partner';
+              const linkedOrder = enterpriseOrders.find(o => o.id === p.customerOrderId);
+              const custAccount = linkedOrder ? accounts.find(a => a.id === linkedOrder.accountId) : null;
+              const custName = custAccount?.name || 'Enterprise Customer';
+              const brandName = (p.lines?.[0]?.sku || '').split('-')[0] || vendorName.split(' ')[0] || 'Brand';
+              const brandClass = 'dpo-brand-' + brandName.toLowerCase().replace(/[^a-z]/g, '');
+
+              const totalVal = (p.lines || []).reduce((n, l) => n + (l.qty * (l.cost || 50) * 1.3), 0);
+              const isDispatched = p.status === 'DISPATCHED';
+
+              const newRow = {
+                id: p.id,
+                enterpriseId: p.id,
+                dspo: p.po,
+                custPo: linkedOrder?.po || '315990',
+                customer: custName,
+                brand: brandName,
+                brandClass,
+                vendor: vendorName,
+                orderDate: p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026',
+                inHandsDate: linkedOrder?.inHandsDate || '10/28/2026',
+                status: isDispatched ? 'Shipped' : p.status === 'CANCELLED' ? 'Cancelled' : 'Sent',
+                statusClass: isDispatched ? 'dpo-status-shipped' : p.status === 'CANCELLED' ? 'dpo-status-cancelled' : 'dpo-status-sent',
+                itemCount: p.lines?.length || 1,
+                stepperStatus: isDispatched ? 'Shipped' : 'Sent',
+                createdDate: '10/24',
+                sentDate: '10/24',
+                createdAt: p.issuedAt || new Date().toISOString(),
+                creator: 'EDI (Auto)',
+                shipTo: {
+                  name: custName,
+                  line1: linkedOrder?.shipping?.destination || '1234 Main St, Suite 500',
+                  cityState: 'Tampa, FL 33602',
+                  country: 'United States'
+                },
+                shipping: {
+                  method: p.carrier || linkedOrder?.shipping?.method || 'UPS Ground',
+                  account: linkedOrder?.shipping?.thirdPartyAccount || '-',
+                  zip: linkedOrder?.shipping?.thirdPartyZip || '33602',
+                  inHands: linkedOrder?.inHandsDate || '10/28/2026'
+                },
+                items: (p.lines || []).map((l, idx) => ({
+                  idx: idx + 1,
+                  sku: l.sku,
+                  desc: l.title || l.sku,
+                  qty: l.qty,
+                  price: (l.cost || 50) * 1.3,
+                  total: l.qty * (l.cost || 50) * 1.3
+                })),
+                specialInstructions: p.notes || 'Direct supplier dropship fulfillment.',
+                totalValue: totalVal,
+                docs: ['Dropship PO.pdf', 'Order Confirmation.pdf']
+              };
+
+              list.unshift(newRow);
+            });
+          } catch(err) {
+            console.warn('Error reading dropship purchase orders:', err);
+          }
+        }
+
+        return list;
+      }
+
+      let DROPSHIP_DATA = [];
+
       function renderTable() {
         const tbody = document.querySelector('#dpo-tbody');
         if (!tbody) return;
+
+        DROPSHIP_DATA = getLiveDropshipPOs();
+
+        // Update pill count badges
+        const countAll = DROPSHIP_DATA.length;
+        const countPending = DROPSHIP_DATA.filter(d => d.status === 'Pending').length;
+        const countSent = DROPSHIP_DATA.filter(d => d.status === 'Sent').length;
+        const countAck = DROPSHIP_DATA.filter(d => d.status === 'Acknowledged').length;
+        const countShipped = DROPSHIP_DATA.filter(d => d.status === 'Shipped').length;
+        const countCancelled = DROPSHIP_DATA.filter(d => d.status === 'Cancelled').length;
+
+        document.querySelector('#count-all') && (document.querySelector('#count-all').textContent = countAll);
+        document.querySelector('#count-pending') && (document.querySelector('#count-pending').textContent = countPending);
+        document.querySelector('#count-sent') && (document.querySelector('#count-sent').textContent = countSent);
+        document.querySelector('#count-acknowledged') && (document.querySelector('#count-acknowledged').textContent = countAck);
+        document.querySelector('#count-shipped') && (document.querySelector('#count-shipped').textContent = countShipped);
+        document.querySelector('#count-cancelled') && (document.querySelector('#count-cancelled').textContent = countCancelled);
 
         const q = (document.querySelector('#dpo-filter-search')?.value || '').toLowerCase().trim();
         const brandFilter = document.querySelector('#dpo-filter-brand')?.value || 'all';
@@ -1110,7 +1230,42 @@
           window.print();
         };
         dd.querySelector('[data-op="dispatch"]').onclick = () => {
-          notice(`Dispatched supplier dropship PO ${row.dspo}`);
+          const trackingNumber = '1Z99999999' + Math.floor(10000000 + Math.random() * 90000000);
+          let dispatchedViaSystem = false;
+          if (window.StarkSystem) {
+            try {
+              const S = window.StarkSystem;
+              const st = S.getState ? S.getState() : null;
+              const poInSystem = st?.enterprise?.purchaseOrders?.find(p => p.id === row.id || p.po === row.dspo);
+              if (poInSystem) {
+                if (typeof S.shipDropshipPO === 'function') {
+                  S.shipDropshipPO(poInSystem.id, trackingNumber);
+                  dispatchedViaSystem = true;
+                } else if (typeof S.transaction === 'function') {
+                  S.transaction('DROPSHIP_DISPATCHED', poInSystem.id, s => {
+                    const p = s.enterprise.purchaseOrders.find(x => x.id === poInSystem.id);
+                    if (p) {
+                      p.status = 'DISPATCHED';
+                      p.tracking = trackingNumber;
+                      p.dispatchedAt = new Date().toISOString();
+                      const o = s.enterprise.orders.find(x => x.id === p.customerOrderId);
+                      if (o) {
+                        o.status = 'SHIPPED';
+                        o.tracking = trackingNumber;
+                        o.updatedAt = new Date().toISOString();
+                        (o.lines || []).forEach(x => { x.shipped = x.qty; });
+                      }
+                    }
+                  });
+                  dispatchedViaSystem = true;
+                }
+              }
+            } catch(e) {
+              console.warn('Dispatch via StarkSystem failed:', e);
+            }
+          }
+
+          notice(`Dispatched supplier dropship PO ${row.dspo}${dispatchedViaSystem ? ' (Synced across ERP)' : ''}`);
           row.status = 'Shipped';
           row.stepperStatus = 'Shipped';
           row.statusClass = 'dpo-status-shipped';
@@ -1227,6 +1382,14 @@
             document.querySelectorAll('.dpo-row-checkbox').forEach(cb => cb.checked = thCheck.checked);
           });
         }
+
+        // Live cross-tab and focus sync
+        window.addEventListener('storage', () => {
+          renderTable();
+        });
+        window.addEventListener('focus', () => {
+          renderTable();
+        });
       });
     })();
   </script>

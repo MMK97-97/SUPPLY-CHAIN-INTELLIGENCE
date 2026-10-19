@@ -848,6 +848,42 @@
                 thumb.innerHTML = SVGS.default;
               }
             }
+
+            // Cross-module catalog lookup for items created via Add Item or Item Master
+            try {
+              let matched = null;
+              if (window.StarkSystem && window.StarkSystem.getState) {
+                const inv = window.StarkSystem.getState()?.enterprise?.inventory || [];
+                matched = inv.find(x => x.sku?.toUpperCase() === s || (x.model && x.model.toUpperCase() === s));
+              }
+              if (!matched) {
+                const rawCustom = localStorage.getItem('stark.enterpriseItemMaster.customRecords.v2');
+                if (rawCustom) {
+                  const arr = JSON.parse(rawCustom);
+                  matched = arr.find(x => x.sku?.toUpperCase() === s || (x.model && x.model.toUpperCase() === s));
+                }
+              }
+              if (!matched) {
+                const rawCat = localStorage.getItem('stark-item-master-catalog');
+                if (rawCat) {
+                  const arr = JSON.parse(rawCat);
+                  matched = arr.find(x => x.sku?.toUpperCase() === s || (x.model && x.model.toUpperCase() === s));
+                }
+              }
+
+              if (matched) {
+                if (descInp && (!descInp.value || descInp.value === s)) {
+                  descInp.value = matched.title || matched.description || matched.model || matched.sku;
+                }
+                if (vendorItemInp && !vendorItemInp.value) {
+                  vendorItemInp.value = matched.vendorItem || matched.model || matched.sku;
+                }
+                if (costInp && (!costInp.value || Number(costInp.value) === 0)) {
+                  costInp.value = String(matched.cost || Math.round((matched.standardPrice || 50) * 0.65 * 100) / 100);
+                }
+              }
+            } catch(e) {}
+
             recalculate();
           });
         }
@@ -994,6 +1030,22 @@
       }
 
       function openVendorModal() {
+        const S = window.StarkSystem;
+        let vendors = [];
+        if (S && S.getState) {
+          try {
+            vendors = S.getState()?.enterprise?.vendors || [];
+          } catch(e) {}
+        }
+        if (!vendors.length) {
+          vendors = [
+            { id: 'vend_abc', name: 'ABC Manufacturing Co.', terms: 'Net 30' },
+            { id: 'vend_sony', name: 'Sony Electronics US', terms: 'Net 45' },
+            { id: 'vend_nb', name: 'New Balance Athletic', terms: 'Net 30' },
+            { id: 'vend_yeti', name: 'YETI Coolers LLC', terms: 'Net 30' }
+          ];
+        }
+
         const modal = document.createElement('div');
         modal.className = 'sys-modal-backdrop';
         modal.innerHTML = `
@@ -1002,23 +1054,13 @@
               <h3 style="margin:0; font-size:18px; font-weight:700;">Select Vendor</h3>
               <button type="button" class="sys-btn" style="padding:4px 8px;" data-close>×</button>
             </div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              <div class="vpo-vendor-opt" data-name="ABC Manufacturing Co." data-terms="Net 30" style="padding:12px; border:1px solid #bfdbfe; background:#eff6ff; border-radius:8px; cursor:pointer;">
-                <strong style="color:#1e3a8a;">ABC Manufacturing Co.</strong> (Selected)
-                <div style="font-size:12px; color:#475569; margin-top:2px;">Primary Supplier · Electronic & Lifestyle Assemblies · Terms: Net 30</div>
-              </div>
-              <div class="vpo-vendor-opt" data-name="Sony Electronics US" data-terms="Net 45" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
-                <strong style="color:#0f172a;">Sony Electronics US</strong>
-                <div style="font-size:12px; color:#64748b; margin-top:2px;">Audio & Video Hardware Direct · Terms: Net 45</div>
-              </div>
-              <div class="vpo-vendor-opt" data-name="New Balance Athletic" data-terms="Net 30" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
-                <strong style="color:#0f172a;">New Balance Athletic</strong>
-                <div style="font-size:12px; color:#64748b; margin-top:2px;">Footwear & Apparel Logistics · Terms: Net 30</div>
-              </div>
-              <div class="vpo-vendor-opt" data-name="YETI Coolers LLC" data-terms="Net 30" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
-                <strong style="color:#0f172a;">YETI Coolers LLC</strong>
-                <div style="font-size:12px; color:#64748b; margin-top:2px;">Premium Drinkware & Outdoor Gear · Terms: Net 30</div>
-              </div>
+            <div style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
+              ${vendors.map(v => `
+                <div class="vpo-vendor-opt" data-name="${v.name}" data-terms="${v.terms || 'Net 30'}" style="padding:12px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                  <strong style="color:#0f172a;">${v.name}</strong>
+                  <div style="font-size:12px; color:#64748b; margin-top:2px;">Vendor ID: ${v.id} · Terms: ${v.terms || 'Net 30'} · Status: Active</div>
+                </div>
+              `).join('')}
             </div>
             <div style="margin-top:20px; text-align:right;">
               <button type="button" class="sys-btn" data-close>Cancel</button>
@@ -1150,20 +1192,162 @@
         const form = document.querySelector('#vpo-form');
         if (!form.reportValidity()) return;
 
-        const vendor = document.querySelector('#vpo-vendor').value.trim();
-        const poNum = 'PO-2026-00125';
-        const wh = document.querySelector('#vpo-warehouse-select').value;
-        const total = document.querySelector('#sum-total-val').textContent;
+        const S = window.StarkSystem;
+        const vendorName = document.querySelector('#vpo-vendor').value.trim() || 'ABC Manufacturing Co.';
+        const poType = document.querySelector('#vpo-type').value;
+        const requestedShipDate = document.querySelector('#vpo-ship-date').value.trim() || '10/28/2026';
+        const expectedArrivalDate = document.querySelector('#vpo-arrival-date').value.trim() || '';
+        const wh = document.querySelector('#vpo-warehouse-select').value || 'Sarasota';
+        const shippingMethod = document.querySelector('#vpo-ship-method-val')?.value || 'UPS Ground';
+        const instructions = document.querySelector('#vpo-special-instructions')?.value.trim() || '';
 
-        sessionStorage.setItem('stark-toast-msg', `Purchase Order ${poNum} for ${vendor} (${wh}) ${isPdf ? 'generated as PDF' : 'saved as Draft'} successfully.`);
+        const poNumInput = document.querySelector('#vpo-number').value.trim();
+        let poNum = (!poNumInput || poNumInput === 'Auto-generate') ? 'PO-2026-' + Math.floor(100000 + Math.random() * 900000) : poNumInput;
+
+        const lines = [];
+        document.querySelectorAll('#vpo-items-tbody tr').forEach(row => {
+          const sku = row.querySelector('.vpo-row-sku')?.value.trim();
+          const vItem = row.querySelector('.vpo-row-vitem')?.value.trim();
+          const desc = row.querySelector('.vpo-row-desc')?.value.trim();
+          const qty = Number(row.querySelector('.vpo-row-qty')?.value) || 0;
+          const cost = Number(row.querySelector('.vpo-row-cost')?.value) || 0;
+          if (sku && qty > 0) {
+            lines.push({
+              sku,
+              vendorItem: vItem || sku,
+              title: desc || sku,
+              description: desc || sku,
+              qty,
+              cost
+            });
+          }
+        });
+
+        if (!lines.length) {
+          notice('Please add at least one line item with valid SKU and quantity.', true);
+          return;
+        }
+
+        const totalCost = lines.reduce((acc, l) => acc + l.qty * l.cost, 0);
+        const purpose = poType.toUpperCase().includes('DROPSHIP') ? 'DROPSHIP' : poType.toUpperCase().includes('EVENT') ? 'EVENT' : 'INVENTORY';
+
+        if (S && S.transaction) {
+          try {
+            S.transaction('VENDOR_PO_CREATED', poNum, s => {
+              const e = s.enterprise;
+              const l = s.logistics;
+
+              // Ensure vendor exists in e.vendors
+              let vendor = e.vendors.find(v => v.name.toLowerCase() === vendorName.toLowerCase());
+              if (!vendor) {
+                vendor = {
+                  id: 'vend_' + vendorName.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 18),
+                  name: vendorName,
+                  status: 'ACTIVE',
+                  terms: document.querySelector('#vpo-payment-terms')?.value || 'Net 30'
+                };
+                e.vendors.push(vendor);
+              }
+
+              // Ensure line SKUs exist in inventory
+              lines.forEach(line => {
+                let inv = e.inventory.find(i => i.sku.toLowerCase() === line.sku.toLowerCase());
+                if (!inv) {
+                  inv = {
+                    sku: line.sku,
+                    model: line.sku,
+                    brand: vendorName.split(' ')[0] || 'General',
+                    title: line.title || line.sku,
+                    nature: 'PHYSICAL',
+                    onHand: 0,
+                    reserved: 0,
+                    externalReserved: 0,
+                    damaged: 0,
+                    safety: 10,
+                    cost: line.cost,
+                    standardPrice: Math.round(line.cost * 1.4 * 100) / 100,
+                    status: 'Live',
+                    region: 'US',
+                    updatedAt: S.stamp ? S.stamp() : new Date().toISOString()
+                  };
+                  e.inventory.unshift(inv);
+                  if (!l.inventory.some(x => x.sku === line.sku)) {
+                    l.inventory.push({
+                      sku: line.sku,
+                      brand: inv.brand,
+                      description: inv.title,
+                      binId: 'A-01-R1-B1',
+                      onHand: 0,
+                      reserved: 0,
+                      damaged: 0,
+                      serialized: false,
+                      lotControl: false,
+                      lastCount: S.stamp ? S.stamp() : new Date().toISOString()
+                    });
+                  }
+                }
+              });
+
+              // Construct Purchase Order object
+              const newPO = {
+                id: S.uid ? S.uid('vpo') : 'vpo_' + Date.now(),
+                vendorId: vendor.id,
+                po: poNum,
+                purpose,
+                status: 'PO_ISSUED',
+                issuedAt: S.stamp ? S.stamp() : new Date().toISOString(),
+                eta: expectedArrivalDate ? new Date(expectedArrivalDate).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString(),
+                shippingWindow: requestedShipDate,
+                warehouse: wh,
+                carrier: shippingMethod || 'UPS_GROUND',
+                tracking: '',
+                notes: instructions,
+                lines: lines.map(x => ({ ...x, received: 0 }))
+              };
+
+              e.purchaseOrders = e.purchaseOrders.filter(p => p.po.toLowerCase() !== poNum.toLowerCase());
+              e.purchaseOrders.unshift(newPO);
+
+              // If Inventory PO, add inbound ASN to logistics receipts so it can be received in WMS!
+              if (purpose === 'INVENTORY') {
+                const newReceipt = {
+                  id: S.uid ? S.uid('rcv') : 'rcv_' + Date.now(),
+                  po: poNum,
+                  vendor: vendor.name,
+                  asn: 'ASN-' + poNum.replace(/[^0-9]/g, '').slice(-6),
+                  appointment: expectedArrivalDate ? new Date(expectedArrivalDate).toISOString() : new Date(Date.now() + 86400000).toISOString(),
+                  dock: 'D2',
+                  carrier: shippingMethod || 'UPS Freight',
+                  status: 'ARRIVED',
+                  invoice: 'INV-' + poNum.replace(/[^0-9]/g, '').slice(-6),
+                  invoiceTotal: totalCost,
+                  poTotal: totalCost,
+                  lines: lines.map(x => ({
+                    sku: x.sku,
+                    expected: x.qty,
+                    received: 0,
+                    damaged: 0,
+                    unitCost: x.cost
+                  }))
+                };
+                if (!l.receipts) l.receipts = [];
+                l.receipts.unshift(newReceipt);
+              }
+            });
+          } catch(err) {
+            console.error('Vendor PO creation error:', err);
+          }
+        }
+
+        sessionStorage.setItem('stark-toast-msg', `Purchase Order ${poNum} for ${vendorName} (${wh}) ${isPdf ? 'generated as PDF' : 'saved'} successfully.`);
 
         if (isPdf) {
           window.print();
         } else {
-          notice(`Purchase Order ${poNum} saved as Draft.`);
+          notice(`Purchase Order ${poNum} saved.`);
           setTimeout(() => {
             window.location.href = 'procurement/index.html';
-          }, 600);
+          }, 500);
         }
       }
 
@@ -1302,6 +1486,14 @@
         updateWarehouseAddress('Sarasota');
         recalculate();
         syncSummary();
+
+        // Live cross-tab and focus sync
+        window.addEventListener('storage', () => {
+          syncSummary();
+        });
+        window.addEventListener('focus', () => {
+          syncSummary();
+        });
       });
     })();
   </script>
