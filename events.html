@@ -2905,6 +2905,44 @@
           events.push(event);
         }
 
+        // As soon as an event PO is created, the quantity on the order for that item should be on hold automatically
+        try {
+          ['stark-item-master-catalog', 'stark.enterpriseItemMaster.customRecords.v2'].forEach(mKey => {
+            const raw = localStorage.getItem(mKey);
+            if (raw) {
+              const records = JSON.parse(raw);
+              if (Array.isArray(records)) {
+                (event.items || []).forEach(it => {
+                  const qty = Number(it.quantity) || 0;
+                  if (qty > 0 && it.model) {
+                    const mItem = records.find(x => (x.model && x.model.toLowerCase() === it.model.toLowerCase()) || (x.sku && x.sku.toLowerCase() === it.model.toLowerCase()));
+                    if (mItem) {
+                      mItem.onHold = (Number(mItem.onHold) || 0) + qty;
+                      mItem.totalATS = Math.max(0, (Number(mItem.onHand) || 0) - (Number(mItem.onHold) || 0));
+                      if (Array.isArray(mItem.warehouses)) {
+                        const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
+                        if (wh) {
+                          wh.onHold = (Number(wh.onHold) || 0) + qty;
+                          wh.ats = Math.max(0, (Number(wh.ats) || 0) - qty);
+                        }
+                      }
+                      mItem.history = mItem.history || [];
+                      mItem.history.unshift({
+                        time: new Date().toISOString(),
+                        type: 'Hold Reserved',
+                        text: `${qty} units put on hold for Event PO #${event.poNumber} (${event.customer})`,
+                        actor: 'Event Planner',
+                        delta: `+${qty} onHold`
+                      });
+                    }
+                  }
+                });
+                localStorage.setItem(mKey, JSON.stringify(records));
+              }
+            }
+          });
+        } catch (_) {}
+
         saveEvents();
         render();
         $("eventDialog").close();

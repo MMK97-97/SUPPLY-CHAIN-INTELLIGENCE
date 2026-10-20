@@ -1862,6 +1862,1254 @@
     };
   }
 
+  // -------------------------------------------------------------------------
+  // Item Detail Inspection Modal Helpers & Data Aggregators (7 Tabs)
+  // -------------------------------------------------------------------------
+
+  function ensureItemVendors(item) {
+    if (Array.isArray(item.vendors) && item.vendors.length > 0) {
+      return item.vendors;
+    }
+    const b = (item.brand || '').toLowerCase();
+    const s = (item.sku || '').toLowerCase();
+    let initialVendors = [];
+
+    if (b.includes('sony') || s.includes('sony')) {
+      initialVendors = [
+        { id: 'vend_sony', name: 'Sony Electronics Corp', code: 'VEND-001', vendorSku: (item.model || item.sku) + '-SNY', cost: Number(item.cost) || 278, leadTime: '7 days', moq: 25, isPrimary: true },
+        { id: 'vend_apex_dist', name: 'Apex Global Distribution', code: 'VEND-088', vendorSku: (item.model || item.sku) + '-DST', cost: Math.round((Number(item.cost) || 278) * 1.05), leadTime: '4 days', moq: 10, isPrimary: false }
+      ];
+    } else if (b.includes('apple') || s.includes('apple') || s.includes('airpod')) {
+      initialVendors = [
+        { id: 'vend_apple', name: 'Apple Distribution North America', code: 'VEND-002', vendorSku: (item.model || item.sku) + '-APL', cost: Number(item.cost) || 185, leadTime: '5 days', moq: 50, isPrimary: true },
+        { id: 'vend_apex_dist', name: 'Apex Global Distribution', code: 'VEND-088', vendorSku: (item.model || item.sku) + '-DST', cost: Math.round((Number(item.cost) || 185) * 1.06), leadTime: '3 days', moq: 15, isPrimary: false }
+      ];
+    } else if (b.includes('kendra') || s.includes('ks-')) {
+      initialVendors = [
+        { id: 'vend_ks', name: 'Kendra Scott Wholesale', code: 'VEND-003', vendorSku: (item.model || item.sku) + '-KS', cost: Number(item.cost) || 62, leadTime: '10 days', moq: 20, isPrimary: true }
+      ];
+    } else if (b.includes('new balance') || s.includes('nb-')) {
+      initialVendors = [
+        { id: 'vend_nb', name: 'New Balance Athletics Inc', code: 'VEND-004', vendorSku: (item.model || item.sku) + '-NB', cost: Number(item.cost) || 65, leadTime: '14 days', moq: 50, isPrimary: true },
+        { id: 'vend_prime', name: 'Prime Sports Logistics', code: 'VEND-042', vendorSku: (item.model || item.sku) + '-PRM', cost: Math.round((Number(item.cost) || 65) * 1.08), leadTime: '6 days', moq: 25, isPrimary: false }
+      ];
+    } else {
+      const estimatedCost = Number(item.cost) > 0 ? Number(item.cost) : (Number(item.standardPrice) ? Math.round(Number(item.standardPrice) * 0.70) : 50);
+      initialVendors = [
+        { id: 'vend_global', name: 'Global Supply Distribution Hub', code: 'VEND-100', vendorSku: (item.model || item.sku) + '-GBL', cost: estimatedCost, leadTime: '12 days', moq: 20, isPrimary: true },
+        { id: 'vend_apex_dist', name: 'Apex Global Distribution', code: 'VEND-088', vendorSku: (item.model || item.sku) + '-DST', cost: Math.round(estimatedCost * 1.08), leadTime: '5 days', moq: 10, isPrimary: false }
+      ];
+    }
+
+    item.vendors = initialVendors;
+    return item.vendors;
+  }
+
+  function getItemHistory(item) {
+    if (!Array.isArray(item.history)) item.history = [];
+
+    if (item.history.length === 0) {
+      const createdStamp = item.uploadedAt || new Date(Date.now() - 30 * 864e5).toISOString();
+      item.history.push({
+        id: 'h_' + Date.now().toString(36) + '1',
+        date: createdStamp,
+        type: 'CATALOG',
+        title: 'Master Catalog Ingestion',
+        detail: `Item created in master catalog via ${item.uploadSource || 'System Core'}. Initial price: ${money(item.standardPrice)}.`,
+        actor: 'Catalog Operations'
+      });
+      item.history.push({
+        id: 'h_' + Date.now().toString(36) + '2',
+        date: new Date(new Date(createdStamp).getTime() + 864e5 * 2).toISOString(),
+        type: 'INVENTORY',
+        title: 'Baseline ATS Synchronization',
+        detail: `Initial Available-to-Sell stock recorded: ${item.totalATS || 0} units distributed across warehouses.`,
+        actor: 'WMS Connector'
+      });
+      if (item.onHold > 0) {
+        item.history.push({
+          id: 'h_' + Date.now().toString(36) + '3',
+          date: new Date(Date.now() - 864e5 * 3).toISOString(),
+          type: 'HOLD',
+          title: 'Hold PO Allocation Reserved',
+          detail: `${item.onHold} units placed on hold for pending partner programs and event commitments.`,
+          actor: 'Order Management Desk'
+        });
+      }
+      item.history.push({
+        id: 'h_' + Date.now().toString(36) + '4',
+        date: new Date(Date.now() - 864e5 * 1).toISOString(),
+        type: 'INTEGRATION',
+        title: 'Outbound Feed Channel Sync',
+        detail: `ATS availability published to Shopify D2C, Amazon BuyBox, and EDI 846 networks.`,
+        actor: 'Syndication Dispatcher'
+      });
+    }
+
+    // Sort descending by date
+    return item.history.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  function getItemCustomerSales(item) {
+    const skuLower = (item.sku || '').toLowerCase();
+    const modelLower = (item.model || '').toLowerCase();
+    const salesMap = {};
+
+    // 1. Search StarkSystem unified orders
+    if (S && S.getState) {
+      try {
+        const sysState = S.getState();
+        const accounts = sysState.enterprise?.accounts || [];
+        const orders = sysState.enterprise?.orders || [];
+
+        orders.forEach(ord => {
+          const matchingLines = (ord.lines || []).filter(l => {
+            const lSku = (l.sku || '').toLowerCase();
+            return lSku === skuLower || lSku === modelLower || lSku.includes(skuLower) || (skuLower && skuLower.includes(lSku));
+          });
+          if (matchingLines.length > 0) {
+            const acct = accounts.find(a => a.id === ord.accountId);
+            const custName = acct?.name || ord.shipping?.name || ord.accountId || 'Enterprise Client';
+            if (!salesMap[custName]) {
+              salesMap[custName] = { customer: custName, units: 0, revenue: 0, orderCount: 0, types: new Set(), lastDate: ord.createdAt || ord.updatedAt || '', status: ord.status || 'ALLOCATED' };
+            }
+            matchingLines.forEach(l => {
+              const q = Number(l.qty) || 0;
+              const p = Number(l.price) || item.standardPrice;
+              salesMap[custName].units += q;
+              salesMap[custName].revenue += q * p;
+            });
+            salesMap[custName].orderCount += 1;
+            salesMap[custName].types.add(ord.type || 'STANDARD_PO');
+            if (new Date(ord.createdAt || 0) > new Date(salesMap[custName].lastDate || 0)) {
+              salesMap[custName].lastDate = ord.createdAt;
+              salesMap[custName].status = ord.status;
+            }
+          }
+        });
+      } catch (_) {}
+    }
+
+    // 2. Search localStorage stark-enterprise-orders
+    try {
+      const rawOrders = localStorage.getItem('stark-enterprise-orders');
+      if (rawOrders) {
+        const parsed = JSON.parse(rawOrders);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(ord => {
+            const lines = ord.lines || [];
+            const matchingLines = lines.filter(l => {
+              const lSku = (l.sku || '').toLowerCase();
+              const lDesc = (l.description || '').toLowerCase();
+              return lSku === skuLower || lSku === modelLower || lDesc.includes(modelLower) || lDesc.includes(skuLower);
+            });
+            if (matchingLines.length > 0) {
+              const custName = ord.customer || 'Enterprise Direct Client';
+              if (!salesMap[custName]) {
+                salesMap[custName] = { customer: custName, units: 0, revenue: 0, orderCount: 0, types: new Set(), lastDate: ord.date || '', status: ord.status || 'CONFIRMED' };
+              }
+              matchingLines.forEach(l => {
+                const q = Number(l.qty) || 0;
+                const p = Number(l.unitPrice) || item.standardPrice;
+                salesMap[custName].units += q;
+                salesMap[custName].revenue += q * p;
+              });
+              salesMap[custName].orderCount += 1;
+              salesMap[custName].types.add(ord.orderType || ord.purpose || 'Standard PO');
+              if (new Date(ord.date || 0) > new Date(salesMap[custName].lastDate || 0)) {
+                salesMap[custName].lastDate = ord.date;
+                salesMap[custName].status = ord.status || 'CONFIRMED';
+              }
+            }
+          });
+        }
+      }
+    } catch (_) {}
+
+    // 3. Fallback realistic sales distribution if no matching orders exist yet
+    if (Object.keys(salesMap).length === 0) {
+      salesMap['Northstar Auto Programs'] = {
+        customer: 'Northstar Auto Programs',
+        units: 24,
+        revenue: 24 * (item.standardPrice || 100),
+        orderCount: 3,
+        types: new Set(['Hold PO', 'Event Order']),
+        lastDate: new Date(Date.now() - 864e5 * 2).toISOString(),
+        status: 'ALLOCATED'
+      };
+      salesMap['Apex Incentives & Loyalty'] = {
+        customer: 'Apex Incentives & Loyalty',
+        units: 18,
+        revenue: 18 * (item.standardPrice || 100),
+        orderCount: 2,
+        types: new Set(['Bulk PO']),
+        lastDate: new Date(Date.now() - 864e5 * 4).toISOString(),
+        status: 'SHIPPED'
+      };
+      salesMap['Global Rewards Group'] = {
+        customer: 'Global Rewards Group',
+        units: 12,
+        revenue: 12 * (item.standardPrice || 100),
+        orderCount: 1,
+        types: new Set(['Standard PO']),
+        lastDate: new Date(Date.now() - 864e5 * 10).toISOString(),
+        status: 'DELIVERED'
+      };
+    }
+
+    const list = Object.values(salesMap).map(row => ({
+      ...row,
+      types: Array.from(row.types).join(', ')
+    })).sort((a, b) => b.revenue - a.revenue);
+
+    const totalUnits = list.reduce((acc, c) => acc + c.units, 0);
+    const totalRevenue = list.reduce((acc, c) => acc + c.revenue, 0);
+
+    return { list, totalUnits, totalRevenue, topCustomer: list[0]?.customer || '—' };
+  }
+
+  function getItemFeeds(item) {
+    const ats = Number(item.totalATS) || 0;
+    return [
+      {
+        channel: 'Shopify D2C Storefront',
+        id: 'FEED-SHOPIFY-US',
+        format: 'REST API / Webhook v2',
+        cadence: 'Real-time Webhook',
+        unitsFed: ats,
+        status: 'ACTIVE',
+        lastSync: '3 minutes ago',
+        notes: 'Pushes inventory delta instantly on order or inbound receipt'
+      },
+      {
+        channel: 'Amazon BuyBox & Seller Central',
+        id: 'FEED-AMZN-SP-API',
+        format: 'Amazon SP-API (JSON / XML)',
+        cadence: 'Every 15 mins',
+        unitsFed: Math.max(0, ats - 2),
+        status: 'ACTIVE',
+        lastSync: '12 minutes ago',
+        notes: 'Applies 2-unit safety buffer to eliminate out-of-stock BuyBox penalties'
+      },
+      {
+        channel: 'Northstar Auto B2B Rewards Portal',
+        id: 'FEED-NORTHSTAR-EDI846',
+        format: 'ANSI X12 EDI 846 (v004010)',
+        cadence: 'Hourly Batch',
+        unitsFed: ats,
+        status: 'ACTIVE',
+        lastSync: '38 minutes ago',
+        notes: 'Automated dealer program allocation with priority hold reservations'
+      },
+      {
+        channel: 'Apex Incentives Loyalty Gateway',
+        id: 'FEED-APEX-PULL-API',
+        format: 'GraphQL / JSON Stream',
+        cadence: 'Every 30 mins',
+        unitsFed: ats,
+        status: 'ACTIVE',
+        lastSync: '22 minutes ago',
+        notes: 'Syncs enterprise prize catalog & bulk corporate award points'
+      },
+      {
+        channel: 'Global Token & Voucher Exchange',
+        id: 'FEED-GTX-DIGITAL-REST',
+        format: 'REST JSON Payload',
+        cadence: 'Real-time API',
+        unitsFed: ats,
+        status: 'ACTIVE',
+        lastSync: '6 minutes ago',
+        notes: 'Immediate token reservation sync across multi-region digital vault'
+      },
+      {
+        channel: 'Sarasota Wholesale EDI Network',
+        id: 'FEED-EDI-846-SARASOTA',
+        format: 'EDI 846 Inventory Ingest',
+        cadence: 'Daily at 06:00 UTC',
+        unitsFed: ats,
+        status: 'ACTIVE',
+        lastSync: '2 hours ago',
+        notes: 'Wholesale distributor catalog broadcast with volume pricing tiers'
+      }
+    ];
+  }
+
+  function getItemPurchaseOrders(item) {
+    const skuLower = (item.sku || '').toLowerCase();
+    const modelLower = (item.model || '').toLowerCase();
+    const pos = [];
+
+    if (S && S.getState) {
+      try {
+        const sysState = S.getState();
+        const sysPOs = sysState.enterprise?.purchaseOrders || [];
+        const vendors = sysState.enterprise?.vendors || [];
+
+        sysPOs.forEach(p => {
+          const matchLine = (p.lines || []).find(l => {
+            const lSku = (l.sku || '').toLowerCase();
+            return lSku === skuLower || lSku === modelLower || lSku.includes(skuLower) || (skuLower && skuLower.includes(lSku));
+          });
+          if (matchLine) {
+            const vName = vendors.find(v => v.id === p.vendorId)?.name || 'Authorized Supplier';
+            pos.push({
+              po: p.po,
+              vendor: vName,
+              purpose: p.purpose || 'Inventory Replenishment',
+              qty: Number(matchLine.qty) || 0,
+              received: Number(matchLine.received) || 0,
+              balance: Math.max(0, (Number(matchLine.qty) || 0) - (Number(matchLine.received) || 0)),
+              unitCost: Number(matchLine.cost) || item.cost || 0,
+              totalCost: (Number(matchLine.qty) || 0) * (Number(matchLine.cost) || item.cost || 0),
+              eta: p.eta ? new Date(p.eta).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Nov 04, 2026',
+              carrier: p.carrier || 'FedEx Priority',
+              tracking: p.tracking || 'TRK772839410192',
+              status: p.status || 'PO_ISSUED'
+            });
+          }
+        });
+      } catch (_) {}
+    }
+
+    if (pos.length === 0) {
+      const vName = item.vendors?.[0]?.name || (item.brand + ' Distribution Hub');
+      const unitCost = Number(item.cost) > 0 ? Number(item.cost) : (item.standardPrice * 0.72);
+      const onOrderQty = Number(item.onOrder) || 50;
+
+      pos.push({
+        po: item.poNumber || 'PO-2026-887411',
+        vendor: vName,
+        purpose: 'Inventory Replenishment',
+        qty: onOrderQty,
+        received: Math.round(onOrderQty * 0.4),
+        balance: Math.round(onOrderQty * 0.6),
+        unitCost: unitCost,
+        totalCost: onOrderQty * unitCost,
+        eta: 'Nov 02, 2026',
+        carrier: 'FedEx Freight',
+        tracking: 'TRK772839410192',
+        status: onOrderQty > 0 ? 'DISPATCHED' : 'RECEIVED'
+      });
+
+      pos.push({
+        po: 'PO-2026-887480',
+        vendor: vName,
+        purpose: 'Event PO Buffer',
+        qty: 30,
+        received: 30,
+        balance: 0,
+        unitCost: unitCost,
+        totalCost: 30 * unitCost,
+        eta: 'Oct 24, 2026',
+        carrier: 'UPS Ground',
+        tracking: '1ZDEMO887480',
+        status: 'RECEIVED'
+      });
+    }
+
+    return pos;
+  }
+
+  function getItemShippingActivity(item) {
+    const skuLower = (item.sku || '').toLowerCase();
+    const modelLower = (item.model || '').toLowerCase();
+    const shipments = [];
+
+    if (S && S.getState) {
+      try {
+        const sysState = S.getState();
+        const packing = sysState.logistics?.packing || [];
+        packing.forEach(pk => {
+          const pkSku = (pk.sku || '').toLowerCase();
+          if (pkSku === skuLower || pkSku === modelLower || pkSku.includes(skuLower) || (skuLower && skuLower.includes(pkSku))) {
+            shipments.push({
+              tracking: pk.tracking || ('1Z' + Math.random().toString(36).substring(2, 11).toUpperCase()),
+              carrier: (pk.carrier || 'UPS') + ' ' + (pk.service || 'Ground'),
+              orderRef: pk.order || 'ORD-87366',
+              recipient: (pk.agency || 'Corporate Client') + ' · ' + (pk.program || 'Fulfillment'),
+              qty: Number(pk.qty) || 1,
+              date: '2 hours ago',
+              carton: pk.carton || 'CTN-87366-001',
+              status: pk.status || 'LABEL_CREATED'
+            });
+          }
+        });
+      } catch (_) {}
+    }
+
+    if (shipments.length === 0) {
+      shipments.push({
+        tracking: '1ZDEMO87366001',
+        carrier: 'UPS Ground',
+        orderRef: '87366-R001',
+        recipient: 'Northstar Auto Winner · Tampa, FL',
+        qty: 8,
+        date: 'Oct 17, 2026 · 14:22',
+        carton: 'CTN-87366-001',
+        status: 'DELIVERED'
+      });
+      shipments.push({
+        tracking: 'FDX98273619283',
+        carrier: 'FedEx Express Priority',
+        orderRef: '88211-BLK',
+        recipient: 'Apex DC 03 Distribution · Dallas, TX',
+        qty: 12,
+        date: 'Oct 18, 2026 · 09:15',
+        carton: 'CTN-88211-004',
+        status: 'IN_TRANSIT'
+      });
+      shipments.push({
+        tracking: '1ZDEMO88405012',
+        carrier: 'UPS Next Day Air',
+        orderRef: '88405-R01',
+        recipient: 'Executive Incentive Awards · Chicago, IL',
+        qty: 4,
+        date: 'Oct 19, 2026 · 11:40',
+        carton: 'CTN-88405-012',
+        status: 'DELIVERED'
+      });
+    }
+
+    return shipments;
+  }
+
+  function openItemDetailModal(item, initialTab) {
+    document.querySelector('.im-detail-modal-overlay')?.remove();
+
+    ensureItemVendors(item);
+    getItemHistory(item);
+
+    let activeTab = initialTab || 'details';
+    const svg = productSVGs[item.sku] || fallbackProductSVG;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'im-detail-modal-overlay';
+    overlay.id = 'im-detail-modal-overlay';
+
+    overlay.innerHTML = `
+      <div class="im-detail-modal-card" role="dialog" aria-modal="true" aria-labelledby="im-detail-title-h">
+        <!-- Modal Top Header -->
+        <div class="im-detail-header">
+          <div class="im-detail-header-left">
+            <div class="im-detail-icon-wrap">
+              ${svg}
+            </div>
+            <div class="im-detail-header-meta">
+              <div class="im-detail-badge-line">
+                <span class="im-detail-brand-badge">${esc(item.brand)}</span>
+                ${getStatusBadgeHtml(item.status)}
+                <span class="im-detail-sku-pill">${esc(item.sku)}</span>
+              </div>
+              <h2 class="im-detail-title" id="im-detail-title-h" title="${esc(item.title)}">${esc(item.title)}</h2>
+              <div class="im-detail-subline">Model: <strong>${esc(item.model)}</strong> &nbsp;|&nbsp; Category: ${(item.tags || []).join(', ') || 'General Catalog'}</div>
+            </div>
+          </div>
+          <div class="im-detail-header-right">
+            <div class="im-detail-header-kpis">
+              <div class="im-header-kpi teal">
+                <span class="im-header-kpi-label">Available (ATS)</span>
+                <span class="im-header-kpi-val" id="im-modal-ats-val">${num(item.totalATS)}</span>
+              </div>
+              <div class="im-header-kpi">
+                <span class="im-header-kpi-label">Std Price</span>
+                <span class="im-header-kpi-val">${money(item.standardPrice)}</span>
+              </div>
+              <div class="im-header-kpi">
+                <span class="im-header-kpi-label">On Hold</span>
+                <span class="im-header-kpi-val">${num(item.onHold || 0)}</span>
+              </div>
+            </div>
+            <button class="im-detail-close-btn" type="button" aria-label="Close modal">✕</button>
+          </div>
+        </div>
+
+        <!-- 7-Tab Navigation Bar -->
+        <div class="im-detail-nav" role="tablist">
+          <button class="im-detail-tab-btn ${activeTab === 'details' ? 'active' : ''}" type="button" data-tab="details">Item Details</button>
+          <button class="im-detail-tab-btn ${activeTab === 'vendors' ? 'active' : ''}" type="button" data-tab="vendors">Vendor (Add or Delete)</button>
+          <button class="im-detail-tab-btn ${activeTab === 'history' ? 'active' : ''}" type="button" data-tab="history">Item History</button>
+          <button class="im-detail-tab-btn ${activeTab === 'sales' ? 'active' : ''}" type="button" data-tab="sales">Sales by the Customer</button>
+          <button class="im-detail-tab-btn ${activeTab === 'feeds' ? 'active' : ''}" type="button" data-tab="feeds">Whom It's Getting Feed To</button>
+          <button class="im-detail-tab-btn ${activeTab === 'pos' ? 'active' : ''}" type="button" data-tab="pos">PO's</button>
+          <button class="im-detail-tab-btn ${activeTab === 'shipping' ? 'active' : ''}" type="button" data-tab="shipping">Shipping Activity</button>
+        </div>
+
+        <!-- Dynamic Content Body -->
+        <div class="im-detail-body" id="im-detail-body">
+        </div>
+
+        <!-- Modal Bottom Footer -->
+        <div class="im-detail-footer">
+          <div class="im-detail-footer-sync">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle; margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>
+            Synchronized with Unified Enterprise State &amp; Master Catalog
+          </div>
+          <div style="display:flex; gap:8px">
+            <button class="im-detail-action-btn" type="button" id="im-detail-btn-edit">Edit Item Specifications</button>
+            <button class="im-detail-action-btn primary" type="button" id="im-detail-btn-close">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const bodyEl = overlay.querySelector('#im-detail-body');
+
+    function renderTab(tabKey) {
+      activeTab = tabKey;
+      overlay.querySelectorAll('.im-detail-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabKey);
+      });
+
+      if (tabKey === 'details') {
+        renderDetailsTab();
+      } else if (tabKey === 'vendors') {
+        renderVendorsTab();
+      } else if (tabKey === 'history') {
+        renderHistoryTab();
+      } else if (tabKey === 'sales') {
+        renderSalesTab();
+      } else if (tabKey === 'feeds') {
+        renderFeedsTab();
+      } else if (tabKey === 'pos') {
+        renderPOsTab();
+      } else if (tabKey === 'shipping') {
+        renderShippingTab();
+      }
+    }
+
+    // ----------------------------------------------------
+    // TAB 1: Item Details
+    // ----------------------------------------------------
+    function renderDetailsTab() {
+      const price = Number(item.standardPrice) || 0;
+      const cost = Number(item.cost) || 0;
+      const margin = price - cost;
+      const marginPct = price > 0 ? ((margin / price) * 100).toFixed(1) : '0.0';
+      const ats = Number(item.totalATS) || 0;
+      const onHold = Number(item.onHold) || 0;
+      const onOrder = Number(item.onOrder) || 0;
+      const physicalStock = ats + onHold;
+
+      bodyEl.innerHTML = `
+        <div class="im-detail-grid-4" style="margin-bottom:18px">
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Standard Price</span>
+            <div class="im-kpi-stat-value">${money(price)}</div>
+            <span class="im-kpi-stat-sub">MSRP / Baseline Catalog</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Unit Cost &amp; Margin</span>
+            <div class="im-kpi-stat-value">${cost > 0 ? money(cost) : '—'}</div>
+            <span class="im-kpi-stat-sub" style="color:#059669; font-weight:600">Margin: ${cost > 0 ? money(margin) + ' (' + marginPct + '%)' : 'N/A'}</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Available to Sell (ATS)</span>
+            <div class="im-kpi-stat-value" style="color:#087f78">${num(ats)}</div>
+            <span class="im-kpi-stat-sub">Sellable Across All Channels</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Hold &amp; Inbound Orders</span>
+            <div class="im-kpi-stat-value">${num(onHold)} <span style="font-size:13px; font-weight:400; color:#64748b">/ ${num(onOrder)} PO</span></div>
+            <span class="im-kpi-stat-sub">${onHold} On Hold · ${onOrder} On Order</span>
+          </div>
+        </div>
+
+        <div class="im-detail-card-panel">
+          <h3 class="im-detail-panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+            Warehouse Stock Allocation &amp; Bin Locations
+          </h3>
+          <table class="im-detail-table">
+            <thead>
+              <tr>
+                <th>Warehouse Name</th>
+                <th>Physical On Hand</th>
+                <th>On Hold</th>
+                <th>Available (ATS)</th>
+                <th>Default Storage Bin</th>
+                <th>Bin Utilization</th>
+                <th style="text-align:right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(item.warehouses || [
+                { name: 'Sarasota DC', ats: ats },
+                { name: 'Demo_3PL', ats: 0 },
+                { name: 'TX DC', ats: 0 }
+              ]).map((w, idx) => {
+                const whAts = Number(w.ats) || 0;
+                const whHold = idx === 0 ? onHold : 0;
+                const whOnHand = whAts + whHold;
+                const binCode = idx === 0 ? 'A-01-R1-B' + (1 + (item.sku.length % 8)) : (idx === 1 ? '3PL-EAST-BIN' : 'TX-SEC-01');
+                return `
+                  <tr>
+                    <td><strong>${esc(w.name)}</strong></td>
+                    <td>${num(whOnHand)}</td>
+                    <td><span class="sys-badge amber">${num(whHold)}</span></td>
+                    <td><span class="sys-badge green" style="font-weight:700">${num(whAts)} ATS</span></td>
+                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600">${binCode}</code></td>
+                    <td><span style="color:#64748b; font-size:12px">Primary Pick Active</span></td>
+                    <td style="text-align:right">
+                      <a href="${S ? S.url('warehouse-management/inventory-bins.html?sku=' + encodeURIComponent(item.sku)) : 'warehouse-management/inventory-bins.html'}" class="im-detail-action-btn" style="text-decoration:none; padding:3px 8px; font-size:11.5px">Inspect Bins →</a>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="im-detail-card-panel">
+          <h3 class="im-detail-panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Master Catalog Core Attributes
+          </h3>
+          <div class="im-detail-grid-2">
+            <div>
+              <table class="im-detail-table" style="font-size:12.5px">
+                <tr><td style="width:130px; color:#64748b; font-weight:600">Model #</td><td><strong>${esc(item.model)}</strong></td></tr>
+                <tr><td style="color:#64748b; font-weight:600">Master SKU</td><td><code>${esc(item.sku)}</code></td></tr>
+                <tr><td style="color:#64748b; font-weight:600">Brand</td><td>${esc(item.brand)}</td></tr>
+                <tr><td style="color:#64748b; font-weight:600">Lifecycle Status</td><td>${getStatusBadgeHtml(item.status)}</td></tr>
+              </table>
+            </div>
+            <div>
+              <table class="im-detail-table" style="font-size:12.5px">
+                <tr><td style="width:130px; color:#64748b; font-weight:600">PO Number</td><td>${esc(item.poNumber || '—')}</td></tr>
+                <tr><td style="color:#64748b; font-weight:600">Upload Source</td><td>${esc(item.uploadSource || 'Standard Master Catalog')}</td></tr>
+                <tr><td style="color:#64748b; font-weight:600">Catalog Timestamp</td><td>${esc(formatDate(item.uploadedAt))}</td></tr>
+                <tr><td style="color:#64748b; font-weight:600">Tags</td><td>${(item.tags || []).map(t => `<span class="sys-badge gray">${esc(t)}</span>`).join(' ') || 'None'}</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------
+    // TAB 2: Vendor (Add or Delete)
+    // ----------------------------------------------------
+    function renderVendorsTab() {
+      const vendors = ensureItemVendors(item);
+
+      bodyEl.innerHTML = `
+        <div class="im-detail-card-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 class="im-detail-panel-title" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Assigned Suppliers &amp; Procurement Vendors (${vendors.length})
+            </h3>
+            <span style="font-size:12px; color:#64748b">Manage authorized suppliers for this item. Add or remove vendors below.</span>
+          </div>
+
+          ${vendors.length === 0 ? `
+            <div style="text-align:center; padding:32px 16px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1; color:#64748b">
+              <p style="margin:0 0 8px; font-weight:600; color:#1e293b">No vendors currently assigned to this item</p>
+              <span style="font-size:12px">Use the "Add Vendor" form below to assign an authorized supplier.</span>
+            </div>
+          ` : `
+            <table class="im-detail-table">
+              <thead>
+                <tr>
+                  <th>Vendor / Supplier Name</th>
+                  <th>Vendor Code</th>
+                  <th>Supplier Part # / SKU</th>
+                  <th>Unit Cost ($)</th>
+                  <th>Lead Time</th>
+                  <th>MOQ</th>
+                  <th>Supplier Role</th>
+                  <th style="text-align:right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${vendors.map(v => `
+                  <tr>
+                    <td><strong>${esc(v.name)}</strong></td>
+                    <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px">${esc(v.code || v.id || 'VEND')}</code></td>
+                    <td>${esc(v.vendorSku || item.model + '-VND')}</td>
+                    <td><strong>${money(v.cost || item.cost || 0)}</strong></td>
+                    <td>${esc(v.leadTime || '7 days')}</td>
+                    <td>${num(v.moq || 25)} units</td>
+                    <td>
+                      ${v.isPrimary ? '<span class="sys-badge green">★ Primary Supplier</span>' : '<span class="sys-badge gray">Secondary / Backup</span>'}
+                    </td>
+                    <td style="text-align:right">
+                      <button class="im-detail-action-btn danger btn-del-vendor" data-vendor-id="${esc(v.id || v.code)}" type="button" style="padding:4px 10px; font-size:12px">
+                        🗑 Delete
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `}
+        </div>
+
+        <div class="im-detail-card-panel" style="background:#f8fafc; border:1px solid #cbd5e1">
+          <h3 class="im-detail-panel-title" style="color:#0f172a">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Vendor to Item
+          </h3>
+          <form id="im-add-vendor-form" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; align-items:flex-end">
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px">Select Supplier Preset</label>
+              <select id="vform-preset" style="width:100%; height:36px; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; background:#fff">
+                <option value="">-- Choose or type custom below --</option>
+                <option value="Sony Electronics Corp|VEND-001|7 days|25">Sony Electronics (VEND-001)</option>
+                <option value="Apple Distribution NA|VEND-002|5 days|50">Apple Distribution (VEND-002)</option>
+                <option value="Kendra Scott Wholesale|VEND-003|10 days|20">Kendra Scott Wholesale (VEND-003)</option>
+                <option value="New Balance Athletics|VEND-004|14 days|50">New Balance Athletics (VEND-004)</option>
+                <option value="Apex Global Distribution|VEND-088|4 days|10">Apex Global Logistics (VEND-088)</option>
+                <option value="Global Voucher Aggregator|VEND-099|1 day|100">Global Voucher Aggregator (VEND-099)</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px">Vendor Name *</label>
+              <input type="text" id="vform-name" required placeholder="e.g. Apex Global Logistics" style="width:100%; height:36px; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; background:#fff; box-sizing:border-box">
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px">Vendor Code / ID *</label>
+              <input type="text" id="vform-code" required placeholder="e.g. VEND-088" style="width:100%; height:36px; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; background:#fff; box-sizing:border-box">
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px">Supplier Part / SKU #</label>
+              <input type="text" id="vform-part" value="${esc(item.model)}-VND" placeholder="Part #" style="width:100%; height:36px; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; background:#fff; box-sizing:border-box">
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px">Unit Cost ($) *</label>
+              <input type="number" step="0.01" id="vform-cost" required value="${(Number(item.cost) || (Number(item.standardPrice) ? Number(item.standardPrice) * 0.7 : 50)).toFixed(2)}" style="width:100%; height:36px; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; background:#fff; box-sizing:border-box">
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px">Lead Time (Days)</label>
+              <input type="text" id="vform-lead" value="7 days" placeholder="e.g. 7 days" style="width:100%; height:36px; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; background:#fff; box-sizing:border-box">
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px">Min Order Qty (MOQ)</label>
+              <input type="number" id="vform-moq" value="25" min="1" style="width:100%; height:36px; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; background:#fff; box-sizing:border-box">
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; padding-bottom:8px">
+              <input type="checkbox" id="vform-primary" ${vendors.length === 0 ? 'checked' : ''} style="width:16px; height:16px">
+              <label for="vform-primary" style="font-size:12.5px; font-weight:600; color:#334155; cursor:pointer">Set as Primary Supplier</label>
+            </div>
+            <div style="text-align:right">
+              <button type="submit" class="im-detail-action-btn primary" style="width:100%; height:36px; font-weight:700">
+                + Add Vendor to Item
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+
+      // Preset change handler
+      const presetSel = bodyEl.querySelector('#vform-preset');
+      if (presetSel) {
+        presetSel.onchange = () => {
+          if (!presetSel.value) return;
+          const [pName, pCode, pLead, pMoq] = presetSel.value.split('|');
+          bodyEl.querySelector('#vform-name').value = pName || '';
+          bodyEl.querySelector('#vform-code').value = pCode || '';
+          bodyEl.querySelector('#vform-lead').value = pLead || '7 days';
+          bodyEl.querySelector('#vform-moq').value = pMoq || '25';
+        };
+      }
+
+      // Delete vendor handler
+      bodyEl.querySelectorAll('.btn-del-vendor').forEach(btn => {
+        btn.onclick = () => {
+          const vId = btn.dataset.vendorId;
+          const targetVendor = item.vendors.find(v => (v.id || v.code) === vId);
+          item.vendors = item.vendors.filter(v => (v.id || v.code) !== vId);
+
+          // Add history entry
+          item.history = item.history || [];
+          item.history.unshift({
+            id: 'h_' + Date.now().toString(36),
+            date: new Date().toISOString(),
+            type: 'VENDOR',
+            title: 'Vendor Removed',
+            detail: `Removed supplier "${targetVendor ? targetVendor.name : vId}" from item configuration.`,
+            actor: 'Vendor Operations'
+          });
+
+          const all = getItemMasterRecords();
+          const idx = all.findIndex(x => x.sku === item.sku);
+          if (idx !== -1) all[idx] = item;
+          saveCatalog(all);
+
+          notice(`Vendor removed from ${item.sku}.`);
+          renderTab('vendors');
+        };
+      });
+
+      // Add vendor form submit
+      const addForm = bodyEl.querySelector('#im-add-vendor-form');
+      if (addForm) {
+        addForm.onsubmit = e => {
+          e.preventDefault();
+          const name = bodyEl.querySelector('#vform-name').value.trim();
+          const code = bodyEl.querySelector('#vform-code').value.trim();
+          const part = bodyEl.querySelector('#vform-part').value.trim();
+          const cost = Number(bodyEl.querySelector('#vform-cost').value) || 0;
+          const lead = bodyEl.querySelector('#vform-lead').value.trim() || '7 days';
+          const moq = Number(bodyEl.querySelector('#vform-moq').value) || 1;
+          const isPrimary = bodyEl.querySelector('#vform-primary').checked;
+
+          if (!name || !code) {
+            notice('Vendor Name and Code are required.', true);
+            return;
+          }
+
+          if (isPrimary) {
+            item.vendors.forEach(v => { v.isPrimary = false; });
+          }
+
+          const newV = {
+            id: 'vend_' + Date.now().toString(36),
+            name,
+            code,
+            vendorSku: part || (item.model + '-VND'),
+            cost,
+            leadTime: lead,
+            moq,
+            isPrimary
+          };
+
+          item.vendors.unshift(newV);
+
+          // Add history entry
+          item.history = item.history || [];
+          item.history.unshift({
+            id: 'h_' + Date.now().toString(36),
+            date: new Date().toISOString(),
+            type: 'VENDOR',
+            title: 'Vendor Assigned',
+            detail: `Assigned new supplier "${name}" (${code}) at unit cost ${money(cost)}. Primary: ${isPrimary ? 'Yes' : 'No'}.`,
+            actor: 'Vendor Desk'
+          });
+
+          const all = getItemMasterRecords();
+          const idx = all.findIndex(x => x.sku === item.sku);
+          if (idx !== -1) all[idx] = item;
+          saveCatalog(all);
+
+          notice(`Vendor ${name} successfully assigned to ${item.sku}.`);
+          renderTab('vendors');
+        };
+      }
+    }
+
+    // ----------------------------------------------------
+    // TAB 3: Item History
+    // ----------------------------------------------------
+    function renderHistoryTab() {
+      const historyList = getItemHistory(item);
+
+      bodyEl.innerHTML = `
+        <div class="im-detail-card-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">
+            <h3 class="im-detail-panel-title" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Complete Item Lifecycle Audit Trail (${historyList.length})
+            </h3>
+            <span style="font-size:12px; color:#64748b">Chronological log of master changes, stock syncs, pricing updates, and allocations</span>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:12px">
+            ${historyList.map(h => {
+              const badgeType = h.type === 'HOLD' ? 'amber' : h.type === 'CATALOG' ? 'teal' : h.type === 'PRICING' ? 'blue' : h.type === 'VENDOR' ? 'purple' : 'gray';
+              return `
+                <div style="display:flex; gap:14px; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; align-items:flex-start">
+                  <div style="min-width:130px; font-size:11.5px; color:#64748b; font-weight:600">
+                    <div>${esc(formatDate(h.date))}</div>
+                    <span class="sys-badge ${badgeType}" style="margin-top:4px; display:inline-block">${esc(h.type || 'AUDIT')}</span>
+                  </div>
+                  <div style="flex:1">
+                    <strong style="color:#0f172a; font-size:13.5px">${esc(h.title)}</strong>
+                    <p style="margin:4px 0 0; font-size:12.5px; color:#334155">${esc(h.detail)}</p>
+                  </div>
+                  <div style="font-size:11.5px; color:#94a3b8; text-align:right">
+                    <span style="display:block; color:#475569; font-weight:600">Actor</span>
+                    ${esc(h.actor || 'System Operations')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------
+    // TAB 4: Sales by the Customer
+    // ----------------------------------------------------
+    function renderSalesTab() {
+      const sales = getItemCustomerSales(item);
+
+      bodyEl.innerHTML = `
+        <div class="im-detail-grid-4" style="margin-bottom:18px">
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Total Customer Units</span>
+            <div class="im-kpi-stat-value" style="color:#087f78">${num(sales.totalUnits)}</div>
+            <span class="im-kpi-stat-sub">Lifetime Purchased Units</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Total Gross Sales</span>
+            <div class="im-kpi-stat-value">${money(sales.totalRevenue)}</div>
+            <span class="im-kpi-stat-sub">Aggregated Customer Revenue</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Purchasing Accounts</span>
+            <div class="im-kpi-stat-value">${sales.list.length}</div>
+            <span class="im-kpi-stat-sub">Distinct Enterprise Clients</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Top Client</span>
+            <div class="im-kpi-stat-value" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="${esc(sales.topCustomer)}">${esc(sales.topCustomer)}</div>
+            <span class="im-kpi-stat-sub">Highest Volume Buyer</span>
+          </div>
+        </div>
+
+        <div class="im-detail-card-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 class="im-detail-panel-title" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Customer Order &amp; Sales Breakdown for ${esc(item.sku)}
+            </h3>
+            <span style="font-size:12px; color:#64748b">Cross-referenced with enterprise order books and customer accounts</span>
+          </div>
+
+          <table class="im-detail-table">
+            <thead>
+              <tr>
+                <th>Customer / Account Name</th>
+                <th>Units Purchased</th>
+                <th>Total Revenue ($)</th>
+                <th>Order Count</th>
+                <th>Order Types Utilized</th>
+                <th>Latest Order Date</th>
+                <th>Fulfillment Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sales.list.map(c => `
+                <tr>
+                  <td><strong>${esc(c.customer)}</strong></td>
+                  <td><strong>${num(c.units)}</strong> units</td>
+                  <td style="color:#059669; font-weight:700">${money(c.revenue)}</td>
+                  <td>${num(c.orderCount)} orders</td>
+                  <td><span class="sys-badge blue" style="font-size:11.5px">${esc(c.types)}</span></td>
+                  <td>${esc(formatDate(c.lastDate))}</td>
+                  <td><span class="sys-badge green">${esc(c.status)}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------
+    // TAB 5: Whom It's Getting Feed To
+    // ----------------------------------------------------
+    function renderFeedsTab() {
+      const feeds = getItemFeeds(item);
+
+      bodyEl.innerHTML = `
+        <div class="im-detail-grid-4" style="margin-bottom:18px">
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Active Sales Feeds</span>
+            <div class="im-kpi-stat-value" style="color:#087f78">${feeds.length} Channels</div>
+            <span class="im-kpi-stat-sub">100% Syndication Health</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">ATS Live Feed Value</span>
+            <div class="im-kpi-stat-value">${num(item.totalATS)} Units</div>
+            <span class="im-kpi-stat-sub">Broadcasted Across Network</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Sync Protocols</span>
+            <div class="im-kpi-stat-value" style="font-size:15px">REST / EDI / SP-API</div>
+            <span class="im-kpi-stat-sub">Multi-protocol Gateway</span>
+          </div>
+          <div class="im-kpi-stat-box" style="display:flex; flex-direction:column; justify-content:center">
+            <button class="im-detail-action-btn primary" id="im-btn-sync-feeds" type="button" style="width:100%; height:38px; font-weight:700">
+              ⚡ Trigger Feed Sync Now
+            </button>
+          </div>
+        </div>
+
+        <div class="im-detail-card-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 class="im-detail-panel-title" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+              Outbound Channel Syndication Matrix
+            </h3>
+            <span style="font-size:12px; color:#64748b">External platforms, client portals, and marketplaces receiving inventory updates for this item</span>
+          </div>
+
+          <table class="im-detail-table">
+            <thead>
+              <tr>
+                <th>Destination Channel / Portal</th>
+                <th>Channel ID</th>
+                <th>Interface Protocol</th>
+                <th>Sync Cadence</th>
+                <th>Fed ATS Units</th>
+                <th>Last Push</th>
+                <th>Status</th>
+                <th>Integration Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${feeds.map(f => `
+                <tr>
+                  <td><strong>${esc(f.channel)}</strong></td>
+                  <td><code>${esc(f.id)}</code></td>
+                  <td><span class="sys-badge gray">${esc(f.format)}</span></td>
+                  <td>${esc(f.cadence)}</td>
+                  <td><strong style="color:#087f78">${num(f.unitsFed)}</strong></td>
+                  <td>${esc(f.lastSync)}</td>
+                  <td><span class="sys-badge green">● Live Sync</span></td>
+                  <td style="color:#64748b; font-size:12px">${esc(f.notes)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      const syncBtn = bodyEl.querySelector('#im-btn-sync-feeds');
+      if (syncBtn) {
+        syncBtn.onclick = () => {
+          syncBtn.disabled = true;
+          syncBtn.textContent = 'Syncing 6 Channels...';
+
+          setTimeout(() => {
+            // Add history entry
+            item.history = item.history || [];
+            item.history.unshift({
+              id: 'h_' + Date.now().toString(36),
+              date: new Date().toISOString(),
+              type: 'INTEGRATION',
+              title: 'Manual Feed Syndication Push',
+              detail: `Synchronized ${item.totalATS} ATS units across Shopify, Amazon BuyBox, Northstar EDI 846, and Apex portals.`,
+              actor: 'On-Demand Dispatcher'
+            });
+
+            const all = getItemMasterRecords();
+            const idx = all.findIndex(x => x.sku === item.sku);
+            if (idx !== -1) all[idx] = item;
+            saveCatalog(all);
+
+            notice(`Successfully published updated ATS feeds for ${item.sku} across all 6 outbound channels.`);
+            renderTab('feeds');
+          }, 350);
+        };
+      }
+    }
+
+    // ----------------------------------------------------
+    // TAB 6: PO's (Purchase Orders)
+    // ----------------------------------------------------
+    function renderPOsTab() {
+      const pos = getItemPurchaseOrders(item);
+      const totalOrdered = pos.reduce((acc, p) => acc + p.qty, 0);
+      const totalReceived = pos.reduce((acc, p) => acc + p.received, 0);
+      const totalBalance = pos.reduce((acc, p) => acc + p.balance, 0);
+      const totalValue = pos.reduce((acc, p) => acc + p.totalCost, 0);
+
+      bodyEl.innerHTML = `
+        <div class="im-detail-grid-4" style="margin-bottom:18px">
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Total Ordered Units</span>
+            <div class="im-kpi-stat-value">${num(totalOrdered)} Units</div>
+            <span class="im-kpi-stat-sub">${pos.length} Purchase Orders</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Received to Warehouse</span>
+            <div class="im-kpi-stat-value" style="color:#059669">${num(totalReceived)} Units</div>
+            <span class="im-kpi-stat-sub">Putaway Verified</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">In-Transit / Outstanding</span>
+            <div class="im-kpi-stat-value" style="color:#0284c7">${num(totalBalance)} Units</div>
+            <span class="im-kpi-stat-sub">Open Vendor Commitment</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Total Inbound PO Value</span>
+            <div class="im-kpi-stat-value">${money(totalValue)}</div>
+            <span class="im-kpi-stat-sub">Procurement Spend</span>
+          </div>
+        </div>
+
+        <div class="im-detail-card-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 class="im-detail-panel-title" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              Vendor Purchase Orders Containing ${esc(item.sku)}
+            </h3>
+            <a href="${S ? S.url('vendor-management/procurement.html') : 'vendor-management/procurement.html'}" class="im-detail-action-btn" style="text-decoration:none; padding:4px 10px; font-size:12px">
+              + New Vendor PO
+            </a>
+          </div>
+
+          <table class="im-detail-table">
+            <thead>
+              <tr>
+                <th>PO Number</th>
+                <th>Supplier / Vendor</th>
+                <th>Purpose</th>
+                <th>Ordered</th>
+                <th>Received</th>
+                <th>Balance</th>
+                <th>Unit Cost</th>
+                <th>Total Value</th>
+                <th>ETA Window</th>
+                <th>Carrier / Tracking</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pos.map(p => {
+                const badge = p.status === 'RECEIVED' ? 'green' : p.status === 'DISPATCHED' ? 'blue' : p.status === 'PO_ISSUED' ? 'amber' : 'gray';
+                return `
+                  <tr>
+                    <td><strong>${esc(p.po)}</strong></td>
+                    <td>${esc(p.vendor)}</td>
+                    <td><span class="sys-badge gray">${esc(p.purpose)}</span></td>
+                    <td>${num(p.qty)}</td>
+                    <td>${num(p.received)}</td>
+                    <td><strong style="color:${p.balance > 0 ? '#0284c7' : '#64748b'}">${num(p.balance)}</strong></td>
+                    <td>${money(p.unitCost)}</td>
+                    <td><strong>${money(p.totalCost)}</strong></td>
+                    <td>${esc(p.eta)}</td>
+                    <td>
+                      <div>${esc(p.carrier)}</div>
+                      <small style="color:#64748b">${esc(p.tracking)}</small>
+                    </td>
+                    <td><span class="sys-badge ${badge}">${esc(p.status)}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------
+    // TAB 7: Shipping Activity
+    // ----------------------------------------------------
+    function renderShippingTab() {
+      const shipments = getItemShippingActivity(item);
+      const totalShipped = shipments.reduce((acc, s) => acc + s.qty, 0);
+
+      bodyEl.innerHTML = `
+        <div class="im-detail-grid-4" style="margin-bottom:18px">
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Total Outbound Shipments</span>
+            <div class="im-kpi-stat-value">${shipments.length} Dispatches</div>
+            <span class="im-kpi-stat-sub">Tracked Consignments</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Total Dispatched Units</span>
+            <div class="im-kpi-stat-value" style="color:#087f78">${num(totalShipped)} Units</div>
+            <span class="im-kpi-stat-sub">Delivered / In Transit</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Primary Carrier</span>
+            <div class="im-kpi-stat-value" style="font-size:15px">UPS Ground / Express</div>
+            <span class="im-kpi-stat-sub">Integrated Carrier SLA</span>
+          </div>
+          <div class="im-kpi-stat-box">
+            <span class="im-kpi-stat-label">Fulfillment Accuracy</span>
+            <div class="im-kpi-stat-value" style="color:#059669">99.8%</div>
+            <span class="im-kpi-stat-sub">Verified Carton Scan</span>
+          </div>
+        </div>
+
+        <div class="im-detail-card-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h3 class="im-detail-panel-title" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              Outbound Packing, Dispatch &amp; Tracking Activity
+            </h3>
+            <a href="${S ? S.url('warehouse-management/packing-shipping.html') : 'warehouse-management/packing-shipping.html'}" class="im-detail-action-btn" style="text-decoration:none; padding:4px 10px; font-size:12px">
+              View Packing Station →
+            </a>
+          </div>
+
+          <table class="im-detail-table">
+            <thead>
+              <tr>
+                <th>Tracking Number</th>
+                <th>Carrier &amp; Service</th>
+                <th>Order / PO Ref</th>
+                <th>Recipient / Destination</th>
+                <th>Units Shipped</th>
+                <th>Dispatch Time</th>
+                <th>Carton ID</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${shipments.map(s => {
+                const badge = s.status === 'DELIVERED' ? 'green' : s.status === 'IN_TRANSIT' ? 'blue' : 'amber';
+                return `
+                  <tr>
+                    <td>
+                      <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:700; color:#0369a1">${esc(s.tracking)}</code>
+                    </td>
+                    <td><strong>${esc(s.carrier)}</strong></td>
+                    <td>${esc(s.orderRef)}</td>
+                    <td>${esc(s.recipient)}</td>
+                    <td><strong>${num(s.qty)}</strong> units</td>
+                    <td>${esc(s.date)}</td>
+                    <td><small style="color:#64748b">${esc(s.carton)}</small></td>
+                    <td><span class="sys-badge ${badge}">${esc(s.status)}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // Tab buttons click handler
+    overlay.querySelectorAll('.im-detail-tab-btn').forEach(btn => {
+      btn.onclick = () => renderTab(btn.dataset.tab);
+    });
+
+    // Close handlers
+    function closeModal() {
+      overlay.remove();
+      document.removeEventListener('keydown', handleKey);
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Escape') closeModal();
+    }
+
+    document.addEventListener('keydown', handleKey);
+
+    overlay.querySelector('.im-detail-close-btn').onclick = closeModal;
+    overlay.querySelector('#im-detail-btn-close').onclick = closeModal;
+    overlay.onclick = e => {
+      if (e.target === overlay) closeModal();
+    };
+
+    overlay.querySelector('#im-detail-btn-edit').onclick = () => {
+      closeModal();
+      openEditItemModal(item);
+    };
+
+    // Initial tab render
+    renderTab(activeTab);
+  }
+
   function openEditItemModal(item) {
     const body = `
       <form class="im-form" id="im-edit-form">
@@ -2476,10 +3724,37 @@
 
     // Edit item buttons
     document.querySelectorAll('[data-edit]').forEach(btn => {
-      btn.onclick = () => {
+      btn.onclick = e => {
+        e.stopPropagation();
         const sku = btn.dataset.edit;
         const item = allRecords.find(x => x.sku === sku);
         if (item) openEditItemModal(item);
+      };
+    });
+
+    // Product card click to open 7-tab detail inspection modal
+    document.querySelectorAll('.im-product-card').forEach(card => {
+      card.style.cursor = 'pointer';
+      card.onclick = e => {
+        if (e.target.closest('[data-more]') || e.target.closest('[data-edit]') || e.target.closest('a') || e.target.closest('button')) {
+          return;
+        }
+        const sku = card.dataset.sku;
+        const item = allRecords.find(x => x.sku === sku);
+        if (item) openItemDetailModal(item);
+      };
+    });
+
+    // Table row click to open 7-tab detail inspection modal
+    document.querySelectorAll('#im-main-table tbody tr[data-sku]').forEach(row => {
+      row.style.cursor = 'pointer';
+      row.onclick = e => {
+        if (e.target.closest('[data-more]') || e.target.closest('[data-edit]') || e.target.closest('a') || e.target.closest('button')) {
+          return;
+        }
+        const sku = row.dataset.sku;
+        const item = allRecords.find(x => x.sku === sku);
+        if (item) openItemDetailModal(item);
       };
     });
 
@@ -2593,6 +3868,8 @@
     openAddItemModal,
     openAtsUploadModal,
     openPriceUpdateModal,
+    openItemDetailModal,
+    openEditItemModal,
     exportCSV
   };
 })();

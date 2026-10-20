@@ -1409,14 +1409,65 @@
                 account.creditUsed = (Number(account.creditUsed) || 0) + totalAmount;
               }
 
-              const purposeVal = document.querySelector('#co-purpose')?.value;
+              const purposeVal = document.querySelector('#co-purpose')?.value || '';
+              const isHoldOrEvent = orderType === 'Hold PO' || purposeVal === 'Event order' || orderType.toLowerCase().includes('hold') || purposeVal.toLowerCase().includes('event');
+
+              // As soon as a Hold PO or Event PO is created, the quantity on the order for that item should be on hold automatically
+              if (isHoldOrEvent) {
+                lines.forEach(line => {
+                  const inv = e.inventory.find(x => x.sku === line.sku);
+                  if (inv) {
+                    inv.onHold = (Number(inv.onHold) || 0) + line.qty;
+                  }
+                });
+
+                // Synchronize onHold quantity and audit event to Item Master catalogs
+                try {
+                  const masterKeys = ['stark-item-master-catalog', 'stark.enterpriseItemMaster.customRecords.v2'];
+                  masterKeys.forEach(mKey => {
+                    const raw = localStorage.getItem(mKey);
+                    if (raw) {
+                      const records = JSON.parse(raw);
+                      if (Array.isArray(records)) {
+                        lines.forEach(line => {
+                          const mItem = records.find(x => (x.sku && x.sku.toLowerCase() === line.sku.toLowerCase()) || (x.model && line.model && x.model.toLowerCase() === line.model.toLowerCase()));
+                          if (mItem) {
+                            mItem.onHold = (Number(mItem.onHold) || 0) + line.qty;
+                            mItem.totalATS = Math.max(0, (Number(mItem.onHand) || 0) - (Number(mItem.onHold) || 0));
+                            if (Array.isArray(mItem.warehouses)) {
+                              const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
+                              if (wh) {
+                                wh.onHold = (Number(wh.onHold) || 0) + line.qty;
+                                wh.ats = Math.max(0, (Number(wh.ats) || 0) - line.qty);
+                              }
+                            }
+                            mItem.history = mItem.history || [];
+                            mItem.history.unshift({
+                              time: new Date().toISOString(),
+                              type: 'Hold Reserved',
+                              text: `${line.qty} units put on hold for ${orderType === 'Hold PO' ? 'Hold PO' : 'Event PO'} #${po} (${customer})`,
+                              actor: 'Order Entry',
+                              delta: `+${line.qty} onHold`
+                            });
+                          }
+                        });
+                        localStorage.setItem(mKey, JSON.stringify(records));
+                      }
+                    }
+                  });
+                } catch(err) {
+                  console.warn('Item Master on-hold sync failed:', err);
+                }
+              }
+
               const newOrder = {
                 id: S.uid ? S.uid('ord') : 'ord_' + Math.floor(100000 + Math.random() * 900000),
                 orderNumber: 'SO-' + po,
                 po,
                 accountId: account.id,
                 warehouseId: 'SARASOTA',
-                type: orderType === 'Hold PO' ? 'HOLD_PO' : orderType === 'Bulk Order' ? 'BULK_PO' : 'FIRM_PO',
+                type: orderType === 'Hold PO' ? 'HOLD_PO' : orderType === 'Bulk Order' ? 'BULK_PO' : (purposeVal === 'Event order' ? 'EVENT_PO' : 'FIRM_PO'),
+                purpose: purposeVal,
                 status: validate ? 'ALLOCATED' : 'UNVALIDATED',
                 validation: { state: validate ? 'VALIDATED' : 'UNVALIDATED' },
                 region: region || 'US',

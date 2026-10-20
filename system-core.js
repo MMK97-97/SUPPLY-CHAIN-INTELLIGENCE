@@ -252,6 +252,12 @@
       if (o.type === 'REDEMPTION_PO') { const parent = e.orders.find(x => x.id === o.parentHoldId); if (parent.warehouseId && !order.warehouseId) { order.warehouseId = parent.warehouseId; order.shipping = {...order.shipping,warehouseId:parent.warehouseId}; } }
       if (o.lines.every(x => inventoryItem(s, x.sku).nature === 'DIGITAL')) order.status = 'ALLOCATED';
       if(o.supplyMode==='DROPSHIP'){order.fulfillment={kind:'DROPSHIP'};order.status='ALLOCATED';}
+      if (o.type === 'HOLD_PO' || o.purpose === 'EVENT' || o.purpose === 'Event order' || o.type === 'EVENT' || o.type === 'EVENT_PO') {
+        o.lines.forEach(line => {
+          const invItem = e.inventory.find(x => x.sku === line.sku);
+          if (invItem) invItem.onHold = (Number(invItem.onHold) || 0) + line.qty;
+        });
+      }
       e.orders.push(order); e.activity.unshift({ time: stamp(), kind: 'order', text: `${o.po} allocated; stock remains on hand until dispatch.` });
       return order.id;
     });
