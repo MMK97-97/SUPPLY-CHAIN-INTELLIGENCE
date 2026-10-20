@@ -1396,10 +1396,17 @@
     const filename=`Sales Intelligence ${state.region} ${section === "all" ? "Complete" : titleCase(section)}.xlsx`;
     try {
       let attempts=0;while((!window.StarkReportExport?.captureChartImages||!window.JSZip)&&attempts<40){await new Promise(resolve=>setTimeout(resolve,75));attempts+=1;}
-      if(!window.StarkReportExport?.captureChartImages||!window.StarkReportExport?.embedCharts||!window.JSZip)throw new Error("The visual chart exporter is still loading. Please try again in a moment.");
-      const images=await window.StarkReportExport.captureChartImages();
-      if(!images.length)throw new Error("No rendered charts are available for the current analysis selection.");
-      const bytes=XLSX.write(workbook,{bookType:"xlsx",type:"array"}),blob=await window.StarkReportExport.embedCharts(bytes,images),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1400);showToast("Excel report exported with visual charts and detailed data.");
+      const hasExporter = window.StarkReportExport?.captureChartImages && window.StarkReportExport?.embedCharts && window.JSZip;
+      let images = [];
+      if (hasExporter) {
+        try { images = await window.StarkReportExport.captureChartImages(); } catch (_) { images = []; }
+      }
+      if (images && images.length) {
+        const bytes=XLSX.write(workbook,{bookType:"xlsx",type:"array"}),blob=await window.StarkReportExport.embedCharts(bytes,images),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1400);showToast("Excel report exported with visual charts and detailed data.");
+      } else {
+        XLSX.writeFile(workbook, filename);
+        showToast("Excel data workbook exported successfully.");
+      }
     }catch(error){showToast(`Export failed: ${error.message}`,true);}
   }
 

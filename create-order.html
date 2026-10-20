@@ -110,7 +110,8 @@
             <div class="co-form-group">
               <label class="co-label" for="co-customer">Customer <span class="co-req">*</span></label>
               <div class="co-input-icon-wrap">
-                <input type="text" class="co-input" id="co-customer" name="customer" value="ABC Company" required>
+                <input type="text" class="co-input" id="co-customer" name="customer" value="ABC Company" list="co-customer-datalist" required>
+                <datalist id="co-customer-datalist"></datalist>
                 <button type="button" class="co-input-icon-btn" id="co-btn-cust-search" title="Search customer" aria-label="Search customer">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </button>
@@ -884,28 +885,55 @@
         });
 
         if (modelInput) {
-          modelInput.addEventListener('change', () => {
-            const m = modelInput.value.trim().toUpperCase();
+          const onModelChange = () => {
+            const m = modelInput.value.trim();
+            if (!m) return;
+            const mUpper = m.toUpperCase();
             const thumbBox = row.querySelector('.co-img-thumb');
-            if (thumbBox) {
-              if (m.includes('1000XM') || m.includes('WH-1000')) {
+
+            // Look up catalog item from StarkSystem enterprise inventory or Item Master records
+            let found = null;
+            if (S && S.getState) {
+              const inv = S.getState()?.enterprise?.inventory || [];
+              found = inv.find(i => (i.model && i.model.toUpperCase() === mUpper) || (i.sku && i.sku.toUpperCase() === mUpper));
+            }
+            if (!found) {
+              try {
+                const master = JSON.parse(localStorage.getItem('stark.enterpriseItemMaster.customRecords.v2') || localStorage.getItem('stark-item-master-catalog') || '[]');
+                found = master.find(i => (i.model && i.model.toUpperCase() === mUpper) || (i.sku && i.sku.toUpperCase() === mUpper));
+              } catch (_) {}
+            }
+
+            if (found) {
+              if (descInput) descInput.value = found.title || found.description || found.model || m;
+              if (priceInput) priceInput.value = Number(found.standardPrice || found.price || 0).toFixed(2);
+              if (thumbBox) {
+                if (mUpper.includes('1000XM') || mUpper.includes('WH-1000') || (found.brand && found.brand.toUpperCase() === 'SONY')) thumbBox.innerHTML = ITEM_THUMBS['WH-1000XM5'];
+                else if (mUpper.includes('550') || mUpper.includes('NB-550')) thumbBox.innerHTML = ITEM_THUMBS['NB-550'];
+                else if (mUpper.includes('TMBLR') || mUpper.includes('YETI') || mUpper.includes('40')) thumbBox.innerHTML = ITEM_THUMBS['TMBLR-40'];
+                else thumbBox.innerHTML = ITEM_THUMBS['DEFAULT'];
+              }
+            } else if (thumbBox) {
+              if (mUpper.includes('1000XM') || mUpper.includes('WH-1000')) {
                 thumbBox.innerHTML = ITEM_THUMBS['WH-1000XM5'];
-                if (descInput && !descInput.value) descInput.value = 'Sony Wireless Headphones';
+                if (descInput) descInput.value = 'Sony Wireless Headphones';
                 if (priceInput && Number(priceInput.value) === 0) priceInput.value = '349.00';
-              } else if (m.includes('550') || m.includes('NB-550')) {
+              } else if (mUpper.includes('550') || mUpper.includes('NB-550')) {
                 thumbBox.innerHTML = ITEM_THUMBS['NB-550'];
-                if (descInput && !descInput.value) descInput.value = 'New Balance 550 Sneakers';
+                if (descInput) descInput.value = 'New Balance 550 Sneakers';
                 if (priceInput && Number(priceInput.value) === 0) priceInput.value = '110.00';
-              } else if (m.includes('TMBLR') || m.includes('YETI') || m.includes('40')) {
+              } else if (mUpper.includes('TMBLR') || mUpper.includes('YETI') || mUpper.includes('40')) {
                 thumbBox.innerHTML = ITEM_THUMBS['TMBLR-40'];
-                if (descInput && !descInput.value) descInput.value = 'YETI Rambler 40oz';
+                if (descInput) descInput.value = 'YETI Rambler 40oz';
                 if (priceInput && Number(priceInput.value) === 0) priceInput.value = '45.00';
               } else {
                 thumbBox.innerHTML = ITEM_THUMBS['DEFAULT'];
               }
             }
             recalculate();
-          });
+          };
+          modelInput.addEventListener('change', onModelChange);
+          modelInput.addEventListener('input', onModelChange);
         }
 
         if (trashBtn) {
@@ -1089,7 +1117,7 @@
         });
       }
 
-      function openCrmLoader() {
+      function getCrmAccounts() {
         let accounts = [];
         if (S && S.getState) {
           try {
@@ -1098,11 +1126,17 @@
         }
         if (!accounts.length) {
           accounts = [
-            { id: 'acct_abc', name: 'ABC Company', terms: 'Net 30' },
-            { id: 'acct_northstar', name: 'Northstar Rewards Group', terms: 'Net 30' },
-            { id: 'acct_apex', name: 'Apex Incentives', terms: 'Net 45' }
+            { id: 'demo_customer_us', name: 'Atlas Recognition (Demo)', terms: 'Net 30', status: 'ACTIVE', currency: 'USD', customerAddress: { line1: '100 Demo Avenue', city: 'Sarasota', state: 'FL', postalCode: '34236' } },
+            { id: 'demo_customer_eu', name: 'Orion Rewards (Demo)', terms: 'Net 30', status: 'ACTIVE', currency: 'EUR', customerAddress: { line1: '10 Example Street', city: 'Berlin', state: 'BE', postalCode: '10115' } },
+            { id: 'demo_customer_ca', name: 'Maple Programs (Demo)', terms: 'Net 30', status: 'ACTIVE', currency: 'CAD', customerAddress: { line1: '20 Sample Road', city: 'Toronto', state: 'ON', postalCode: 'M5V 1A1' } },
+            { id: 'acct_abc', name: 'ABC Company', terms: 'Net 30', status: 'ACTIVE', currency: 'USD' }
           ];
         }
+        return accounts;
+      }
+
+      function openCrmLoader() {
+        const accounts = getCrmAccounts();
 
         const modal = document.createElement('div');
         modal.className = 'sys-modal-backdrop';
@@ -1114,12 +1148,17 @@
             </div>
             <p style="color:#64748b; font-size:13px; margin:0 0 16px 0;">Select a verified customer account to auto-populate shipping address and commercial details.</p>
             <div style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
-              ${accounts.map(acc => `
-                <div class="co-crm-card" data-name="${acc.name}" data-addr="1234 Main St, Suite 500" data-city="Tampa" data-state="FL" data-zip="33602" style="padding:14px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+              ${accounts.map(acc => {
+                const addr = acc.customerAddress?.line1 || acc.address?.line1 || '1234 Main St, Suite 500';
+                const city = acc.customerAddress?.city || acc.address?.city || 'Tampa';
+                const state = acc.customerAddress?.state || acc.address?.state || 'FL';
+                const zip = acc.customerAddress?.postalCode || acc.address?.postalCode || acc.customerAddress?.zip || acc.address?.zip || '33602';
+                return `
+                <div class="co-crm-card" data-name="${acc.name}" data-id="${acc.id}" data-addr="${addr}" data-city="${city}" data-state="${state}" data-zip="${zip}" style="padding:14px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
                   <strong style="color:#0f172a; font-size:15px;">${acc.name}</strong>
-                  <div style="font-size:12px; color:#64748b; margin-top:3px;">Account ID: ${acc.id} · Terms: ${acc.terms || 'Net 30'} · Status: Active</div>
+                  <div style="font-size:12px; color:#64748b; margin-top:3px;">Account ID: ${acc.id} · Type: ${acc.type || 'PARENT'} · Terms: ${acc.terms || 'Net 30'} · Status: ${acc.status || 'Active'} · Currency: ${acc.currency || 'USD'}</div>
                 </div>
-              `).join('')}
+              `;}).join('')}
             </div>
             <div style="margin-top:20px; text-align:right;">
               <button type="button" class="sys-btn" data-close>Cancel</button>
@@ -1376,6 +1415,7 @@
                 orderNumber: 'SO-' + po,
                 po,
                 accountId: account.id,
+                warehouseId: 'SARASOTA',
                 type: orderType === 'Hold PO' ? 'HOLD_PO' : orderType === 'Bulk Order' ? 'BULK_PO' : 'FIRM_PO',
                 status: validate ? 'ALLOCATED' : 'UNVALIDATED',
                 validation: { state: validate ? 'VALIDATED' : 'UNVALIDATED' },
@@ -1389,6 +1429,7 @@
                   thirdPartyZip,
                   destination: '1234 Main St, Suite 500, Tampa, FL 33602',
                   warehouse: 'Sarasota DC',
+                  warehouseId: 'SARASOTA',
                   marks: 'APX-HOL / DC03 / PALLET 1'
                 },
                 lines: lines.map(x => ({
@@ -1500,6 +1541,38 @@
           form.addEventListener('submit', (e) => {
             e.preventDefault();
             submitOrder(true);
+          });
+        }
+
+        // Populate customer datalist from CRM accounts
+        const custDatalist = document.querySelector('#co-customer-datalist');
+        if (custDatalist) {
+          const accs = getCrmAccounts();
+          custDatalist.innerHTML = accs.map(a => `<option value="${a.name}">${a.name} (${a.terms || 'Net 30'})</option>`).join('');
+        }
+
+        const custInp = document.querySelector('#co-customer');
+        if (custInp) {
+          custInp.addEventListener('change', () => {
+            const val = custInp.value.trim().toLowerCase();
+            const match = getCrmAccounts().find(a => a.name.toLowerCase() === val || a.id.toLowerCase() === val);
+            if (match) {
+              const addr = match.customerAddress?.line1 || match.address?.line1 || '1234 Main St, Suite 500';
+              const city = match.customerAddress?.city || match.address?.city || 'Tampa';
+              const st = match.customerAddress?.state || match.address?.state || 'FL';
+              const zip = match.customerAddress?.postalCode || match.address?.postalCode || match.customerAddress?.zip || match.address?.zip || '33602';
+              document.querySelector('#co-ship-company').value = match.name;
+              document.querySelector('#co-address-line1').value = addr;
+              document.querySelector('#co-city').value = city;
+              document.querySelector('#co-state').value = st;
+              document.querySelector('#co-zip').value = zip;
+              if (match.currency && document.querySelector('#co-region')) {
+                if (match.currency === 'EUR') document.querySelector('#co-region').value = 'EU';
+                else if (match.currency === 'CAD') document.querySelector('#co-region').value = 'CA';
+                else document.querySelector('#co-region').value = 'US';
+              }
+              syncSummary();
+            }
           });
         }
 

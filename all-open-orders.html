@@ -835,9 +835,8 @@
       const S = window.StarkSystem;
 
       function getLiveOrders() {
-        const list = JSON.parse(JSON.stringify(BASE_ORDERS_DATA));
-        const seen = new Set(list.map(x => (x.po || '').toLowerCase()));
-        list.forEach(x => seen.add((x.num || '').toLowerCase()));
+        const list = [];
+        const seen = new Set();
 
         if (S && S.getState) {
           try {
@@ -848,22 +847,12 @@
             enterpriseOrders.forEach(o => {
               const poKey = (o.po || '').toLowerCase();
               const numKey = (o.po || o.orderNumber?.replace('SO-', '') || o.id).toLowerCase();
-
-              if (seen.has(poKey) || seen.has(numKey)) {
-                const match = list.find(x => (x.po || '').toLowerCase() === poKey || (x.num || '').toLowerCase() === numKey);
-                if (match) {
-                  match.enterpriseId = o.id;
-                  if (o.status === 'CANCELLED') match.status = 'Cancelled';
-                  else if (o.status === 'SHIPPED') match.status = 'Shipped';
-                  else match.status = 'Open';
-                }
-                return;
-              }
-              seen.add(poKey);
-              seen.add(numKey);
+              if (seen.has(poKey) || seen.has(numKey)) return;
+              if (poKey) seen.add(poKey);
+              if (numKey) seen.add(numKey);
 
               const acc = accounts.find(a => a.id === o.accountId);
-              const custName = acc?.name || o.accountId || 'ABC Company';
+              const custName = acc?.name || o.shipping?.company || o.accountId || 'ABC Company';
               const typeStr = o.type === 'HOLD_PO' ? 'Hold PO' : o.type === 'BULK_PO' ? 'Bulk PO' : 'Firm PO';
               const typeClass = o.type === 'HOLD_PO' ? 'oo-badge-hold' : o.type === 'BULK_PO' ? 'oo-badge-bulk' : 'oo-badge-firm';
               const is3rd = !!(o.shipping?.thirdPartyAccount || o.shipping?.is3rdParty);
@@ -908,12 +897,23 @@
                 instructions: o.instructions || 'Standard delivery.'
               };
 
-              list.unshift(newRow);
+              list.push(newRow);
             });
           } catch(err) {
             console.warn('Error reading enterprise orders:', err);
           }
         }
+
+        // Add base sample orders that aren't already represented
+        BASE_ORDERS_DATA.forEach(baseRow => {
+          const poKey = (baseRow.po || '').toLowerCase();
+          const numKey = (baseRow.num || '').toLowerCase();
+          if (!seen.has(poKey) && !seen.has(numKey)) {
+            list.push(JSON.parse(JSON.stringify(baseRow)));
+            if (poKey && poKey !== '-') seen.add(poKey);
+            if (numKey) seen.add(numKey);
+          }
+        });
 
         return list;
       }
@@ -1131,6 +1131,21 @@
           return true;
         });
 
+        const pagStart = filtered.length > 0 ? 1 : 0;
+        const pagEnd = Math.min(filtered.length, 10);
+        const pagTotal = filtered.length;
+        const pStartEl = document.querySelector('#oo-pag-start');
+        const pEndEl = document.querySelector('#oo-pag-end');
+        const pTotEl = document.querySelector('#oo-pag-total');
+        if (pStartEl) pStartEl.textContent = pagStart;
+        if (pEndEl) pEndEl.textContent = pagEnd;
+        if (pTotEl) pTotEl.textContent = pagTotal;
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:36px; color:#64748b;">No open orders found matching the filter criteria.</td></tr>';
+          return;
+        }
+
         tbody.innerHTML = filtered.map((ord, idx) => `
           <tr data-order-num="${ord.num}" class="${ord.num === selectedOrderNum ? 'selected' : ''}">
             <td onclick="event.stopPropagation();">
@@ -1237,6 +1252,18 @@
             if (cur) openRowMenu(cur, btn);
           });
         });
+
+        function populateCustomerFilter() {
+          const select = document.querySelector('#oo-filter-customer');
+          if (!select) return;
+          const currentVal = select.value;
+          const accounts = S?.getState ? (S.getState()?.enterprise?.accounts || []) : [];
+          const customerNames = new Set(['ABC Company', 'XYZ Retail', 'Cozy Earth', 'Kendra Scott', 'BOA', 'Smith & Nephew', 'Acme Gifts', 'Global Brands', 'Wellness Co.']);
+          accounts.forEach(a => { if (a && a.name) customerNames.add(a.name); });
+          select.innerHTML = '<option value="all">All customers</option>' + 
+            Array.from(customerNames).map(name => `<option value="${name}" ${name === currentVal ? 'selected' : ''}>${name}</option>`).join('');
+        }
+        populateCustomerFilter();
 
         // Filter Tabs
         document.querySelectorAll('.oo-pill-tab').forEach(tab => {

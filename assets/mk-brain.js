@@ -874,6 +874,12 @@
       scenario.description.push(`on hand ${number.format(scenario.onHand)}`);
       scenario.changed = true;
     }
+    const buffer = q.match(/(?:buffer|safety\s*stock|safety).{0,16}?(?:to|at|is|of)?\s*(\d+(?:\.\d+)?)\s*(?:units?)?/);
+    if (buffer) {
+      scenario.buffer = Math.max(0, Number(buffer[1]));
+      scenario.description.push(`buffer ${number.format(scenario.buffer)} units`);
+      scenario.changed = true;
+    }
     if (scenario.coverage == null) scenario.coverage = settings.coverage;
     return scenario;
   }
@@ -884,7 +890,8 @@
     const coverage = scenario.coverage ?? settings.coverage;
     const onHand = scenario.onHand ?? item.onHand;
     const planningSupplier = scenario.planningSupplier ?? item.planningSupplier;
-    const need = demand * (leadMonths + coverage) + settings.critical + item.openClient;
+    const critical = scenario.buffer ?? settings.critical;
+    const need = demand * (leadMonths + coverage) + critical + item.openClient;
     const recommended = item.activeBrand && item.eligible && !item.excluded ? Math.max(0, Math.ceil(need - onHand - planningSupplier - 1e-9)) : 0;
     const netAvailable = onHand + planningSupplier - item.openClient;
     return { item, demand, leadMonths, coverage, onHand, planningSupplier, recommended, stockoutRisk: demand > 0 && netAvailable < demand * Math.max(leadMonths, 1 / 30.44) };

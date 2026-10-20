@@ -2216,14 +2216,26 @@
           .replace(/'/g, "&#039;");
       }
 
+      function parseDate(value) {
+        if (!value) return null;
+        const text = String(value).trim();
+        const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        const us = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        let date = null;
+        if (iso) date = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+        else if (us) date = new Date(Number(us[3]), Number(us[1]) - 1, Number(us[2]));
+        else date = new Date(text);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
       function formatDate(value) {
         if (!value) {
           return "Not recorded";
         }
 
-        const date = new Date(`${value}T12:00:00`);
+        const date = parseDate(value);
 
-        if (Number.isNaN(date.getTime())) {
+        if (!date || Number.isNaN(date.getTime())) {
           return String(value);
         }
 
@@ -2235,18 +2247,12 @@
       }
 
       function daysUntil(value) {
-        if (!value) {
-          return null;
-        }
-
-        const targetDate = new Date(`${value}T12:00:00`);
+        const target = parseDate(value);
+        if (!target) return null;
         const today = new Date();
-
-        today.setHours(12, 0, 0, 0);
-
-        return Math.ceil(
-          (targetDate.getTime() - today.getTime()) / 86400000
-        );
+        today.setHours(0, 0, 0, 0);
+        target.setHours(0, 0, 0, 0);
+        return Math.round((target.getTime() - today.getTime()) / 86400000);
       }
 
       function dateMessage(event) {

@@ -722,7 +722,7 @@
                 brand: ci.brand || 'General',
                 title: ci.title || ci.model,
                 nature: 'PHYSICAL',
-                onHand: Number(ci.totalATS) || 100,
+                onHand: Number(ci.totalATS) || 0,
                 reserved: 0,
                 externalReserved: 0,
                 damaged: 0,
@@ -785,6 +785,13 @@
         if (state?.enterprise?.inventory) {
           state.enterprise.inventory.forEach(inv => {
             if (inv && inv.sku && !catalog.some(c => c.sku.toLowerCase() === inv.sku.toLowerCase() || (inv.model && c.model && c.model.toLowerCase() === inv.model.toLowerCase()))) {
+              const openPOs = (state?.enterprise?.purchaseOrders || []).filter(po => !['RECEIVED', 'CANCELLED'].includes(po.status));
+              const poQty = openPOs.reduce((sum, po) => {
+                const line = (po.lines || []).find(l => (l.sku && l.sku.toLowerCase() === inv.sku.toLowerCase()) || (inv.model && l.model && l.model.toLowerCase() === inv.model.toLowerCase()));
+                return sum + (line ? (Number(line.qty) || 0) : 0);
+              }, 0);
+              const latestPO = openPOs.find(po => (po.lines || []).some(l => (l.sku && l.sku.toLowerCase() === inv.sku.toLowerCase()) || (inv.model && l.model && l.model.toLowerCase() === inv.model.toLowerCase())));
+              const atsStock = Math.max(0, (inv.onHand || 0) - (inv.reserved || 0));
               catalog.push({
                 sku: inv.sku,
                 model: inv.model || inv.sku,
@@ -794,14 +801,16 @@
                 cost: inv.cost || 0,
                 status: inv.status || 'Live',
                 tags: [inv.brand || 'General', 'Catalog'],
-                onOrder: 50,
-                poNumber: 'PO-38500',
+                onOrder: poQty,
+                poNumber: latestPO ? latestPO.po : '',
                 onHold: 0,
-                totalATS: Math.max(0, inv.onHand - inv.reserved),
+                totalATS: atsStock,
                 uploadedAt: inv.updatedAt || new Date().toISOString(),
                 uploadSource: 'Enterprise Inventory Sync',
                 warehouses: [
-                  { name: 'Sarasota DC', ats: Math.max(0, inv.onHand - inv.reserved) }
+                  { name: 'Sarasota DC', ats: atsStock },
+                  { name: 'Demo_3PL', ats: 0 },
+                  { name: 'TX DC', ats: 0 }
                 ]
               });
             }
@@ -1832,16 +1841,16 @@
         measurements,
         features,
         tags: [brand, 'Catalog'],
-        onOrder: 100,
-        poNumber: 'PO-' + Math.floor(38000 + Math.random() * 900),
+        onOrder: 0,
+        poNumber: '',
         onHold: 0,
-        totalATS: 50,
+        totalATS: 0,
         uploadedAt: new Date().toISOString(),
         uploadSource: 'Manual Entry',
         warehouses: [
-          { name: 'Sarasota DC', ats: 30 },
-          { name: 'Demo_3PL', ats: 15 },
-          { name: 'TX DC', ats: 5 }
+          { name: 'Sarasota DC', ats: 0 },
+          { name: 'Demo_3PL', ats: 0 },
+          { name: 'TX DC', ats: 0 }
         ]
       };
 

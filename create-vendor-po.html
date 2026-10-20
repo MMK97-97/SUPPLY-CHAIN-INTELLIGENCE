@@ -1185,7 +1185,7 @@
         };
       }
 
-      function submitPO(isPdf = false) {
+      function submitPO(isPdf = false, isDraft = false) {
         const form = document.querySelector('#vpo-form');
         if (!form.reportValidity()) return;
 
@@ -1291,8 +1291,8 @@
                 vendorId: vendor.id,
                 po: poNum,
                 purpose,
-                status: 'PO_ISSUED',
-                issuedAt: S.stamp ? S.stamp() : new Date().toISOString(),
+                status: isDraft ? 'DRAFT' : 'PO_ISSUED',
+                issuedAt: isDraft ? null : (S.stamp ? S.stamp() : new Date().toISOString()),
                 eta: expectedArrivalDate ? new Date(expectedArrivalDate).toISOString() : new Date(Date.now() + 7 * 86400000).toISOString(),
                 shippingWindow: requestedShipDate,
                 warehouse: wh,
@@ -1305,8 +1305,8 @@
               e.purchaseOrders = e.purchaseOrders.filter(p => p.po.toLowerCase() !== poNum.toLowerCase());
               e.purchaseOrders.unshift(newPO);
 
-              // If Inventory PO, add inbound ASN to logistics receipts so it can be received in WMS!
-              if (purpose === 'INVENTORY') {
+              // If Inventory PO and not Draft, add inbound ASN to logistics receipts so it can be received in WMS!
+              if (!isDraft && purpose === 'INVENTORY') {
                 const newReceipt = {
                   id: S.uid ? S.uid('rcv') : 'rcv_' + Date.now(),
                   po: poNum,
@@ -1336,7 +1336,7 @@
           }
         }
 
-        sessionStorage.setItem('stark-toast-msg', `Purchase Order ${poNum} for ${vendorName} (${wh}) ${isPdf ? 'generated as PDF' : 'saved'} successfully.`);
+        sessionStorage.setItem('stark-toast-msg', `Purchase Order ${poNum} for ${vendorName} (${wh}) ${isDraft ? 'saved as Draft' : isPdf ? 'generated as PDF' : 'issued'} successfully.`);
 
         if (isPdf) {
           window.print();
@@ -1472,11 +1472,12 @@
         }
 
         // Bottom actions
-        document.querySelector('#vpo-btn-draft')?.addEventListener('click', () => submitPO(false));
+        document.querySelector('#vpo-btn-draft')?.addEventListener('click', () => submitPO(false, true));
+        document.querySelector('#vpo-btn-issue')?.addEventListener('click', () => submitPO(false, false));
         document.querySelector('#vpo-btn-preview')?.addEventListener('click', openPreviewModal);
         document.querySelector('#vpo-form')?.addEventListener('submit', (e) => {
           e.preventDefault();
-          submitPO(true);
+          submitPO(false, false);
         });
 
         // Initialize warehouse and totals

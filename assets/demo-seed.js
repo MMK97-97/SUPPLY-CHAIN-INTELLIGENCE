@@ -46,8 +46,8 @@
     l.bins.forEach(b=>{b.capacity=3000;b.used=0;});
     l.inventory=enterprise().inventory.filter(i=>i.nature!=='DIGITAL').map(i=>({sku:i.sku,brand:i.brand,description:i.title,binId:'A-01-R1-B1',warehouseId:'SARASOTA',onHand:i.onHand,reserved:0,damaged:0,serialized:false,lotControl:false,lastCount:iso(-5)}));
     l.waves=[{id:'DEMO-WAVE-US-1007',status:'READY',priority:'NORMAL',createdAt:iso(-.2),orders:['DEMO-US-1007'],orderIds:['demo_order_US_7'],sku:'US::AUDIO-01',qty:2,binId:'A-01-R1-B1',picker:'Unassigned',picked:0}];
-    l.tplNodes=[{id:'demo_3pl',name:'Demo Partner Fulfillment',status:'ACTIVE',region:'US',state:'TX',cutoff:'17:00',handlingCost:2,shipCost:8,slaHours:24,apiStatus:'SIMULATED'}];
-    l.tplInventory=enterprise().inventory.filter(i=>i.region==='US').map(i=>({nodeId:'demo_3pl',sku:i.sku,qty:120,reserved:0,variation:true,updatedAt:iso(0)}));
+    l.tplNodes=[{id:'demo_3pl',name:'Demo Partner Fulfillment',code:'DEMO-3PL',city:'Dallas',state:'TX',region:'US',status:'ACTIVE',integrationKey:'demo_3pl_••••4421',cutoff:'17:00',handlingCost:2,shipCost:8,slaHours:24,apiStatus:'SIMULATED',ackSlaMin:15,dispatchSlaHrs:24,onTime:98.5,inventoryAccuracy:99.2,baseHandling:2,zoneRate:1.0,lastSync:iso(-.5)}];
+    l.tplInventory=enterprise().inventory.filter(i=>i.region==='US').map((i,idx)=>({nodeId:'demo_3pl',sku:i.sku,qty:120,reserved:0,registryQty:idx===0?118:120,variation:true,updatedAt:iso(0),lastSync:iso(-.5)}));
     l.packing=enterprise().orders.filter(o=>['SHIPPED','DELIVERED'].includes(o.status)).map(o=>({id:'demo_pack_'+o.id,orderId:o.id,order:o.po,sku:o.lines[0].sku,qty:2,status:'SHIPPED',carrier:'UPS',service:'UPS_GROUND',tracking:o.tracking,shippedAt:iso(-Number(o.id.split('_').at(-1))),warehouseId:'SARASOTA'}));
     return l;
   }

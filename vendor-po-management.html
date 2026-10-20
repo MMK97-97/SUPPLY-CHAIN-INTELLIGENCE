@@ -1662,6 +1662,9 @@
               } else if (p.status === 'PO_ISSUED') {
                 st = 'In Production';
                 stClass = 'vpm-status-inproduction';
+              } else if (p.status === 'DRAFT') {
+                st = 'Draft';
+                stClass = 'vpm-status-pending';
               }
 
               const newRow = {
@@ -1677,7 +1680,7 @@
                 status: st,
                 statusClass: stClass,
                 lastUpdateDate: p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026',
-                lastUpdateDesc: st === 'Shipped' ? 'In transit' : st === 'Delivered' ? 'Delivered' : 'PO Confirmed',
+                lastUpdateDesc: st === 'Shipped' ? 'In transit' : st === 'Delivered' ? 'Delivered' : st === 'Draft' ? 'Draft - Not Issued' : 'PO Confirmed',
                 poDate: p.issuedAt ? p.issuedAt.slice(0, 10) : '10/24/2026',
                 arrivalDate: p.eta ? p.eta.slice(0, 10) : '11/20/2026',
                 createdBy: 'ABC Company',

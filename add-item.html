@@ -687,16 +687,16 @@
           measurements,
           features,
           tags: [brand, 'Audio', 'Electronics'],
-          onOrder: 120,
-          poNumber: 'PO-' + Math.floor(38400 + Math.random() * 900),
-          onHold: 10,
-          totalATS: 150,
+          onOrder: 0,
+          poNumber: '',
+          onHold: 0,
+          totalATS: 0,
           uploadedAt: new Date().toISOString(),
           uploadSource: 'Manual Item Entry',
           warehouses: [
-            { name: 'Sarasota DC', ats: 90 },
-            { name: 'Demo_3PL', ats: 40 },
-            { name: 'TX DC', ats: 20 }
+            { name: 'Sarasota DC', ats: 0 },
+            { name: 'Demo_3PL', ats: 0 },
+            { name: 'TX DC', ats: 0 }
           ]
         };
 
@@ -731,7 +731,7 @@
                   brand,
                   title: title || model,
                   nature: 'PHYSICAL',
-                  onHand: 150,
+                  onHand: 0,
                   reserved: 0,
                   externalReserved: 0,
                   damaged: 0,
@@ -749,7 +749,7 @@
                     brand,
                     description: existing.title,
                     binId: 'A-01-R1-B1',
-                    onHand: 150,
+                    onHand: 0,
                     reserved: 0,
                     damaged: 0,
                     serialized: false,

@@ -115,14 +115,17 @@
     else if (/what.?if|scenario|simulate/.test(query)) {
       const parsed = window.MKVerifiedEngine.parseScenario(query, reports[0].settings);
       const leadDelay = Math.max(0, Number(query.match(/(?:delay|late).*?(\d+(?:\.\d+)?)\s*days?/)?.[1] || 0));
-      const args = { region: 'ALL', query: named, demand_change_pct: ((parsed.demandMultiplier ?? 1) - 1) * 100, lead_delay_days: leadDelay, lead_months: parsed.leadMonths ?? null, coverage_months: parsed.coverage ?? null, on_hand: parsed.onHand ?? null, inbound_units: parsed.planningSupplier ?? null, exclude_inbound: /exclude.*inbound|no inbound|without inbound/.test(query) };
+      const bufferMatch = query.match(/(?:buffer|safety\s*stock|safety).{0,16}?(?:to|at|is|of)?\s*(\d+(?:\.\d+)?)\s*(?:units?)?/i);
+      const bufferVal = bufferMatch ? Number(bufferMatch[1]) : (parsed.buffer ?? null);
+      const args = { region: 'ALL', query: named, demand_change_pct: ((parsed.demandMultiplier ?? 1) - 1) * 100, lead_delay_days: leadDelay, lead_months: parsed.leadMonths ?? null, coverage_months: parsed.coverage ?? null, on_hand: parsed.onHand ?? null, inbound_units: parsed.planningSupplier ?? null, buffer: bufferVal, exclude_inbound: /exclude.*inbound|no inbound|without inbound/.test(query) };
       const result = call('simulate_scenario', args);
-      answer = `Scenario across ${result.matchedItems} eligible models: ${fmt(result.baselineUnits)} baseline reorder units → ${fmt(result.simulatedUnits)} simulated units (${fmt(result.change)} change).`;
+      answer = `Scenario across ${result.matchedItems} eligible models: ${fmt(result.baselineUnits)} baseline reorder units → ${fmt(result.simulatedUnits)} simulated units (${fmt(result.change)} change).` + (args.buffer !== null ? ` Buffer configured at ${fmt(args.buffer)} units.` : '');
       findings = result.items.slice(0, 4).map(item => ({ title: `${item.region} · ${item.model}`, severity: item.change > 0 ? 'high' : 'low', explanation: `Scenario: ${fmt(item.baseline)} baseline units → ${fmt(item.simulated)} simulated units.`, evidence_ids: [item.evidence_id] }));
       assumptions.push(`Demand change ${fmt(args.demand_change_pct)}%; additional supplier delay ${fmt(leadDelay)} days; ${args.exclude_inbound ? 'inbound excluded' : 'eligible inbound retained'}. Planning records were unchanged.`);
       if (args.lead_months !== null) assumptions.push(`Scenario lead time is ${fmt(args.lead_months)} months.`);
       if (args.on_hand !== null || args.inbound_units !== null) assumptions.push(`Per matched model: ${args.on_hand !== null ? fmt(args.on_hand) + ' on-hand units' : 'current on-hand units'}; ${args.inbound_units !== null ? fmt(args.inbound_units) + ' eligible inbound units' : 'current eligible inbound'}.`);
-      if (!parsed.changed && !leadDelay && !args.exclude_inbound) { answer = 'Give a measurable scenario, for example demand increasing 20%, supplier delivery delayed 10 days, or lead time set to 8 weeks.'; findings = []; questions.push('Which assumption should change, and by how much?'); }
+      if (args.buffer !== null) assumptions.push(`Safety stock buffer configured at ${fmt(args.buffer)} units.`);
+      if (!parsed.changed && !leadDelay && !args.exclude_inbound && args.buffer === null) { answer = 'Give a measurable scenario, for example demand increasing 20%, supplier delivery delayed 10 days, or lead time set to 8 weeks.'; findings = []; questions.push('Which assumption should change, and by how much?'); }
     } else if (named && names.includes(named) && !models.includes(named)) {
       const result = call('compare_brands', { region: 'ALL', query: named });
       answer = `${named} analysis\n` + result.brands.map(b => `${b.region}: ${b.eligibleItems} eligible models; ${fmt(b.recommendedUnits)} recommended units; ${b.stockoutRisks} stockout risks; ${fmt(b.confidence)}/100 confidence.`).join('\n');

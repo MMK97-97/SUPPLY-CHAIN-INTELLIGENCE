@@ -71,6 +71,7 @@
   window.addEventListener('pagereveal', reset);
   window.addEventListener('popstate', () => { reset(); ready(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
+  window.addEventListener('pointerdown', ready, { capture: true, passive: true });
   function ready() {
     try { sessionStorage.setItem('stark-session-active', '1'); } catch (_) {}
     // Modules and the shared shell finish their DOMContentLoaded listeners first.

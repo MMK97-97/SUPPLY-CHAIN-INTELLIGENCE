@@ -105,8 +105,8 @@
   function warehouseId(order) {
     const raw = order.warehouseId || order.shipping?.warehouseId || order.fulfillment?.nodeId || order.shipping?.warehouse;
     const key = norm(raw);
-    if (['sarasota','whsarasota','sarasotafl','sarasotawarehouse'].includes(key)) return 'SARASOTA';
-    if (['farmersbranch','farmersbranchwarehouse','whfarmersbranch','texas','whtexas'].includes(key)) return 'FARMERS_BRANCH';
+    if (key.includes('sarasota')) return 'SARASOTA';
+    if (key.includes('farmers') || key.includes('branch') || key.includes('texas')) return 'FARMERS_BRANCH';
     return '';
   }
   const warehouseName = order => WAREHOUSES.find(w => w.id === warehouseId(order))?.name || 'Unassigned';
