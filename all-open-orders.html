@@ -306,10 +306,16 @@
             </div>
             <div class="oo-panel-cust-po" id="oo-panel-cust-po">Customer PO#: 90080</div>
           </div>
-          <div class="oo-panel-top-btns">
-            <button type="button" class="oo-panel-edit-btn" id="oo-panel-edit-action" title="Edit Order">
+          <div class="oo-panel-top-btns" style="display:flex; align-items:center; gap:6px;">
+            <button type="button" class="oo-panel-edit-btn" id="oo-panel-ship-action" title="Mark as Shipped" style="background:#087f78; color:#fff; border-color:#087f78; padding:5px 9px;">
+              🚚 Ship
+            </button>
+            <button type="button" class="oo-panel-edit-btn" id="oo-panel-edit-action" title="Edit Order" style="padding:5px 9px;">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               Edit
+            </button>
+            <button type="button" class="oo-panel-edit-btn" id="oo-panel-delete-action" title="Delete Order" style="background:#fff; color:#ef4444; border-color:#fca5a5; padding:5px 9px;">
+              🗑️ Delete
             </button>
             <button type="button" class="oo-action-icon-btn more-btn" title="More options" style="border:1px solid #cbd5e1; border-radius:6px; padding:4px 6px;">⋯</button>
           </div>
@@ -1023,8 +1029,16 @@
           <a href="create-order.html?id=${ord.num}" style="display:flex; align-items:center; gap:8px; padding:7px 10px; text-decoration:none; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
             ✏️ Edit order
           </a>
-          ${ord.status !== 'Cancelled' ? `
-            <button type="button" data-op="cancel" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#ef4444; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
+          ${ord.status !== 'Shipped' ? `
+            <button type="button" data-op="ship" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#087f78; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
+              🚚 Mark as Shipped
+            </button>
+          ` : ''}
+          <button type="button" data-op="delete" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#ef4444; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
+            🗑️ Delete order
+          </button>
+          ${ord.status !== 'Cancelled' && ord.status !== 'Shipped' ? `
+            <button type="button" data-op="cancel" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#dc2626; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
               ❌ Cancel order
             </button>
           ` : ''}
@@ -1045,6 +1059,16 @@
           dd.remove();
         });
 
+        dd.querySelector('[data-op="ship"]')?.addEventListener('click', () => {
+          dd.remove();
+          shipLiveOrder(ord);
+        });
+
+        dd.querySelector('[data-op="delete"]')?.addEventListener('click', () => {
+          dd.remove();
+          deleteLiveOrder(ord);
+        });
+
         dd.querySelector('[data-op="cancel"]')?.addEventListener('click', () => {
           dd.remove();
           if (confirm(`Are you sure you want to cancel order ${ord.num}? Reserved stock will be released.`)) {
@@ -1053,31 +1077,193 @@
         });
       }
 
-      function cancelLiveOrder(ord) {
-        if (S && S.transaction) {
-          try {
-            S.transaction('ORDER_CANCELLED', ord.enterpriseId || ord.num, s => {
-              const target = s.enterprise.orders.find(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
-              if (target) {
-                target.status = 'CANCELLED';
-                target.updatedAt = S.stamp ? S.stamp() : new Date().toISOString();
-                (target.lines || []).forEach(l => {
-                  const inv = s.enterprise.inventory.find(i => i.sku === l.sku);
-                  if (inv) inv.reserved = Math.max(0, (inv.reserved || 0) - l.qty);
-                });
-                const acc = s.enterprise.accounts.find(a => a.id === target.accountId);
-                if (acc) {
-                  const val = (target.lines || []).reduce((n, l) => n + l.qty * l.price, 0);
-                  acc.creditUsed = Math.max(0, (acc.creditUsed || 0) - val);
+      function releaseOrderHold(ord, actionType) {
+        const lines = ord.items || ord.lines || [];
+        const isHoldOrEvent = /hold/i.test(ord.type || '') || /event/i.test(ord.type || '') || /event/i.test(ord.purpose || '');
+
+        try {
+          const keys = ['stark-item-master-catalog', 'stark.enterpriseItemMaster.customRecords.v2'];
+          keys.forEach(k => {
+            const raw = localStorage.getItem(k);
+            if (!raw) return;
+            const cat = JSON.parse(raw);
+            if (!Array.isArray(cat)) return;
+
+            lines.forEach(line => {
+              const sku = (line.sku || '').toLowerCase();
+              const model = (line.model || '').toLowerCase();
+              const qty = Number(line.qty || line.allocated || line.quantity) || 0;
+
+              const mItem = cat.find(x => 
+                (x.sku && x.sku.toLowerCase() === sku) || 
+                (x.model && x.model.toLowerCase() === model) || 
+                (x.sku && x.sku.toLowerCase() === model) || 
+                (x.model && x.model.toLowerCase() === sku) ||
+                (x.title && line.title && x.title.toLowerCase() === line.title.toLowerCase())
+              );
+
+              if (mItem) {
+                // If the order had hold quantities, remove it
+                if (isHoldOrEvent) {
+                  mItem.onHold = Math.max(0, (Number(mItem.onHold) || 0) - qty);
+                  if (Array.isArray(mItem.warehouses)) {
+                    const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
+                    if (wh) wh.onHold = Math.max(0, (Number(wh.onHold) || 0) - qty);
+                  }
+                }
+
+                if (actionType === 'shipped') {
+                  // Shipped items physically depart the warehouse
+                  mItem.totalATS = Math.max(0, (Number(mItem.totalATS) || 0) - qty);
+                  if (mItem.onHand !== undefined) mItem.onHand = Math.max(0, (Number(mItem.onHand) || 0) - qty);
+                  if (Array.isArray(mItem.warehouses)) {
+                    const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
+                    if (wh) wh.ats = Math.max(0, (Number(wh.ats) || 0) - qty);
+                  }
+                  mItem.history = mItem.history || [];
+                  mItem.history.unshift({
+                    date: new Date().toISOString(),
+                    type: 'SHIP',
+                    title: 'Order Shipped',
+                    detail: `Order #${ord.num} marked as Shipped (${qty} units). Hold quantity removed.`,
+                    actor: 'Shipping Station'
+                  });
+                } else if (actionType === 'deleted' || actionType === 'cancelled') {
+                  // If deleted or cancelled, hold quantity is removed and included in available quantity
+                  mItem.history = mItem.history || [];
+                  mItem.history.unshift({
+                    date: new Date().toISOString(),
+                    type: 'DELETE',
+                    title: actionType === 'deleted' ? 'Order Deleted' : 'Order Cancelled',
+                    detail: `Order #${ord.num} ${actionType}. Hold quantity (${qty}) removed and included in available stock.`,
+                    actor: 'Order Desk'
+                  });
                 }
               }
             });
-          } catch(e) {
+
+            localStorage.setItem(k, JSON.stringify(cat));
+          });
+        } catch (err) {
+          console.warn('Error updating item master hold quantity:', err);
+        }
+
+        // Also sync with StarkSystem if available
+        if (S && S.transaction) {
+          try {
+            if (actionType === 'shipped') {
+              if (typeof S.shipOrder === 'function') {
+                S.shipOrder(ord.enterpriseId || ord.num);
+              } else {
+                S.transaction('ORDER_SHIPPED', ord.enterpriseId || ord.num, s => {
+                  const target = s.enterprise.orders.find(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
+                  if (target) {
+                    target.status = 'SHIPPED';
+                    target.tracking = '1Z' + Math.random().toString(36).substring(2, 10).toUpperCase();
+                    target.updatedAt = S.stamp ? S.stamp() : new Date().toISOString();
+                    (target.lines || []).forEach(l => {
+                      l.shipped = l.qty;
+                      const inv = s.enterprise.inventory.find(i => i.sku === l.sku);
+                      if (inv) {
+                        inv.onHand = Math.max(0, inv.onHand - l.qty);
+                        if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - l.qty);
+                        inv.reserved = Math.max(0, (inv.reserved || 0) - l.qty);
+                      }
+                    });
+                  }
+                });
+              }
+            } else if (actionType === 'deleted') {
+              if (typeof S.deleteOrder === 'function') {
+                S.deleteOrder(ord.enterpriseId || ord.num);
+              } else {
+                S.transaction('ORDER_DELETED', ord.enterpriseId || ord.num, s => {
+                  const idx = s.enterprise.orders.findIndex(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
+                  if (idx !== -1) {
+                    const target = s.enterprise.orders[idx];
+                    (target.lines || []).forEach(l => {
+                      const inv = s.enterprise.inventory.find(i => i.sku === l.sku);
+                      if (inv) {
+                        if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - l.qty);
+                        inv.reserved = Math.max(0, (inv.reserved || 0) - l.qty);
+                      }
+                    });
+                    s.enterprise.orders.splice(idx, 1);
+                  }
+                });
+              }
+            } else if (actionType === 'cancelled') {
+              S.transaction('ORDER_CANCELLED', ord.enterpriseId || ord.num, s => {
+                const target = s.enterprise.orders.find(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
+                if (target) {
+                  target.status = 'CANCELLED';
+                  target.updatedAt = S.stamp ? S.stamp() : new Date().toISOString();
+                  (target.lines || []).forEach(l => {
+                    const inv = s.enterprise.inventory.find(i => i.sku === l.sku);
+                    if (inv) {
+                      if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - l.qty);
+                      inv.reserved = Math.max(0, (inv.reserved || 0) - l.qty);
+                    }
+                  });
+                  const acc = s.enterprise.accounts.find(a => a.id === target.accountId);
+                  if (acc) {
+                    const val = (target.lines || []).reduce((n, l) => n + l.qty * l.price, 0);
+                    acc.creditUsed = Math.max(0, (acc.creditUsed || 0) - val);
+                  }
+                }
+              });
+            }
+          } catch (e) {
             console.warn(e);
           }
         }
+
+        // Also sync with stark-enterprise-orders in localStorage
+        try {
+          const rawE = localStorage.getItem('stark-enterprise-orders');
+          if (rawE) {
+            let eOrders = JSON.parse(rawE);
+            if (Array.isArray(eOrders)) {
+              if (actionType === 'deleted') {
+                eOrders = eOrders.filter(o => o.id !== ord.enterpriseId && o.po !== ord.po && o.po !== ord.num);
+              } else if (actionType === 'shipped') {
+                const target = eOrders.find(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
+                if (target) {
+                  target.status = 'SHIPPED';
+                  target.tracking = '1Z' + Math.random().toString(36).substring(2, 10).toUpperCase();
+                }
+              }
+              localStorage.setItem('stark-enterprise-orders', JSON.stringify(eOrders));
+            }
+          }
+        } catch (_) {}
+      }
+
+      function shipLiveOrder(ord) {
+        releaseOrderHold(ord, 'shipped');
+        ord.status = 'Shipped';
+        notice(`Order #${ord.num} marked as Shipped. Hold quantity removed and available stock updated.`);
+        renderTable();
+        const cur = ORDERS_DATA.find(x => x.num === ord.num);
+        if (cur) updatePanel(cur);
+      }
+
+      function deleteLiveOrder(ord) {
+        if (!confirm(`Are you sure you want to delete order #${ord.num}? Any hold quantities will be removed and included in available stock.`)) return;
+        releaseOrderHold(ord, 'deleted');
+        ORDERS_DATA = ORDERS_DATA.filter(o => o.num !== ord.num && o.po !== ord.num && o.po !== ord.po);
+        notice(`Order #${ord.num} deleted. Hold quantity removed and included in available stock.`);
+        if (selectedOrderNum === ord.num) {
+          const next = ORDERS_DATA[0];
+          if (next) updatePanel(next);
+        }
+        renderTable();
+      }
+
+      function cancelLiveOrder(ord) {
+        releaseOrderHold(ord, 'cancelled');
         ord.status = 'Cancelled';
-        notice(`Order ${ord.num} cancelled and inventory allocations released.`);
+        notice(`Order #${ord.num} cancelled. Hold quantity removed and inventory allocations released.`);
         renderTable();
         const cur = ORDERS_DATA.find(x => x.num === ord.num);
         if (cur) updatePanel(cur);
@@ -1239,9 +1425,21 @@
           }
         });
 
+        // Ship button in Panel
+        document.querySelector('#oo-panel-ship-action')?.addEventListener('click', () => {
+          const cur = ORDERS_DATA.find(x => x.num === selectedOrderNum);
+          if (cur) shipLiveOrder(cur);
+        });
+
         // Edit button in Panel
         document.querySelector('#oo-panel-edit-action')?.addEventListener('click', () => {
           window.location.href = `create-order.html?id=${selectedOrderNum}`;
+        });
+
+        // Delete button in Panel
+        document.querySelector('#oo-panel-delete-action')?.addEventListener('click', () => {
+          const cur = ORDERS_DATA.find(x => x.num === selectedOrderNum);
+          if (cur) deleteLiveOrder(cur);
         });
 
         // Panel more button

@@ -2407,7 +2407,7 @@
           <div class="im-kpi-stat-box">
             <span class="im-kpi-stat-label">Available to Sell (ATS)</span>
             <div class="im-kpi-stat-value" style="color:#087f78">${num(ats)}</div>
-            <span class="im-kpi-stat-sub">Sellable Across All Channels</span>
+            <span class="im-kpi-stat-sub">Includes Hold Quantities</span>
           </div>
           <div class="im-kpi-stat-box">
             <span class="im-kpi-stat-label">Hold &amp; Inbound Orders</span>
@@ -2440,8 +2440,8 @@
                 { name: 'TX DC', ats: 0 }
               ]).map((w, idx) => {
                 const whAts = Number(w.ats) || 0;
-                const whHold = idx === 0 ? onHold : 0;
-                const whOnHand = whAts + whHold;
+                const whHold = idx === 0 ? onHold : (Number(w.onHold) || 0);
+                const whOnHand = whAts;
                 const binCode = idx === 0 ? 'A-01-R1-B' + (1 + (item.sku.length % 8)) : (idx === 1 ? '3PL-EAST-BIN' : 'TX-SEC-01');
                 return `
                   <tr>

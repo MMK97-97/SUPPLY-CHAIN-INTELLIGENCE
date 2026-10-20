@@ -1433,19 +1433,21 @@
                           const mItem = records.find(x => (x.sku && x.sku.toLowerCase() === line.sku.toLowerCase()) || (x.model && line.model && x.model.toLowerCase() === line.model.toLowerCase()));
                           if (mItem) {
                             mItem.onHold = (Number(mItem.onHold) || 0) + line.qty;
-                            mItem.totalATS = Math.max(0, (Number(mItem.onHand) || 0) - (Number(mItem.onHold) || 0));
+                            // Hold quantity should be included in the available quantity:
+                            if (mItem.onHand !== undefined) {
+                              mItem.totalATS = Math.max(Number(mItem.totalATS) || 0, Number(mItem.onHand) || 0);
+                            }
                             if (Array.isArray(mItem.warehouses)) {
                               const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
                               if (wh) {
                                 wh.onHold = (Number(wh.onHold) || 0) + line.qty;
-                                wh.ats = Math.max(0, (Number(wh.ats) || 0) - line.qty);
                               }
                             }
                             mItem.history = mItem.history || [];
                             mItem.history.unshift({
                               time: new Date().toISOString(),
                               type: 'Hold Reserved',
-                              text: `${line.qty} units put on hold for ${orderType === 'Hold PO' ? 'Hold PO' : 'Event PO'} #${po} (${customer})`,
+                              text: `${line.qty} units put on hold for ${orderType === 'Hold PO' ? 'Hold PO' : 'Event PO'} #${po} (${customer}). Hold quantity included in available stock.`,
                               actor: 'Order Entry',
                               delta: `+${line.qty} onHold`
                             });

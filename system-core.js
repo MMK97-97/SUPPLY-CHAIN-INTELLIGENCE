@@ -286,6 +286,91 @@
       s.logistics.waves.filter(w => w.orderIds?.includes(id)).forEach(w => w.status = 'COMPLETE');
       s.logistics.packing.filter(x=>x.orderId===id).forEach(x=>x.status='CANCELLED');
       for(const sh of s.logistics.tplShipments.filter(x=>x.customerOrderId===id&&!['DELIVERED','DISPATCHED','CANCELLED'].includes(x.status))){const stock=s.logistics.tplInventory.find(x=>x.nodeId===sh.nodeId&&x.sku===sh.sku);if(stock)stock.reserved=Math.max(0,stock.reserved-sh.qty);sh.status='CANCELLED';}
+      if (o.type === 'HOLD_PO' || /event/i.test(o.purpose || '') || o.type === 'EVENT_PO' || o.lines?.some(l => l.allocated)) {
+        for (const l of o.lines) {
+          const inv = inventoryItem(s, l.sku);
+          if (inv && inv.onHold) inv.onHold = Math.max(0, inv.onHold - (l.qty || 0));
+        }
+        syncCatalogHoldRelease(o.lines, o.po, 'deleted');
+      }
+    });
+  }
+  function syncCatalogHoldRelease(lines, orderPo, action) {
+    try {
+      const keys = ['stark-item-master-catalog', 'stark.enterpriseItemMaster.customRecords.v2'];
+      keys.forEach(k => {
+        const raw = localStorage.getItem(k);
+        if (!raw) return;
+        const cat = JSON.parse(raw);
+        if (!Array.isArray(cat)) return;
+        lines.forEach(l => {
+          const sku = (l.sku || '').toLowerCase();
+          const model = (l.model || '').toLowerCase();
+          const qty = Number(l.qty || l.allocated || l.quantity) || 0;
+          const item = cat.find(x => (x.sku && x.sku.toLowerCase() === sku) || (x.model && x.model.toLowerCase() === model) || (x.sku && x.sku.toLowerCase() === model) || (x.model && x.model.toLowerCase() === sku));
+          if (item) {
+            item.onHold = Math.max(0, (Number(item.onHold) || 0) - qty);
+            if (Array.isArray(item.warehouses)) {
+              const wh = item.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || item.warehouses[0];
+              if (wh) wh.onHold = Math.max(0, (Number(wh.onHold) || 0) - qty);
+            }
+            if (action === 'shipped') {
+              item.totalATS = Math.max(0, (Number(item.totalATS) || 0) - qty);
+              if (item.onHand !== undefined) item.onHand = Math.max(0, (Number(item.onHand) || 0) - qty);
+              if (Array.isArray(item.warehouses)) {
+                const wh = item.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || item.warehouses[0];
+                if (wh) wh.ats = Math.max(0, (Number(wh.ats) || 0) - qty);
+              }
+            }
+            item.history = item.history || [];
+            item.history.unshift({
+              time: stamp(),
+              type: action === 'shipped' ? 'Order Shipped' : 'Hold Released',
+              text: `Order #${orderPo} ${action}. Hold quantity of ${qty} removed.`,
+              actor: action === 'shipped' ? 'Shipping Station' : 'Order Desk',
+              delta: `-${qty} onHold`
+            });
+          }
+        });
+        localStorage.setItem(k, JSON.stringify(cat));
+      });
+    } catch (_) {}
+  }
+  function shipOrder(id, tracking) {
+    const trk = tracking || ('1Z' + Math.random().toString(36).substring(2, 10).toUpperCase());
+    return transaction('ORDER_SHIPPED', id, s => {
+      const o = s.enterprise.orders.find(x => x.id === id || x.po === id);
+      if (!o) throw new Error('Order not found.');
+      if (final(o.status)) throw new Error('Only open orders can be marked as shipped.');
+      o.status = 'SHIPPED';
+      o.tracking = trk;
+      o.updatedAt = stamp();
+      for (const l of o.lines) {
+        l.shipped = number(l.qty);
+        const inv = inventoryItem(s, l.sku);
+        if (inv) {
+          inv.onHand = Math.max(0, inv.onHand - l.shipped);
+          if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - l.shipped);
+          inv.reserved = Math.max(0, (inv.reserved || 0) - l.shipped);
+        }
+      }
+      syncCatalogHoldRelease(o.lines, o.po, 'shipped');
+    });
+  }
+  function deleteOrder(id) {
+    return transaction('ORDER_DELETED', id, s => {
+      const idx = s.enterprise.orders.findIndex(x => x.id === id || x.po === id);
+      if (idx === -1) throw new Error('Order not found.');
+      const o = s.enterprise.orders[idx];
+      for (const l of o.lines) {
+        const inv = inventoryItem(s, l.sku);
+        if (inv) {
+          if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - (l.qty || 0));
+          inv.reserved = Math.max(0, (inv.reserved || 0) - (l.qty || 0));
+        }
+      }
+      syncCatalogHoldRelease(o.lines, o.po, 'deleted');
+      s.enterprise.orders.splice(idx, 1);
     });
   }
   function receivePO(id) {
@@ -375,6 +460,11 @@
       if (!tracking?.trim()) throw new Error('Enter the carrier tracking number before dispatch.');
       i.onHand -= p.qty; line.shipped = number(line.shipped) + p.qty; p.status = 'SHIPPED'; p.tracking = tracking.trim(); p.shippedAt = stamp();
       o.status = o.lines.every(x => number(x.shipped) >= x.qty) ? 'SHIPPED' : 'PACKED'; o.updatedAt = stamp(); o.tracking = p.tracking;
+      if (o.type === 'HOLD_PO' || /event/i.test(o.purpose || '') || o.type === 'EVENT_PO') {
+        const inv = inventoryItem(s, p.sku);
+        if (inv && inv.onHold) inv.onHold = Math.max(0, inv.onHold - p.qty);
+        syncCatalogHoldRelease([{ sku: p.sku, qty: p.qty }], o.po, 'shipped');
+      }
       s.logistics.movements.unshift({ id: uid('mv'), time: stamp(), type: 'SHIP', sku: p.sku, qty: -p.qty, from: 'PACK', to: p.carrier, ref: o.po, user: 'Pack station' });
     });
   }
@@ -617,6 +707,6 @@
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});
     return rows;
   }
-  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
+  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, shipOrder, deleteOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
   expireHolds();
 })();
