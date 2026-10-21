@@ -1,6 +1,6 @@
 {
-  "passed": 49,
-  "failed": 0,
+  "passed": 45,
+  "failed": 4,
   "checks": [
     "customer draft preserves all requested fields without stock or credit effects",
     "unknown models remain searchable in an atomic issues queue",
@@ -45,13 +45,26 @@
     "heartbeat/UI text, mismatched acknowledgments and timeouts remain UNKNOWN",
     "definitive provider rejection is distinguishable from unconfirmed delivery",
     "connector and transport bounds reject private URLs, oversized bodies and redirects",
-    "new navigation separates 3PL, transportation, shipping and procurement",
     "new module text, labels, cards and tabs meet 4.5:1 contrast",
-    "customer form has address lines, billing fields, three PO types and live totals",
-    "customer form submission saves shared fields and navigates to the correct queue",
-    "shipment upload includes a preview, template and disabled unverified commit",
-    "procurement form captures all line fields and safe CSV export neutralizes formulas"
+    "shipment upload includes a preview, template and disabled unverified commit"
   ],
-  "failures": [],
+  "failures": [
+    {
+      "name": "new navigation separates 3PL, transportation, shipping and procurement",
+      "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(tpl && transport && d.querySelector('[data-nav-group=\"shipping\"]') && d.querySelector('[data-nav-group=\"procurement\"]'))\n\n    at /workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:57:314\n    at async test (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:13:34)\n    at async main (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:57:3)"
+    },
+    {
+      "name": "customer form has address lines, billing fields, three PO types and live totals",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'Not implemented: navigation (except hash changes)'\n+ ]\n- []\n\n    at /workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:59:186\n    at async test (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:13:34)\n    at async main (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:59:3)"
+    },
+    {
+      "name": "customer form submission saves shared fields and navigates to the correct queue",
+      "error": "TypeError: Cannot read properties of null (reading 'querySelector')\n    at set (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:60:322)\n    at /workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:60:567\n    at async test (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:13:34)\n    at async main (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:60:3)"
+    },
+    {
+      "name": "procurement form captures all line fields and safe CSV export neutralizes formulas",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'Not implemented: navigation (except hash changes)'\n+ ]\n- []\n\n    at /workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:62:181\n    at async test (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:13:34)\n    at async main (/workspace/scratch/d5371e625b44/fix-work/SUPPLY-CHAIN-INTELLIGENCE-main/scripts/check-fulfillment.cjs:62:3)"
+    }
+  ],
   "method": "Node.js shared-state workflows, jsdom forms/navigation and mocked authenticated server/provider transport. Synthetic records only. No graphical browser, live partner send or database execution."
 }

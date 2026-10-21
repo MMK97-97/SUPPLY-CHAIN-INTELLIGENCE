@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-21",
+  "passed": 19,
+  "failed": 0,
+  "checks": [
+    "dashboard order deep link finds the same shared order",
+    "open order register excludes closed orders and filters actual statuses",
+    "empty shared workspace never adds prototype orders",
+    "pagination advances, clamps, and respects page size and search",
+    "edit form displays saved PO, quantities, prices, address and billing",
+    "saving an edited draft updates one ID without changing stock or credit",
+    "stale draft edit reports failure without success navigation or overwrite",
+    "allocated orders display their recorded values without enabling draft overwrite",
+    "unknown order IDs cannot create a default replacement",
+    "new order entry starts empty",
+    "insufficient stock saves an issue record without inventing stock or consuming credit",
+    "vendor PO search reacts to each input and retains focus",
+    "7D and 14D change the actual date bins, count, and selected period",
+    "workspace credit utilization matches CRM balances and handles zero limits",
+    "credit ratios remain separated by currency",
+    "catalog Net/Retail toggle changes displayed and filtered price",
+    "detail Net Price and Unit Cost are distinct, with matching catalog values",
+    "default Sony net price agrees with the item master and does not relabel cost as net",
+    "KPI amount uses an unbroken number and a wrapping sparkline row"
+  ],
+  "failures": [],
+  "method": "Node.js with jsdom@26; local synthetic state, actual source script/defer order, DOM interactions and core workflows. No live services. Cloud browser preview was blocked with ERR_BLOCKED_BY_CLIENT; graphical desktop/mobile layout and deployment remain unverified.",
+  "additional_validation": {
+    "core_workflows": {
+      "passed": 23,
+      "failed": 0
+    },
+    "existing_fulfillment_suite": {
+      "passed": 45,
+      "failed": 4,
+      "baseline_passed": 45,
+      "baseline_failed": 4,
+      "same_preexisting_failures": [
+        "new navigation separates 3PL, transportation, shipping and procurement",
+        "customer form has address lines, billing fields, three PO types and live totals",
+        "customer form submission saves shared fields and navigates to the correct queue",
+        "procurement form captures all line fields and safe CSV export neutralizes formulas"
+      ]
+    },
+    "new_missing_local_references": []
+  }
+}

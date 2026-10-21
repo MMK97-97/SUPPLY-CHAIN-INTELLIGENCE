@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-21",
+  "passed": 18,
+  "failed": 0,
+  "modules": [
+    "itemMaster",
+    "planning",
+    "crm",
+    "orders",
+    "vendor",
+    "procurement",
+    "shipping",
+    "warehouse",
+    "tpl",
+    "transportation",
+    "analytics",
+    "data"
+  ],
+  "checks": [
+    "original twelve module cards, banners, links and quick actions remain in the grid",
+    "every module moves independently and retains all its destinations",
+    "touch movement works and dragging does not execute a link",
+    "clicks, small tap movement and interactive links do not move a card",
+    "each position persists through a fresh homepage load",
+    "dragging beyond every screen edge keeps the full card reachable",
+    "resize and orientation changes adapt all panels without losing their contents",
+    "keyboard positioning and individual reset affect only the selected module",
+    "card, placeholder and full-layout resets restore the original card order",
+    "pointer cancellation and Escape undo unfinished moves without changing saved positions",
+    "another pointer or a secondary mouse button cannot take over a drag",
+    "overlapping panels come forward on interaction without changing module links",
+    "normal and modified link clicks retain native navigation after dragging",
+    "region changes refresh original links and retain the arrangement",
+    "switching to telemetry restores the previous dashboard and returning restores cards",
+    "invalid preferences and storage errors keep the modules functional",
+    "demo layout stays separate from working layout and operational data",
+    "visual viewport resize and pan keep each card inside the visible screen"
+  ],
+  "failures": [],
+  "method": "Actual source/defer order in jsdom@26, synthetic pointer/keyboard events and simulated geometry. No network or graphical rendering.",
+  "graphical_verification": "Unverified: the cloud browser connection timed out during the preceding preview attempt. No live deployment was made."
+}
