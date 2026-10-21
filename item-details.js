@@ -792,15 +792,20 @@
     }
 
     if (activeTab === 'Pricing') {
+      const retail=Number(item.standardPrice ?? item.priceNet ?? 0);
+      const net=Number(item.priceNet ?? item.standardPrice ?? 0);
+      const cost=item.cost==null?null:Number(item.cost);
+      const margin=cost==null?null:net-cost;
       return `
         <div class="id-card" style="margin-bottom:16px">
           <h2 class="id-card-title">Tiered Commercial Pricing Matrix</h2>
-          <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; margin-bottom:18px">
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Standard / Retail</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(item.standardPrice || 349.99)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Net / Unit Cost</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(item.cost || 278.00)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Wholesale Tier 1</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money((item.standardPrice || 349.99) * 0.88)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">MAP Protected</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(item.standardPrice || 349.99)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Gross Margin</span><strong style="display:block;font-size:18px;color:#16a34a;margin-top:4px">${money((item.standardPrice || 349.99) - (item.cost || 278.00))} (20.6%)</strong></div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:18px">
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Standard / Retail</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(retail)}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Net Price</span><strong data-price-net style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(net)}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Unit Cost</span><strong data-unit-cost style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${cost==null?'—':money(cost)}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Wholesale Tier 1</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(retail * 0.88)}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">MAP Protected</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(retail)}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Gross Margin</span><strong style="display:block;font-size:18px;color:#16a34a;margin-top:4px">${margin==null?'—':money(margin)+(net>0?' ('+(100*margin/net).toFixed(1)+'%)':'')}</strong></div>
           </div>
           <h3 style="font-size:13px;font-weight:700;color:#1e293b;margin:0 0 10px">Contracted Customer Pricing Overrides</h3>
           <table class="id-wh-table">
@@ -985,7 +990,7 @@
       return `
         <div class="id-card" style="margin-bottom:16px">
           <h2 class="id-card-title">Carton &amp; Pallet Specifications</h2>
-          <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; margin-bottom:18px">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:18px">
             <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Length (L)</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:4px">9.2 in</strong></div>
             <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Width (W)</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:4px">7.8 in</strong></div>
             <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Height (H)</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:4px">3.1 in</strong></div>

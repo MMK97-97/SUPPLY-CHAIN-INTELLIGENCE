@@ -28,12 +28,12 @@
 
   <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
   <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
-  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-4">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261021-dragcards1">
   <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
 
-  <script src="assets/system-shell.js?v=20261017-3" defer></script>
+  <script src="assets/system-shell.js?v=20261021-dragcards1" defer></script>
   <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
-  <script src="assets/fulfillment-core.js?v=20261012-2" defer></script>
+  <script src="assets/fulfillment-core.js?v=20261021-fixes1" defer></script>
 </head>
 <body data-system-page="orders">
   <main class="system-page oo-page-container" aria-label="All Open Orders">
@@ -167,9 +167,9 @@
           <label class="oo-label" for="oo-filter-warehouse">Warehouse</label>
           <select class="oo-select" id="oo-filter-warehouse">
             <option value="all" selected>All warehouses</option>
-            <option value="Sarasota DC">Sarasota DC</option>
+            <option value="Sarasota">Sarasota</option>
             <option value="Demo_3PL">Demo_3PL</option>
-            <option value="TX DC">TX DC</option>
+            <option value="Farmers Branch">Farmers Branch</option>
           </select>
         </div>
 
@@ -260,23 +260,13 @@
           <div>Showing <span id="oo-pag-start">1</span> to <span id="oo-pag-end">10</span> of <span id="oo-pag-total">126</span> orders</div>
           <div class="oo-page-controls">
             <span style="font-size:12px; margin-right:8px;">Rows per page</span>
-            <select class="oo-select" style="width: auto; height: 28px; padding: 2px 22px 2px 8px; font-size: 12px; margin-right: 14px;">
+            <select class="oo-select" id="oo-page-size" aria-label="Rows per page" style="width: auto; height: 28px; padding: 2px 22px 2px 8px; font-size: 12px; margin-right: 14px;">
               <option value="10" selected>10</option>
               <option value="25">25</option>
               <option value="50">50</option>
             </select>
 
-            <button type="button" class="oo-page-btn" aria-label="First page">«</button>
-            <button type="button" class="oo-page-btn" aria-label="Previous page">‹</button>
-            <button type="button" class="oo-page-btn active">1</button>
-            <button type="button" class="oo-page-btn">2</button>
-            <button type="button" class="oo-page-btn">3</button>
-            <button type="button" class="oo-page-btn">4</button>
-            <button type="button" class="oo-page-btn">5</button>
-            <span style="color:#94a3b8; font-size:12px; padding:0 4px;">…</span>
-            <button type="button" class="oo-page-btn">13</button>
-            <button type="button" class="oo-page-btn" aria-label="Next page">›</button>
-            <button type="button" class="oo-page-btn" aria-label="Last page">»</button>
+<span id="oo-page-buttons" style="display:flex;gap:4px" aria-label="Order pages"></span>
           </div>
         </div>
       </section>
@@ -307,7 +297,7 @@
             <div class="oo-panel-cust-po" id="oo-panel-cust-po">Customer PO#: 90080</div>
           </div>
           <div class="oo-panel-top-btns" style="display:flex; align-items:center; gap:6px;">
-            <button type="button" class="oo-panel-edit-btn" id="oo-panel-ship-action" title="Mark as Shipped" style="background:#087f78; color:#fff; border-color:#087f78; padding:5px 9px;">
+            <button type="button" class="oo-panel-edit-btn" id="oo-panel-ship-action" title="Open shipping workflow" style="background:#087f78; color:#fff; border-color:#087f78; padding:5px 9px;">
               🚚 Ship
             </button>
             <button type="button" class="oo-panel-edit-btn" id="oo-panel-edit-action" title="Edit Order" style="padding:5px 9px;">
@@ -476,327 +466,6 @@
     (function() {
       'use strict';
 
-      // Seed Open Orders Dataset matching the screenshot
-      const BASE_ORDERS_DATA = [
-        {
-          num: '315980',
-          po: '90080',
-          customer: 'ABC Company',
-          type: 'Firm PO',
-          typeClass: 'oo-badge-firm',
-          inhands: '10/28/2026',
-          shipMethod: 'UPS Ground',
-          itemCount: 3,
-          totalQty: 120,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'Auto-generate',
-          holdExpiry: '-',
-          program: 'No program',
-          shipTo: {
-            company: 'ABC Company',
-            line1: '1234 Main St, Suite 500',
-            cityState: 'Tampa, FL 33602, USA'
-          },
-          shipping: {
-            method: 'UPS Ground',
-            is3rdParty: true,
-            account: '123456',
-            zip: '33073'
-          },
-          items: [
-            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 50, type: 'sony' },
-            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 50, type: 'nb' },
-            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 20, type: 'yeti' }
-          ],
-          instructions: 'Deliver before event, call before delivery, inside delivery, etc.'
-        },
-        {
-          num: '315979',
-          po: '70012',
-          customer: 'XYZ Retail',
-          type: 'Hold PO',
-          typeClass: 'oo-badge-hold',
-          inhands: '11/05/2026',
-          shipMethod: 'FedEx 2Day',
-          itemCount: 5,
-          totalQty: 350,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315979',
-          holdExpiry: '11/04/2026',
-          program: 'VIP Rewards',
-          shipTo: {
-            company: 'XYZ Retail',
-            line1: '880 3rd Avenue, Suite 1200',
-            cityState: 'New York, NY 10022, USA'
-          },
-          shipping: {
-            method: 'FedEx 2Day',
-            is3rdParty: false,
-            account: '-',
-            zip: '-'
-          },
-          items: [
-            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 150, type: 'sony' },
-            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 200, type: 'yeti' }
-          ],
-          instructions: 'Hold stock until branch confirmation.'
-        },
-        {
-          num: '315978',
-          po: '-',
-          customer: 'Cozy Earth',
-          type: 'Firm PO',
-          typeClass: 'oo-badge-firm',
-          inhands: '10/25/2025',
-          shipMethod: 'UPS Ground',
-          itemCount: 7,
-          totalQty: 500,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315978',
-          holdExpiry: '-',
-          program: 'No program',
-          shipTo: {
-            company: 'Cozy Earth HQ',
-            line1: '250 S 100 W',
-            cityState: 'Salt Lake City, UT 84101, USA'
-          },
-          shipping: {
-            method: 'UPS Ground',
-            is3rdParty: true,
-            account: '882910',
-            zip: '84101'
-          },
-          items: [
-            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 500, type: 'nb' }
-          ],
-          instructions: 'Dock delivery only between 8am and 3pm.'
-        },
-        {
-          num: '315977',
-          po: '77431',
-          customer: 'Kendra Scott',
-          type: 'Event PO',
-          typeClass: 'oo-badge-event',
-          inhands: '11/15/2026',
-          shipMethod: 'Drop Ship',
-          itemCount: 4,
-          totalQty: 200,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315977',
-          holdExpiry: '-',
-          program: 'Holiday Gala',
-          shipTo: {
-            company: 'Austin Convention Center',
-            line1: '500 E Cesar Chavez St',
-            cityState: 'Austin, TX 78701, USA'
-          },
-          shipping: {
-            method: 'Drop Ship',
-            is3rdParty: false,
-            account: '-',
-            zip: '-'
-          },
-          items: [
-            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 200, type: 'yeti' }
-          ],
-          instructions: 'Deliver to Exhibit Hall B. Contact on-site rep.'
-        },
-        {
-          num: '315976',
-          po: '-',
-          customer: 'BOA',
-          type: 'Bulk PO',
-          typeClass: 'oo-badge-bulk',
-          inhands: '11/02/2026',
-          shipMethod: 'LTL',
-          itemCount: 6,
-          totalQty: 650,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315976',
-          holdExpiry: '-',
-          program: 'Corporate Gifting',
-          shipTo: {
-            company: 'Bank of America Hub',
-            line1: '100 N Tryon St',
-            cityState: 'Charlotte, NC 28255, USA'
-          },
-          shipping: {
-            method: 'LTL',
-            is3rdParty: true,
-            account: '445920',
-            zip: '28255'
-          },
-          items: [
-            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 350, type: 'sony' },
-            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 300, type: 'nb' }
-          ],
-          instructions: 'Call dispatch 24h prior to delivery.'
-        },
-        {
-          num: '315975',
-          po: '88901',
-          customer: 'Smith & Nephew',
-          type: 'Firm PO',
-          typeClass: 'oo-badge-firm',
-          inhands: '10/30/2026',
-          shipMethod: 'UPS Ground',
-          itemCount: 2,
-          totalQty: 75,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315975',
-          holdExpiry: '-',
-          program: 'No program',
-          shipTo: {
-            company: 'Smith & Nephew Logistics',
-            line1: '1450 Brooks Rd',
-            cityState: 'Memphis, TN 38116, USA'
-          },
-          shipping: {
-            method: 'UPS Ground',
-            is3rdParty: false,
-            account: '-',
-            zip: '-'
-          },
-          items: [
-            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 75, type: 'sony' }
-          ],
-          instructions: 'Deliver before end of business Friday.'
-        },
-        {
-          num: '315974',
-          po: '-',
-          customer: 'XYZ Retail',
-          type: 'Firm PO',
-          typeClass: 'oo-badge-firm',
-          inhands: '11/01/2026',
-          shipMethod: 'FedEx Ground',
-          itemCount: 8,
-          totalQty: 910,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315974',
-          holdExpiry: '-',
-          program: 'Executive Club',
-          shipTo: {
-            company: 'XYZ Regional DC',
-            line1: '400 Logistics Blvd',
-            cityState: 'Dallas, TX 75261, USA'
-          },
-          shipping: {
-            method: 'FedEx Ground',
-            is3rdParty: true,
-            account: '992014',
-            zip: '75261'
-          },
-          items: [
-            { sku: 'NB-550', title: 'New Balance 550 Sneakers', qty: 450, type: 'nb' },
-            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 460, type: 'yeti' }
-          ],
-          instructions: 'Palletized with stretch wrap only.'
-        },
-        {
-          num: '315973',
-          po: '55678',
-          customer: 'Acme Gifts',
-          type: 'Hold PO',
-          typeClass: 'oo-badge-hold',
-          inhands: '11/10/2026',
-          shipMethod: 'UPS Ground',
-          itemCount: 1,
-          totalQty: 30,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315973',
-          holdExpiry: '11/09/2026',
-          program: 'No program',
-          shipTo: {
-            company: 'Acme Fulfillment',
-            line1: '1200 Industrial Way',
-            cityState: 'Phoenix, AZ 85034, USA'
-          },
-          shipping: {
-            method: 'UPS Ground',
-            is3rdParty: false,
-            account: '-',
-            zip: '-'
-          },
-          items: [
-            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 30, type: 'sony' }
-          ],
-          instructions: 'Hold for redemption release.'
-        },
-        {
-          num: '315972',
-          po: '-',
-          customer: 'Global Brands',
-          type: 'Event PO',
-          typeClass: 'oo-badge-event',
-          inhands: '11/05/2026',
-          shipMethod: 'Freight (FTL)',
-          itemCount: 10,
-          totalQty: 1500,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315972',
-          holdExpiry: '-',
-          program: 'Annual Summit',
-          shipTo: {
-            company: 'MGM Grand Convention Hall',
-            line1: '3799 Las Vegas Blvd S',
-            cityState: 'Las Vegas, NV 89109, USA'
-          },
-          shipping: {
-            method: 'Freight (FTL)',
-            is3rdParty: true,
-            account: '772190',
-            zip: '89109'
-          },
-          items: [
-            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 1500, type: 'yeti' }
-          ],
-          instructions: 'Inside delivery to main exhibit floor.'
-        },
-        {
-          num: '315971',
-          po: '22345',
-          customer: 'Wellness Co.',
-          type: 'Firm PO',
-          typeClass: 'oo-badge-firm',
-          inhands: '10/27/2026',
-          shipMethod: 'USPS Priority',
-          itemCount: 4,
-          totalQty: 180,
-          status: 'Open',
-          region: 'US',
-          salesOrder: 'SO-315971',
-          holdExpiry: '-',
-          program: 'Health & Wellness',
-          shipTo: {
-            company: 'Wellness Co. Storefront',
-            line1: '710 Market St',
-            cityState: 'San Francisco, CA 94103, USA'
-          },
-          shipping: {
-            method: 'USPS Priority',
-            is3rdParty: false,
-            account: '-',
-            zip: '-'
-          },
-          items: [
-            { sku: 'WH-1000XM5', title: 'Sony Wireless Headphones', qty: 80, type: 'sony' },
-            { sku: 'TMBLR-40', title: 'YETI Rambler 40oz', qty: 100, type: 'yeti' }
-          ],
-          instructions: 'Deliver to rear loading entrance.'
-        }
-      ];
-
-      // Product SVG Thumbs
       const SVGS = {
         sony: `<svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
@@ -838,95 +507,37 @@
         </svg>`
       };
 
-      const S = window.StarkSystem;
-
+      let S;
+      const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const closed=status=>['SHIPPED','DELIVERED','CANCELLED','EXPIRED'].includes(status);
+      const navigate=url=>window.StarkNavigation?.navigate?window.StarkNavigation.navigate(url):location.assign(url);
+      const dateLabel=value=>value?String(value).slice(0,10):'—';
       function getLiveOrders() {
-        const list = [];
-        const seen = new Set();
-
-        if (S && S.getState) {
-          try {
-            const state = S.getState();
-            const accounts = state?.enterprise?.accounts || [];
-            const enterpriseOrders = state?.enterprise?.orders || [];
-
-            enterpriseOrders.forEach(o => {
-              const poKey = (o.po || '').toLowerCase();
-              const numKey = (o.po || o.orderNumber?.replace('SO-', '') || o.id).toLowerCase();
-              if (seen.has(poKey) || seen.has(numKey)) return;
-              if (poKey) seen.add(poKey);
-              if (numKey) seen.add(numKey);
-
-              const acc = accounts.find(a => a.id === o.accountId);
-              const custName = acc?.name || o.shipping?.company || o.accountId || 'ABC Company';
-              const typeStr = o.type === 'HOLD_PO' ? 'Hold PO' : o.type === 'BULK_PO' ? 'Bulk PO' : 'Firm PO';
-              const typeClass = o.type === 'HOLD_PO' ? 'oo-badge-hold' : o.type === 'BULK_PO' ? 'oo-badge-bulk' : 'oo-badge-firm';
-              const is3rd = !!(o.shipping?.thirdPartyAccount || o.shipping?.is3rdParty);
-
-              const newRow = {
-                enterpriseId: o.id,
-                num: o.po || o.orderNumber?.replace('SO-', '') || o.id,
-                po: o.po || '-',
-                customer: custName,
-                type: typeStr,
-                typeClass: typeClass,
-                inhands: o.inHandsDate || '10/28/2026',
-                shipMethod: o.shipping?.method || 'UPS Ground',
-                itemCount: o.lines?.length || 1,
-                totalQty: (o.lines || []).reduce((n, l) => n + (l.qty || 0), 0),
-                status: o.status === 'CANCELLED' ? 'Cancelled' : o.status === 'SHIPPED' ? 'Shipped' : 'Open',
-                region: o.region || 'US',
-                salesOrder: o.orderNumber || 'SO-' + o.po,
-                holdExpiry: o.holdUntil || '-',
-                program: o.programId || 'No program',
-                shipTo: {
-                  company: o.shipping?.company || custName,
-                  line1: o.shipping?.destination || '1234 Main St, Suite 500',
-                  cityState: 'Tampa, FL 33602, USA'
-                },
-                shipping: {
-                  method: o.shipping?.method || 'UPS Ground',
-                  is3rdParty: is3rd,
-                  account: o.shipping?.thirdPartyAccount || '-',
-                  zip: o.shipping?.thirdPartyZip || '-'
-                },
-                items: (o.lines || []).map(l => {
-                  const skuLower = (l.sku || '').toLowerCase();
-                  const type = skuLower.includes('sony') ? 'sony' : skuLower.includes('nb') ? 'nb' : 'yeti';
-                  return {
-                    sku: l.model || l.sku,
-                    title: l.title || l.description || l.sku,
-                    qty: l.qty,
-                    type: type
-                  };
-                }),
-                instructions: o.instructions || 'Standard delivery.'
-              };
-
-              list.push(newRow);
-            });
-          } catch(err) {
-            console.warn('Error reading enterprise orders:', err);
-          }
-        }
-
-        // Add base sample orders that aren't already represented
-        BASE_ORDERS_DATA.forEach(baseRow => {
-          const poKey = (baseRow.po || '').toLowerCase();
-          const numKey = (baseRow.num || '').toLowerCase();
-          if (!seen.has(poKey) && !seen.has(numKey)) {
-            list.push(JSON.parse(JSON.stringify(baseRow)));
-            if (poKey && poKey !== '-') seen.add(poKey);
-            if (numKey) seen.add(numKey);
-          }
+        if(!S?.getState)return [];
+        const state=S.getState(),e=state.enterprise;
+        return e.orders.map(o=>{
+          const account=e.accounts.find(a=>a.id===o.accountId),address=o.address||{};
+          const type={FIRM_PO:'Firm PO',HOLD_PO:'Hold PO',BULK_PO:'Bulk PO',EVENT_PO:'Event PO',REDEMPTION_PO:'Redemption PO'};
+          const orderType=o.purpose==='EVENT'?'Event PO':type[o.type]||o.type;
+          const num=o.orderNumber||o.po||o.id;
+          return {
+            enterpriseId:o.id,num,po:o.po||'—',customer:account?.name||o.customerName||o.accountId||'—',
+            type:orderType,typeClass:o.type==='HOLD_PO'?'oo-badge-hold':o.type==='BULK_PO'?'oo-badge-bulk':'oo-badge-firm',
+            inhands:dateLabel(o.inHandsDate),createdAt:o.createdAt||'',shipMethod:o.shipping?.method||'—',
+            warehouse:window.StarkFulfillment?.warehouseName(o)||o.shipping?.warehouse||'',
+            itemCount:o.lines.length,totalQty:o.lines.reduce((n,l)=>n+Number(l.qty||0),0),
+            rawStatus:o.status,isOpen:!closed(o.status),status:String(o.status).toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()),
+            region:o.region||'US',salesOrder:o.orderNumber||'—',holdExpiry:dateLabel(o.holdUntil),
+            program:e.programs.find(p=>p.id===o.programId)?.name||'No program',
+            shipTo:{company:address.name||account?.name||'',line1:[address.line1,address.line2,address.line3].filter(Boolean).join(', ')||o.shipping?.destination||'',cityState:[address.city,address.state,address.zip,address.country].filter(Boolean).join(', ')},
+            shipping:{method:o.shipping?.method||'',is3rdParty:o.shipping?.billingType==='THIRD_PARTY'||!!o.shipping?.thirdPartyAccount,account:o.shipping?.thirdPartyAccount||'—',zip:o.shipping?.thirdPartyZip||'—'},
+            items:o.lines.map(l=>({sku:l.model||e.inventory.find(i=>i.sku===l.sku)?.model||l.sku,title:l.description||l.title||e.inventory.find(i=>i.sku===l.sku)?.title||l.sku,qty:l.qty,type:/sony/i.test(l.sku)?'sony':/nb/i.test(l.sku)?'nb':'yeti'})),
+            instructions:o.instructions||'',editUrl:'create-order.html?id='+encodeURIComponent(o.id),record:o
+          };
         });
-
-        return list;
       }
 
-      let ORDERS_DATA = [];
-      let selectedOrderNum = '315980';
-      let activeTabFilter = 'all';
+      let ORDERS_DATA=[],selectedOrderNum='',activeTabFilter='all',currentPage=1,pageSize=10;
 
       function notice(message, error = false) {
         if (window.StarkSystemUI?.notice) {
@@ -960,8 +571,8 @@
         document.querySelector('#oo-p-prog').textContent = order.program || 'No program';
 
         document.querySelector('#oo-p-ship-company').textContent = order.shipTo?.company || order.customer;
-        document.querySelector('#oo-p-ship-addr1').textContent = order.shipTo?.line1 || '1234 Main St, Suite 500';
-        document.querySelector('#oo-p-ship-citystate').textContent = order.shipTo?.cityState || 'Tampa, FL 33602, USA';
+        document.querySelector('#oo-p-ship-addr1').textContent = order.shipTo?.line1 || '—';
+        document.querySelector('#oo-p-ship-citystate').textContent = order.shipTo?.cityState || '—';
 
         document.querySelector('#oo-p-ship-method').textContent = order.shipMethod;
         document.querySelector('#oo-p-3rd-active').textContent = order.shipping?.is3rdParty ? 'Yes' : 'No';
@@ -980,8 +591,8 @@
                 ${SVGS[it.type] || SVGS.sony}
               </div>
               <div class="oo-panel-item-meta">
-                <div class="oo-panel-item-title">${it.sku}</div>
-                <div class="oo-panel-item-sub">${it.title}</div>
+                <div class="oo-panel-item-title">${esc(it.sku)}</div>
+                <div class="oo-panel-item-sub">${esc(it.title)}</div>
               </div>
               <div class="oo-panel-item-qty">Qty: ${it.qty}</div>
             </div>
@@ -1026,12 +637,12 @@
           <button type="button" data-op="view" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
             🔍 View details
           </button>
-          <a href="create-order.html?id=${ord.num}" style="display:flex; align-items:center; gap:8px; padding:7px 10px; text-decoration:none; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
+          <a href="${esc(ord.editUrl)}" style="display:flex; align-items:center; gap:8px; padding:7px 10px; text-decoration:none; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
             ✏️ Edit order
           </a>
           ${ord.status !== 'Shipped' ? `
             <button type="button" data-op="ship" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#087f78; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
-              🚚 Mark as Shipped
+              🚚 Open shipping workflow
             </button>
           ` : ''}
           <button type="button" data-op="delete" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#ef4444; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
@@ -1071,202 +682,43 @@
 
         dd.querySelector('[data-op="cancel"]')?.addEventListener('click', () => {
           dd.remove();
-          if (confirm(`Are you sure you want to cancel order ${ord.num}? Reserved stock will be released.`)) {
+          if (confirm(`Are you sure you want to cancel order ${esc(ord.num)}? Reserved stock will be released.`)) {
             cancelLiveOrder(ord);
           }
         });
       }
 
-      function releaseOrderHold(ord, actionType) {
-        const lines = ord.items || ord.lines || [];
-        const isHoldOrEvent = /hold/i.test(ord.type || '') || /event/i.test(ord.type || '') || /event/i.test(ord.purpose || '');
-
-        try {
-          const keys = ['stark-item-master-catalog', 'stark.enterpriseItemMaster.customRecords.v2'];
-          keys.forEach(k => {
-            const raw = localStorage.getItem(k);
-            if (!raw) return;
-            const cat = JSON.parse(raw);
-            if (!Array.isArray(cat)) return;
-
-            lines.forEach(line => {
-              const sku = (line.sku || '').toLowerCase();
-              const model = (line.model || '').toLowerCase();
-              const qty = Number(line.qty || line.allocated || line.quantity) || 0;
-
-              const mItem = cat.find(x => 
-                (x.sku && x.sku.toLowerCase() === sku) || 
-                (x.model && x.model.toLowerCase() === model) || 
-                (x.sku && x.sku.toLowerCase() === model) || 
-                (x.model && x.model.toLowerCase() === sku) ||
-                (x.title && line.title && x.title.toLowerCase() === line.title.toLowerCase())
-              );
-
-              if (mItem) {
-                // If the order had hold quantities, remove it
-                if (isHoldOrEvent) {
-                  mItem.onHold = Math.max(0, (Number(mItem.onHold) || 0) - qty);
-                  if (Array.isArray(mItem.warehouses)) {
-                    const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
-                    if (wh) wh.onHold = Math.max(0, (Number(wh.onHold) || 0) - qty);
-                  }
-                }
-
-                if (actionType === 'shipped') {
-                  // Shipped items physically depart the warehouse
-                  mItem.totalATS = Math.max(0, (Number(mItem.totalATS) || 0) - qty);
-                  if (mItem.onHand !== undefined) mItem.onHand = Math.max(0, (Number(mItem.onHand) || 0) - qty);
-                  if (Array.isArray(mItem.warehouses)) {
-                    const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
-                    if (wh) wh.ats = Math.max(0, (Number(wh.ats) || 0) - qty);
-                  }
-                  mItem.history = mItem.history || [];
-                  mItem.history.unshift({
-                    date: new Date().toISOString(),
-                    type: 'SHIP',
-                    title: 'Order Shipped',
-                    detail: `Order #${ord.num} marked as Shipped (${qty} units). Hold quantity removed.`,
-                    actor: 'Shipping Station'
-                  });
-                } else if (actionType === 'deleted' || actionType === 'cancelled') {
-                  // If deleted or cancelled, hold quantity is removed and included in available quantity
-                  mItem.history = mItem.history || [];
-                  mItem.history.unshift({
-                    date: new Date().toISOString(),
-                    type: 'DELETE',
-                    title: actionType === 'deleted' ? 'Order Deleted' : 'Order Cancelled',
-                    detail: `Order #${ord.num} ${actionType}. Hold quantity (${qty}) removed and included in available stock.`,
-                    actor: 'Order Desk'
-                  });
-                }
-              }
-            });
-
-            localStorage.setItem(k, JSON.stringify(cat));
-          });
-        } catch (err) {
-          console.warn('Error updating item master hold quantity:', err);
-        }
-
-        // Also sync with StarkSystem if available
-        if (S && S.transaction) {
-          try {
-            if (actionType === 'shipped') {
-              if (typeof S.shipOrder === 'function') {
-                S.shipOrder(ord.enterpriseId || ord.num);
-              } else {
-                S.transaction('ORDER_SHIPPED', ord.enterpriseId || ord.num, s => {
-                  const target = s.enterprise.orders.find(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
-                  if (target) {
-                    target.status = 'SHIPPED';
-                    target.tracking = '1Z' + Math.random().toString(36).substring(2, 10).toUpperCase();
-                    target.updatedAt = S.stamp ? S.stamp() : new Date().toISOString();
-                    (target.lines || []).forEach(l => {
-                      l.shipped = l.qty;
-                      const inv = s.enterprise.inventory.find(i => i.sku === l.sku);
-                      if (inv) {
-                        inv.onHand = Math.max(0, inv.onHand - l.qty);
-                        if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - l.qty);
-                        inv.reserved = Math.max(0, (inv.reserved || 0) - l.qty);
-                      }
-                    });
-                  }
-                });
-              }
-            } else if (actionType === 'deleted') {
-              if (typeof S.deleteOrder === 'function') {
-                S.deleteOrder(ord.enterpriseId || ord.num);
-              } else {
-                S.transaction('ORDER_DELETED', ord.enterpriseId || ord.num, s => {
-                  const idx = s.enterprise.orders.findIndex(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
-                  if (idx !== -1) {
-                    const target = s.enterprise.orders[idx];
-                    (target.lines || []).forEach(l => {
-                      const inv = s.enterprise.inventory.find(i => i.sku === l.sku);
-                      if (inv) {
-                        if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - l.qty);
-                        inv.reserved = Math.max(0, (inv.reserved || 0) - l.qty);
-                      }
-                    });
-                    s.enterprise.orders.splice(idx, 1);
-                  }
-                });
-              }
-            } else if (actionType === 'cancelled') {
-              S.transaction('ORDER_CANCELLED', ord.enterpriseId || ord.num, s => {
-                const target = s.enterprise.orders.find(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
-                if (target) {
-                  target.status = 'CANCELLED';
-                  target.updatedAt = S.stamp ? S.stamp() : new Date().toISOString();
-                  (target.lines || []).forEach(l => {
-                    const inv = s.enterprise.inventory.find(i => i.sku === l.sku);
-                    if (inv) {
-                      if (inv.onHold) inv.onHold = Math.max(0, inv.onHold - l.qty);
-                      inv.reserved = Math.max(0, (inv.reserved || 0) - l.qty);
-                    }
-                  });
-                  const acc = s.enterprise.accounts.find(a => a.id === target.accountId);
-                  if (acc) {
-                    const val = (target.lines || []).reduce((n, l) => n + l.qty * l.price, 0);
-                    acc.creditUsed = Math.max(0, (acc.creditUsed || 0) - val);
-                  }
-                }
-              });
-            }
-          } catch (e) {
-            console.warn(e);
-          }
-        }
-
-        // Also sync with stark-enterprise-orders in localStorage
-        try {
-          const rawE = localStorage.getItem('stark-enterprise-orders');
-          if (rawE) {
-            let eOrders = JSON.parse(rawE);
-            if (Array.isArray(eOrders)) {
-              if (actionType === 'deleted') {
-                eOrders = eOrders.filter(o => o.id !== ord.enterpriseId && o.po !== ord.po && o.po !== ord.num);
-              } else if (actionType === 'shipped') {
-                const target = eOrders.find(o => o.id === ord.enterpriseId || o.po === ord.po || o.po === ord.num);
-                if (target) {
-                  target.status = 'SHIPPED';
-                  target.tracking = '1Z' + Math.random().toString(36).substring(2, 10).toUpperCase();
-                }
-              }
-              localStorage.setItem('stark-enterprise-orders', JSON.stringify(eOrders));
-            }
-          }
-        } catch (_) {}
-      }
-
       function shipLiveOrder(ord) {
-        releaseOrderHold(ord, 'shipped');
-        ord.status = 'Shipped';
-        notice(`Order #${ord.num} marked as Shipped. Hold quantity removed and available stock updated.`);
-        renderTable();
-        const cur = ORDERS_DATA.find(x => x.num === ord.num);
-        if (cur) updatePanel(cur);
+        navigate(S.url('shipping/index.html?search='+encodeURIComponent(ord.po)));
       }
-
       function deleteLiveOrder(ord) {
-        if (!confirm(`Are you sure you want to delete order #${ord.num}? Any hold quantities will be removed and included in available stock.`)) return;
-        releaseOrderHold(ord, 'deleted');
-        ORDERS_DATA = ORDERS_DATA.filter(o => o.num !== ord.num && o.po !== ord.num && o.po !== ord.po);
-        notice(`Order #${ord.num} deleted. Hold quantity removed and included in available stock.`);
-        if (selectedOrderNum === ord.num) {
-          const next = ORDERS_DATA[0];
-          if (next) updatePanel(next);
+        const record=S.getState().enterprise.orders.find(o=>o.id===ord.enterpriseId);
+        if(!record||!window.StarkFulfillment.pending(record)||window.StarkFulfillment.final(record)){
+          notice('Only unvalidated orders can be deleted. Cancel an active order to retain its fulfillment history.',true);return;
         }
-        renderTable();
+        if(!confirm(`Delete unvalidated order #${ord.num}?`))return;
+        try{S.deleteOrder(ord.enterpriseId);renderTable();notice(`Draft #${ord.num} deleted.`);}
+        catch(error){notice(error.message,true);}
+      }
+      function cancelLiveOrder(ord) {
+        try{S.cancelOrder(ord.enterpriseId);renderTable();notice(`Order #${ord.num} cancelled.`);}
+        catch(error){notice(error.message,true);}
       }
 
-      function cancelLiveOrder(ord) {
-        releaseOrderHold(ord, 'cancelled');
-        ord.status = 'Cancelled';
-        notice(`Order #${ord.num} cancelled. Hold quantity removed and inventory allocations released.`);
-        renderTable();
-        const cur = ORDERS_DATA.find(x => x.num === ord.num);
-        if (cur) updatePanel(cur);
+      function renderPagination(total) {
+        const pages=Math.max(1,Math.ceil(total/pageSize));
+        currentPage=Math.max(1,Math.min(currentPage,pages));
+        document.querySelector('#oo-pag-start').textContent=total?(currentPage-1)*pageSize+1:0;
+        document.querySelector('#oo-pag-end').textContent=Math.min(currentPage*pageSize,total);
+        document.querySelector('#oo-pag-total').textContent=total;
+        const button=(label,value,text,disabled=false)=>`<button type="button" class="oo-page-btn ${value===currentPage&&/^\d+$/.test(label)?'active':''}" aria-label="${label}" data-page-target="${value}" ${disabled?'disabled':''} ${value===currentPage&&/^\d+$/.test(label)?'aria-current="page"':''}>${text}</button>`;
+        const numbers=new Set([1,pages]);
+        for(let p=Math.max(1,currentPage-2);p<=Math.min(pages,currentPage+2);p++)numbers.add(p);
+        let last=0,middle='';
+        [...numbers].sort((a,b)=>a-b).forEach(p=>{if(last&&p>last+1)middle+='<span aria-hidden="true">…</span>';middle+=button(String(p),p,p);last=p;});
+        const host=document.querySelector('#oo-page-buttons');
+        host.innerHTML=button('First page',1,'«',currentPage===1)+button('Previous page',currentPage-1,'‹',currentPage===1)+middle+button('Next page',currentPage+1,'›',currentPage===pages)+button('Last page',pages,'»',currentPage===pages);
+        host.querySelectorAll('[data-page-target]').forEach(node=>node.onclick=()=>{currentPage=Number(node.dataset.pageTarget);renderTable();});
       }
 
       function renderTable() {
@@ -1276,11 +728,11 @@
         ORDERS_DATA = getLiveOrders();
 
         // Update count badges
-        const countAll = ORDERS_DATA.filter(o => o.status === 'Open').length;
-        const countFirm = ORDERS_DATA.filter(o => o.type === 'Firm PO' && o.status === 'Open').length;
-        const countHold = ORDERS_DATA.filter(o => o.type === 'Hold PO' && o.status === 'Open').length;
-        const countBulk = ORDERS_DATA.filter(o => o.type === 'Bulk PO' && o.status === 'Open').length;
-        const countEvent = ORDERS_DATA.filter(o => o.type === 'Event PO' && o.status === 'Open').length;
+        const countAll = ORDERS_DATA.filter(o => o.isOpen).length;
+        const countFirm = ORDERS_DATA.filter(o => o.type === 'Firm PO' && o.isOpen).length;
+        const countHold = ORDERS_DATA.filter(o => o.type === 'Hold PO' && o.isOpen).length;
+        const countBulk = ORDERS_DATA.filter(o => o.type === 'Bulk PO' && o.isOpen).length;
+        const countEvent = ORDERS_DATA.filter(o => o.type === 'Event PO' && o.isOpen).length;
 
         const pAll = document.querySelector('.oo-pill-tab[data-tab="all"] .oo-pill-count');
         if (pAll) pAll.textContent = countAll;
@@ -1298,8 +750,13 @@
         const typeVal = document.querySelector('#oo-filter-type')?.value || 'all';
         const shipVal = document.querySelector('#oo-filter-shipmethod')?.value || 'all';
         const regVal = document.querySelector('#oo-filter-region')?.value || 'all';
+        const statusVal=document.querySelector('#oo-filter-status').value;
+        const warehouseVal=document.querySelector('#oo-filter-warehouse').value;
 
         const filtered = ORDERS_DATA.filter(o => {
+          if(statusVal==='Open'&&!o.isOpen)return false;
+          if(statusVal!=='all'&&statusVal!=='Open'&&o.status!==statusVal)return false;
+          if(warehouseVal!=='all'&&o.warehouse!==warehouseVal)return false;
           if (activeTabFilter === 'firm' && o.type !== 'Firm PO') return false;
           if (activeTabFilter === 'hold' && o.type !== 'Hold PO') return false;
           if (activeTabFilter === 'bulk' && o.type !== 'Bulk PO') return false;
@@ -1311,65 +768,62 @@
           if (regVal !== 'all' && (o.region || 'US') !== regVal) return false;
 
           if (searchVal) {
-            const rowText = `${o.num} ${o.po} ${o.customer} ${o.type} ${o.shipMethod} ${o.items.map(i=>i.sku).join(' ')}`.toLowerCase();
+            const rowText = `${o.num} ${o.po} ${o.enterpriseId} ${o.customer} ${o.type} ${o.shipMethod} ${o.record.tracking||''} ${o.items.map(i=>i.sku).join(' ')}`.toLowerCase();
             if (!rowText.includes(searchVal)) return false;
           }
           return true;
         });
 
-        const pagStart = filtered.length > 0 ? 1 : 0;
-        const pagEnd = Math.min(filtered.length, 10);
-        const pagTotal = filtered.length;
-        const pStartEl = document.querySelector('#oo-pag-start');
-        const pEndEl = document.querySelector('#oo-pag-end');
-        const pTotEl = document.querySelector('#oo-pag-total');
-        if (pStartEl) pStartEl.textContent = pagStart;
-        if (pEndEl) pEndEl.textContent = pagEnd;
-        if (pTotEl) pTotEl.textContent = pagTotal;
+        renderPagination(filtered.length);
+        const pageRows=filtered.slice((currentPage-1)*pageSize,currentPage*pageSize);
 
         if (filtered.length === 0) {
           tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:36px; color:#64748b;">No open orders found matching the filter criteria.</td></tr>';
+          document.querySelector('#oo-detail-panel').style.display='none';
+          document.querySelector('#oo-split-container').classList.add('no-panel');
           return;
         }
 
-        tbody.innerHTML = filtered.map((ord, idx) => `
-          <tr data-order-num="${ord.num}" class="${ord.num === selectedOrderNum ? 'selected' : ''}">
+        tbody.innerHTML = pageRows.map((ord, idx) => `
+          <tr data-order-num="${esc(ord.num)}" class="${ord.num === selectedOrderNum ? 'selected' : ''}">
             <td onclick="event.stopPropagation();">
-              <input type="checkbox" class="oo-checkbox" aria-label="Select order ${ord.num}">
+              <input type="checkbox" class="oo-checkbox" aria-label="Select order ${esc(ord.num)}">
             </td>
-            <td>${idx + 1}</td>
+            <td>${(currentPage-1)*pageSize+idx+1}</td>
             <td>
-              <a href="create-order.html?id=${ord.num}" class="oo-order-link" onclick="event.stopPropagation();">${ord.num}</a>
+              <a href="${esc(ord.editUrl)}" class="oo-order-link" onclick="event.stopPropagation();">${esc(ord.num)}</a>
             </td>
-            <td>${ord.po}</td>
-            <td><strong>${ord.customer}</strong></td>
+            <td>${esc(ord.po)}</td>
+            <td><strong>${esc(ord.customer)}</strong></td>
             <td>
-              <span class="oo-badge-type ${ord.typeClass}">${ord.type}</span>
+              <span class="oo-badge-type ${ord.typeClass}">${esc(ord.type)}</span>
             </td>
             <td>
-              <span class="oo-badge-date">${ord.inhands}</span>
+              <span class="oo-badge-date">${esc(ord.inhands)}</span>
             </td>
-            <td>${ord.shipMethod}</td>
+            <td>${esc(ord.shipMethod)}</td>
             <td style="text-align: center;">${ord.itemCount}</td>
             <td style="text-align: right; font-weight:600;">${ord.totalQty.toLocaleString()}</td>
             <td style="text-align: center;">
-              <span class="${ord.status === 'Cancelled' ? 'oo-badge-type oo-badge-cancelled' : 'oo-badge-status-open'}">${ord.status}</span>
+              <span class="${ord.status === 'Cancelled' ? 'oo-badge-type oo-badge-cancelled' : 'oo-badge-status-open'}">${esc(ord.status)}</span>
             </td>
             <td style="text-align: center;" onclick="event.stopPropagation();">
               <div class="oo-row-actions">
-                <button type="button" class="oo-action-icon-btn oo-view-btn" data-num="${ord.num}" title="View Details" aria-label="View Details">
+                <button type="button" class="oo-action-icon-btn oo-view-btn" data-num="${esc(ord.num)}" title="View Details" aria-label="View Details">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
                 </button>
-                <a href="create-order.html?id=${ord.num}" class="oo-action-icon-btn" title="Edit Order" aria-label="Edit Order">
+                <a href="${esc(ord.editUrl)}" class="oo-action-icon-btn" title="Edit Order" aria-label="Edit Order">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 </a>
-                <button type="button" class="oo-action-icon-btn more-btn" data-num="${ord.num}" title="More Options" aria-label="More Options">
+                <button type="button" class="oo-action-icon-btn more-btn" data-num="${esc(ord.num)}" title="More Options" aria-label="More Options">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                 </button>
               </div>
             </td>
           </tr>
         `).join('');
+
+        updatePanel(filtered.find(o=>o.num===selectedOrderNum)||pageRows[0]);
 
         // Row Click Listeners
         tbody.querySelectorAll('tr').forEach(tr => {
@@ -1402,6 +856,12 @@
       }
 
       document.addEventListener('DOMContentLoaded', () => {
+        S=window.StarkSystem;
+        if(!S){notice('Workspace data could not be loaded. Reload before making changes.',true);return;}
+        document.querySelector('#oo-filter-search').value=new URLSearchParams(location.search).get('search')||'';
+        const applyFilters=()=>{currentPage=1;renderTable();};
+        document.querySelector('#oo-page-size').onchange=event=>{pageSize=Number(event.target.value);currentPage=1;renderTable();};
+        window.addEventListener('stark:system-change',()=>{populateCustomerFilter();renderTable();});
         // Check for toast message from create-order.html
         try {
           const toastMsg = sessionStorage.getItem('stark-toast-msg');
@@ -1412,8 +872,6 @@
         } catch(e) {}
 
         renderTable();
-        const initialOrder = ORDERS_DATA.find(o => o.num === selectedOrderNum) || ORDERS_DATA[0];
-        updatePanel(initialOrder);
 
         // Panel Close Button
         document.querySelector('#oo-panel-close-btn')?.addEventListener('click', () => {
@@ -1433,7 +891,8 @@
 
         // Edit button in Panel
         document.querySelector('#oo-panel-edit-action')?.addEventListener('click', () => {
-          window.location.href = `create-order.html?id=${selectedOrderNum}`;
+          const current=ORDERS_DATA.find(o=>o.num===selectedOrderNum);
+          if(current)navigate(current.editUrl);
         });
 
         // Delete button in Panel
@@ -1456,10 +915,10 @@
           if (!select) return;
           const currentVal = select.value;
           const accounts = S?.getState ? (S.getState()?.enterprise?.accounts || []) : [];
-          const customerNames = new Set(['ABC Company', 'XYZ Retail', 'Cozy Earth', 'Kendra Scott', 'BOA', 'Smith & Nephew', 'Acme Gifts', 'Global Brands', 'Wellness Co.']);
+          const customerNames = new Set();
           accounts.forEach(a => { if (a && a.name) customerNames.add(a.name); });
           select.innerHTML = '<option value="all">All customers</option>' + 
-            Array.from(customerNames).map(name => `<option value="${name}" ${name === currentVal ? 'selected' : ''}>${name}</option>`).join('');
+            Array.from(customerNames).map(name => `<option value="${esc(name)}" ${name === currentVal ? 'selected' : ''}>${esc(name)}</option>`).join('');
         }
         populateCustomerFilter();
 
@@ -1469,17 +928,17 @@
             document.querySelectorAll('.oo-pill-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             activeTabFilter = tab.dataset.tab;
-            renderTable();
+            applyFilters();
           };
         });
 
         // Search and Select Filters
-        ['#oo-filter-search', '#oo-filter-customer', '#oo-filter-type', '#oo-filter-shipmethod', '#oo-filter-region'].forEach(sel => {
-          document.querySelector(sel)?.addEventListener('input', renderTable);
-          document.querySelector(sel)?.addEventListener('change', renderTable);
+        ['#oo-filter-search', '#oo-filter-customer', '#oo-filter-type', '#oo-filter-shipmethod', '#oo-filter-region', '#oo-filter-status', '#oo-filter-warehouse'].forEach(sel => {
+          document.querySelector(sel)?.addEventListener('input', applyFilters);
+          document.querySelector(sel)?.addEventListener('change', applyFilters);
         });
 
-        document.querySelector('#oo-btn-search')?.addEventListener('click', renderTable);
+        document.querySelector('#oo-btn-search')?.addEventListener('click', applyFilters);
 
         // Reset Button
         document.querySelector('#oo-btn-reset')?.addEventListener('click', () => {
@@ -1491,6 +950,8 @@
           document.querySelector('#oo-filter-region').value = 'all';
           document.querySelector('#oo-filter-daterange').value = '';
           document.querySelector('#oo-filter-inhands').value = '';
+          document.querySelector('#oo-filter-status').value='Open';
+          currentPage=1;
           activeTabFilter = 'all';
           document.querySelectorAll('.oo-pill-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
           renderTable();

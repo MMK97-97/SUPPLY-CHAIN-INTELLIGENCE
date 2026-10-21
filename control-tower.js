@@ -14,13 +14,14 @@
   
   let period=30,tab='orders',healthFilter='',queue='warehouse',orderStage='recent';
   let viewMode=localStorage.getItem('stark-overview-view')||'telemetry';
+  let moduleArrangement = null;
   const seriesVisible={orders:true,shipments:true,delivered:true};
   let chartMetric='orders';
   let simDemand=0;
   let simDelay=0;
 
   function snapshot(state,region,days=30,now=new Date()){
-    days=days==='all'?'all':[30,90].includes(Number(days))?Number(days):30;
+    days=days==='all'?'all':[7,14,30,90].includes(Number(days))?Number(days):30;
     region=S.regionCode(region);const e=state.enterprise,l=state.logistics,bySku=new Map(e.inventory.map(i=>[i.sku,i])),byOrder=new Map(e.orders.map(o=>[o.id,o]));
     const itemRegion=i=>S.regionCode(i?.region||'US');
     const matches=o=>o.region?S.regionCode(o.region)===region:o.lines.some(line=>itemRegion(bySku.get(line.sku))===region);
@@ -44,10 +45,10 @@
     const bins=Math.min(30,span),points=Array.from({length:bins},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+Math.floor(i*span/bins));return {date:day(d),orders:0,shipments:0,delivered:0};});
     const add=(value,key)=>{const d=date(value);if(!d||d<start||d>now)return;const index=Math.min(bins-1,Math.floor((calendarDay(d)-calendarDay(start))*bins/span));if(index>=0)points[index][key]++;};
     orders.forEach(o=>{add(o.createdAt,'orders');if(o.status==='DELIVERED')add(o.deliveredAt,'delivered');});shipments.forEach(p=>add(p.dispatchedAt,'shipments'));
-    const credit={};e.accounts.forEach(a=>{const c=a.currency||'USD';credit[c]=(credit[c]||0)+n(a.creditUsed);});
+    const credit={},creditLimits={};e.accounts.forEach(a=>{const c=a.currency||'USD';credit[c]=(credit[c]||0)+n(a.creditUsed);creditLimits[c]=(creditLimits[c]||0)+n(a.creditLimit);});
     const digital=e.vaultTokens.filter(t=>t.state==='DISPATCHED'&&itemRegion(bySku.get(t.sku))===region).length;
     const issues=S.issues().filter(issue=>{const o=e.orders.find(o=>issue.title.startsWith(o.po+':'));if(o)return matches(o);const p=e.purchaseOrders.find(p=>issue.title.startsWith(p.po+':'));if(p)return supplierPOs.some(x=>x.id===p.id);const i=e.inventory.find(i=>issue.title.startsWith(i.sku+':'));return !i||itemRegion(i)===region;});
-    return {state,region,regionName:names[region],orders,open,purchase,supplierPOs,physical,health,healthGroups,report,shipments,recentOrders,deliveries,onTime,points,credit,digital,issues,span,inPeriod,available:physical.reduce((v,i)=>v+i.available,0)};
+    return {state,region,regionName:names[region],orders,open,purchase,supplierPOs,physical,health,healthGroups,report,shipments,recentOrders,deliveries,onTime,points,credit,creditLimits,digital,issues,span,inPeriod,available:physical.reduce((v,i)=>v+i.available,0)};
   }
 
   const icon=name=>window.StarkSystemUI?.glyph(name)||'';
@@ -291,14 +292,22 @@
         </div>
       </div>
 
+      <div class="module-arrangement-toolbar">
+        <p id="module-arrangement-help">Drag a module header to place it anywhere. Alt + arrow keys move the focused handle.</p>
+        <button type="button" class="sys-btn" data-reset-module-layout>Restore module layout</button>
+      </div>
       <div class="module-overview-grid">
         ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction]) => `
-          <article class="module-overview-card" style="--card-accent:${color}">
+          <article class="module-overview-card" data-draggable-module="${id}" style="--card-accent:${color}">
             <header class="module-card-head">
               <span class="module-card-icon" style="background:${color}">${icon(id)}</span>
               <div class="module-card-titles">
                 <h2>${esc(label)}</h2>
                 <small>${esc(subtitle)}</small>
+              </div>
+              <div class="module-card-position-controls">
+                <button type="button" class="module-card-position-button" data-dock-module="${id}" aria-label="Return ${esc(label)} to grid" title="Return to grid" hidden>↺</button>
+                <button type="button" class="module-card-position-button module-card-drag-handle" id="module-drag-${id}" data-move-module="${id}" aria-label="Move ${esc(label)}" aria-describedby="module-arrangement-help" title="Drag to move · Alt + arrow keys · Alt + Home to return to grid"><svg viewBox="0 0 18 24" width="14" height="20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="13" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="13" cy="19" r="1.5"/></svg></button>
               </div>
             </header>
             <div class="module-card-banner">
@@ -323,6 +332,181 @@
         `).join('')}
       </div>
     `;
+  }
+
+  function initDraggableModules(host) {
+    const grid = host.querySelector('.module-overview-grid');
+    const cards = [...grid.querySelectorAll('[data-draggable-module]')];
+    const store = window.StarkWorkspace?.localStorage || window.localStorage;
+    const key = 'stark-module-card-positions-v1';
+    const entries = {}, placeholders = new Map(), preferredWidths = new Map();
+    const cleanup = [], stack = cards.map(card => card.dataset.draggableModule);
+    const padding = 12, visualViewport = window.visualViewport;
+    let drag = null, suppressed = null, suppressTimer;
+    const clamp = (value, min, max) => Math.min(Math.max(min, max), Math.max(min, value));
+    const idOf = card => card.dataset.draggableModule;
+    function listen(target, name, handler, options) {
+      target.addEventListener(name, handler, options);
+      cleanup.push(() => target.removeEventListener(name, handler, options));
+    }
+    function viewport() {
+      return { x: visualViewport?.offsetLeft || 0, y: visualViewport?.offsetTop || 0,
+        width: visualViewport?.width || window.innerWidth, height: visualViewport?.height || window.innerHeight };
+    }
+    function bounds(card) {
+      const v = viewport();
+      const width = Math.min(preferredWidths.get(idOf(card)) || 360, Math.max(0, v.width - padding * 2));
+      card.style.width = width + 'px';
+      card.style.maxHeight = Math.max(0, v.height - padding * 2) + 'px';
+      const height = Math.min(card.getBoundingClientRect().height || card.scrollHeight || 480, Math.max(0, v.height - padding * 2));
+      return { minX: v.x + padding, minY: v.y + padding,
+        maxX: Math.max(v.x + padding, v.x + v.width - width - padding),
+        maxY: Math.max(v.y + padding, v.y + v.height - height - padding) };
+    }
+    function place(card, x, y) {
+      const b = bounds(card);
+      card.style.left = clamp(x, b.minX, b.maxX) + 'px';
+      card.style.top = clamp(y, b.minY, b.maxY) + 'px';
+    }
+    function raise(card) {
+      const id = idOf(card), previous = stack.indexOf(id);
+      if (previous >= 0) stack.splice(previous, 1);
+      stack.push(id);
+      cards.filter(node => node.classList.contains('module-is-floating')).forEach(node => {
+        node.style.zIndex = String(820 + stack.indexOf(idOf(node)));
+      });
+    }
+    function float(card, width) {
+      const id = idOf(card);
+      if (!card.classList.contains('module-is-floating')) {
+        const rect = card.getBoundingClientRect(), slot = document.createElement('div');
+        slot.className = 'module-card-placeholder';
+        slot.style.height = (rect.height || 480) + 'px';
+        slot.innerHTML = `<strong>${esc(card.querySelector('h2').textContent)}</strong><span>Placed on your screen</span><button type="button" class="sys-btn" data-dock-module="${id}" aria-label="Return ${esc(card.querySelector('h2').textContent)} to grid">Return to grid</button>`;
+        grid.insertBefore(slot, card);
+        placeholders.set(id, slot);
+        preferredWidths.set(id, width || rect.width || 360);
+        card.classList.add('module-is-floating');
+        card.querySelector('[data-dock-module]').hidden = false;
+      }
+      if (width) preferredWidths.set(id, width);
+      raise(card);
+    }
+    function persist() {
+      try { store.setItem(key, JSON.stringify(entries)); } catch (_) { /* Layout changes still work without storage. */ }
+    }
+    function remember(card) {
+      const b = bounds(card);
+      entries[idOf(card)] = {
+        x: (parseFloat(card.style.left) - b.minX) / (b.maxX - b.minX || 1),
+        y: (parseFloat(card.style.top) - b.minY) / (b.maxY - b.minY || 1),
+        width: preferredWidths.get(idOf(card))
+      };
+      persist();
+    }
+    function dock(card, save = true) {
+      const id = idOf(card);
+      card.classList.remove('module-is-floating', 'module-is-dragging');
+      for (const property of ['left', 'top', 'width', 'max-height', 'z-index']) card.style.removeProperty(property);
+      card.querySelector('[data-dock-module]').hidden = true;
+      placeholders.get(id)?.remove(); placeholders.delete(id); preferredWidths.delete(id);
+      delete entries[id];
+      if (save) persist();
+    }
+    function restore(card, entry) {
+      float(card, entry.width);
+      const b = bounds(card);
+      place(card, b.minX + entry.x * (b.maxX - b.minX), b.minY + entry.y * (b.maxY - b.minY));
+    }
+    try {
+      const saved = JSON.parse(store.getItem(key));
+      for (const card of cards) {
+        const entry = saved?.[idOf(card)];
+        if (entry && ['x', 'y'].every(k => Number.isFinite(entry[k]) && entry[k] >= 0 && entry[k] <= 1) && Number.isFinite(entry.width) && entry.width > 0) {
+          entries[idOf(card)] = { x: entry.x, y: entry.y, width: entry.width };
+          restore(card, entries[idOf(card)]);
+        }
+      }
+    } catch (_) { /* Invalid or unavailable preferences leave the original grid intact. */ }
+
+    function finish(event, cancel = false) {
+      if (!drag || (event && event.pointerId !== drag.pointerId)) return;
+      const done = drag; drag = null;
+      done.card.classList.remove('module-is-dragging');
+      if (done.moved) {
+        if (cancel) {
+          if (done.floating) place(done.card, done.rect.left, done.rect.top);
+          else dock(done.card, false);
+        } else remember(done.card);
+        suppressed = idOf(done.card);
+        clearTimeout(suppressTimer);
+        suppressTimer = setTimeout(() => { suppressed = null; }, 500);
+      }
+      try { done.head.releasePointerCapture(done.pointerId); } catch (_) {}
+    }
+    listen(grid, 'pointerdown', event => {
+      if (!drag) { suppressed = null; clearTimeout(suppressTimer); }
+      const card = event.target.closest('[data-draggable-module]');
+      if (card?.classList.contains('module-is-floating')) raise(card);
+      const head = event.target.closest('.module-card-head');
+      const control = event.target.closest('a,button,input,select,textarea');
+      if (!card || !head || (control && !control.hasAttribute('data-move-module')) || event.isPrimary === false || event.button !== 0 || drag) return;
+      drag = { card, head, pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+        rect: card.getBoundingClientRect(), floating: card.classList.contains('module-is-floating'), moved: false };
+      try { head.setPointerCapture(event.pointerId); } catch (_) { /* Window listeners cover non-capturing devices. */ }
+    });
+    listen(window, 'pointermove', event => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+      if (!drag.moved && Math.hypot(dx, dy) > 5) {
+        drag.moved = true; float(drag.card, preferredWidths.get(idOf(drag.card)) || drag.rect.width || 360);
+        drag.card.classList.add('module-is-dragging');
+      }
+      if (drag.moved) { event.preventDefault(); place(drag.card, drag.rect.left + dx, drag.rect.top + dy); }
+    }, { passive: false });
+    listen(window, 'pointerup', event => finish(event));
+    listen(window, 'pointercancel', event => finish(event, true));
+    listen(grid, 'lostpointercapture', event => finish(event, true));
+    listen(grid, 'click', event => {
+      if (suppressed && event.detail !== 0 && event.target.closest('[data-draggable-module]')?.dataset.draggableModule === suppressed) {
+        event.preventDefault(); event.stopImmediatePropagation(); suppressed = null;
+      }
+    }, true);
+    listen(grid, 'click', event => {
+      const reset = event.target.closest('[data-dock-module]');
+      if (reset) {
+        const card = cards.find(node => idOf(node) === reset.dataset.dockModule);
+        if (card) { dock(card); card.querySelector('[data-move-module]').focus({ preventScroll: true }); }
+      }
+    });
+    listen(grid, 'keydown', event => {
+      const handle = event.target.closest('[data-move-module]');
+      if (!handle || !event.altKey) return;
+      const card = handle.closest('[data-draggable-module]');
+      if (event.key === 'Home') { event.preventDefault(); dock(card); return; }
+      const delta = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+      if (!delta) return;
+      event.preventDefault();
+      const rect = card.getBoundingClientRect(), step = event.shiftKey ? 4 : 16;
+      float(card, preferredWidths.get(idOf(card)) || rect.width || 360);
+      place(card, rect.left + delta[0] * step, rect.top + delta[1] * step);
+      remember(card);
+    });
+    listen(window, 'keydown', event => {
+      if (event.key === 'Escape' && drag) { event.preventDefault(); finish(null, true); }
+    });
+    listen(host.querySelector('[data-reset-module-layout]'), 'click', () => {
+      finish(null, true);
+      for (const card of cards) dock(card, false);
+      persist();
+    });
+    function resize() {
+      finish(null, true);
+      for (const card of cards) if (entries[idOf(card)]) restore(card, entries[idOf(card)]);
+    }
+    listen(window, 'resize', resize);
+    if (visualViewport) { listen(visualViewport, 'resize', resize); listen(visualViewport, 'scroll', resize); }
+    return { destroy() { finish(null, true); clearTimeout(suppressTimer); cleanup.forEach(remove => remove()); } };
   }
 
   function trend(model){
@@ -577,10 +761,15 @@
   function render(){
     const host=document.querySelector('#system-page-content');if(!host||document.body.dataset.systemPage!=='dashboard')return;
     const focused=document.activeElement?.id;
+    moduleArrangement?.destroy();
+    moduleArrangement = null;
     const model=snapshot(S.getState(),S.getRegion(),period);
     const e=model.state.enterprise,l=model.state.logistics;
     const currencies=Object.entries(model.credit);
     const credit=currencies.length===1?money(currencies[0][1],currencies[0][0]):currencies.length?currencies.length+' currencies':'—';
+    const creditUtilization=currencies.length?currencies.map(([currency,used])=>`${currencies.length>1?currency+' ':''}${model.creditLimits[currency]>0?Math.round(100*used/model.creditLimits[currency])+'%':'—'}`).join(' · '):'—';
+    const netTerms=e.accounts.map(a=>Number(String(a.terms||'').match(/^Net\s+(\d+)$/i)?.[1])).filter(Number.isFinite);
+    const creditSubmetric='Utilization: '+creditUtilization+(netTerms.length?' · Max Term: Net '+Math.max(...netTerms):'');
 
     host.classList.add('tower-page');
 
@@ -592,7 +781,7 @@
       } else {
         requestAnimationFrame(() => {
           const retry = window.StarkModuleNavigation?.groups ? window.StarkModuleNavigation.groups() : [];
-          if (retry.length && viewMode === 'modules') host.innerHTML = renderModuleGrid(retry);
+          if (retry.length && viewMode === 'modules') render();
         });
         return;
       }
@@ -640,6 +829,8 @@
               <button type="button" class="tower-period-btn ${period===90?'active':''}" data-period-btn="90">90D</button>
               <button type="button" class="tower-period-btn ${period==='all'?'active':''}" data-period-btn="all">All</button>
               <select id="tower-period" aria-label="Dashboard activity period" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;">
+                <option value="7" ${period===7?'selected':''}>Last 7 days</option>
+                <option value="14" ${period===14?'selected':''}>Last 14 days</option>
                 <option value="30" ${period===30?'selected':''}>Last 30 days</option>
                 <option value="90" ${period===90?'selected':''}>Last 90 days</option>
                 <option value="all" ${period==='all'?'selected':''}>All recorded activity</option>
@@ -680,7 +871,7 @@
           ${kpi('inventory','Available inventory',fmt(model.available),model.report?.items.length?(model.physical.some(i=>i.linkedStock)?'Connected stock · ':'Regional report · ')+model.region:'Operations stock · '+model.region,'inventory-dashboard-'+model.region.toLowerCase()+'.html','warehouse','#00a49c',model.available>0?'Optimal DOI':'Low Buffer',model.available>0?'up':'warning',inventorySpark,'Days of Inventory: ~42d · Safety Stock: 98%')}
           ${kpi('digital','Digital keys allocated',fmt(model.digital),'Dispatched token references','vendor-management/digital-vault.html','data','#e34770','100% Vault Sync','neutral',digitalSpark,'Zero Token Latency · Dual-Region HSM')}
           ${kpi('purchase','Open purchase orders',fmt(model.purchase.length),'All open supplier commitments','procurement/index.html','procurement','#8752e8',model.purchase.length?'Active Inbound':'Replenished','neutral',purchaseSpark,'Supplier On-Time: 96.5% · Lead Time: 18d')}
-          ${kpi('credit','Credit exposure',credit,'All CRM accounts · own currencies','crm/accounts.html','crm','#ec8326','Low Risk Profile','up',creditSpark,'Utilization: 24.8% · Max Term: Net 45')}
+          ${kpi('credit','Credit exposure',credit,'All CRM accounts · own currencies','crm/accounts.html','crm','#ec8326','Low Risk Profile','up',creditSpark,creditSubmetric)}
         </div>
 
         <div class="tower-analysis-grid">
@@ -720,7 +911,7 @@
         btn.onclick = () => {
           const val = btn.dataset.periodBtn;
           period = val === 'all' ? 'all' : Number(val);
-          if (periodSelect) periodSelect.value = (val === '7' || val === '14') ? '30' : val;
+          if (periodSelect) periodSelect.value = val;
           render();
         };
       });
@@ -787,6 +978,7 @@
       };
     });
 
+    if (viewMode === 'modules') moduleArrangement = initDraggableModules(host);
     if(focused){const target=document.getElementById(focused);if(target&&host.contains(target))target.focus();}
     initFloatingActionModule();
     window.dispatchEvent(new CustomEvent('stark:tower-rendered'));

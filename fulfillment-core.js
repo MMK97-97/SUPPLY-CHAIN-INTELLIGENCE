@@ -139,7 +139,7 @@
     const shipping = shippingInput(input);
     return {po:text(input.po),orderNumberMode,accountId:input.accountId,customerName:state.enterprise.accounts.find(a=>a.id===input.accountId).name,customerAddress:clone(book.customer),shipToSource:source,region,type:input.type,purpose:input.purpose === 'EVENT' ? 'EVENT' : 'REGULAR',eventId:input.eventId || null,programId:input.programId || null,
       address,inHandsDate:text(input.inHandsDate),holdUntil:input.type === 'HOLD_PO' && input.holdUntil ? new Date(input.holdUntil + 'T23:59:59Z').toISOString() : null,
-      instructions:text(input.instructions).slice(0,5000),warehouseId:assignedWarehouse,fulfillmentMode:input.fulfillmentMode === 'AUTO' ? 'AUTO' : 'MANUAL',
+      instructions:text(input.instructions).slice(0,5000),...(input.internalNotes===undefined?{}:{internalNotes:text(input.internalNotes).slice(0,500)}),warehouseId:assignedWarehouse,fulfillmentMode:input.fulfillmentMode === 'AUTO' ? 'AUTO' : 'MANUAL',
       shipping:{...shipping,warehouseId:assignedWarehouse,warehouse:WAREHOUSES.find(w => w.id === assignedWarehouse)?.name || '',destination:Object.values(address).filter(Boolean).join(', '),city:address.city,state:address.state,zip:address.zip,country:address.country},lines};
   }
   function assess(state, order, partnerId) {
@@ -217,7 +217,7 @@
       const order=state.enterprise.orders.find(o=>o.id===id);
       if(!order || final(order) || pending(order) || ['3PL','DROPSHIP'].includes(order.fulfillment?.kind))throw new Error('Update delivery details before external fulfillment or dispatch.');
       if(expectedVersion!==undefined && num(order.recordRevision)!==expectedVersion)throw new Error('This order changed in another tab. Reload before saving.');
-      const candidate={...order,address:cleanAddress({...order.address,...input.address}),shipToSource:'CUSTOM',inHandsDate:text(input.inHandsDate),instructions:text(input.instructions).slice(0,5000),warehouseId:input.warehouseId,
+      const candidate={...order,address:cleanAddress({...order.address,...input.address}),shipToSource:'CUSTOM',inHandsDate:text(input.inHandsDate),instructions:text(input.instructions).slice(0,5000),...(input.internalNotes===undefined?{}:{internalNotes:text(input.internalNotes).slice(0,500)}),warehouseId:input.warehouseId,
         shipping:{...order.shipping,...shippingInput(input),warehouseId:input.warehouseId,warehouse:WAREHOUSES.find(w=>w.id===input.warehouseId)?.name || ''},validation:{state:'VALIDATED',checkedAt:now(),issues:[]}};
       candidate.shipping.destination=Object.values(candidate.address).filter(Boolean).join(', ');
       const issues=assess(state,candidate);if(issues.length)throw new Error(issues[0].label+': '+issues[0].detail);

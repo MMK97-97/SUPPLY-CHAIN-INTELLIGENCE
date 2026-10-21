@@ -28,12 +28,12 @@
 
   <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
   <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
-  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261017-3">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261021-dragcards1">
   <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
 
-  <script src="assets/system-shell.js?v=20261017-2" defer></script>
+  <script src="assets/system-shell.js?v=20261021-dragcards1" defer></script>
   <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
-  <script src="assets/fulfillment-core.js?v=20261012-2" defer></script>
+  <script src="assets/fulfillment-core.js?v=20261021-fixes1" defer></script>
 </head>
 <body data-system-page="orders">
   <main class="system-page co-page-container" aria-label="Create Customer Order">
@@ -797,8 +797,8 @@
         </svg>`
       };
 
-      const S = window.StarkSystem;
-      const F = window.StarkFulfillment;
+      let S,F,loadedOrder=null,loadFailed=false;
+      const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
       function notice(message, error = false) {
         if (window.StarkSystemUI?.notice) {
@@ -849,9 +849,9 @@
 
       // Synchronize Summary Header Values
       function syncSummary() {
-        const cust = document.querySelector('#co-customer')?.value.trim() || 'ABC Company';
+        const cust = document.querySelector('#co-customer')?.value.trim() || '—';
         const type = document.querySelector('#co-order-type')?.value || 'Firm PO';
-        const po = document.querySelector('#co-customer-po')?.value.trim() || '315980';
+        const po = document.querySelector('#co-customer-po')?.value.trim() || '—';
         const reg = document.querySelector('#co-region')?.value || 'US';
         const inhands = document.querySelector('#co-inhands-date')?.value.trim() || '10/28/2026';
 
@@ -977,20 +977,20 @@
         tr.innerHTML = `
           <td class="co-td-center">${newIdx}</td>
           <td>
-            <div class="co-img-thumb" title="${desc || 'Product Image'}">
+            <div class="co-img-thumb" title="${esc(desc || 'Product Image')}">
               ${svgIcon}
             </div>
           </td>
           <td>
             <div class="co-input-icon-wrap">
-              <input type="text" class="co-input co-row-model" value="${model}" placeholder="Model# or catalog SKU">
+              <input type="text" class="co-input co-row-model" value="${esc(model)}" placeholder="Model# or catalog SKU">
               <button type="button" class="co-input-icon-btn co-row-search-btn" title="Look up item in catalog">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
             </div>
           </td>
           <td>
-            <input type="text" class="co-input co-row-desc" value="${desc}" placeholder="Description - automatic">
+            <input type="text" class="co-input co-row-desc" value="${esc(desc)}" placeholder="Description - automatic">
           </td>
           <td>
             <input type="number" class="co-input co-row-qty" value="${qty}" min="1" step="1">
@@ -1124,14 +1124,7 @@
             accounts = S.getState()?.enterprise?.accounts || [];
           } catch(e) {}
         }
-        if (!accounts.length) {
-          accounts = [
-            { id: 'demo_customer_us', name: 'Atlas Recognition (Demo)', terms: 'Net 30', status: 'ACTIVE', currency: 'USD', customerAddress: { line1: '100 Demo Avenue', city: 'Sarasota', state: 'FL', postalCode: '34236' } },
-            { id: 'demo_customer_eu', name: 'Orion Rewards (Demo)', terms: 'Net 30', status: 'ACTIVE', currency: 'EUR', customerAddress: { line1: '10 Example Street', city: 'Berlin', state: 'BE', postalCode: '10115' } },
-            { id: 'demo_customer_ca', name: 'Maple Programs (Demo)', terms: 'Net 30', status: 'ACTIVE', currency: 'CAD', customerAddress: { line1: '20 Sample Road', city: 'Toronto', state: 'ON', postalCode: 'M5V 1A1' } },
-            { id: 'acct_abc', name: 'ABC Company', terms: 'Net 30', status: 'ACTIVE', currency: 'USD' }
-          ];
-        }
+
         return accounts;
       }
 
@@ -1149,14 +1142,14 @@
             <p style="color:#64748b; font-size:13px; margin:0 0 16px 0;">Select a verified customer account to auto-populate shipping address and commercial details.</p>
             <div style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;">
               ${accounts.map(acc => {
-                const addr = acc.customerAddress?.line1 || acc.address?.line1 || '1234 Main St, Suite 500';
-                const city = acc.customerAddress?.city || acc.address?.city || 'Tampa';
-                const state = acc.customerAddress?.state || acc.address?.state || 'FL';
-                const zip = acc.customerAddress?.postalCode || acc.address?.postalCode || acc.customerAddress?.zip || acc.address?.zip || '33602';
+                const addr = acc.customerAddress?.line1 || acc.address?.line1 || '';
+                const city = acc.customerAddress?.city || acc.address?.city || '';
+                const state = acc.customerAddress?.state || acc.address?.state || '';
+                const zip = acc.customerAddress?.postalCode || acc.address?.postalCode || acc.customerAddress?.zip || acc.address?.zip || '';
                 return `
-                <div class="co-crm-card" data-name="${acc.name}" data-id="${acc.id}" data-addr="${addr}" data-city="${city}" data-state="${state}" data-zip="${zip}" style="padding:14px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
-                  <strong style="color:#0f172a; font-size:15px;">${acc.name}</strong>
-                  <div style="font-size:12px; color:#64748b; margin-top:3px;">Account ID: ${acc.id} · Type: ${acc.type || 'PARENT'} · Terms: ${acc.terms || 'Net 30'} · Status: ${acc.status || 'Active'} · Currency: ${acc.currency || 'USD'}</div>
+                <div class="co-crm-card" data-name="${esc(acc.name)}" data-id="${esc(acc.id)}" data-addr="${esc(addr)}" data-city="${esc(city)}" data-state="${esc(state)}" data-zip="${esc(zip)}" style="padding:14px; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer;">
+                  <strong style="color:#0f172a; font-size:15px;">${esc(acc.name)}</strong>
+                  <div style="font-size:12px; color:#64748b; margin-top:3px;">Account ID: ${esc(acc.id)} · Type: ${acc.type || 'PARENT'} · Terms: ${acc.terms || 'Net 30'} · Status: ${acc.status || 'Active'} · Currency: ${acc.currency || 'USD'}</div>
                 </div>
               `;}).join('')}
             </div>
@@ -1298,236 +1291,110 @@
         };
       }
 
-      // Order Submission
-      function submitOrder(validate = true) {
-        const form = document.querySelector('#co-order-form');
-        if (!form.reportValidity()) return;
+      function setField(id,value,label) {
+        const node=document.getElementById(id);
+        if(!node)return;
+        const text=String(value??'');
+        if(node.tagName==='SELECT'&&![...node.options].some(o=>o.value===text))node.add(new Option(label||text,text));
+        node.value=text;
+      }
+      function calendarDate(value) {
+        if(!value)return '';
+        const text=String(value).trim();
+        const us=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        return us?`${us[3]}-${us[1].padStart(2,'0')}-${us[2].padStart(2,'0')}`:text.slice(0,10);
+      }
+      function disableSaving(message) {
+        loadFailed=true;
+        document.querySelectorAll('#co-order-form input,#co-order-form select,#co-order-form textarea,#co-order-form button,#co-hdr-save-draft,#co-hdr-create-order').forEach(node=>node.disabled=true);
+        const help=document.createElement('p');help.id='co-load-message';help.setAttribute('role','status');help.textContent=message;
+        document.querySelector('#co-order-form').before(help);
+      }
+      function loadOrder() {
+        const id=new URLSearchParams(location.search).get('id');
+        const body=document.querySelector('#co-items-tbody');body.replaceChildren();
+        // A fresh order never inherits the unrelated design fixture.
+        for(const key of ['co-customer','co-customer-po','co-ship-company','co-address-line1','co-address-line2','co-city','co-zip','co-inhands-date','co-hold-early','co-special-instructions','co-internal-notes'])setField(key,'');
+        setField('co-sales-order','Auto-generate');
+        document.querySelector('#co-toggle-3rdparty').checked=false;
+        document.querySelector('#co-3rdparty-box').style.display='none';
+        setField('co-3rdparty-acct','');setField('co-3rdparty-zip','');
+        if(!id){setField('co-region',S.getRegion());addNewRow();return;}
+        const state=S.getState(),order=state.enterprise.orders.find(o=>o.id===id||o.po===id||o.orderNumber===id);
+        if(!order){disableSaving('This order was not found. Return to All Open Orders and choose an existing record.');return;}
+        loadedOrder=order;
+        const account=state.enterprise.accounts.find(a=>a.id===order.accountId),address=order.address||{},shipping=order.shipping||{};
+        document.querySelector('h1').textContent=F.pending(order)&&!F.final(order)?'Edit Customer Order':'Customer Order '+(order.orderNumber||order.po);
+        const types={FIRM_PO:'Firm PO',HOLD_PO:'Hold PO',BULK_PO:'Bulk Order',REDEMPTION_PO:'Redemption PO',EVENT_PO:'Event PO'};
+        setField('co-order-type',types[order.type]||order.type);
+        setField('co-customer',account?.name||order.customerName||order.accountId);
+        setField('co-customer-po',order.po);setField('co-sales-order',order.orderNumber||order.po);
+        setField('co-region',order.region||'US');
+        const program=state.enterprise.programs.find(p=>p.id===order.programId);
+        setField('co-program',order.programId||'No program',program?.name);
+        setField('co-purpose',order.purpose==='EVENT'?'Event order':order.purpose==='DROPSHIP'?'Dropship':'Regular customer order');
+        setField('co-inhands-date',calendarDate(order.inHandsDate));setField('co-hold-early',calendarDate(order.holdUntil));
+        setField('co-ship-company',address.name||account?.name||'');
+        for(const [key,field] of Object.entries({line1:'co-address-line1',line2:'co-address-line2',city:'co-city',state:'co-state',zip:'co-zip',country:'co-country'}))setField(field,address[key]||shipping[key]||'');
+        // For legacy snapshots retain the recorded destination; do not substitute a sample address.
+        if(!address.line1&&shipping.destination)setField('co-address-line1',shipping.destination);
+        const method=shipping.method||'',carrier=shipping.carrier||F.shippingCarrier(method);
+        setField('co-carrier',carrier);setField('co-shipping-method',method);
+        const third=shipping.billingType==='THIRD_PARTY'||!!shipping.thirdPartyAccount;
+        setField('co-shipping-billing',third?'Third Party':'Shipper account');
+        document.querySelector('#co-toggle-3rdparty').checked=third;
+        document.querySelector('#co-3rdparty-box').style.display=third?'grid':'none';
+        setField('co-3rdparty-acct',shipping.thirdPartyAccount);setField('co-3rdparty-zip',shipping.thirdPartyZip);
+        setField('co-special-instructions',order.instructions);setField('co-internal-notes',order.internalNotes);
+        order.lines.forEach(line=>addNewRow(line.model||state.enterprise.inventory.find(i=>i.sku===line.sku)?.model||line.sku,line.description||line.title||'',line.qty,line.price,line.warehouse||'Automatic'));
+        document.querySelector('#co-hdr-create-order').textContent='Save Changes';
+        document.querySelector('#co-special-counter').textContent=(order.instructions||'').length+'/500';
+        document.querySelector('#co-notes-counter').textContent=(order.internalNotes||'').length+'/500';
+        if(!F.pending(order)||F.final(order))disableSaving('This order is already allocated or closed. Its saved details are shown here; manage delivery and fulfillment from All Open Orders. Drafts can be edited before validation.');
+      }
 
-        const customer = document.querySelector('#co-customer').value.trim();
-        const po = document.querySelector('#co-customer-po').value.trim();
-        const orderType = document.querySelector('#co-order-type').value;
-        const region = document.querySelector('#co-region').value;
-        const inHandsDate = document.querySelector('#co-inhands-date').value.trim();
-        const carrier = document.querySelector('#co-carrier').value;
-        const shippingMethod = document.querySelector('#co-shipping-method').value;
-        const shippingBilling = document.querySelector('#co-shipping-billing').value;
-        const is3rdParty = document.querySelector('#co-toggle-3rdparty').checked;
-        const thirdPartyAccount = is3rdParty ? document.querySelector('#co-3rdparty-acct').value.trim() : '';
-        const thirdPartyZip = is3rdParty ? document.querySelector('#co-3rdparty-zip').value.trim() : '';
-
-        const lines = [];
-        document.querySelectorAll('#co-items-tbody tr').forEach(row => {
-          const model = row.querySelector('.co-row-model')?.value.trim();
-          const desc = row.querySelector('.co-row-desc')?.value.trim();
-          const qty = Number(row.querySelector('.co-row-qty')?.value) || 0;
-          const price = Number(row.querySelector('.co-row-price')?.value) || 0;
-          const warehouse = row.querySelector('.co-row-warehouse')?.value || 'Automatic';
-          if (model && qty > 0) {
-            lines.push({ model, sku: model, title: desc, description: desc, qty, price, warehouse });
-          }
-        });
-
-        if (lines.length === 0) {
-          notice('Please add at least one item line with model and quantity.', true);
-          return;
-        }
-
-        const totalAmount = lines.reduce((acc, l) => acc + l.qty * l.price, 0);
-
-        // Save order into Enterprise storage / StarkSystem via unified transaction
+      // Use the existing draft/validation APIs so editing cannot duplicate a saved
+      // order, invent stock, or increment its credit/reservations a second time.
+      function submitOrder(validate=true) {
+        if(loadFailed||!S||!F)return;
+        const form=document.querySelector('#co-order-form');
+        if(!form.reportValidity())return;
+        const read=id=>document.getElementById(id)?.value.trim()||'';
         try {
-          if (S && S.transaction) {
-            S.transaction('ORDER_CREATED', `${po} created via Create Order.`, state => {
-              const e = state.enterprise;
-              const l = state.logistics;
-
-              // Ensure customer account exists in CRM
-              let account = e.accounts?.find(a => a.name.toLowerCase() === customer.toLowerCase());
-              if (!account) {
-                account = {
-                  id: 'acct_' + customer.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20),
-                  name: customer,
-                  type: 'PARENT',
-                  status: 'ACTIVE',
-                  currency: 'USD',
-                  terms: 'Net 30',
-                  creditLimit: 500000,
-                  creditUsed: 0
-                };
-                if (!e.accounts) e.accounts = [];
-                e.accounts.push(account);
-              }
-
-              // Ensure all line item SKUs exist in enterprise inventory and update reservations
-              lines.forEach(line => {
-                let inv = e.inventory.find(x => x.sku.toLowerCase() === line.sku.toLowerCase() || (line.model && x.model && x.model.toLowerCase() === line.model.toLowerCase()));
-                if (!inv) {
-                  inv = {
-                    sku: line.sku,
-                    model: line.model || line.sku,
-                    brand: 'General',
-                    title: line.title || line.model || line.sku,
-                    nature: 'PHYSICAL',
-                    onHand: Math.max(500, line.qty * 2),
-                    reserved: 0,
-                    externalReserved: 0,
-                    damaged: 0,
-                    safety: 10,
-                    cost: Math.round(line.price * 0.7 * 100) / 100,
-                    standardPrice: line.price,
-                    status: 'Live',
-                    region: region || 'US',
-                    updatedAt: S.stamp ? S.stamp() : new Date().toISOString()
-                  };
-                  e.inventory.unshift(inv);
-                  if (!l.inventory.some(x => x.sku === line.sku)) {
-                    l.inventory.push({
-                      sku: line.sku,
-                      brand: inv.brand,
-                      description: inv.title,
-                      binId: 'A-01-R1-B1',
-                      onHand: inv.onHand,
-                      reserved: 0,
-                      damaged: 0,
-                      serialized: false,
-                      lotControl: false,
-                      lastCount: S.stamp ? S.stamp() : new Date().toISOString()
-                    });
-                  }
-                }
-
-                if (validate) {
-                  // Ensure onHand covers reservation so state remains consistent
-                  if (inv.onHand < (inv.reserved || 0) + line.qty) {
-                    inv.onHand = (inv.reserved || 0) + line.qty + 50;
-                  }
-                  inv.reserved = (inv.reserved || 0) + line.qty;
-                }
-              });
-
-              if (validate) {
-                account.creditUsed = (Number(account.creditUsed) || 0) + totalAmount;
-              }
-
-              const purposeVal = document.querySelector('#co-purpose')?.value || '';
-              const isHoldOrEvent = orderType === 'Hold PO' || purposeVal === 'Event order' || orderType.toLowerCase().includes('hold') || purposeVal.toLowerCase().includes('event');
-
-              // As soon as a Hold PO or Event PO is created, the quantity on the order for that item should be on hold automatically
-              if (isHoldOrEvent) {
-                lines.forEach(line => {
-                  const inv = e.inventory.find(x => x.sku === line.sku);
-                  if (inv) {
-                    inv.onHold = (Number(inv.onHold) || 0) + line.qty;
-                  }
-                });
-
-                // Synchronize onHold quantity and audit event to Item Master catalogs
-                try {
-                  const masterKeys = ['stark-item-master-catalog', 'stark.enterpriseItemMaster.customRecords.v2'];
-                  masterKeys.forEach(mKey => {
-                    const raw = localStorage.getItem(mKey);
-                    if (raw) {
-                      const records = JSON.parse(raw);
-                      if (Array.isArray(records)) {
-                        lines.forEach(line => {
-                          const mItem = records.find(x => (x.sku && x.sku.toLowerCase() === line.sku.toLowerCase()) || (x.model && line.model && x.model.toLowerCase() === line.model.toLowerCase()));
-                          if (mItem) {
-                            mItem.onHold = (Number(mItem.onHold) || 0) + line.qty;
-                            // Hold quantity should be included in the available quantity:
-                            if (mItem.onHand !== undefined) {
-                              mItem.totalATS = Math.max(Number(mItem.totalATS) || 0, Number(mItem.onHand) || 0);
-                            }
-                            if (Array.isArray(mItem.warehouses)) {
-                              const wh = mItem.warehouses.find(w => w.name?.toLowerCase().includes('sarasota') || w.id === 'sarasota') || mItem.warehouses[0];
-                              if (wh) {
-                                wh.onHold = (Number(wh.onHold) || 0) + line.qty;
-                              }
-                            }
-                            mItem.history = mItem.history || [];
-                            mItem.history.unshift({
-                              time: new Date().toISOString(),
-                              type: 'Hold Reserved',
-                              text: `${line.qty} units put on hold for ${orderType === 'Hold PO' ? 'Hold PO' : 'Event PO'} #${po} (${customer}). Hold quantity included in available stock.`,
-                              actor: 'Order Entry',
-                              delta: `+${line.qty} onHold`
-                            });
-                          }
-                        });
-                        localStorage.setItem(mKey, JSON.stringify(records));
-                      }
-                    }
-                  });
-                } catch(err) {
-                  console.warn('Item Master on-hold sync failed:', err);
-                }
-              }
-
-              const newOrder = {
-                id: S.uid ? S.uid('ord') : 'ord_' + Math.floor(100000 + Math.random() * 900000),
-                orderNumber: 'SO-' + po,
-                po,
-                accountId: account.id,
-                warehouseId: 'SARASOTA',
-                type: orderType === 'Hold PO' ? 'HOLD_PO' : orderType === 'Bulk Order' ? 'BULK_PO' : (purposeVal === 'Event order' ? 'EVENT_PO' : 'FIRM_PO'),
-                purpose: purposeVal,
-                status: validate ? 'ALLOCATED' : 'UNVALIDATED',
-                validation: { state: validate ? 'VALIDATED' : 'UNVALIDATED' },
-                region: region || 'US',
-                inHandsDate,
-                shipping: {
-                  carrier,
-                  method: shippingMethod,
-                  billingType: shippingBilling,
-                  thirdPartyAccount,
-                  thirdPartyZip,
-                  destination: '1234 Main St, Suite 500, Tampa, FL 33602',
-                  warehouse: 'Sarasota DC',
-                  warehouseId: 'SARASOTA',
-                  marks: 'APX-HOL / DC03 / PALLET 1'
-                },
-                lines: lines.map(x => ({
-                  sku: x.sku,
-                  model: x.model,
-                  title: x.title || x.model,
-                  description: x.description || x.title || x.model,
-                  qty: x.qty,
-                  price: x.price,
-                  allocated: x.qty,
-                  redeemed: 0,
-                  shipped: 0
-                })),
-                total: totalAmount,
-                createdAt: S.stamp ? S.stamp() : new Date().toISOString(),
-                updatedAt: S.stamp ? S.stamp() : new Date().toISOString()
-              };
-
-              if (purposeVal === 'Dropship' || orderType.toLowerCase().includes('dropship')) {
-                newOrder.fulfillment = { kind: 'DROPSHIP' };
-                newOrder.supplyMode = 'DROPSHIP';
-              }
-
-              if (!e.orders) e.orders = [];
-              e.orders = e.orders.filter(o => o.po.toLowerCase() !== po.toLowerCase());
-              e.orders.unshift(newOrder);
-
-              // Persist backup to stark-enterprise-orders
-              try {
-                localStorage.setItem('stark-enterprise-orders', JSON.stringify(e.orders));
-              } catch(e) {}
-            });
-          }
-        } catch(err) {
-          console.error('Order creation error:', err);
-        }
-
-        sessionStorage.setItem('stark-toast-msg', `Customer Order ${po} (${customer}) created and ${validate ? 'validated' : 'saved'} successfully.`);
-        window.location.href = validate ? 'all-open-orders.html' : 'order-management/unvalidated.html';
+          const state=S.getState(),customer=read('co-customer');
+          const account=state.enterprise.accounts.find(a=>a.name.toLowerCase()===customer.toLowerCase()||a.id===customer);
+          if(!account)throw new Error('Choose an existing customer from CRM.');
+          const lines=[...document.querySelectorAll('#co-items-tbody tr')].map(row=>({model:row.querySelector('.co-row-model').value.trim(),qty:Number(row.querySelector('.co-row-qty').value),price:Number(row.querySelector('.co-row-price').value)})).filter(line=>line.model);
+          const method=read('co-shipping-method'),selectedCarrier=read('co-carrier'),carrier=F.SHIPPING_SERVICES[selectedCarrier]?selectedCarrier:F.shippingCarrier(method);
+          const third=document.querySelector('#co-toggle-3rdparty').checked||read('co-shipping-billing')==='Third Party';
+          const type={'Hold PO':'HOLD_PO','Bulk Order':'BULK_PO','Firm PO':'FIRM_PO','Regular customer order':'FIRM_PO','Presentation':'FIRM_PO'}[read('co-order-type')];
+          const input={po:read('co-customer-po'),accountId:account.id,type,region:read('co-region'),
+            orderNumberMode:loadedOrder?.orderNumberMode||'AUTO',programId:read('co-program')==='No program'?null:read('co-program'),
+            purpose:read('co-purpose')==='Event order'?'EVENT':'REGULAR',
+            address:{name:read('co-ship-company'),line1:read('co-address-line1'),line2:read('co-address-line2'),line3:loadedOrder?.address?.line3||'',city:read('co-city'),state:read('co-state'),zip:read('co-zip'),country:read('co-country')},
+            inHandsDate:calendarDate(read('co-inhands-date')),holdUntil:calendarDate(read('co-hold-early')),
+            instructions:read('co-special-instructions'),internalNotes:read('co-internal-notes'),
+            shippingCarrier:carrier,shippingService:F.SHIPPING_SERVICES[carrier]?.includes(method)?method:'CUSTOM',shippingMethod:method,
+            shippingBillingType:third?'THIRD_PARTY':'SHIPPER',thirdPartyAccount:third?read('co-3rdparty-acct'):'',thirdPartyZip:third?read('co-3rdparty-zip'):'',
+            warehouseId:loadedOrder?.warehouseId||'SARASOTA',fulfillmentMode:loadedOrder?.fulfillmentMode||'MANUAL',lines};
+          if(read('co-purpose')==='Dropship')throw new Error('Use the dropship fulfillment workflow for supplier-direct orders.');
+          if(!third&&['Recipient account','Prepaid'].includes(read('co-shipping-billing')))throw new Error('Choose shipper account or third-party billing for this order workflow.');
+          const id=loadedOrder?F.editDraft(loadedOrder.id,input,loadedOrder.updatedAt,Number(loadedOrder.recordRevision||0)):F.createDraft(input);
+          loadedOrder=S.getState().enterprise.orders.find(o=>o.id===id);
+          const result=validate?F.validateDraft(id):{ok:true};
+          const message=result.ok?`Customer Order ${input.po} ${validate?'saved and validated':'saved unvalidated'} successfully.`:`Customer Order ${input.po} saved with issues: ${result.issues.map(i=>i.label).join(', ')}.`;
+          sessionStorage.setItem('stark-toast-msg',message);
+          const path=!result.ok?'order-management/issues.html':validate?'all-open-orders.html':'order-management/unvalidated.html';
+          const destination=S.url(path+'?search='+encodeURIComponent(input.po));
+          if(window.StarkNavigation?.navigate)window.StarkNavigation.navigate(destination);else location.assign(destination);
+        } catch(error){notice(error.message,true);}
       }
 
       // Initialize Page
       document.addEventListener('DOMContentLoaded', () => {
-        // Bind initial rows
-        document.querySelectorAll('#co-items-tbody tr').forEach(bindRow);
+        S=window.StarkSystem;F=window.StarkFulfillment;
+        if(!S||!F){disableSaving('Workspace data could not be loaded. Reload before editing.');return;}
+        // Saved rows are loaded only after shared state is initialized.
 
         // Toggle 3rd Party Box
         const toggle3rd = document.querySelector('#co-toggle-3rdparty');
@@ -1601,7 +1468,7 @@
         const custDatalist = document.querySelector('#co-customer-datalist');
         if (custDatalist) {
           const accs = getCrmAccounts();
-          custDatalist.innerHTML = accs.map(a => `<option value="${a.name}">${a.name} (${a.terms || 'Net 30'})</option>`).join('');
+          custDatalist.innerHTML = accs.map(a => `<option value="${esc(a.name)}">${esc(a.name)} (${a.terms || 'Net 30'})</option>`).join('');
         }
 
         const custInp = document.querySelector('#co-customer');
@@ -1610,10 +1477,10 @@
             const val = custInp.value.trim().toLowerCase();
             const match = getCrmAccounts().find(a => a.name.toLowerCase() === val || a.id.toLowerCase() === val);
             if (match) {
-              const addr = match.customerAddress?.line1 || match.address?.line1 || '1234 Main St, Suite 500';
-              const city = match.customerAddress?.city || match.address?.city || 'Tampa';
-              const st = match.customerAddress?.state || match.address?.state || 'FL';
-              const zip = match.customerAddress?.postalCode || match.address?.postalCode || match.customerAddress?.zip || match.address?.zip || '33602';
+              const addr = match.customerAddress?.line1 || match.address?.line1 || '';
+              const city = match.customerAddress?.city || match.address?.city || '';
+              const st = match.customerAddress?.state || match.address?.state || '';
+              const zip = match.customerAddress?.postalCode || match.address?.postalCode || match.customerAddress?.zip || match.address?.zip || '';
               document.querySelector('#co-ship-company').value = match.name;
               document.querySelector('#co-address-line1').value = addr;
               document.querySelector('#co-city').value = city;
@@ -1629,6 +1496,7 @@
           });
         }
 
+        loadOrder();
         recalculate();
         syncSummary();
 
