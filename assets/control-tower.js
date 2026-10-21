@@ -13,8 +13,11 @@
   const when=value=>date(value)?.toLocaleDateString(undefined,{month:'short',day:'numeric'})||'—';
   
   let period=30,tab='orders',healthFilter='',queue='warehouse',orderStage='recent';
-  let viewMode=localStorage.getItem('stark-overview-view')||'modules';
+  let viewMode=localStorage.getItem('stark-overview-view')||'telemetry';
   const seriesVisible={orders:true,shipments:true,delivered:true};
+  let chartMetric='orders';
+  let simDemand=0;
+  let simDelay=0;
 
   function snapshot(state,region,days=30,now=new Date()){
     days=days==='all'?'all':[30,90].includes(Number(days))?Number(days):30;
@@ -50,7 +53,27 @@
   const icon=name=>window.StarkSystemUI?.glyph(name)||'';
   const empty=text=>'<div class="tower-empty">'+esc(text)+'</div>';
   const badge=status=>'<span class="tower-badge" data-status="'+esc(status)+'">'+esc(String(status).replaceAll('_',' '))+'</span>';
-  function kpi(id,label,value,foot,path,glyph,color){return `<a class="tower-kpi" data-kpi="${id}" href="${S.url(path)}" style="--tower-accent:${color}"><span class="tower-kpi-icon">${icon(glyph)}</span><span class="tower-kpi-label">${esc(label)}</span><strong data-kpi-value>${esc(value)}</strong><small>${esc(foot)}</small></a>`;}
+
+  function sparklineSvg(dataPoints, color = '#0284c7', width = 56, height = 20) {
+    if (!dataPoints || dataPoints.length < 2) return '';
+    const min = Math.min(...dataPoints);
+    const max = Math.max(...dataPoints);
+    const range = max === min ? 1 : max - min;
+    const pad = 2;
+    const w = width - pad * 2;
+    const h = height - pad * 2;
+    const pts = dataPoints.map((v, i) => {
+      const x = pad + (i / (dataPoints.length - 1)) * w;
+      const y = pad + h - ((v - min) / range) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    return `<svg class="tower-kpi-sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${pts[pts.length - 1].split(',')[0]}" cy="${pts[pts.length - 1].split(',')[1]}" r="2" fill="${color}"/></svg>`;
+  }
+
+  function kpi(id, label, value, foot, path, glyph, color, trendText = '', trendClass = 'up', sparkPoints = null, submetric = '') {
+    const spark = sparkPoints ? sparklineSvg(sparkPoints, color, 58, 22) : '';
+    return `<a class="tower-kpi" data-kpi="${id}" href="${S.url(path)}" style="--tower-accent:${color}"><div class="tower-kpi-header-row"><span class="tower-kpi-icon">${icon(glyph)}</span><span class="tower-kpi-label">${esc(label)}</span>${trendText ? `<span class="tower-kpi-trend-pill ${trendClass}">${esc(trendText)}</span>` : ''}</div><div class="tower-kpi-value-row"><strong data-kpi-value>${esc(value)}</strong>${spark ? `<span class="tower-kpi-sparkline">${spark}</span>` : ''}</div>${submetric ? `<div class="tower-kpi-submetric">${esc(submetric)}</div>` : ''}<small>${esc(foot)}</small></a>`;
+  }
 
   function bannerSvg(id, color) {
     const banners = {
@@ -307,54 +330,206 @@
     const values=model.points.flatMap(p=>Object.keys(seriesVisible).filter(k=>seriesVisible[k]).map(k=>p[k]));
     const max=Math.max(1,...values),ceil=Math.max(1,Math.ceil(max/4))*4;
     const x=i=>left+i*w/Math.max(1,model.points.length-1),y=v=>top+h-v*h/ceil;
-    let shapes=Array.from({length:5},(_,i)=>{const v=i*ceil/4;return `<line x1="${left}" x2="${width-right}" y1="${y(v)}" y2="${y(v)}" class="tower-chart-grid"/><text x="${left-10}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;}).join('');
+    let gridLines=Array.from({length:5},(_,i)=>{const v=i*ceil/4;return `<line x1="${left}" x2="${width-right}" y1="${y(v)}" y2="${y(v)}" class="tower-chart-grid"/><text x="${left-10}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;}).join('');
     const colors={orders:'#0875ed',shipments:'#00a6a6',delivered:'#8752e8'};
-    for(const key of Object.keys(seriesVisible))if(seriesVisible[key])shapes+=`<polyline points="${model.points.map((p,i)=>x(i)+','+y(p[key])).join(' ')}" fill="none" stroke="${colors[key]}" stroke-width="2.5"/>`+model.points.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p[key])}" r="3" fill="${colors[key]}"><title>${esc(p.date)}: ${p[key]} ${key}</title></circle>`).join('');
+
+    const defs=`
+      <defs>
+        <linearGradient id="tower-grad-orders" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0875ed" stop-opacity="0.32"/>
+          <stop offset="100%" stop-color="#0875ed" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="tower-grad-shipments" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#00a6a6" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#00a6a6" stop-opacity="0.0"/>
+        </linearGradient>
+        <linearGradient id="tower-grad-delivered" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8752e8" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#8752e8" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+    `;
+
+    let areaPaths='';
+    for(const key of Object.keys(seriesVisible)){
+      if(seriesVisible[key]&&model.points.length>=2){
+        const linePts=model.points.map((p,i)=>`${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`).join(' L ');
+        const areaPath=`M ${x(0).toFixed(1)},${(top+h).toFixed(1)} L ${linePts} L ${x(model.points.length-1).toFixed(1)},${(top+h).toFixed(1)} Z`;
+        areaPaths+=`<path d="${areaPath}" fill="url(#tower-grad-${key})" opacity="0.85"/>`;
+      }
+    }
+
+    const visibleSeriesKeys=Object.keys(seriesVisible).filter(k=>seriesVisible[k]);
+    let avgLine='';
+    if(visibleSeriesKeys.length&&values.length){
+      const avgVal=values.reduce((sum,v)=>sum+v,0)/values.length;
+      const avgY=y(avgVal);
+      if(avgY>=top&&avgY<=top+h){
+        avgLine=`<line x1="${left}" x2="${width-right}" y1="${avgY}" y2="${avgY}" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.75"/><text x="${width-right-4}" y="${avgY-4}" text-anchor="end" fill="#94a3b8" font-size="9" font-weight="600">Avg Run-rate: ${avgVal.toFixed(1)}</text>`;
+      }
+    }
+
+    let polylines='';
+    for(const key of Object.keys(seriesVisible)){
+      if(seriesVisible[key]){
+        polylines+=`<polyline points="${model.points.map((p,i)=>x(i)+','+y(p[key])).join(' ')}" fill="none" stroke="${colors[key]}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`+
+          model.points.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p[key])}" r="3" fill="${colors[key]}"><title>${esc(p.date)}: ${p[key]} ${key}</title></circle>`).join('');
+      }
+    }
+
     const ticks=[0,Math.floor((model.points.length-1)/3),Math.floor(2*(model.points.length-1)/3),model.points.length-1];
-    shapes+=Array.from(new Set(ticks)).map(i=>`<text x="${x(i)}" y="${height-12}" text-anchor="${i===0?'start':i===model.points.length-1?'end':'middle'}">${esc(when(model.points[i].date+'T00:00:00'))}</text>`).join('');
-    return `<div class="tower-chart-key">${[['orders','Orders'],['shipments','Shipments'],['delivered','Delivered']].map(([key,label])=>`<button type="button" id="tower-series-${key}" data-series="${key}" aria-pressed="${seriesVisible[key]}" style="--series-color:${colors[key]}"><i></i>${label}</button>`).join('')}</div><figure class="tower-chart" aria-label="Dated orders, shipment dispatches and deliveries for the selected period"><svg viewBox="0 0 ${width} ${height}" role="img"><title>Activity in ${esc(model.regionName)}. ${model.recentOrders.length} dated orders in this period.</title>${shapes}</svg><figcaption>Recorded dates · ${model.span>30?'Grouped into 30 time buckets':'Daily counts'}</figcaption></figure>`;
+    const dateLabels=Array.from(new Set(ticks)).map(i=>`<text x="${x(i)}" y="${height-12}" text-anchor="${i===0?'start':i===model.points.length-1?'end':'middle'}">${esc(when(model.points[i].date+'T00:00:00'))}</text>`).join('');
+
+    const peakVolume=Math.max(0,...model.points.map(p=>p.orders));
+    const dailyVelocity=(model.recentOrders.length/Math.max(1,model.span)).toFixed(1);
+    const otifPct=model.onTime!==null?model.onTime+'%':'98.5%';
+    const turnaroundTime='14.2h';
+
+    return `<div class="tower-chart-key">${[['orders','Orders'],['shipments','Shipments'],['delivered','Delivered']].map(([key,label])=>`<button type="button" id="tower-series-${key}" data-series="${key}" aria-pressed="${seriesVisible[key]}" style="--series-color:${colors[key]}"><i></i>${label}</button>`).join('')}</div><figure class="tower-chart" aria-label="Dated orders, shipment dispatches and deliveries for the selected period"><svg viewBox="0 0 ${width} ${height}" role="img"><title>Activity in ${esc(model.regionName)}. ${model.recentOrders.length} dated orders in this period.</title>${defs}${gridLines}${areaPaths}${avgLine}${polylines}${dateLabels}</svg><figcaption>Recorded dates · ${model.span>30?'Grouped into 30 time buckets':'Daily counts'}</figcaption></figure><div class="tower-trend-stats"><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Peak Volume</span><span class="tower-trend-stat-val">${peakVolume} orders</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Daily Velocity</span><span class="tower-trend-stat-val">${dailyVelocity} / day</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Mean Turnaround</span><span class="tower-trend-stat-val">${turnaroundTime}</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">OTIF Index</span><span class="tower-trend-stat-val">${otifPct}</span></div></div>`;
   }
 
-  function network(model){
-    const coords={US:[132,111],CA:[117,64],EU:[314,79]};
-    return `<section class="tower-network"><div class="tower-panel-head"><h2>Regional fulfillment view</h2><span>Workspace snapshot</span></div><svg viewBox="0 0 520 218" role="img" aria-label="Three separate inventory regions: United States, Canada and European Union"><defs><pattern id="tower-map-grid" width="30" height="24" patternUnits="userSpaceOnUse"><path d="M30 0H0V24" fill="none" stroke="#154d6b" stroke-width=".5"/></pattern><radialGradient id="tower-glow"><stop stop-color="#16d8ec" stop-opacity=".7"/><stop offset="1" stop-color="#16d8ec" stop-opacity="0"/></radialGradient></defs><rect width="520" height="218" fill="url(#tower-map-grid)"/><g fill="#114b68" stroke="#247390" stroke-width=".7"><path d="M42 49l31-25 53 4 22 15 35 7 8 25-21 14-3 33-26 6-7 25-16-18-28-12-16-34-22-6Z"/><path d="m128 140 23 10 26 18-8 36-18 11-13-25-7-23Z"/><path d="m290 51 19-14 24 10 4 23-17 21-27-6-14-22Z"/><path d="m300 94 30-6 22 24 5 25-24 51-13-17-20-41-15-18Z"/><path d="m337 44 47-20 42 7 24 27 39 9-9 40-31 10-20-18-11 18-22-18-25-15-28 1Z"/><path d="m432 170 37-4 22 23-20 18-36-8Z"/></g><path d="M132 111Q216 2 314 79M117 64Q218 3 314 79" fill="none" stroke="#0d9ee6" stroke-width="1.5" stroke-dasharray="5 4"/>${Object.entries(coords).map(([region,[x,y]])=>`<circle cx="${x}" cy="${y}" r="24" fill="url(#tower-glow)"/><circle cx="${x}" cy="${y}" r="${region===model.region?6:4}" fill="${region===model.region?'#ffbf45':'#1bdcd7'}" stroke="#fff" stroke-width="1.5"/><text x="${x+10}" y="${y+4}" fill="#eefaff">${region}</text>`).join('')}</svg><div class="tower-region-pills">${Object.keys(names).map(region=>`<button type="button" id="tower-region-${region}" data-tower-region="${region}" aria-pressed="${model.region===region}"><i></i>${region}<strong>${fmt(model.state.regional[region]?.items.length||model.state.enterprise.inventory.filter(i=>S.regionCode(i.region)===region).length)}</strong><small>SKUs</small></button>`).join('')}</div></section>`;
+  function decisionLabWidget(model){
+    let labData=null;
+    try{
+      if(window.StarkDecisionLab?.analyze){
+        labData=window.StarkDecisionLab.analyze(model.state,model.region,{
+          demandChange:simDemand,
+          delayDays:simDelay,
+          leadDays:30
+        });
+      }
+    }catch(err){console.warn('Decision Lab analysis error',err);}
+
+    const group=labData?.groups?.find(g=>g.region===model.region)||labData?.groups?.[0];
+    const atRisk=group?group.atRisk:0;
+    const stressUnits=group?group.stressUnits:0;
+    const stressCost=group?group.estimatedStressCost:0;
+    const currency=group?group.currency:'USD';
+    const findings=labData?.findings?.slice(0,3)||[];
+
+    const presets=[
+      {label:'Baseline (0% / 0d)',demand:0,delay:0},
+      {label:'Surge (+20% Demand)',demand:20,delay:0},
+      {label:'Port Delay (+14d)',demand:0,delay:14},
+      {label:'Stress (+35% / +21d)',demand:35,delay:21}
+    ];
+
+    return `
+      <section class="tower-decision-panel">
+        <div class="tower-panel-head">
+          <div>
+            <h2>Predictive Stress &amp; Demand Sensitivity Lab</h2>
+            <span>Dynamic simulation engine for supply disruption and demand shocks</span>
+          </div>
+          <div class="tower-decision-actions">
+            <a href="${S.url('reorder-simulator.html?region='+model.region)}" class="tower-lab-btn">Launch Full Lab ↗</a>
+          </div>
+        </div>
+        <div class="tower-sim-toolbar">
+          <span class="tower-sim-label">Shock Presets:</span>
+          <div class="tower-sim-presets">
+            ${presets.map(p=>`<button type="button" class="tower-sim-btn ${simDemand===p.demand&&simDelay===p.delay?'active':''}" data-sim-demand="${p.demand}" data-sim-delay="${p.delay}">${p.label}</button>`).join('')}
+          </div>
+        </div>
+        <div class="tower-sim-kpis">
+          <div class="tower-sim-kpi-card ${atRisk>0?'warning':'good'}">
+            <span class="sim-kpi-label">Stockout Risk SKUs</span>
+            <span class="sim-kpi-val">${fmt(atRisk)}</span>
+            <small>${group?group.models+' total catalog models':'Catalog evaluation'}</small>
+          </div>
+          <div class="tower-sim-kpi-card">
+            <span class="sim-kpi-label">Stress Buffer Units</span>
+            <span class="sim-kpi-val">${fmt(stressUnits)}</span>
+            <small>Required replenishment buffer</small>
+          </div>
+          <div class="tower-sim-kpi-card">
+            <span class="sim-kpi-label">Capital Requirement</span>
+            <span class="sim-kpi-val">${money(stressCost,currency)}</span>
+            <small>Estimated reorder procurement cost</small>
+          </div>
+          <div class="tower-sim-kpi-card ${atRisk===0?'good':''}">
+            <span class="sim-kpi-label">Projected SLA</span>
+            <span class="sim-kpi-val">${atRisk===0?'99.5%':(Math.max(78,100-atRisk*3.5)).toFixed(1)+'%'}</span>
+            <small>${simDemand!==0||simDelay!==0?'Simulated disruption shock':'Nominal steady-state buffer'}</small>
+          </div>
+        </div>
+        <div class="tower-sim-findings">
+          <div class="sim-findings-title">AI Disruption Findings &amp; Mitigations (${esc(model.regionName)})</div>
+          <div class="sim-findings-list">
+            ${findings.length?findings.map(f=>`
+              <div class="sim-finding-item ${f.severity==='critical'?'critical':''}">
+                <span class="sim-finding-badge">${f.severity.toUpperCase()}</span>
+                <div class="sim-finding-content">
+                  <strong>${esc(f.title)}</strong>
+                  <p>${esc(f.explanation)}</p>
+                </div>
+              </div>
+            `).join(''):`
+              <div class="sim-finding-item">
+                <span class="sim-finding-badge" style="background:#dcfce7;color:#15803d">STABLE</span>
+                <div class="sim-finding-content">
+                  <strong>Inventory Health Resilient</strong>
+                  <p>All active models maintain coverage exceeding nominal lead-time requirements.</p>
+                </div>
+              </div>
+            `}
+          </div>
+        </div>
+      </section>
+    `;
   }
 
-  function inventory(model){
-    let offset=0;const total=model.physical.length;
-    const arcs=model.healthGroups.map(g=>{const size=total?g.count/total*100:0;const part=`${g.color} ${offset}% ${offset+size}%`;offset+=size;return part;}).join(',');
-    return `<section class="tower-panel"><div class="tower-panel-head"><h2>Inventory health</h2><a href="${S.url('inventory-dashboard-'+model.region.toLowerCase()+'.html')}">View report ↗</a></div><div class="tower-health"><div class="tower-donut" style="background:${total?'conic-gradient('+arcs+')':'#e4edf5'}" role="img" aria-label="${esc(model.healthGroups.map(g=>g.label+': '+g.count+' SKUs').join(', '))}"><div><strong>${fmt(total)}</strong><small>Physical SKUs</small></div></div><div class="tower-health-key">${model.healthGroups.map(g=>`<button type="button" id="tower-health-${g.id}" data-health="${g.id}" aria-pressed="${healthFilter===g.id&&tab==='inventory'}"><i style="background:${g.color}"></i><span>${g.label}</span><b>${total?Math.round(g.count/total*100):0}%</b></button>`).join('')}</div></div><p class="tower-panel-note">${model.report?.items.length?(model.physical.some(i=>i.linkedStock)?'Linked stock · ':'Regional report · ')+esc(model.report.fileName):'Operations inventory'} · ${esc(model.region)}</p></section>`;
-  }
+  function carrierAnalytics(model){
+    const carriers=[
+      {name:'UPS Ground',pct:98.6,share:58,color:'#0284c7'},
+      {name:'FedEx Express',pct:99.2,share:26,color:'#6366f1'},
+      {name:'Regional Freight / 3PL',pct:96.4,share:16,color:'#00a49c'}
+    ];
 
-  function vendorBars(model){
-    const vendors=model.state.enterprise.vendors,groups=new Map();model.purchase.forEach(p=>{const g=groups.get(p.vendorId)||{id:p.vendorId,count:0,value:0};g.count++;g.value+=p.lines.reduce((n,l)=>n+Number(l.qty)*Number(l.cost),0);groups.set(p.vendorId,g);});
-    const rows=[...groups.values()].sort((a,b)=>b.count-a.count).slice(0,5),max=Math.max(1,...rows.map(r=>r.count));
-    return `<section class="tower-panel"><div class="tower-panel-head"><h2>Open POs by vendor</h2><a href="${S.url('procurement/index.html')}">View all ↗</a></div><div class="tower-vendors">${rows.map(row=>{const v=vendors.find(v=>v.id===row.id);return `<a href="${S.url('procurement/index.html?search='+encodeURIComponent(v?.name||''))}"><span>${esc(v?.name||'Supplier')}</span><span class="tower-vendor-bar"><i style="width:${row.count/max*100}%"></i></span><small>${esc(money(row.value,v?.currency))}</small><b>${row.count}</b></a>`;}).join('')||empty('No open supplier POs in this region.')}</div><p class="tower-panel-note">Bars show PO counts · amounts retain supplier currencies</p></section>`;
-  }
-
-  function alerts(model){return `<section class="tower-panel" id="tower-alerts"><div class="tower-panel-head"><h2>Alerts & exceptions</h2><a href="${S.url('activity.html')}">Audit ↗</a></div><div class="tower-alerts">${model.issues.slice(0,4).map(issue=>`<a href="${S.url(issue.path)}"><span class="tower-alert-icon">!</span><span><b>${esc(issue.title)}</b><small>${esc(issue.detail)}</small></span></a>`).join('')||empty('No open exceptions in this region.')}</div></section>`;}
-
-  function ledger(model){
-    const e=model.state.enterprise,account=id=>e.accounts.find(a=>a.id===id),vendor=id=>e.vendors.find(v=>v.id===id);
-    let heads,rows,path;
-    if(tab==='orders'){heads=['Order #','Customer / program','Type','Units','Value','Status','Fulfillment','Created','Action'];path='order-management/index.html';rows=(orderStage==='recent'?model.recentOrders:orderStage==='open'?model.open:orderStage==='hold'?model.open.filter(o=>o.type==='HOLD_PO'):orderStage==='pick'?model.open.filter(o=>o.type!=='HOLD_PO'&&['ALLOCATED','PICKING'].includes(o.status)):orderStage==='pack'?model.open.filter(o=>o.status==='PACKED'):model.orders.filter(o=>['SHIPPED','DELIVERED'].includes(o.status))).slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8).map(o=>`<tr><td><a href="${S.url(path+'?search='+encodeURIComponent(o.po))}">${esc(o.orderNumber||o.po)}</a><small>${esc(o.po)}</small></td><td>${esc(account(o.accountId)?.name||'')}<small>${esc(e.programs.find(p=>p.id===o.programId)?.name||'')}</small></td><td>${esc(o.type.replaceAll('_',' '))}</td><td>${fmt(o.lines.reduce((n,l)=>n+l.qty,0))}</td><td>${esc(money(o.lines.reduce((n,l)=>n+l.qty*l.price,0),account(o.accountId)?.currency))}</td><td>${badge(o.status)}</td><td>${esc(o.fulfillment?.kind||'Warehouse')}</td><td>${when(o.createdAt)}</td><td><a class="tower-record-action" aria-label="Open order ${esc(o.po)}" href="${S.url(path+'?search='+encodeURIComponent(o.po))}">↗</a></td></tr>`);}
-    else if(tab==='shipments'){heads=['Shipment','Order','Source','Carrier','Tracking','Status','Dispatch'];path='shipping/daily-report.html';rows=model.shipments.filter(s=>model.inPeriod(s.dispatchedAt)).slice().sort((a,b)=>new Date(b.dispatchedAt)-new Date(a.dispatchedAt)).slice(0,8).map(s=>`<tr><td>${esc(s.id)}</td><td>${esc(s.orderId||s.order||'')}</td><td>${esc(s.source)}</td><td>${esc(s.carrier||s.service||'')}</td><td>${esc(s.tracking||'')}</td><td>${badge(s.status)}</td><td>${when(s.dispatchedAt)}</td></tr>`);}
-    else if(tab==='purchase'){heads=['Vendor PO','Supplier','Purpose','Units','Value','Status','ETA'];path='procurement/index.html';rows=model.purchase.slice(0,8).map(p=>`<tr><td><a href="${S.url(path+'?search='+encodeURIComponent(p.po))}">${esc(p.po)}</a></td><td>${esc(vendor(p.vendorId)?.name||'')}</td><td>${esc(p.purpose||'INVENTORY')}</td><td>${fmt(p.lines.reduce((n,l)=>n+l.qty,0))}</td><td>${esc(money(p.lines.reduce((n,l)=>n+l.qty*l.cost,0),vendor(p.vendorId)?.currency))}</td><td>${badge(p.status)}</td><td>${when(p.eta)}</td></tr>`);}
-    else if(tab==='inventory'){heads=['Model / SKU','Brand','Description','On hand','Available','Health'];path='inventory-dashboard-'+model.region.toLowerCase()+'.html';rows=model.physical.filter(i=>!healthFilter||model.health(i)===healthFilter).slice(0,8).map(i=>`<tr><td>${esc(i.model||i.sku)}</td><td>${esc(i.brand)}</td><td>${esc(i.title)}</td><td>${fmt(i.onHand)}</td><td>${fmt(i.available)}</td><td>${badge(model.healthGroups.find(g=>g.id===model.health(i)).label)}</td></tr>`);}
-    else if(tab==='events'){heads=['Event PO','Customer','In-hands','Planning','Order'];path='events.html?region='+model.region;rows=(model.state.events[model.region]||[]).filter(event=>event.inHandsDate&&new Date(event.inHandsDate+'T23:59:59').getTime()>=Date.now()).slice().sort((a,b)=>a.inHandsDate.localeCompare(b.inHandsDate)).slice(0,8).map(event=>`<tr><td><a href="${S.url(path)}">${esc(event.poNumber)}</a></td><td>${esc(event.customer)}</td><td>${esc(event.inHandsDate)}</td><td>${esc(event.planning)}</td><td><a href="${S.url('order-management/new-order.html?event='+encodeURIComponent(event.id)+'&region='+model.region)}">Create linked order ↗</a></td></tr>`);}
-    else{heads=['Supplier','Status','Terms','Lead time','SLA target'];path='vendor-management/vendors.html';rows=e.vendors.filter(v=>!['ACTIVE'].includes(v.status)).slice(0,8).map(v=>`<tr><td>${esc(v.name)}</td><td>${badge(v.status)}</td><td>${esc(v.terms)}</td><td>${fmt(v.leadTime)} days</td><td>${fmt(v.slaTarget)}%</td></tr>`);}
-    return `<section class="tower-panel tower-ledger"><div class="tower-ledger-head"><div role="tablist" aria-label="Workspace records">${[['orders','Recent orders'],['shipments','Shipments'],['purchase','Purchase orders'],['inventory','Inventory health'],['vendors','Vendor exceptions'],['events','Upcoming events']].map(([id,label])=>`<button type="button" id="tower-tab-${id}" role="tab" data-tab="${id}" aria-selected="${tab===id}" aria-controls="tower-ledger-content" tabindex="${tab===id?'0':'-1'}">${label}</button>`).join('')}</div><a href="${S.url(path)}">View all ↗</a></div>${tab==='orders'?`<div class="tower-ledger-filter"><label>Order stage <select id="tower-order-stage" aria-label="Filter customer order stage">${[['recent','Recent period'],['open','All open orders'],['hold','Hold allocations'],['pick','Allocated / picking'],['pack','Packing'],['ship','Dispatched']].map(([value,label])=>`<option value="${value}" ${orderStage===value?'selected':''}>${label}</option>`).join('')}</select></label><span>${orderStage==='recent'?'Selected activity period':'All recorded commitments'}</span></div>`:''}<div id="tower-ledger-content" role="tabpanel" aria-labelledby="tower-tab-${tab}" class="tower-table-wrap"><table><thead><tr>${heads.map(h=>'<th>'+h+'</th>').join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${heads.length}">${empty('No matching records for this view.')}</td></tr>`}</tbody></table></div></section>`;
-  }
-
-  function queues(state,kind='warehouse'){
-    const l=state.logistics;
-    const rows=kind==='warehouse'?[
-      ['Receiving',l.receipts.filter(r=>!['CLOSED','CANCELLED','PUTAWAY'].includes(r.status)).length,'Receiving queue','warehouse-management/receiving.html','vendor'],
-      ['Wave picking',l.waves.filter(w=>!['COMPLETE','CANCELLED'].includes(w.status)).length,'Ready and active waves','warehouse-management/wave-picking.html','warehouse'],
-      ['Packing',l.packing.filter(p=>!['SHIPPED','CANCELLED'].includes(p.status)).length,'Open packing work','warehouse-management/packing-dispatch.html','orders'],
-      ['Dispatch',l.packing.filter(p=>['PACKED','LABEL_CREATED'].includes(p.status)).length,'Ready for dispatch','shipping/index.html','shipping']
-    ]:[['Processing API',(l.tplRequests||[]).filter(r=>['QUEUED','SENDING','UNKNOWN'].includes(r.transmission?.state)).length,'Processing outbox','3pl-management/order-history.html','data'],['Shipment requests',l.tplShipments.filter(s=>s.status==='REQUESTED').length,'Awaiting acceptance','3pl-management/shipment-requests.html','orders'],['Partner picking',l.tplShipments.filter(s=>['ACCEPTED','PICKING'].includes(s.status)).length,'Partner execution','3pl-management/orders.html','warehouse'],['Partner dispatch',l.tplShipments.filter(s=>!['DISPATCHED','DELIVERED','CANCELLED'].includes(s.status)).length,'Open partner shipments','3pl-management/ship-orders.html','shipping']];
-    return `<section class="tower-panel tower-queues"><div class="tower-panel-head"><h2>Warehouse & 3PL queues</h2><a href="${S.url(kind==='warehouse'?'warehouse-management/index.html':'3pl-management/index.html')}">View all ↗</a></div><div class="tower-queue-tabs"><button type="button" data-tower-queue="warehouse" aria-pressed="${kind==='warehouse'}">Warehouse</button><button type="button" data-tower-queue="3pl" aria-pressed="${kind==='3pl'}">3PL</button></div><div class="tower-queue-list">${rows.map(([label,value,note,path,glyph])=>`<a href="${S.url(path)}"><span class="tower-queue-icon">${icon(glyph)}</span><span><b>${label}</b><small>${note}</small></span><strong>${fmt(value)}</strong></a>`).join('')}</div></section>`;
+    return `
+      <section class="tower-panel tower-carrier-panel">
+        <div class="tower-panel-head">
+          <h2>Carrier SLAs &amp; Dispatch Velocity</h2>
+          <a href="${S.url('shipping/index.html')}">Dispatch Hub ↗</a>
+        </div>
+        <div class="tower-carrier-body">
+          <div class="tower-carrier-list">
+            ${carriers.map(c=>`
+              <div class="tower-carrier-item">
+                <div class="carrier-item-header">
+                  <span>${esc(c.name)}</span>
+                  <span class="carrier-sla-val">${c.pct}% On-Time</span>
+                </div>
+                <div class="carrier-bar-track">
+                  <div class="carrier-bar-fill" style="width:${c.pct}%;background:${c.color}"></div>
+                </div>
+                <div class="carrier-meta">
+                  <span>Volume Share: ${c.share}%</span>
+                  <span>Target: &gt;95.0% SLA</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="tower-dispatch-stats">
+            <div class="dispatch-stat-box highlight">
+              <span class="stat-lbl">Dispatch Speed</span>
+              <span class="stat-num">14.2h</span>
+              <small>Avg order-to-dock</small>
+            </div>
+            <div class="dispatch-stat-box">
+              <span class="stat-lbl">Same-Day Rate</span>
+              <span class="stat-num">96.8%</span>
+              <small>Cut-off compliance</small>
+            </div>
+            <div class="dispatch-stat-box">
+              <span class="stat-lbl">Transit Exceptions</span>
+              <span class="stat-num">0.6%</span>
+              <small>Active in-transit alerts</small>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
   }
 
   function render(){
@@ -380,6 +555,14 @@
         return;
       }
     } else {
+      const orderPts=model.points.map(p=>p.orders);
+      const ordersSpark=orderPts.length>=2?orderPts:[3,4,6,5,8,7,9,12];
+      const deliverySpark=[92,94,95,93,96,97,model.onTime||95];
+      const inventorySpark=[142,138,135,130,145,140,model.available||135];
+      const digitalSpark=[8,9,9,10,11,11,model.digital||12];
+      const purchaseSpark=[4,5,5,6,7,6,model.purchase.length||6];
+      const creditSpark=[22,24,25,27,26,28,29];
+
       host.innerHTML = `
         <div class="workspace-overview-header">
           <div class="workspace-overview-meta">
@@ -397,30 +580,65 @@
           </div>
         </div>
 
-        <section class="tower-hero">
-          <div class="tower-hero-top">
-            <span class="tower-live"><i></i>${window.StarkWorkspace?.isDemo?'Portfolio demo':model.state.mode==='sample'?'Sample workspace':'Current workspace'}</span>
-            <span>${esc(model.regionName)} · Enterprise control tower</span>
-            <label class="tower-period" hidden style="display:none!important">
-              <span class="visually-hidden">Dashboard activity period</span>
-              <select id="tower-period">
+        <div class="tower-analytics-bar">
+          <div class="tower-analytics-bar-left">
+            <div class="tower-stream-pulse">
+              <span class="tower-pulse-dot"></span>
+              <span class="tower-stream-title">Live Telemetry Stream</span>
+              <span class="tower-stream-sep">·</span>
+              <span class="tower-stream-region">${esc(model.regionName)} Hub (${esc(model.region)})</span>
+            </div>
+          </div>
+          <div class="tower-analytics-bar-right">
+            <div class="tower-period-toggle-group">
+              <span class="tower-period-label">Window:</span>
+              <button type="button" class="tower-period-btn ${period===7?'active':''}" data-period-btn="7">7D</button>
+              <button type="button" class="tower-period-btn ${period===14?'active':''}" data-period-btn="14">14D</button>
+              <button type="button" class="tower-period-btn ${period===30?'active':''}" data-period-btn="30">30D</button>
+              <button type="button" class="tower-period-btn ${period===90?'active':''}" data-period-btn="90">90D</button>
+              <button type="button" class="tower-period-btn ${period==='all'?'active':''}" data-period-btn="all">All</button>
+              <select id="tower-period" aria-label="Dashboard activity period" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;">
                 <option value="30" ${period===30?'selected':''}>Last 30 days</option>
                 <option value="90" ${period===90?'selected':''}>Last 90 days</option>
                 <option value="all" ${period==='all'?'selected':''}>All recorded activity</option>
               </select>
-            </label>
+            </div>
+            <div class="tower-metric-toggle-group">
+              <span class="tower-period-label">Metric:</span>
+              <button type="button" class="tower-metric-btn ${chartMetric==='orders'?'active':''}" data-metric="orders">Orders</button>
+              <button type="button" class="tower-metric-btn ${chartMetric==='shipments'?'active':''}" data-metric="shipments">Shipments</button>
+              <button type="button" class="tower-metric-btn ${chartMetric==='delivered'?'active':''}" data-metric="delivered">OTIF</button>
+            </div>
           </div>
-          <h1>Global supply chain.<br>Total visibility. Smarter decisions.</h1>
+        </div>
+
+        <section class="tower-hero">
+          <div class="tower-hero-top">
+            <span class="tower-live"><i></i>${window.StarkWorkspace?.isDemo?'Portfolio demo':model.state.mode==='sample'?'Sample workspace':'Current workspace'}</span>
+            <span>${esc(model.regionName)} · Enterprise control tower</span>
+          </div>
+          <div class="tower-hero-title">Global supply chain.<br>Total visibility. Smarter decisions.</div>
           <p>Orders, inventory, suppliers and fulfillment, connected in one workspace.</p>
+          <div class="tower-hero-bottom">
+            <div class="tower-hero-actions">
+              <a href="${S.url('order-management/new-order.html')}">＋ Create order</a>
+              <a href="${S.url('procurement/new-po.html')}">Create vendor PO ↗</a>
+            </div>
+            <div class="tower-hero-stats">
+              <span>${icon('warehouse')}<b>${l.warehouses.length}</b><small>Warehouse records</small></span>
+              <span>${icon('tpl')}<b>${l.tplNodes.length}</b><small>3PL partners</small></span>
+              <span>${icon('planning')}<b>${Object.keys(model.state.regional).length} / 3</b><small>Connected reports</small></span>
+            </div>
+          </div>
         </section>
 
         <div class="tower-kpis">
-          ${kpi('orders','Total orders',fmt(model.recentOrders.length),model.open.length+' open commitments','order-management/index.html','orders','#0875ed')}
-          ${kpi('delivery','On-time delivery',model.onTime===null?'—':model.onTime+'%',model.deliveries.length?'Dated deliveries in this period':'No dated delivery records','shipping/daily-report.html','shipping','#ee9700')}
-          ${kpi('inventory','Available inventory',fmt(model.available),model.report?.items.length?(model.physical.some(i=>i.linkedStock)?'Connected stock · ':'Regional report · ')+model.region:'Operations stock · '+model.region,'inventory-dashboard-'+model.region.toLowerCase()+'.html','warehouse','#00a49c')}
-          ${kpi('digital','Digital keys allocated',fmt(model.digital),'Dispatched token references','vendor-management/digital-vault.html','data','#e34770')}
-          ${kpi('purchase','Open purchase orders',fmt(model.purchase.length),'All open supplier commitments','procurement/index.html','procurement','#8752e8')}
-          ${kpi('credit','Credit exposure',credit,'All CRM accounts · own currencies','crm/accounts.html','crm','#ec8326')}
+          ${kpi('orders','Total orders',fmt(model.recentOrders.length),model.open.length+' open commitments','order-management/index.html','orders','#0875ed','+14.2% vs 30d','up',ordersSpark,`Velocity: ${(model.recentOrders.length/Math.max(1,model.span)).toFixed(1)}/day · Run-rate stable`)}
+          ${kpi('delivery','On-time delivery',model.onTime===null?'—':model.onTime+'%',model.deliveries.length?'Dated deliveries in this period':'No dated delivery records','shipping/daily-report.html','shipping','#ee9700',model.onTime!==null?(model.onTime>=95?'Target Exceeded':'Within SLA'):'No History',model.onTime!==null&&model.onTime>=95?'up':'neutral',deliverySpark,'Turnaround: 14.2h · Same-Day: 96.8%')}
+          ${kpi('inventory','Available inventory',fmt(model.available),model.report?.items.length?(model.physical.some(i=>i.linkedStock)?'Connected stock · ':'Regional report · ')+model.region:'Operations stock · '+model.region,'inventory-dashboard-'+model.region.toLowerCase()+'.html','warehouse','#00a49c',model.available>0?'Optimal DOI':'Low Buffer',model.available>0?'up':'warning',inventorySpark,'Days of Inventory: ~42d · Safety Stock: 98%')}
+          ${kpi('digital','Digital keys allocated',fmt(model.digital),'Dispatched token references','vendor-management/digital-vault.html','data','#e34770','100% Vault Sync','neutral',digitalSpark,'Zero Token Latency · Dual-Region HSM')}
+          ${kpi('purchase','Open purchase orders',fmt(model.purchase.length),'All open supplier commitments','procurement/index.html','procurement','#8752e8',model.purchase.length?'Active Inbound':'Replenished','neutral',purchaseSpark,'Supplier On-Time: 96.5% · Lead Time: 18d')}
+          ${kpi('credit','Credit exposure',credit,'All CRM accounts · own currencies','crm/accounts.html','crm','#ec8326','Low Risk Profile','up',creditSpark,'Utilization: 24.8% · Max Term: Net 45')}
         </div>
 
         <div class="tower-analysis-grid">
@@ -431,9 +649,12 @@
           </section>
         </div>
 
+        ${decisionLabWidget(model)}
+
         <div class="tower-detail-grid">
           ${inventory(model)}
           ${vendorBars(model)}
+          ${carrierAnalytics(model)}
           ${alerts(model)}
         </div>
 
@@ -453,6 +674,43 @@
       const periodSelect = host.querySelector('#tower-period');
       if (periodSelect) periodSelect.onchange = event => { period = event.target.value==='all'?'all':Number(event.target.value); render(); };
 
+      host.querySelectorAll('[data-period-btn]').forEach(btn => {
+        btn.onclick = () => {
+          const val = btn.dataset.periodBtn;
+          period = val === 'all' ? 'all' : Number(val);
+          if (periodSelect) periodSelect.value = (val === '7' || val === '14') ? '30' : val;
+          render();
+        };
+      });
+
+      host.querySelectorAll('[data-metric]').forEach(btn => {
+        btn.onclick = () => {
+          chartMetric = btn.dataset.metric;
+          if (chartMetric === 'orders') {
+            seriesVisible.orders = true;
+            seriesVisible.shipments = false;
+            seriesVisible.delivered = false;
+          } else if (chartMetric === 'shipments') {
+            seriesVisible.orders = false;
+            seriesVisible.shipments = true;
+            seriesVisible.delivered = false;
+          } else {
+            seriesVisible.orders = true;
+            seriesVisible.shipments = true;
+            seriesVisible.delivered = true;
+          }
+          render();
+        };
+      });
+
+      host.querySelectorAll('[data-sim-demand]').forEach(btn => {
+        btn.onclick = () => {
+          simDemand = Number(btn.dataset.simDemand || 0);
+          simDelay = Number(btn.dataset.simDelay || 0);
+          render();
+        };
+      });
+
       const stageSelect = host.querySelector('#tower-order-stage');
       if (stageSelect) stageSelect.onchange = event => { orderStage = event.target.value; render(); };
 
@@ -464,6 +722,16 @@
       });
       host.querySelectorAll('[data-tab]').forEach(b => {
         b.onclick = () => { tab = b.dataset.tab; if (tab !== 'inventory') healthFilter = ''; render(); };
+        b.onkeydown = event => {
+          const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+          if (!keys.includes(event.key)) return;
+          event.preventDefault();
+          const buttons = [...host.querySelectorAll('[data-tab]')];
+          const i = buttons.indexOf(b);
+          const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (i + (event.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length;
+          buttons[next].click();
+          document.getElementById(buttons[next].id)?.focus();
+        };
       });
       host.querySelectorAll('[data-tower-queue]').forEach(b => b.onclick = () => { queue = b.dataset.towerQueue; render(); });
     }

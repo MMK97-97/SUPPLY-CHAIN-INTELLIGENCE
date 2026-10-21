@@ -10103,4 +10103,493 @@ body.stark-system.is-home .system-submodule-bar {
   .id-main-layout { grid-template-columns: 1fr !important; }
   .id-hero-card { grid-template-columns: 1fr !important; }
   .id-hero-specs { grid-template-columns: repeat(3, 1fr) !important; }
+  .tower-sim-kpis { grid-template-columns: repeat(2, 1fr) !important; }
+  .tower-trend-stats { grid-template-columns: repeat(2, 1fr) !important; }
 }
+
+/* ==========================================================================
+   ADVANCED SUPPLY CHAIN TELEMETRY & ANALYTICS DASHBOARD
+   ========================================================================== */
+.tower-analytics-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: #ffffff !important;
+  border: 1px solid #dde5ed !important;
+  border-radius: 12px !important;
+  padding: 10px 18px !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04) !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.tower-analytics-bar-left,
+.tower-analytics-bar-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.tower-stream-pulse {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+}
+
+.tower-pulse-dot {
+  width: 8px !important;
+  height: 8px !important;
+  background: #10b981 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+  animation: pulse-green 2s infinite !important;
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3); }
+  50% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.1); }
+}
+
+.tower-stream-title {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.tower-stream-sep {
+  color: #cbd5e1 !important;
+}
+
+.tower-stream-region {
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+}
+
+.tower-period-toggle-group,
+.tower-metric-toggle-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  background: #f1f5f9 !important;
+  padding: 3px !important;
+  border-radius: 8px !important;
+}
+
+.tower-period-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  padding: 0 6px !important;
+}
+
+.tower-period-btn,
+.tower-metric-btn {
+  border: none !important;
+  background: transparent !important;
+  color: #475569 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+.tower-period-btn:hover,
+.tower-metric-btn:hover {
+  color: #0f172a !important;
+}
+
+.tower-period-btn.active,
+.tower-metric-btn.active {
+  background: #ffffff !important;
+  color: #0284c7 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+  font-weight: 700 !important;
+}
+
+.tower-hero-title {
+  font-size: clamp(25px, 2.4vw, 38px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -1.2px !important;
+  margin: 8px 0 10px !important;
+  color: #ffffff !important;
+  font-weight: 750 !important;
+}
+
+/* Enhanced KPI Cards */
+.tower-kpi-header-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  grid-column: 1 / -1 !important;
+  margin-bottom: 2px !important;
+}
+
+.tower-kpi-trend-pill {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 7px !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+.tower-kpi-trend-pill.up {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.tower-kpi-trend-pill.neutral {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+.tower-kpi-trend-pill.warning {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+}
+
+.tower-kpi-value-row {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.tower-kpi-sparkline {
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.tower-kpi-sparkline-svg {
+  display: block !important;
+}
+
+.tower-kpi-submetric {
+  grid-column: 1 / -1 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: #0284c7 !important;
+  margin-top: 4px !important;
+  padding-top: 4px !important;
+  border-top: 1px dashed #e2e8f0 !important;
+}
+
+/* Trend Studio Stats Ribbon */
+.tower-trend-stats {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  padding: 8px 15px 12px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  background: #fcfdfd !important;
+}
+
+.tower-trend-stat-cell {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.tower-trend-stat-label {
+  font-size: 9.5px !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+
+.tower-trend-stat-val {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+/* Predictive Scenario Simulator Analytic Tool */
+.tower-decision-panel {
+  background: #ffffff !important;
+  border: 1px solid #dde5ed !important;
+  border-radius: 12px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+  overflow: hidden !important;
+}
+
+.tower-decision-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.tower-lab-btn {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #075d58 !important;
+  background: #e8f5f3 !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  text-decoration: none !important;
+  border: 1px solid #bfe3dd !important;
+  transition: all 0.12s ease !important;
+}
+
+.tower-lab-btn:hover {
+  background: #d4ede7 !important;
+}
+
+.tower-sim-toolbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 18px !important;
+  background: #f8fafc !important;
+  border-top: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  flex-wrap: wrap !important;
+}
+
+.tower-sim-label {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+}
+
+.tower-sim-presets {
+  display: flex !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+
+.tower-sim-btn {
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+.tower-sim-btn:hover {
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+
+.tower-sim-btn.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.25) !important;
+}
+
+.tower-sim-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 12px !important;
+  padding: 14px 18px !important;
+}
+
+.tower-sim-kpi-card {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.tower-sim-kpi-card.warning {
+  border-color: #fde68a !important;
+  background: #fffbeb !important;
+}
+
+.tower-sim-kpi-card.good {
+  border-color: #bbf7d0 !important;
+  background: #f0fdf4 !important;
+}
+
+.sim-kpi-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+}
+
+.sim-kpi-val {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.1 !important;
+}
+
+.tower-sim-kpi-card small {
+  font-size: 10px !important;
+  color: #64748b !important;
+}
+
+.tower-sim-findings {
+  padding: 10px 18px 16px !important;
+  border-top: 1px solid #f1f5f9 !important;
+}
+
+.sim-findings-title {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  margin-bottom: 8px !important;
+}
+
+.sim-findings-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.sim-finding-item {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+}
+
+.sim-finding-badge {
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  flex-shrink: 0 !important;
+}
+
+.sim-finding-item.critical .sim-finding-badge {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+
+.sim-finding-content strong {
+  font-size: 12px !important;
+  color: #0f172a !important;
+  display: block !important;
+  margin-bottom: 2px !important;
+}
+
+.sim-finding-content p {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Carrier & Dispatch Analytics */
+.tower-carrier-panel {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.tower-carrier-body {
+  padding: 12px 16px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+.tower-carrier-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.tower-carrier-item {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.carrier-item-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+}
+
+.carrier-sla-val {
+  color: #10b981 !important;
+  font-weight: 700 !important;
+}
+
+.carrier-bar-track {
+  height: 6px !important;
+  background: #f1f5f9 !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+}
+
+.carrier-bar-fill {
+  height: 100% !important;
+  border-radius: 3px !important;
+}
+
+.carrier-meta {
+  display: flex !important;
+  justify-content: space-between !important;
+  font-size: 9.5px !important;
+  color: #64748b !important;
+}
+
+.tower-dispatch-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 8px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  padding-top: 10px !important;
+}
+
+.dispatch-stat-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 6px 8px !important;
+  text-align: center !important;
+}
+
+.dispatch-stat-box.highlight {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.dispatch-stat-box .stat-lbl {
+  font-size: 9px !important;
+  color: #64748b !important;
+  display: block !important;
+}
+
+.dispatch-stat-box .stat-num {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  display: block !important;
+  line-height: 1.2 !important;
+}
+
+.dispatch-stat-box.highlight .stat-num {
+  color: #059669 !important;
+}
+
+.dispatch-stat-box small {
+  font-size: 8.5px !important;
+  color: #94a3b8 !important;
+}
+
