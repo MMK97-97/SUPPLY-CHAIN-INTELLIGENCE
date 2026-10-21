@@ -746,10 +746,241 @@
     });
 
     if(focused){const target=document.getElementById(focused);if(target&&host.contains(target))target.focus();}
+    initFloatingActionModule();
     window.dispatchEvent(new CustomEvent('stark:tower-rendered'));
   }
 
-  window.StarkControlTower={render,snapshot,queues};
+  let fabCoords = null;
+  function initFloatingActionModule() {
+    if (document.getElementById('stark-fab-wrapper')) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'stark-fab-wrapper';
+    wrapper.className = 'stark-fab-wrapper';
+    wrapper.setAttribute('role', 'region');
+    wrapper.setAttribute('aria-label', 'Floating Action Module');
+
+    wrapper.innerHTML = `
+      <nav class="stark-fab-menu" id="stark-fab-menu" role="menu" aria-label="Operational Actions">
+        <div class="stark-fab-menu-header">
+          <span>Quick Actions</span>
+          <span>Adaptive FAB</span>
+        </div>
+        <button type="button" class="stark-fab-item" role="menuitem" data-action="create-po">
+          <span class="stark-fab-item-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </span>
+          <span class="stark-fab-item-text">
+            <strong>Create Purchase PO</strong>
+            <small>Procurement &amp; replenishment</small>
+          </span>
+        </button>
+        <button type="button" class="stark-fab-item" role="menuitem" data-action="scan-sku">
+          <span class="stark-fab-item-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+          </span>
+          <span class="stark-fab-item-text">
+            <strong>Scan Warehouse SKU</strong>
+            <small>Real-time ATS &amp; bin status</small>
+          </span>
+        </button>
+        <button type="button" class="stark-fab-item" role="menuitem" data-action="carrier-radar">
+          <span class="stark-fab-item-icon">
+            <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+          </span>
+          <span class="stark-fab-item-text">
+            <strong>Carrier Dispatch Radar</strong>
+            <small>UPS / FedEx transit telemetry</small>
+          </span>
+        </button>
+      </nav>
+      <button type="button" class="stark-fab-button" id="stark-fab-btn" aria-haspopup="true" aria-expanded="false" aria-label="Toggle Quick Actions">
+        <span class="stark-fab-badge" aria-hidden="true"></span>
+        <svg class="stark-fab-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+    `;
+
+    document.body.appendChild(wrapper);
+
+    const button = wrapper.querySelector('#stark-fab-btn');
+    const menu = wrapper.querySelector('#stark-fab-menu');
+
+    const VIEWPORT_PADDING = 16;
+    const DRAG_THRESHOLD = 5;
+    const MENU_HEIGHT = 190;
+    const MENU_WIDTH = 240;
+
+    let isOpen = false;
+    let isDragging = false;
+    let hasDraggedBeyondThreshold = false;
+    let startX = 0, startY = 0;
+    let initialLeft = 0, initialTop = 0;
+    let currentLeft = 0, currentTop = 0;
+
+    function clampPosition(x, y) {
+      const fabW = button.offsetWidth || 58;
+      const fabH = button.offsetHeight || 58;
+      const minX = VIEWPORT_PADDING;
+      const maxX = Math.max(minX, window.innerWidth - fabW - VIEWPORT_PADDING);
+      const minY = VIEWPORT_PADDING;
+      const maxY = Math.max(minY, window.innerHeight - fabH - VIEWPORT_PADDING);
+      return {
+        x: Math.max(minX, Math.min(maxX, x)),
+        y: Math.max(minY, Math.min(maxY, y))
+      };
+    }
+
+    function setPosition(x, y, animate = false) {
+      const clamped = clampPosition(x, y);
+      currentLeft = clamped.x;
+      currentTop = clamped.y;
+      fabCoords = { x: currentLeft, y: currentTop };
+
+      if (animate) {
+        wrapper.classList.add('animating');
+        setTimeout(() => wrapper.classList.remove('animating'), 320);
+      }
+      wrapper.style.left = currentLeft + 'px';
+      wrapper.style.top = currentTop + 'px';
+    }
+
+    function adaptMenuOrientation() {
+      const rect = button.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      const spaceBelow = vh - rect.bottom;
+      const expandUp = spaceBelow < (MENU_HEIGHT + VIEWPORT_PADDING) || rect.top > (vh / 2);
+
+      const spaceRight = vw - rect.right;
+      const alignLeft = spaceRight < (MENU_WIDTH - rect.width) || rect.left > (vw / 2);
+
+      menu.classList.toggle('expand-up', expandUp);
+      menu.classList.toggle('expand-down', !expandUp);
+      menu.classList.toggle('align-left', alignLeft);
+      menu.classList.toggle('align-right', !alignLeft);
+    }
+
+    function setMenuState(open) {
+      isOpen = open;
+      button.setAttribute('aria-expanded', String(isOpen));
+      if (isOpen) {
+        adaptMenuOrientation();
+        wrapper.classList.add('open');
+      } else {
+        wrapper.classList.remove('open');
+      }
+    }
+
+    // Default positioning: bottom-right
+    if (fabCoords) {
+      setPosition(fabCoords.x, fabCoords.y, false);
+    } else {
+      const fabSize = 58;
+      const defaultLeft = window.innerWidth - fabSize - 28;
+      const defaultTop = window.innerHeight - fabSize - 96;
+      setPosition(defaultLeft, defaultTop, false);
+    }
+
+    // Pointer events for desktop mouse and mobile touch
+    function onPointerDown(e) {
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      isDragging = true;
+      hasDraggedBeyondThreshold = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      initialLeft = currentLeft;
+      initialTop = currentTop;
+
+      button.setPointerCapture(e.pointerId);
+      button.addEventListener('pointermove', onPointerMove);
+      button.addEventListener('pointerup', onPointerUp);
+      button.addEventListener('pointercancel', onPointerCancel);
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const dist = Math.hypot(dx, dy);
+
+      if (!hasDraggedBeyondThreshold && dist > DRAG_THRESHOLD) {
+        hasDraggedBeyondThreshold = true;
+        wrapper.classList.add('dragging');
+        wrapper.classList.remove('animating');
+        if (isOpen) setMenuState(false);
+      }
+
+      if (hasDraggedBeyondThreshold) {
+        setPosition(initialLeft + dx, initialTop + dy, false);
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!isDragging) return;
+      cleanupPointer(e.pointerId);
+
+      if (!hasDraggedBeyondThreshold) {
+        setMenuState(!isOpen);
+      } else {
+        setPosition(currentLeft, currentTop, true);
+      }
+      isDragging = false;
+      hasDraggedBeyondThreshold = false;
+      wrapper.classList.remove('dragging');
+    }
+
+    function onPointerCancel(e) {
+      cleanupPointer(e.pointerId);
+      isDragging = false;
+      hasDraggedBeyondThreshold = false;
+      wrapper.classList.remove('dragging');
+    }
+
+    function cleanupPointer(pointerId) {
+      try { button.releasePointerCapture(pointerId); } catch (_) {}
+      button.removeEventListener('pointermove', onPointerMove);
+      button.removeEventListener('pointerup', onPointerUp);
+      button.removeEventListener('pointercancel', onPointerCancel);
+    }
+
+    button.addEventListener('pointerdown', onPointerDown);
+
+    // Sub-menu item click actions
+    wrapper.querySelectorAll('.stark-fab-item').forEach(item => {
+      item.addEventListener('click', e => {
+        e.stopPropagation();
+        const action = item.dataset.action;
+        const label = item.querySelector('strong')?.textContent || action;
+        console.log('[Floating Module Action Executed]: ' + action + ' (' + label + ')');
+        alert('Selected Quick Action: "' + label + '"\nKey: ' + action + '\nStatus: Triggered successfully.');
+        setMenuState(false);
+      });
+    });
+
+    document.addEventListener('pointerdown', e => {
+      if (isOpen && !wrapper.contains(e.target)) {
+        setMenuState(false);
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && isOpen) {
+        setMenuState(false);
+        button.focus();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      setPosition(currentLeft, currentTop, false);
+      if (isOpen) adaptMenuOrientation();
+    });
+  }
+
+  window.StarkControlTower={render,snapshot,queues,initFloatingActionModule};
   window.addEventListener('stark:region-change', render);
   window.addEventListener('stark:system-change', render);
 })();

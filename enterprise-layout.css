@@ -10593,3 +10593,250 @@ body.stark-system.is-home .system-submodule-bar {
   color: #94a3b8 !important;
 }
 
+/* ==========================================================================
+   FREELY DRAGGABLE FLOATING ACTION MODULE & ADAPTIVE SUB-MENU
+   ========================================================================== */
+.stark-fab-wrapper {
+  position: fixed !important;
+  z-index: 1000 !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  will-change: left, top !important;
+}
+
+.stark-fab-wrapper.animating {
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1), top 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.stark-fab-button {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  outline: none !important;
+  cursor: grab !important;
+  box-shadow: 0 10px 25px -4px rgba(2, 132, 199, 0.45), 0 4px 10px -2px rgba(2, 132, 199, 0.25) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.stark-fab-button:active {
+  cursor: grabbing !important;
+}
+
+.stark-fab-wrapper.dragging .stark-fab-button {
+  cursor: grabbing !important;
+  transform: scale(0.93) !important;
+  box-shadow: 0 16px 32px rgba(2, 132, 199, 0.5) !important;
+}
+
+.stark-fab-icon {
+  width: 24px !important;
+  height: 24px !important;
+  fill: none !important;
+  stroke: #ffffff !important;
+  stroke-width: 2.2 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  pointer-events: none !important;
+}
+
+.stark-fab-wrapper.open .stark-fab-icon {
+  transform: rotate(135deg) !important;
+}
+
+.stark-fab-badge {
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
+  width: 14px !important;
+  height: 14px !important;
+  background: #10b981 !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s ease, transform 0.2s ease !important;
+}
+
+.stark-fab-wrapper.open .stark-fab-badge {
+  opacity: 0 !important;
+  transform: scale(0.5) !important;
+}
+
+/* Adaptive Sub-Menu */
+.stark-fab-menu {
+  position: absolute !important;
+  width: 240px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 30px -8px rgba(15, 23, 42, 0.16), 0 8px 12px -4px rgba(15, 23, 42, 0.08) !important;
+  padding: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transform: scale(0.85) !important;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              visibility 0.2s !important;
+  visibility: hidden !important;
+  z-index: 1001 !important;
+}
+
+.stark-fab-wrapper.open .stark-fab-menu {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  transform: scale(1) !important;
+}
+
+/* Adaptive Orientation */
+.stark-fab-menu.expand-up {
+  bottom: calc(100% + 12px) !important;
+  transform-origin: bottom center !important;
+}
+
+.stark-fab-menu.expand-down {
+  top: calc(100% + 12px) !important;
+  transform-origin: top center !important;
+}
+
+.stark-fab-menu.align-left {
+  right: 0 !important;
+  transform-origin: bottom right !important;
+}
+
+.stark-fab-menu.align-right {
+  left: 0 !important;
+  transform-origin: bottom left !important;
+}
+
+.stark-fab-menu.expand-down.align-left {
+  transform-origin: top right !important;
+}
+
+.stark-fab-menu.expand-down.align-right {
+  transform-origin: top left !important;
+}
+
+.stark-fab-menu-header {
+  padding: 6px 10px 4px !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  color: #64748b !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.stark-fab-menu-header span:last-child {
+  font-size: 9px !important;
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+.stark-fab-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 10px !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  color: #1e293b !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease !important;
+  opacity: 0 !important;
+  transform: translateY(6px) !important;
+}
+
+.stark-fab-item:hover,
+.stark-fab-item:focus-visible {
+  background: #f0f7ff !important;
+  border-color: #bae6fd !important;
+  color: #0284c7 !important;
+  transform: translateX(2px) !important;
+  outline: none !important;
+}
+
+.stark-fab-item-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  background: #f1f5f9 !important;
+  color: #0284c7 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: all 0.15s ease !important;
+}
+
+.stark-fab-item-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  fill: none !important;
+}
+
+.stark-fab-item:hover .stark-fab-item-icon {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.stark-fab-item-text {
+  display: flex !important;
+  flex-direction: column !important;
+  line-height: 1.25 !important;
+}
+
+.stark-fab-item-text strong {
+  font-size: 12px !important;
+  color: #0f172a !important;
+}
+
+.stark-fab-item:hover .stark-fab-item-text strong {
+  color: #0284c7 !important;
+}
+
+.stark-fab-item-text small {
+  font-size: 10px !important;
+  color: #64748b !important;
+  font-weight: 400 !important;
+}
+
+/* Staggered entrance */
+.stark-fab-wrapper.open .stark-fab-item {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, border-color 0.15s ease !important;
+}
+
+.stark-fab-wrapper.open .stark-fab-item:nth-child(2) { transition-delay: 0.04s !important; }
+.stark-fab-wrapper.open .stark-fab-item:nth-child(3) { transition-delay: 0.08s !important; }
+.stark-fab-wrapper.open .stark-fab-item:nth-child(4) { transition-delay: 0.12s !important; }
+
+
