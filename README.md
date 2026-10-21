@@ -1,6 +1,10 @@
 # MK Supply Chain Intelligence
 
-**Current release: v52 workspace and saved-report fixes — October 13, 2026.** Saved Reorder Reports now work below the compact title, with an explicit Save current report action. Organization/demo entry keeps the current page and region. Top AI controls and Analysis Report navigation are removed. Regional dialogs, report headings and the analyst conversation layout are repaired. See [Workspace fixes](docs/WORKSPACE_FIXES.md). The manual reorder simulator, login entry and portfolio workflows remain available.
+**October 21 independent draggable modules:** the previous homepage is restored. In Operational Modules, every existing module card can be dragged by its header and positioned independently on the screen, with its original banner, links and actions. Positions are saved; return one card to its grid slot or restore the whole layout. See [Draggable modules and verification](docs/DRAGGABLE_MODULES_20261021.md). This source package has not been deployed.
+
+**October 21 browser QA patch:** fixes the eight reported order, pricing, date-filter, supplier-search, pagination, credit-utilization and KPI-layout issues. See [Browser fixes and verification](docs/BROWSER_FIXES_20261021.md). The package is ready to upload; the live GitHub Pages site has not been changed.
+
+**Earlier release: v52 workspace and saved-report fixes — October 13, 2026.** Saved Reorder Reports now work below the compact title, with an explicit Save current report action. Organization/demo entry keeps the current page and region. Top AI controls and Analysis Report navigation are removed. Regional dialogs, report headings and the analyst conversation layout are repaired. See [Workspace fixes](docs/WORKSPACE_FIXES.md). The manual reorder simulator, login entry and portfolio workflows remain available.
 
 **Publishing correction:** the inspected repository has newer asset copies at the root while the actual `assets/` folder still contains older code. Preserve the extracted folder paths when publishing. `system-shell.js` at the root does not update `assets/system-shell.js`.
 
@@ -14,7 +18,7 @@ The full-width MK analyst combines existing verified report/forecast tools with 
 
 Use GitHub Pages **Deploy from a branch → main → /(root)**. Upload everything inside `SUPPLY-CHAIN-INTELLIGENCE-main/`, including `.nojekyll`, in one commit. Do not upload an extra outer folder, `dist/`, or custom `.github/workflows`. See [DEPLOY_FROM_BRANCH.md](DEPLOY_FROM_BRANCH.md). This package has not been published remotely.
 
-Workers compatibility remains; [DEPLOY_TO_WORKERS.md](DEPLOY_TO_WORKERS.md) explains the optional build. Changed application assets use version `20261013-1`, and Workers builds fingerprint the JS/CSS bundles.
+Workers compatibility remains; [DEPLOY_TO_WORKERS.md](DEPLOY_TO_WORKERS.md) explains the optional build. The module-arrangement update uses asset version `20261021-dragcards1`; earlier QA fixes keep their own cache versions. Workers builds fingerprint the JS/CSS bundles.
 
 ## Run locally
 
@@ -32,4 +36,4 @@ Sign-in retains the configured authentication and organization membership flow. 
 
 See [VERIFICATION.md](docs/VERIFICATION.md) and the current release JSON report. Automated checks cover transactions, region isolation, demo isolation, conversations, forms, source-driven DOM startup, error recovery, SQL and build/static integrity. Graphical desktop/mobile rendering and live authentication, AI, carrier/partner services and deployment require separate checks on the published site.
 
-The archive retains the earlier source files and historical v51/v50/v49/v48/v47 reports. `VERSION.json` and the current v52 release report are authoritative for this update.
+The archive retains the earlier source files and historical v51/v50/v49/v48/v47 reports. `VERSION.json` and the October 21 verification reports describe the current update.
