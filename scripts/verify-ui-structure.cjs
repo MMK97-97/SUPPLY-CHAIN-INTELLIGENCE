@@ -30,7 +30,6 @@ assert.ok(css.includes('.id-main-layout'), 'CSS must include .id-main-layout');
 
 // 4. Check Item Master JS has Image 2 specifications
 const imJs = fs.readFileSync('item-master.js', 'utf8');
-assert.ok(imJs.includes('SupplyChainPro'), 'item-master.js must include SupplyChainPro');
 assert.ok(imJs.includes('Enterprise Item Master'), 'item-master.js must include Enterprise Item Master');
 assert.ok(imJs.includes('Word Search'), 'item-master.js must include Word Search');
 assert.ok(imJs.includes('Product Details'), 'item-master.js must include Product Details');

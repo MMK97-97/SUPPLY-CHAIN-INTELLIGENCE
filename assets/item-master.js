@@ -437,49 +437,6 @@
     );
 
     root.innerHTML = `
-      <!-- SupplyChainPro Top Navigation Bar -->
-      <header class="system-header scp-top-nav" role="banner">
-        <div class="scp-left-group">
-          <a class="scp-brand" href="workspace.html" title="SupplyChainPro Dashboard">
-            <svg class="scp-brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-              <line x1="12" y1="22.08" x2="12" y2="12"/>
-            </svg>
-            <span class="scp-brand-text">SupplyChainPro</span>
-          </a>
-          <ul class="scp-nav-links">
-            <li><a class="scp-nav-link" href="workspace.html">Home</a></li>
-            <li><a class="scp-nav-link" href="control-tower.html">Inventory</a></li>
-            <li><a class="scp-nav-link" href="all-open-orders.html">Orders</a></li>
-            <li><a class="scp-nav-link active" href="item-master.html">Item Master</a></li>
-            <li><a class="scp-nav-link" href="vendors.html">Vendors</a></li>
-            <li><a class="scp-nav-link" href="crm.html">Customers</a></li>
-            <li><a class="scp-nav-link" href="demand-lab.html">Reports</a></li>
-          </ul>
-        </div>
-        <div class="scp-right-controls">
-          <div class="scp-search-box">
-            <svg class="scp-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input class="scp-search-input" placeholder="Search items, orders, customers..." autocomplete="off">
-          </div>
-          <button class="scp-icon-btn" title="Notifications" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="scp-badge-dot"></span>
-          </button>
-          <button class="scp-icon-btn" title="Settings" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </button>
-          <div class="scp-user-pill">
-            <div class="scp-user-avatar">JD</div>
-            <div class="scp-user-info">
-              <span class="scp-user-name">John Doe</span>
-              <span class="scp-user-role">Supply Chain</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div class="eim-page-wrap">
         <!-- Page Header -->
         <div class="eim-header">
