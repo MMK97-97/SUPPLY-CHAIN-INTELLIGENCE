@@ -53,6 +53,7 @@
     return [
       ['itemMaster','Item Master','Master Catalog · ATS Feeds · Price Updates','#0284c7',[
         ['item-master.html','Item master catalog'],
+        ['item-details.html','Item details'],
         ['add-item.html','Add new item'],
         ['item-master.html?action=ats-upload','ATS upload (Brand)'],
         ['item-master.html?action=price-update','Price update (Brand)']

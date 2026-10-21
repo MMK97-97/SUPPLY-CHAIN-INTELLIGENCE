@@ -1737,6 +1737,265 @@ const cssStyles = `
   margin-top: 4px !important;
 }
 
+/* Clickable KPI Filter Cards */
+.eim-metric-card.is-clickable {
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  position: relative !important;
+  user-select: none !important;
+}
+
+.eim-metric-card.is-clickable:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  border-color: #94a3b8 !important;
+}
+
+.eim-metric-card.is-clickable.active {
+  border: 2px solid #0284c7 !important;
+  background: #f0f9ff !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+.eim-metric-active-badge {
+  position: absolute !important;
+  top: -9px !important;
+  right: 12px !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 1px 7px !important;
+  border-radius: 10px !important;
+  letter-spacing: 0.3px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+/* View Mode Toggles (List / Grid) */
+.eim-view-toggle-group {
+  display: flex !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+.eim-view-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+
+.eim-view-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.eim-view-btn:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.eim-view-btn.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+/* Product Grid Cards View */
+.eim-product-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)) !important;
+  gap: 16px !important;
+  padding: 18px !important;
+  background: #f8fafc !important;
+}
+
+.eim-grid-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.eim-grid-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+  border-color: #cbd5e1 !important;
+}
+
+.eim-grid-img-wrap {
+  height: 150px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  padding: 12px !important;
+}
+
+.eim-grid-img-wrap svg {
+  max-height: 110px !important;
+  max-width: 140px !important;
+}
+
+.eim-grid-badge {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+}
+
+.eim-grid-brand-pill {
+  position: absolute !important;
+  top: 10px !important;
+  left: 10px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+}
+
+.eim-grid-body {
+  padding: 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  flex: 1 !important;
+}
+
+.eim-grid-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  text-decoration: none !important;
+  line-height: 1.3 !important;
+}
+
+.eim-grid-title:hover {
+  text-decoration: underline !important;
+}
+
+.eim-grid-subtitle {
+  font-size: 11.5px !important;
+  color: #64748b !important;
+}
+
+.eim-grid-meta-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  margin-top: 4px !important;
+}
+
+.eim-grid-tag {
+  display: inline-block !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  width: fit-content !important;
+}
+
+.eim-grid-footer {
+  padding: 10px 14px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  background: #ffffff !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.eim-grid-price {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.eim-grid-avail {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #16a34a !important;
+}
+
+.eim-grid-actions {
+  display: flex !important;
+  gap: 6px !important;
+}
+
+.eim-grid-btn-view {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 5px 12px !important;
+  border-radius: 5px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: all 0.12s ease !important;
+}
+
+.eim-grid-btn-view:hover {
+  background: #0369a1 !important;
+}
+
+.eim-results-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.eim-results-filter-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  border: 1px solid #bae6fd !important;
+}
+
+.eim-clear-kpi-filter {
+  background: none !important;
+  border: none !important;
+  color: #0284c7 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  padding: 0 2px !important;
+  line-height: 1 !important;
+}
+
+.eim-clear-kpi-filter:hover {
+  color: #0c4a6e !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .eim-filter-layout { grid-template-columns: 1fr !important; }
@@ -1751,7 +2010,7 @@ const targetFile = path.resolve(__dirname, '..', 'enterprise-layout.css');
 const assetFile = path.resolve(__dirname, '..', 'assets', 'enterprise-layout.css');
 
 let content = fs.readFileSync(targetFile, 'utf8');
-if (!content.includes('.scp-top-nav')) {
+if (!content.includes('.eim-product-grid')) {
   content += '\n' + cssStyles;
   fs.writeFileSync(targetFile, content, 'utf8');
   console.log('Appended styles to enterprise-layout.css');

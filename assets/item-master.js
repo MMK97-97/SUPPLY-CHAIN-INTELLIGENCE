@@ -356,8 +356,17 @@
   let filterStatus = 'All';
   let filterSort = '';
   let coreOnly = false;
+  let activeKpiFilter = null; // null | 'total' | 'brands' | 'core' | 'hold'
+  let viewMode = 'list'; // 'list' | 'grid'
   let itemsPerPage = 50;
   let currentPage = 1;
+
+  const kpiFilterLabels = {
+    'total': 'Total Items (All)',
+    'brands': 'Active Brands',
+    'core': 'Core Items Only',
+    'hold': 'Items with Hold Quantity'
+  };
 
   // Sync hold quantities dynamically with StarkSystem
   function getLiveItemHold(sku) {
@@ -379,7 +388,17 @@
   // FILTERING LOGIC
   // =========================================================================
   function filterRecords(records) {
-    return records.filter(item => {
+    let result = records.filter(item => {
+      // Quick KPI Cards Filter
+      if (activeKpiFilter === 'brands') {
+        if (!item.brand || !brandDirectory.includes(item.brand) || (item.status && item.status.toLowerCase() === 'discontinued')) return false;
+      } else if (activeKpiFilter === 'core') {
+        if (!item.coreItem) return false;
+      } else if (activeKpiFilter === 'hold') {
+        const h = Number(item.onHold || 0) + getLiveItemHold(item.sku || item.model) + Number(item.holdQty || 0);
+        if (h <= 0) return false;
+      }
+
       // Word Search
       if (wordSearchQuery) {
         const q = wordSearchQuery.toLowerCase().trim();
@@ -413,6 +432,21 @@
 
       return true;
     });
+
+    // Sorting
+    if (filterSort === 'brand-asc') {
+      result.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
+    } else if (filterSort === 'model-asc') {
+      result.sort((a, b) => (a.model || a.sku || '').localeCompare(b.model || b.sku || ''));
+    } else if (filterSort === 'price-asc') {
+      result.sort((a, b) => Number(a.priceNet || a.standardPrice || 0) - Number(b.priceNet || b.standardPrice || 0));
+    } else if (filterSort === 'price-desc') {
+      result.sort((a, b) => Number(b.priceNet || b.standardPrice || 0) - Number(a.priceNet || a.standardPrice || 0));
+    } else if (filterSort === 'avail-desc') {
+      result.sort((a, b) => Number(b.availableQty || b.totalATS || 0) - Number(a.availableQty || a.totalATS || 0));
+    }
+
+    return result;
   }
 
   // =========================================================================
@@ -717,7 +751,8 @@
 
         <!-- Metrics Summary Row (4 KPI Cards) -->
         <div class="eim-metrics-grid">
-          <div class="eim-metric-card">
+          <div class="eim-metric-card is-clickable ${activeKpiFilter === 'total' ? 'active' : ''}" data-kpi-filter="total" role="button" tabindex="0" title="Click to view all items (124,893)">
+            ${activeKpiFilter === 'total' ? '<span class="eim-metric-active-badge">● Active Filter</span>' : ''}
             <div class="eim-metric-left">
               <div class="eim-metric-icon-wrap blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
@@ -733,7 +768,8 @@
             </div>
           </div>
 
-          <div class="eim-metric-card">
+          <div class="eim-metric-card is-clickable ${activeKpiFilter === 'brands' ? 'active' : ''}" data-kpi-filter="brands" role="button" tabindex="0" title="Click to filter by Active Brands (482)">
+            ${activeKpiFilter === 'brands' ? '<span class="eim-metric-active-badge">● Active Filter</span>' : ''}
             <div class="eim-metric-left">
               <div class="eim-metric-icon-wrap green">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
@@ -749,7 +785,8 @@
             </div>
           </div>
 
-          <div class="eim-metric-card">
+          <div class="eim-metric-card is-clickable ${activeKpiFilter === 'core' ? 'active' : ''}" data-kpi-filter="core" role="button" tabindex="0" title="Click to filter by Core Items (12,458)">
+            ${activeKpiFilter === 'core' ? '<span class="eim-metric-active-badge">● Active Filter</span>' : ''}
             <div class="eim-metric-left">
               <div class="eim-metric-icon-wrap purple">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -765,7 +802,8 @@
             </div>
           </div>
 
-          <div class="eim-metric-card">
+          <div class="eim-metric-card is-clickable ${activeKpiFilter === 'hold' ? 'active' : ''}" data-kpi-filter="hold" role="button" tabindex="0" title="Click to filter by Items on Hold (1,204)">
+            ${activeKpiFilter === 'hold' ? '<span class="eim-metric-active-badge">● Active Filter</span>' : ''}
             <div class="eim-metric-left">
               <div class="eim-metric-icon-wrap yellow">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -782,13 +820,43 @@
           </div>
         </div>
 
-        <!-- Search Results Card & Table -->
+        <!-- Search Results Card & Table / Grid -->
         <div class="eim-results-card">
           <div class="eim-results-head">
             <div class="eim-results-title">
-              Search Results (1 - ${Math.min(filtered.length, itemsPerPage)} of ${num(totalItemsCount)} items)
+              <span>Search Results (1 - ${Math.min(filtered.length, itemsPerPage)} of ${num(filtered.length)} items)</span>
+              ${activeKpiFilter ? `
+                <span class="eim-results-filter-badge">
+                  Filtered: <strong>${kpiFilterLabels[activeKpiFilter]}</strong>
+                  <button type="button" class="eim-clear-kpi-filter" id="eim-clear-kpi-btn" title="Clear quick filter">✕</button>
+                </span>
+              ` : ''}
             </div>
             <div class="eim-results-controls">
+              <!-- View Toggle Group -->
+              <div class="eim-view-toggle-group" role="group" aria-label="Catalog View Mode">
+                <button type="button" class="eim-view-btn ${viewMode === 'list' ? 'active' : ''}" id="eim-view-list" title="Table list view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                  </svg>
+                  <span>List</span>
+                </button>
+                <button type="button" class="eim-view-btn ${viewMode === 'grid' ? 'active' : ''}" id="eim-view-grid" title="Cards grid view">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                  </svg>
+                  <span>Grid</span>
+                </button>
+              </div>
+
               <div class="eim-per-page-wrap">
                 <span>Show</span>
                 <select class="eim-per-page-select" id="eim-select-per-page">
@@ -810,66 +878,133 @@
             </div>
           </div>
 
-          <div class="eim-table-wrap">
-            <table class="eim-table">
-              <thead>
-                <tr>
-                  <th style="width:36px"><input type="checkbox" id="eim-check-all-rows"></th>
-                  <th style="width:50px">Image</th>
-                  <th>Item</th>
-                  <th>Brand</th>
-                  <th>UPC #</th>
-                  <th>Model #</th>
-                  <th>Category</th>
-                  <th>Sub Category</th>
-                  <th>Price (${priceType})</th>
-                  <th>Status</th>
-                  <th>Available Qty</th>
-                  <th style="width:36px">···</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${filtered.map(item => {
-                  const svg = productSVGs[item.sku] || productSVGs[item.model] || fallbackThumbSVG;
-                  const itemHold = getLiveItemHold(item.sku);
-                  return `
-                    <tr data-sku="${esc(item.sku || item.model)}">
-                      <td><input type="checkbox" class="eim-row-checkbox"></td>
-                      <td>
-                        <div class="eim-table-thumb">
-                          ${svg}
-                        </div>
+          ${viewMode === 'list' ? `
+            <div class="eim-table-wrap">
+              <table class="eim-table">
+                <thead>
+                  <tr>
+                    <th style="width:36px"><input type="checkbox" id="eim-check-all-rows"></th>
+                    <th style="width:50px">Image</th>
+                    <th>Item</th>
+                    <th>Brand</th>
+                    <th>UPC #</th>
+                    <th>Model #</th>
+                    <th>Category</th>
+                    <th>Sub Category</th>
+                    <th>Price (${priceType})</th>
+                    <th>Status</th>
+                    <th>Available Qty</th>
+                    <th style="width:36px">···</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.length === 0 ? `
+                    <tr>
+                      <td colspan="12" style="text-align:center;padding:40px;color:#64748b;">
+                        No items match the selected filters. <button type="button" id="eim-empty-reset" style="margin-left:8px;color:#0284c7;background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Reset filters</button>
                       </td>
-                      <td>
-                        <div class="eim-item-cell">
-                          <a class="eim-item-title-link" href="item-details.html?sku=${encodeURIComponent(item.sku || item.model)}">
-                            ${esc(item.title)}
-                          </a>
-                          <span class="eim-item-subtitle">${esc(item.subtitle || item.variant || '')}</span>
-                        </div>
-                      </td>
-                      <td>${esc(item.brand)}</td>
-                      <td>${esc(item.upc || '—')}</td>
-                      <td>${esc(item.model || item.sku)}</td>
-                      <td>${esc(item.category || '—')}</td>
-                      <td>${esc(item.subCategory || '—')}</td>
-                      <td><strong>${money(item.priceNet || item.standardPrice || 0)}</strong></td>
-                      <td>
+                    </tr>
+                  ` : filtered.map(item => {
+                    const svg = productSVGs[item.sku] || productSVGs[item.model] || fallbackThumbSVG;
+                    const itemHold = Number(item.onHold || 0) + getLiveItemHold(item.sku || item.model) + Number(item.holdQty || 0);
+                    return `
+                      <tr data-sku="${esc(item.sku || item.model)}">
+                        <td><input type="checkbox" class="eim-row-checkbox"></td>
+                        <td>
+                          <div class="eim-table-thumb">
+                            ${svg}
+                          </div>
+                        </td>
+                        <td>
+                          <div class="eim-item-cell">
+                            <a class="eim-item-title-link" href="item-details.html?sku=${encodeURIComponent(item.sku || item.model)}">
+                              ${esc(item.title)}
+                            </a>
+                            <span class="eim-item-subtitle">${esc(item.subtitle || item.variant || '')}</span>
+                          </div>
+                        </td>
+                        <td>${esc(item.brand)}</td>
+                        <td>${esc(item.upc || '—')}</td>
+                        <td>${esc(item.model || item.sku)}</td>
+                        <td>${esc(item.category || '—')}</td>
+                        <td>${esc(item.subCategory || '—')}</td>
+                        <td><strong>${money(item.priceNet || item.standardPrice || 0)}</strong></td>
+                        <td>
+                          <span class="eim-status-badge">
+                            <span class="eim-status-dot"></span>
+                            ${esc(item.status || 'Active')}
+                          </span>
+                        </td>
+                        <td>
+                          <strong>${num(item.availableQty || item.totalATS || 0)}</strong>
+                          ${itemHold > 0 ? `<span style="display:block;font-size:10.5px;color:#d97706;font-weight:600;">Hold: ${num(itemHold)}</span>` : ''}
+                        </td>
+                        <td>
+                          <button class="eim-action-menu-btn" type="button" title="Actions" data-sku="${esc(item.sku || item.model)}">···</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="eim-product-grid">
+              ${filtered.length === 0 ? `
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">
+                  No items match the selected filters. <button type="button" id="eim-empty-reset" style="margin-left:8px;color:#0284c7;background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Reset filters</button>
+                </div>
+              ` : filtered.map(item => {
+                const svg = productSVGs[item.sku] || productSVGs[item.model] || fallbackThumbSVG;
+                const itemHold = Number(item.onHold || 0) + getLiveItemHold(item.sku || item.model) + Number(item.holdQty || 0);
+                const price = item.priceNet || item.standardPrice || 0;
+                const avail = item.availableQty || item.totalATS || 0;
+                return `
+                  <div class="eim-grid-card" data-sku="${esc(item.sku || item.model)}">
+                    <div class="eim-grid-img-wrap">
+                      <span class="eim-grid-brand-pill">${esc(item.brand)}</span>
+                      ${svg}
+                      <div class="eim-grid-badge">
                         <span class="eim-status-badge">
                           <span class="eim-status-dot"></span>
                           ${esc(item.status || 'Active')}
                         </span>
-                      </td>
-                      <td><strong>${num(item.availableQty || item.totalATS || 0)}</strong></td>
-                      <td>
-                        <button class="eim-action-menu-btn" type="button" title="Actions" data-sku="${esc(item.sku || item.model)}">···</button>
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+                    <div class="eim-grid-body">
+                      <a class="eim-grid-title" href="item-details.html?sku=${encodeURIComponent(item.sku || item.model)}">
+                        ${esc(item.title)}
+                      </a>
+                      <span class="eim-grid-subtitle">${esc(item.subtitle || item.variant || item.model || '')}</span>
+                      ${(item.category || item.subCategory) ? `
+                        <div class="eim-grid-tag">${esc([item.category, item.subCategory].filter(Boolean).join(' · '))}</div>
+                      ` : ''}
+                      <div class="eim-grid-meta-row">
+                        <span>Model: <strong>${esc(item.model || item.sku)}</strong></span>
+                        <span>UPC: ${esc(item.upc || '—')}</span>
+                      </div>
+                      ${itemHold > 0 ? `
+                        <div style="font-size:11px;color:#d97706;font-weight:600;display:flex;align-items:center;gap:4px;margin-top:2px;">
+                          <span>🔒 On Hold:</span><strong>${num(itemHold)}</strong>
+                        </div>
+                      ` : ''}
+                    </div>
+                    <div class="eim-grid-footer">
+                      <div>
+                        <div class="eim-grid-price">${money(price)}</div>
+                        <div class="eim-grid-avail">${num(avail)} available</div>
+                      </div>
+                      <div class="eim-grid-actions">
+                        <a class="eim-grid-btn-view" href="item-details.html?sku=${encodeURIComponent(item.sku || item.model)}">
+                          View details
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -910,8 +1045,70 @@
       filterStatus = 'All';
       filterSort = '';
       coreOnly = false;
+      activeKpiFilter = null;
       notice('All catalog filters reset to default.');
       render();
+    });
+
+    // KPI Cards as Quick Filters
+    document.querySelectorAll('.eim-metric-card.is-clickable').forEach(card => {
+      card.addEventListener('click', () => {
+        const filterType = card.getAttribute('data-kpi-filter');
+        if (activeKpiFilter === filterType) {
+          activeKpiFilter = null;
+        } else {
+          activeKpiFilter = filterType;
+        }
+        render();
+      });
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.click();
+        }
+      });
+    });
+
+    document.querySelector('#eim-clear-kpi-btn')?.addEventListener('click', e => {
+      e.stopPropagation();
+      activeKpiFilter = null;
+      render();
+    });
+
+    document.querySelector('#eim-empty-reset')?.addEventListener('click', () => {
+      document.querySelector('#eim-btn-reset-all')?.click();
+    });
+
+    // View Mode Toggle (List / Grid)
+    document.querySelector('#eim-view-list')?.addEventListener('click', () => {
+      if (viewMode !== 'list') {
+        viewMode = 'list';
+        render();
+      }
+    });
+
+    document.querySelector('#eim-view-grid')?.addEventListener('click', () => {
+      if (viewMode !== 'grid') {
+        viewMode = 'grid';
+        render();
+      }
+    });
+
+    // Sort select
+    document.querySelector('#eim-sort-select')?.addEventListener('change', e => {
+      filterSort = e.target.value;
+      render();
+    });
+
+    // Grid card click
+    document.querySelectorAll('.eim-grid-card').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) return;
+        const sku = card.getAttribute('data-sku');
+        if (sku) {
+          window.location.href = 'item-details.html?sku=' + encodeURIComponent(sku);
+        }
+      });
     });
 
     // Card Collapsing
