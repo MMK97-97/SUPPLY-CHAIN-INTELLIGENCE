@@ -2,6 +2,7 @@
   'use strict';
 
   const S = window.StarkSystem;
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = n => new Intl.NumberFormat('en-US').format(Number(n) || 0);
   const money = (n, cur = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -329,14 +330,15 @@
   ];
 
   function getCatalog() {
+    const apply = records => window.StarkCatalogImports?.overlay(records) || records;
     try {
       const stored = localStorage.getItem('stark.enterprise.itemMaster.v2');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return apply(parsed);
       }
     } catch (_) {}
-    return defaultMasterCatalog;
+    return apply(defaultMasterCatalog);
   }
 
   // =========================================================================
@@ -346,6 +348,7 @@
   let selectedBrands = new Set();
   let brandSearchQuery = '';
   let priceType = 'Net'; // 'Net' or 'Retail'
+  const displayPrice=item=>Number(priceType==='Retail'?(item.standardPrice ?? item.priceNet ?? 0):(item.priceNet ?? item.standardPrice ?? 0));
   let filterUPC = '';
   let filterModel = '';
   let filterVariant = '';
@@ -420,7 +423,7 @@
       if (filterTitle && !(item.title || '').toLowerCase().includes(filterTitle.toLowerCase().trim())) return false;
 
       // Pricing Card
-      const p = Number(item.priceNet || item.standardPrice || 0);
+      const p = displayPrice(item);
       if (filterPriceFrom && p < Number(filterPriceFrom)) return false;
       if (filterPriceTo && p > Number(filterPriceTo)) return false;
 
@@ -439,11 +442,11 @@
     } else if (filterSort === 'model-asc') {
       result.sort((a, b) => (a.model || a.sku || '').localeCompare(b.model || b.sku || ''));
     } else if (filterSort === 'price-asc') {
-      result.sort((a, b) => Number(a.priceNet || a.standardPrice || 0) - Number(b.priceNet || b.standardPrice || 0));
+      result.sort((a, b) => displayPrice(a) - displayPrice(b));
     } else if (filterSort === 'price-desc') {
-      result.sort((a, b) => Number(b.priceNet || b.standardPrice || 0) - Number(a.priceNet || a.standardPrice || 0));
+      result.sort((a, b) => displayPrice(b) - displayPrice(a));
     } else if (filterSort === 'avail-desc') {
-      result.sort((a, b) => Number(b.availableQty || b.totalATS || 0) - Number(a.availableQty || a.totalATS || 0));
+      result.sort((a, b) => Number(b.availableQty ?? b.totalATS ?? 0) - Number(a.availableQty ?? a.totalATS ?? 0));
     }
 
     return result;
@@ -928,7 +931,7 @@
                         <td>${esc(item.model || item.sku)}</td>
                         <td>${esc(item.category || '—')}</td>
                         <td>${esc(item.subCategory || '—')}</td>
-                        <td><strong>${money(item.priceNet || item.standardPrice || 0)}</strong></td>
+                        <td><strong>${money(displayPrice(item), item.currency || 'USD')}</strong></td>
                         <td>
                           <span class="eim-status-badge">
                             <span class="eim-status-dot"></span>
@@ -936,7 +939,8 @@
                           </span>
                         </td>
                         <td>
-                          <strong>${num(item.availableQty || item.totalATS || 0)}</strong>
+                          <strong>${num(item.availableQty ?? item.totalATS ?? 0)}</strong>
+                          ${item.atsUpdatedAt ? `<small style="display:block;color:#64748b;font-size:10px">Brand ATS · ${esc(new Date(item.atsUpdatedAt).toLocaleString())}</small>` : ''}
                           ${itemHold > 0 ? `<span style="display:block;font-size:10.5px;color:#d97706;font-weight:600;">Hold: ${num(itemHold)}</span>` : ''}
                         </td>
                         <td>
@@ -957,8 +961,8 @@
               ` : filtered.map(item => {
                 const svg = productSVGs[item.sku] || productSVGs[item.model] || fallbackThumbSVG;
                 const itemHold = Number(item.onHold || 0) + getLiveItemHold(item.sku || item.model) + Number(item.holdQty || 0);
-                const price = item.priceNet || item.standardPrice || 0;
-                const avail = item.availableQty || item.totalATS || 0;
+                const price = displayPrice(item);
+                const avail = item.availableQty ?? item.totalATS ?? 0;
                 return `
                   <div class="eim-grid-card" data-sku="${esc(item.sku || item.model)}">
                     <div class="eim-grid-img-wrap">
@@ -991,7 +995,7 @@
                     </div>
                     <div class="eim-grid-footer">
                       <div>
-                        <div class="eim-grid-price">${money(price)}</div>
+                        <div class="eim-grid-price">${money(price, item.currency || 'USD')}</div>
                         <div class="eim-grid-avail">${num(avail)} available</div>
                       </div>
                       <div class="eim-grid-actions">

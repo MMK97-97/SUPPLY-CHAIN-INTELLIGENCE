@@ -2,6 +2,7 @@
   'use strict';
 
   const S = window.StarkSystem;
+  const localStorage = window.StarkWorkspace?.localStorage || window.localStorage;
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = n => new Intl.NumberFormat('en-US').format(Number(n) || 0);
   const money = (n, cur = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -158,14 +159,15 @@
   // CATALOG REGISTRY
   // =========================================================================
   function getMasterCatalog() {
+    const apply = records => window.StarkCatalogImports?.overlay(records) || records;
     try {
       const stored = localStorage.getItem('stark.enterprise.itemMaster.v2');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return apply(parsed);
       }
     } catch (_) {}
-    return [
+    return apply([
       defaultItemRecord,
       {
         sku: 'AP-SW42-BK',
@@ -296,7 +298,7 @@
         ],
         description: 'Flagship wireless noise cancelling headphones in silver/white with industry-leading ANC and multipoint Bluetooth connection.'
       }
-    ];
+    ]);
   }
 
   function getCurrentItem() {
@@ -689,6 +691,7 @@
                   <div class="id-stock-kpi-row"><span>In-Hands Qty</span><strong>${num(inHands)}</strong></div>
                   <div class="id-stock-kpi-row"><span>On Order Qty</span><strong>${num(onOrder)}</strong></div>
                   <div class="id-stock-kpi-row"><span>Available Qty</span><strong>${num(available)}</strong></div>
+                  ${item.brandATS !== undefined ? `<div class="id-stock-kpi-row" data-brand-ats><span>Brand ATS</span><strong>${num(item.brandATS)}</strong></div>` : ''}
                   <div class="id-stock-kpi-row"><span>Hold Qty</span><strong>${num(liveHold)}</strong></div>
                   <div class="id-stock-kpi-row"><span>Not Available</span><strong>${num(item.notAvailable || 0)}</strong></div>
                 </div>
@@ -792,15 +795,20 @@
     }
 
     if (activeTab === 'Pricing') {
+      const retail=Number(item.standardPrice ?? item.priceNet ?? 0);
+      const net=Number(item.priceNet ?? item.standardPrice ?? 0);
+      const cost=item.cost==null?null:Number(item.cost);
+      const margin=cost==null?null:net-cost;
       return `
         <div class="id-card" style="margin-bottom:16px">
           <h2 class="id-card-title">Tiered Commercial Pricing Matrix</h2>
-          <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; margin-bottom:18px">
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Standard / Retail</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(item.standardPrice || 349.99)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Net / Unit Cost</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(item.cost || 278.00)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Wholesale Tier 1</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money((item.standardPrice || 349.99) * 0.88)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">MAP Protected</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(item.standardPrice || 349.99)}</strong></div>
-            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Gross Margin</span><strong style="display:block;font-size:18px;color:#16a34a;margin-top:4px">${money((item.standardPrice || 349.99) - (item.cost || 278.00))} (20.6%)</strong></div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:18px">
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Standard / Retail</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(retail, item.currency || 'USD')}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Net Price</span><strong data-price-net style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(net, item.currency || 'USD')}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Unit Cost</span><strong data-unit-cost style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${cost==null?'—':money(cost, item.currency || 'USD')}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Wholesale Tier 1</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(retail * 0.88, item.currency || 'USD')}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">MAP Protected</span><strong style="display:block;font-size:18px;color:#0f172a;margin-top:4px">${money(retail, item.currency || 'USD')}</strong></div>
+            <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Gross Margin</span><strong style="display:block;font-size:18px;color:#16a34a;margin-top:4px">${margin==null?'—':money(margin, item.currency || 'USD')+(net>0?' ('+(100*margin/net).toFixed(1)+'%)':'')}</strong></div>
           </div>
           <h3 style="font-size:13px;font-weight:700;color:#1e293b;margin:0 0 10px">Contracted Customer Pricing Overrides</h3>
           <table class="id-wh-table">
@@ -985,7 +993,7 @@
       return `
         <div class="id-card" style="margin-bottom:16px">
           <h2 class="id-card-title">Carton &amp; Pallet Specifications</h2>
-          <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; margin-bottom:18px">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:18px">
             <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Length (L)</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:4px">9.2 in</strong></div>
             <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Width (W)</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:4px">7.8 in</strong></div>
             <div class="eim-card"><span style="font-size:11px;color:#64748b;font-weight:600">Height (H)</span><strong style="display:block;font-size:16px;color:#0f172a;margin-top:4px">3.1 in</strong></div>
