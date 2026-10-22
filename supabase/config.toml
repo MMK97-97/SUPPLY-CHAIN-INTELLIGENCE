@@ -1,0 +1,3 @@
+# The notification handler validates user JWTs and cron credentials in its own code.
+[functions.workspace-notifications]
+verify_jwt = false
