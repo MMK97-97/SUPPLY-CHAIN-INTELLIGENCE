@@ -90,7 +90,7 @@
       loadScript(assetUrl("supabase-config.js?v=20261007-1"), () => Boolean(window.STARK_SUPABASE_CONFIG)),
       loadScript(assetUrl("vendor/supabase-2.117.3.min.js"), () => Boolean(window.supabase?.createClient))
     ])
-    .then(() => loadScript(assetUrl("supabase-auth.js?v=20261014-1"), () => Boolean(window.StarkAuth)))
+    .then(() => loadScript(assetUrl("supabase-auth.js?v=20261021-access1"), () => Boolean(window.StarkAuth)))
     .catch(error => showFailure(error.message));
 
   window.setTimeout(() => {

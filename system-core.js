@@ -7,7 +7,7 @@
 
   if (window.StarkSystem) return;
   const script = document.currentScript;
-  const rootURL = new URL('../', script.src);
+  const rootURL = window.StarkWorkspace?.rootURL || new URL(/\/assets\/[^/]+$/.test(new URL(script.src).pathname) ? '../' : './', script.src);
   const KEY = 'stark.unifiedSystem.v1';
   const CHANNEL = 'stark-unified-system';
   const clone = value => JSON.parse(JSON.stringify(value));
@@ -152,6 +152,18 @@
     if (!s || s.schemaVersion !== 1 || !s.enterprise || !s.logistics) throw new Error('Unsupported workspace format.');
     if (!Number.isSafeInteger(s.revision) || s.revision < 0 || !Array.isArray(s.audit) || !s.regional || typeof s.regional !== 'object' || Array.isArray(s.regional) || !s.events || typeof s.events !== 'object' || Array.isArray(s.events)) throw new Error('Invalid workspace revision or record groups.');
     const e = s.enterprise, l = s.logistics;
+    if (s.tasks !== undefined) {
+      if(!Array.isArray(s.tasks) || s.tasks.length>10000)throw new Error('Invalid task records.');
+      const taskIds=new Set();
+      for(const task of s.tasks){
+        if(!task || typeof task.id!=='string' || !task.id || taskIds.has(task.id) || typeof task.title!=='string' || !task.title.trim() || task.title.length>160 || typeof task.notes!=='string' || task.notes.length>20000 || !['OPEN','IN_PROGRESS','DONE'].includes(task.status) || !['LOW','NORMAL','HIGH'].includes(task.priority) || !Array.isArray(task.comments) || task.comments.length>200)throw new Error('Invalid task records.');
+        if(task.version!==undefined && (!Number.isSafeInteger(task.version) || task.version<0))throw new Error('Invalid task version.');
+        taskIds.add(task.id);
+        for(const value of [task.dueAt,task.reminderAt,task.createdAt,task.updatedAt])if(value && !Number.isFinite(Date.parse(value)))throw new Error('Invalid task date.');
+        if(task.reminderAt && task.dueAt && task.reminderAt>task.dueAt)throw new Error('Reminder must be at or before the due time.');
+        if(task.comments.some(note=>typeof note.text!=='string' || !note.text.trim() || note.text.length>5000 || !Number.isFinite(Date.parse(note.time))))throw new Error('Invalid task note.');
+      }
+    }
     const arrays = ['accounts','programs','inventory','orders','vendors','purchaseOrders','priceOverrides','vendorPriceBooks','vaultTokens','apiKeys','webhookLogs','slaLogs','activity'];
     for (const k of arrays) if (!Array.isArray(e[k])) throw new Error(`Invalid ${k} records.`);
     for (const k of ['warehouses','bins','inventory','receipts','putaway','waves','packing','cycleCounts','movements','tplNodes','tplInventory','tplShipments','reconciliations','activity']) if (!Array.isArray(l[k])) throw new Error(`Invalid ${k} records.`);
@@ -190,10 +202,32 @@
       if (awaitingValidation(o) && !['UNVALIDATED','ISSUES','CANCELLED','EXPIRED'].includes(o.status)) throw new Error(`Order ${o.po} cannot execute before validation.`);
     }
   }
+  function canCancelOrders() {
+    return window.StarkWorkspace?.isDemo === true || window.StarkSystemCloud?.canCancelOrders?.() === true;
+  }
+  function requireCancellationPermission() {
+    if (!canCancelOrders()) throw new Error('Only an authorized owner, admin or manager can cancel an order. Sign in with an authorized organization account.');
+  }
+  function guardOrderCancellations(before, after) {
+    const prior = new Map(before.enterprise.orders.map(order => [order.id, order]));
+    const remaining = new Set(after.enterprise.orders.map(order => order.id));
+    const changed = after.enterprise.orders.filter(order => {
+      const old = prior.get(order.id);
+      return (order.status === 'CANCELLED' && old?.status !== 'CANCELLED') || (old?.status === 'CANCELLED' && order.status !== 'CANCELLED');
+    });
+    const removed = before.enterprise.orders.filter(order => !remaining.has(order.id) && !awaitingValidation(order));
+    const downgraded = after.enterprise.orders.some(order=>prior.has(order.id) && !awaitingValidation(prior.get(order.id)) && awaitingValidation(order));
+    if (changed.length || removed.length || downgraded) requireCancellationPermission();
+    for (const order of changed.filter(order => order.status === 'CANCELLED')) {
+      order.cancelledBy = window.StarkWorkspace?.isDemo ? 'DEMO_MANAGER' : window.StarkSystemCloud.getAccess().userId;
+      order.cancelledAt = stamp();
+    }
+  }
   function transaction(action, detail, fn) {
     const latest = readWorkspace() || state;
     const next = clone(latest);
     const result = fn(next);
+    guardOrderCancellations(latest, next);
     reconcile(next); validateState(next);
     next.revision = latest.revision + 1; next.updatedAt = stamp();
     next.audit.unshift({ id: uid('audit'), time: next.updatedAt, action, detail }); next.audit = next.audit.slice(0, 400);
@@ -273,6 +307,7 @@
     }); return count;
   }
   function cancelOrder(id) {
+    requireCancellationPermission();
     transaction('ORDER_CANCELLED', id, s => {
       const o = s.enterprise.orders.find(x => x.id === id); if (!o || final(o.status)) throw new Error('Only open orders can be cancelled.');
       if ((s.logistics.tplRequests || []).some(r => r.customerOrderId === id && ['SENDING','ACKNOWLEDGED','UNKNOWN'].includes(r.transmission?.state))) throw new Error('Reconcile or cancel this order with the 3PL before releasing its reservation.');
@@ -362,6 +397,7 @@
       const idx = s.enterprise.orders.findIndex(x => x.id === id || x.po === id);
       if (idx === -1) throw new Error('Order not found.');
       const o = s.enterprise.orders[idx];
+      if (!awaitingValidation(o) || final(o.status)) throw new Error('Only unvalidated drafts can be deleted. Cancel an open order to retain its history.');
       for (const l of o.lines) {
         const inv = inventoryItem(s, l.sku);
         if (inv) {
@@ -560,7 +596,15 @@
   function fulfillDigitalOrder(id){transaction('DIGITAL_ORDER_DISPATCHED',id,s=>{const o=s.enterprise.orders.find(x=>x.id===id);if(!o||final(o.status)||awaitingValidation(o)||o.type==='HOLD_PO'||o.lines.some(x=>inventoryItem(s,x.sku).nature!=='DIGITAL'))throw new Error('Choose an open digital customer order.');for(const line of o.lines){const tokens=s.enterprise.vaultTokens.filter(t=>t.sku===line.sku&&t.state==='AVAILABLE');if(tokens.length<line.qty)throw new Error('The masked demonstration vault does not contain enough token records. Replenish its demo capacity first.');tokens.slice(0,line.qty).forEach(t=>{t.state='DISPATCHED';t.orderId=o.id;t.dispatchedAt=stamp();});inventoryItem(s,line.sku).onHand-=line.qty;line.shipped=line.qty;}o.status='SHIPPED';o.updatedAt=stamp();o.digitalDispatch={mode:'MASKED_DEMO',time:stamp()};});}
   function setEvents(region,events){const code=regionCode(region);if(!Array.isArray(events))throw new Error('Invalid event records.');if(JSON.stringify(state.events?.[code]||[])===JSON.stringify(events))return;transaction('EVENTS_UPDATED',`${code}: ${events.length} event POs saved.`,s=>{s.events||={};s.events[code]=clone(events);});}
   function clearRegional(region){transaction('REPORT_DISCONNECTED',regionCode(region),s=>{delete s.regional[regionCode(region)];});}
-  function adoptSharedState(document){validateState(document);transaction('CLOUD_STATE_LOADED','The shared organization workspace was loaded.',s=>{const revision=s.revision;Object.assign(s,clone(document));s.revision=revision;});}
+  async function adoptSharedState(document,datasets=[]) {
+    // Loading a server-authorized snapshot must work for editors after a manager
+    // cancels an order. This read path never publishes mutations; the database
+    // enforces permissions again on every subsequent workspace save.
+    if(!window.StarkSystemCloud?.getAccess?.().userId)throw new Error('Verify your organization session before loading shared data.');
+    validateState(document);const latest=readWorkspace() || state,next=clone(document);
+    next.revision=latest.revision+1;next.updatedAt=stamp();persist(next);state=next;notify();
+    await restoreRegional(datasets);
+  }
   function draftRegionalPO(region, model, vendorId, cost, qty) {
     return transaction('VENDOR_PO_CREATED', `${model}: ${qty} units`, s => {
       const item = inventoryItem(s, `${regionCode(region)}::${model}`); const v = s.enterprise.vendors.find(x => x.id === vendorId);
@@ -624,7 +668,7 @@
       if (updates.brand !== undefined) item.brand = String(updates.brand || '').trim();
       if (updates.title !== undefined) item.title = String(updates.title || '').trim();
       if (updates.model !== undefined) item.model = String(updates.model || '').trim();
-      if (updates.standardPrice !== undefined) item.standardPrice = Math.max(0, number(updates.standardPrice));
+      if (updates.standardPrice !== undefined) item.priceNet = item.standardPrice = Math.max(0, number(updates.standardPrice));
       if (updates.cost !== undefined) item.cost = Math.max(0, number(updates.cost));
       if (updates.safety !== undefined) item.safety = Math.max(0, number(updates.safety));
       item.updatedAt = stamp();
@@ -707,6 +751,6 @@
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});
     return rows;
   }
-  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, shipOrder, deleteOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
+  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, canCancelOrders, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, shipOrder, deleteOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
   expireHolds();
 })();

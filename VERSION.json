@@ -1,6 +1,6 @@
 {
-  "name": "MK Supply Chain Intelligence — Portfolio Enterprise System",
-  "version": "2026.10.21-draggable-module-cards",
+  "name": "MK Supply Chain Intelligence \u2014 Portfolio Enterprise System",
+  "version": "2026.10.21-tasks-price-notices-permissions",
   "base_snapshot": "stark-supply-chain-mk-hybrid-v54",
   "modules": [
     "Enterprise Control Tower",
@@ -17,7 +17,8 @@
     "Warehouse Management",
     "3PL Management",
     "Transportation",
-    "System Data & Audit"
+    "System Data & Audit",
+    "Tasks & Reminders"
   ],
   "deployment": "Cloudflare Workers static assets; GitHub Pages Deploy from a branch (main / root) also supported",
   "entry_points": [
@@ -34,7 +35,7 @@
     "jekyll": false,
     "custom_workflows": false
   },
-  "asset_version": "20261021-dragcards1",
+  "asset_version": "20261021-ops1",
   "ui_fixes": [
     "Shared navigation mounts after module initialization",
     "Consistent readable light theme across operations and logistics",
@@ -77,7 +78,7 @@
     "Prevented duplicate legacy report-export loading and updated legacy asset versions"
   ],
   "ai": {
-    "version": "MK Intelligence 5.0 · Decision Lab",
+    "version": "MK Intelligence 5.0 \u00b7 Decision Lab",
     "provider": "Hugging Face Supply AI Chain Hub",
     "space": "MMK97/supply-ai-chain-hub",
     "endpoint": "https://mmk97-supply-ai-chain-hub.hf.space/gradio_api/call/website_chat",
@@ -169,11 +170,57 @@
   "draggable_modules": {
     "date": "2026-10-21",
     "module_cards": 12,
-    "behavior": "Original operational cards can be independently positioned by dragging their headers; original links, actions, grid and telemetry view are retained.",
+    "behavior": "Original operational cards can be independently dragged; links and actions preserved. Individual return-to-grid controls removed; full-layout reset retained.",
     "saved_layout": "Independent normalized positions; scoped to working/demo workspace",
     "report": "docs/DRAGGABLE_MODULES_20261021.md",
     "verification": "docs/verification-draggable-modules-20261021.json",
-    "focused_checks_passed": 18,
+    "focused_checks_passed": 19,
+    "deployed": false,
+    "deployment_repair": {
+      "pages": [
+        "workspace.html",
+        "business-operations.html"
+      ],
+      "script": "control-tower.js?v=20261021-dragcards2",
+      "stylesheet": "enterprise-layout.css?v=20261021-dragcards2",
+      "reason": "Live assets copies were outdated while correct root files were already published.",
+      "browser_verification": "docs/verification-drag-deployment-20261021.json",
+      "deployed": false
+    }
+  },
+  "access_and_brand_imports": {
+    "date": "2026-10-21",
+    "asset_version": "20261021-access1",
+    "login": "Bind sign-in and password recovery after signedOut/logout; wait for the form DOM; preserve callback paths with root or assets scripts.",
+    "imports": "Brand-scoped CSV/XLSX/XLS preview and transactional ATS/net/retail updates; scoped to workspace and region.",
+    "verification": "docs/verification-access-imports-20261021.json",
+    "focused_checks_passed": 21,
+    "browser_regression_checks_passed": 19,
+    "core_workflow_checks_passed": 23,
+    "cloud_browser": "Both dialogs opened. Actual file chooser upload stalled in browser automation; full upload/apply path verified in source-driven DOM tests with real CSV/XLSX parsing.",
+    "real_account_login_verified": false,
+    "deployed": false
+  },
+  "tasks_and_notifications": {
+    "date": "2026-10-21",
+    "tasks": "Home Tasks link; persistent tasks, due dates, local-time reminders, note history, search, edit, completion and reopening. In-app reminders on workspace pages; owner email reminders through scheduled backend.",
+    "cancellation": "Owner, admin and manager membership verified by auth service; browser transaction guards and server triggers prevent editor/viewer cancellation and record the authenticated actor. Authorized shared reads remain available to editors.",
+    "price_notices": "Server detects committed catalog/net/retail and account contract price changes; queues active CRM customer notices with currency, brand and recipient filters; opt-outs, deduplication, leases and bounded idempotent retries.",
+    "database_migration": "supabase/migrations/20261021_tasks_price_notices_permissions.sql",
+    "function": "supabase/functions/workspace-notifications/index.ts",
+    "schedule": "supabase/configure-notification-schedule.sql",
+    "configuration": "Email provider API key, verified sender, cron secret and Vault schedule configuration are required. No private credentials in frontend files.",
+    "checks": {
+      "ui_and_delivery": 22,
+      "database": 20,
+      "draggable": 19,
+      "browser_regressions": 19,
+      "workflow": 23,
+      "access_imports": 21
+    },
+    "browser_qa": "Cloud browser verified task creation, notes, due/reminder fields, reload persistence, completion/reopening, home Tasks links and retained module movement. File-chooser automation previously stalled; CSV/XLSX import/apply is verified by source-driven DOM tests.",
+    "real_account_login_verified": false,
+    "production_email_sent": false,
     "deployed": false
   }
 }

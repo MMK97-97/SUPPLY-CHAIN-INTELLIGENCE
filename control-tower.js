@@ -286,6 +286,7 @@
           <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
             ▦ Operational Modules
           </button>
+          <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
           <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
             📊 Telemetry &amp; KPIs
           </button>
@@ -306,8 +307,7 @@
                 <small>${esc(subtitle)}</small>
               </div>
               <div class="module-card-position-controls">
-                <button type="button" class="module-card-position-button" data-dock-module="${id}" aria-label="Return ${esc(label)} to grid" title="Return to grid" hidden>↺</button>
-                <button type="button" class="module-card-position-button module-card-drag-handle" id="module-drag-${id}" data-move-module="${id}" aria-label="Move ${esc(label)}" aria-describedby="module-arrangement-help" title="Drag to move · Alt + arrow keys · Alt + Home to return to grid"><svg viewBox="0 0 18 24" width="14" height="20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="13" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="13" cy="19" r="1.5"/></svg></button>
+                <button type="button" class="module-card-position-button module-card-drag-handle" id="module-drag-${id}" data-move-module="${id}" aria-label="Move ${esc(label)}" aria-describedby="module-arrangement-help" title="Drag to move · Alt + arrow keys"><svg viewBox="0 0 18 24" width="14" height="20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="13" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="13" cy="19" r="1.5"/></svg></button>
               </div>
             </header>
             <div class="module-card-banner">
@@ -382,12 +382,11 @@
         const rect = card.getBoundingClientRect(), slot = document.createElement('div');
         slot.className = 'module-card-placeholder';
         slot.style.height = (rect.height || 480) + 'px';
-        slot.innerHTML = `<strong>${esc(card.querySelector('h2').textContent)}</strong><span>Placed on your screen</span><button type="button" class="sys-btn" data-dock-module="${id}" aria-label="Return ${esc(card.querySelector('h2').textContent)} to grid">Return to grid</button>`;
+        slot.setAttribute('aria-hidden', 'true');
         grid.insertBefore(slot, card);
         placeholders.set(id, slot);
         preferredWidths.set(id, width || rect.width || 360);
         card.classList.add('module-is-floating');
-        card.querySelector('[data-dock-module]').hidden = false;
       }
       if (width) preferredWidths.set(id, width);
       raise(card);
@@ -408,7 +407,6 @@
       const id = idOf(card);
       card.classList.remove('module-is-floating', 'module-is-dragging');
       for (const property of ['left', 'top', 'width', 'max-height', 'z-index']) card.style.removeProperty(property);
-      card.querySelector('[data-dock-module]').hidden = true;
       placeholders.get(id)?.remove(); placeholders.delete(id); preferredWidths.delete(id);
       delete entries[id];
       if (save) persist();
@@ -472,18 +470,10 @@
         event.preventDefault(); event.stopImmediatePropagation(); suppressed = null;
       }
     }, true);
-    listen(grid, 'click', event => {
-      const reset = event.target.closest('[data-dock-module]');
-      if (reset) {
-        const card = cards.find(node => idOf(node) === reset.dataset.dockModule);
-        if (card) { dock(card); card.querySelector('[data-move-module]').focus({ preventScroll: true }); }
-      }
-    });
     listen(grid, 'keydown', event => {
       const handle = event.target.closest('[data-move-module]');
       if (!handle || !event.altKey) return;
       const card = handle.closest('[data-draggable-module]');
-      if (event.key === 'Home') { event.preventDefault(); dock(card); return; }
       const delta = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
       if (!delta) return;
       event.preventDefault();
@@ -805,7 +795,8 @@
             <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
               ▦ Operational Modules
             </button>
-            <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
+            <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
+          <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
               📊 Telemetry &amp; KPIs
             </button>
           </div>

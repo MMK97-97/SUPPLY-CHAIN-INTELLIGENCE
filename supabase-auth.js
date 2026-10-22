@@ -14,7 +14,8 @@
   const esc = value => String(value == null ? "" : value).replace(/[&<>\"]/g, character => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[character]));
 
   const scriptEl = document.currentScript || document.querySelector('script[src*="supabase-auth"]') || document.querySelector('script[src*="auth-bootstrap"]');
-  const authRootURL = new URL("../", scriptEl ? scriptEl.src : new URL("assets/", location.href).href);
+  const authScriptURL = new URL(scriptEl?.src || "assets/supabase-auth.js", location.href);
+  const authRootURL = window.StarkWorkspace?.rootURL || new URL(/\/assets\/[^/]+$/.test(authScriptURL.pathname) ? "../" : "./", authScriptURL);
   const appRoot = () => authRootURL.pathname;
 
   const safeReturnTarget = fallback => {
@@ -206,7 +207,6 @@
         forgot.textContent = "Forgot password?";
         forgot.disabled = false;
       }
-      return;
     }
 
     if (state.session) {
@@ -241,10 +241,13 @@
       return;
     }
 
-    setMessage("");
+    if (!wasSignedOut) setMessage("");
     const submit = form?.querySelector("button[type=submit]");
     if (submit) submit.disabled = false;
     if (forgot) forgot.disabled = false;
+    form?.addEventListener("invalid", event => {
+      setMessage(event.target.name === "email" ? "Enter a valid email address." : "Enter your password.", true);
+    }, true);
     form?.addEventListener("submit", async event => {
       event.preventDefault();
       const submit = form.querySelector("button[type=submit]");
@@ -338,7 +341,10 @@
         history.replaceState({}, "", `${cleanUrl.pathname.split("/").pop() || "auth-callback.html"}${cleanUrl.search}${cleanUrl.hash}`);
       }
       window.dispatchEvent(new CustomEvent("stark:auth-client-ready", { detail: { session: state.session } }));
-      if (page === "login.html" || page === "index.html" || root.dataset.authEntry === "true") return initLoginPage();
+      if (page === "login.html" || page === "index.html" || root.dataset.authEntry === "true") {
+        if (document.readyState === "loading") await new Promise(resolve => document.addEventListener("DOMContentLoaded", resolve, { once: true }));
+        return initLoginPage();
+      }
       if (page === "auth-callback.html") return initCallbackPage();
       if (!state.session) {
         location.replace(loginUrl());

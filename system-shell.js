@@ -193,7 +193,7 @@
     }
 
     const all = groups();
-    let group = all.find(([id]) => id === targetId);
+    let group = targetId==='tasks'?['tasks','Tasks & reminders','Follow-ups · Notes · Deadlines','#087f78',[['tasks.html','All tasks']],'tasks.html']:all.find(([id]) => id === targetId);
     if (!group) {
       subBar.hidden = true;
       subBar.style.display = 'none';
@@ -266,7 +266,7 @@
       const activeGroup = allGroups.find(([id, label, subtitle, color, items, primaryUrl]) =>
         items.some(([path]) => active(path)) || active(primaryUrl)
       );
-      currentActiveModuleId = activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
+      currentActiveModuleId = active('tasks.html') ? 'tasks' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
       renderSubnav(currentActiveModuleId);
     }
   }
@@ -283,7 +283,7 @@
   function search(query) {
     const q = query.toLowerCase().trim(), s = S.getState();
     if (!q) return [];
-    const routeMatches = groups().flatMap(([, group, , , items]) => items.map(([path, label]) => ({ label, kind: group, path }))).filter(x => x.label.toLowerCase().includes(q));
+    const routeMatches = [...groups(),['tasks','Tasks & reminders','','',[['tasks.html','Tasks & reminders']]]].flatMap(([, group, , , items]) => items.map(([path, label]) => ({ label, kind: group, path }))).filter(x => x.label.toLowerCase().includes(q));
     const records = [
       ...s.enterprise.accounts.map(x => ({ label: x.name, kind: 'Customer Account', path: 'crm/accounts.html', hay: x.name + ' ' + x.email })),
       ...s.enterprise.vendors.map(x => ({ label: x.name, kind: 'Vendor', path: 'vendor-management/vendors.html', hay: x.name + ' ' + x.email })),
@@ -721,6 +721,13 @@
 
   window.addEventListener('stark:storage-error', event => notice(event.detail.message, true));
   window.StarkSystemUI = { notice, escape, glyph, dialog };
+  if (!document.querySelector('link[href*="tasks.css"]')) {const style=document.createElement('link');style.rel='stylesheet';style.href=S.url('tasks.css?v=20261021-ops1');document.head.append(style);}
+  if (!document.querySelector('script[src*="tasks.js"]')) {
+    const tasks = document.createElement('script');tasks.src=S.url('tasks.js?v=20261021-ops1');
+    tasks.onerror=()=>notice('Task reminders could not load. Reload the workspace to try again.',true);
+    document.head.append(tasks);
+  }
+
 
   if (document.readyState === 'complete') start();
   else document.addEventListener('DOMContentLoaded', start, { once: true });
