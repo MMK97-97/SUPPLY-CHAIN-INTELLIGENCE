@@ -294,22 +294,23 @@
       </div>
 
       <div class="module-arrangement-toolbar">
-        <p id="module-arrangement-help">Drag a module header to place it anywhere. Alt + arrow keys move the focused handle.</p>
+        <p id="module-arrangement-help">Drag a module header to place it anywhere. Moved modules expand with the arrow. Alt + arrow keys move a focused header.</p>
         <button type="button" class="sys-btn" data-reset-module-layout>Restore module layout</button>
       </div>
       <div class="module-overview-grid">
         ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction]) => `
           <article class="module-overview-card" data-draggable-module="${id}" style="--card-accent:${color}">
-            <header class="module-card-head">
+            <header class="module-card-head" id="module-drag-${id}" data-move-module="${id}" tabindex="0" aria-label="Move ${esc(label)}" aria-describedby="module-arrangement-help">
               <span class="module-card-icon" style="background:${color}">${icon(id)}</span>
               <div class="module-card-titles">
                 <h2>${esc(label)}</h2>
                 <small>${esc(subtitle)}</small>
               </div>
               <div class="module-card-position-controls">
-                <button type="button" class="module-card-position-button module-card-drag-handle" id="module-drag-${id}" data-move-module="${id}" aria-label="Move ${esc(label)}" aria-describedby="module-arrangement-help" title="Drag to move · Alt + arrow keys"><svg viewBox="0 0 18 24" width="14" height="20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="5" r="1.5"/><circle cx="13" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="13" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="13" cy="19" r="1.5"/></svg></button>
+                <button type="button" class="module-card-position-button module-card-expand" data-toggle-module="${id}" aria-label="Expand ${esc(label)} options" aria-controls="module-options-${id}" aria-expanded="false" hidden><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="m5 7 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
               </div>
             </header>
+            <div class="module-card-content" id="module-options-${id}">
             <div class="module-card-banner">
               ${bannerSvg(id, color)}
             </div>
@@ -328,6 +329,7 @@
               <a href="${S.url(primaryUrl)}" class="module-card-action">Launch module ↗</a>
               ${quickAction ? `<a href="${S.url(quickAction.path)}" class="module-card-quick">${quickAction.label}</a>` : ''}
             </footer>
+            </div>
           </article>
         `).join('')}
       </div>
@@ -342,7 +344,7 @@
     const entries = {}, placeholders = new Map(), preferredWidths = new Map();
     const cleanup = [], stack = cards.map(card => card.dataset.draggableModule);
     const padding = 12, visualViewport = window.visualViewport;
-    let drag = null, suppressed = null, suppressTimer;
+    let drag = null, suppressed = null, suppressTimer, menu = null;
     const clamp = (value, min, max) => Math.min(Math.max(min, max), Math.max(min, value));
     const idOf = card => card.dataset.draggableModule;
     function listen(target, name, handler, options) {
@@ -353,6 +355,99 @@
       return { x: visualViewport?.offsetLeft || 0, y: visualViewport?.offsetTop || 0,
         width: visualViewport?.width || window.innerWidth, height: visualViewport?.height || window.innerHeight };
     }
+    function utilityRects() {
+      return [...document.querySelectorAll('.mk-brain-launcher, #stark-fab-wrapper')].map(node => node.getBoundingClientRect()).filter(r => r.width > 0 && r.height > 0);
+    }
+    function clearMenuSpace() {
+      if (!menu) return;
+      menu.reserve?.remove(); menu.reserve = null;
+      for (const [card, position] of menu.shifted) {
+        card.style.left = position.left; card.style.top = position.top;
+      }
+      menu.shifted.clear();
+    }
+    function closeMenu(focus = false) {
+      if (!menu) return;
+      const current = menu;
+      clearMenuSpace(); menu = null;
+      current.panel.classList.remove('module-floating-menu');
+      current.panel.removeAttribute('data-placement');
+      current.panel.removeAttribute('data-compact');
+      for (const property of ['left', 'top', 'width', 'max-height', '--card-accent']) current.panel.style.removeProperty(property);
+      current.card.append(current.panel);
+      current.card.classList.remove('module-menu-open');
+      current.button.setAttribute('aria-expanded', 'false');
+      if (focus && current.button.isConnected) current.button.focus({ preventScroll: true });
+    }
+    function positionMenu() {
+      if (!menu) return;
+      clearMenuSpace();
+      const { panel, card, button } = menu, v = viewport(), gap = 10;
+      const anchor = card.getBoundingClientRect();
+      const left = v.x + padding, top = v.y + padding, right = v.x + v.width - padding, bottom = v.y + v.height - padding;
+      const desiredWidth = Math.min(Math.max(260, anchor.width), 360, Math.max(0, right - left));
+      const boxes = [...cards.map(node => node.getBoundingClientRect()), ...utilityRects()].filter(r => r.width > 0 && r.height > 0 && r.right > left && r.left < right && r.bottom > top && r.top < bottom);
+      function findSpace(blocks, minimumY = top, requestedHeight = 160) {
+        let found = null;
+        for (const width of new Set([desiredWidth, Math.min(desiredWidth, 280), Math.min(desiredWidth, 240)])) {
+          panel.style.width = width + 'px'; panel.style.maxHeight = 'none';
+          const naturalHeight = panel.scrollHeight || panel.getBoundingClientRect().height || 400;
+          const minimumHeight = Math.min(naturalHeight, requestedHeight, Math.max(0, bottom - minimumY));
+          const xs = new Set([left, right - width, anchor.left, anchor.right - width, anchor.right + gap, anchor.left - width - gap]);
+          const ys = new Set([minimumY, anchor.top, anchor.bottom + gap, anchor.top - naturalHeight - gap]);
+          for (const box of blocks) { xs.add(box.right + gap); xs.add(box.left - width - gap); ys.add(box.bottom + gap); ys.add(box.top - naturalHeight - gap); }
+          for (const rawX of xs) for (const y of ys) {
+            const x = clamp(rawX, left, right - width);
+            if (y < minimumY || y >= bottom) continue;
+            let available = bottom - y;
+            for (const box of blocks) if (x < box.right + gap && x + width > box.left - gap && box.bottom + gap > y) {
+              available = Math.min(available, box.top - gap - y);
+            }
+            if (available < minimumHeight) continue;
+            const height = Math.min(naturalHeight, available);
+            const score = Math.hypot(x - anchor.left, y - anchor.bottom - gap) + (naturalHeight - height) * 2 + (desiredWidth - width) * .5;
+            if (!found || score < found.score) found = {x, y, width, height, score};
+          }
+        }
+        return found;
+      }
+      let best = findSpace(boxes);
+      if (!best) {
+        // A crowded screen needs real layout space; never paint options over another module.
+        const headerHeight = Math.max(0, ...cards.filter(node => node.classList.contains('module-is-floating')).map(node => node.getBoundingClientRect().height));
+        const y = Math.min(bottom, top + headerHeight + gap);
+        best = findSpace(utilityRects(), y) || findSpace(utilityRects(), y, 80) || {x:left, y, width:desiredWidth, height:Math.max(0,bottom-y)};
+        const reserve = document.createElement('div');
+        reserve.className = 'module-menu-space'; reserve.setAttribute('aria-hidden', 'true');
+        reserve.style.height = Math.max(0, best.y + best.height + gap - grid.getBoundingClientRect().top) + 'px';
+        grid.prepend(reserve); menu.reserve = reserve;
+        for (const node of cards.filter(node => node.classList.contains('module-is-floating'))) {
+          const r = node.getBoundingClientRect();
+          if (r.left < best.x + best.width + gap && r.right > best.x - gap && r.top < best.y + best.height + gap && r.bottom > best.y - gap) {
+            menu.shifted.set(node, {left:node.style.left, top:node.style.top});
+            node.style.top = top + 'px';
+          }
+        }
+      }
+      Object.assign(panel.style, {left:best.x + 'px', top:best.y + 'px', width:best.width + 'px', maxHeight:best.height + 'px'});
+      const currentAnchor = card.getBoundingClientRect();
+      panel.dataset.placement = menu.reserve ? 'workspace' : best.x >= currentAnchor.right ? 'right' : best.x + best.width <= currentAnchor.left ? 'left' : best.y + best.height <= currentAnchor.top ? 'up' : 'down';
+      panel.dataset.compact = String(best.height < 300);
+      button.dataset.placement = panel.dataset.placement;
+    }
+    function openMenu(card, focus = false) {
+      if (!card.classList.contains('module-is-floating')) return;
+      if (menu?.card === card) { closeMenu(); return; }
+      closeMenu();
+      const panel = card.querySelector('.module-card-content'), button = card.querySelector('[data-toggle-module]');
+      menu = {card, panel, button, shifted:new Map(), reserve:null};
+      panel.classList.add('module-floating-menu');
+      panel.style.setProperty('--card-accent', card.style.getPropertyValue('--card-accent'));
+      document.body.append(panel);
+      card.classList.add('module-menu-open'); button.setAttribute('aria-expanded', 'true');
+      positionMenu();
+      if (focus) panel.querySelector('a')?.focus({ preventScroll: true });
+    }
     function bounds(card) {
       const v = viewport();
       const width = Math.min(preferredWidths.get(idOf(card)) || 360, Math.max(0, v.width - padding * 2));
@@ -361,12 +456,22 @@
       const height = Math.min(card.getBoundingClientRect().height || card.scrollHeight || 480, Math.max(0, v.height - padding * 2));
       return { minX: v.x + padding, minY: v.y + padding,
         maxX: Math.max(v.x + padding, v.x + v.width - width - padding),
-        maxY: Math.max(v.y + padding, v.y + v.height - height - padding) };
+        maxY: Math.max(v.y + padding, v.y + v.height - height - padding), width, height };
     }
     function place(card, x, y) {
       const b = bounds(card);
-      card.style.left = clamp(x, b.minX, b.maxX) + 'px';
-      card.style.top = clamp(y, b.minY, b.maxY) + 'px';
+      const target = {x:clamp(x, b.minX, b.maxX), y:clamp(y, b.minY, b.maxY)}, controls = utilityRects(), gap = 10;
+      const xs = new Set([target.x]), ys = new Set([target.y]);
+      for (const r of controls) { xs.add(r.left - b.width - gap); xs.add(r.right + gap); ys.add(r.top - b.height - gap); ys.add(r.bottom + gap); }
+      let nearest = null;
+      for (const rawX of xs) for (const rawY of ys) {
+        const x = clamp(rawX,b.minX,b.maxX), y = clamp(rawY,b.minY,b.maxY);
+        if (controls.some(r => x < r.right + gap && x + b.width > r.left - gap && y < r.bottom + gap && y + b.height > r.top - gap)) continue;
+        const distance = Math.hypot(x-target.x,y-target.y);
+        if (!nearest || distance < nearest.distance) nearest = {x,y,distance};
+      }
+      card.style.left = (nearest || target).x + 'px';
+      card.style.top = (nearest || target).y + 'px';
     }
     function raise(card) {
       const id = idOf(card), previous = stack.indexOf(id);
@@ -387,6 +492,7 @@
         placeholders.set(id, slot);
         preferredWidths.set(id, width || rect.width || 360);
         card.classList.add('module-is-floating');
+        card.querySelector('[data-toggle-module]').hidden = false;
       }
       if (width) preferredWidths.set(id, width);
       raise(card);
@@ -404,9 +510,11 @@
       persist();
     }
     function dock(card, save = true) {
+      closeMenu();
       const id = idOf(card);
       card.classList.remove('module-is-floating', 'module-is-dragging');
       for (const property of ['left', 'top', 'width', 'max-height', 'z-index']) card.style.removeProperty(property);
+      card.querySelector('[data-toggle-module]').hidden = true;
       placeholders.get(id)?.remove(); placeholders.delete(id); preferredWidths.delete(id);
       delete entries[id];
       if (save) persist();
@@ -433,7 +541,7 @@
       done.card.classList.remove('module-is-dragging');
       if (done.moved) {
         if (cancel) {
-          if (done.floating) place(done.card, done.rect.left, done.rect.top);
+          if (done.floating) place(done.card, done.cancelPosition?.left ?? done.rect.left, done.cancelPosition?.top ?? done.rect.top);
           else dock(done.card, false);
         } else remember(done.card);
         suppressed = idOf(done.card);
@@ -450,13 +558,15 @@
       const control = event.target.closest('a,button,input,select,textarea');
       if (!card || !head || (control && !control.hasAttribute('data-move-module')) || event.isPrimary === false || event.button !== 0 || drag) return;
       drag = { card, head, pointerId: event.pointerId, x: event.clientX, y: event.clientY,
-        rect: card.getBoundingClientRect(), floating: card.classList.contains('module-is-floating'), moved: false };
+        rect: card.getBoundingClientRect(), cancelPosition: menu?.shifted.has(card) ? {left:parseFloat(menu.shifted.get(card).left),top:parseFloat(menu.shifted.get(card).top)} : null,
+        floating: card.classList.contains('module-is-floating'), moved: false };
       try { head.setPointerCapture(event.pointerId); } catch (_) { /* Window listeners cover non-capturing devices. */ }
     });
     listen(window, 'pointermove', event => {
       if (!drag || event.pointerId !== drag.pointerId) return;
       const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
       if (!drag.moved && Math.hypot(dx, dy) > 5) {
+        closeMenu();
         drag.moved = true; float(drag.card, preferredWidths.get(idOf(drag.card)) || drag.rect.width || 360);
         drag.card.classList.add('module-is-dragging');
       }
@@ -470,13 +580,25 @@
         event.preventDefault(); event.stopImmediatePropagation(); suppressed = null;
       }
     }, true);
+    listen(grid, 'click', event => {
+      const toggle = event.target.closest('[data-toggle-module]');
+      if (toggle) { openMenu(toggle.closest('[data-draggable-module]'), event.detail === 0); return; }
+    });
     listen(grid, 'keydown', event => {
+      const toggle = event.target.closest('[data-toggle-module]');
+      if (toggle && event.key === 'ArrowDown' && !event.altKey) {
+        event.preventDefault();
+        if (menu?.card !== toggle.closest('[data-draggable-module]')) openMenu(toggle.closest('[data-draggable-module]'), true);
+        else menu.panel.querySelector('a')?.focus({ preventScroll: true });
+        return;
+      }
       const handle = event.target.closest('[data-move-module]');
-      if (!handle || !event.altKey) return;
+      if (!handle || !event.altKey || event.target.closest('button,a')) return;
       const card = handle.closest('[data-draggable-module]');
       const delta = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
       if (!delta) return;
       event.preventDefault();
+      closeMenu();
       const rect = card.getBoundingClientRect(), step = event.shiftKey ? 4 : 16;
       float(card, preferredWidths.get(idOf(card)) || rect.width || 360);
       place(card, rect.left + delta[0] * step, rect.top + delta[1] * step);
@@ -484,7 +606,10 @@
     });
     listen(window, 'keydown', event => {
       if (event.key === 'Escape' && drag) { event.preventDefault(); finish(null, true); }
+      else if (event.key === 'Escape' && menu) { event.preventDefault(); closeMenu(true); }
     });
+    listen(document, 'pointerdown', event => { if (menu && !menu.panel.contains(event.target) && !menu.card.contains(event.target)) closeMenu(); });
+    listen(window, 'scroll', () => { if (menu?.reserve) closeMenu(); else positionMenu(); });
     listen(host.querySelector('[data-reset-module-layout]'), 'click', () => {
       finish(null, true);
       for (const card of cards) dock(card, false);
@@ -492,11 +617,12 @@
     });
     function resize() {
       finish(null, true);
+      closeMenu();
       for (const card of cards) if (entries[idOf(card)]) restore(card, entries[idOf(card)]);
     }
     listen(window, 'resize', resize);
     if (visualViewport) { listen(visualViewport, 'resize', resize); listen(visualViewport, 'scroll', resize); }
-    return { destroy() { finish(null, true); clearTimeout(suppressTimer); cleanup.forEach(remove => remove()); } };
+    return { destroy() { closeMenu(); finish(null, true); clearTimeout(suppressTimer); cleanup.forEach(remove => remove()); } };
   }
 
   function trend(model){

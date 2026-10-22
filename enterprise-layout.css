@@ -10877,8 +10877,9 @@ body.stark-system.is-home .system-submodule-bar {
 }
 .module-card-position-button[hidden] { display: none !important; }
 .module-card-position-button:hover { background: #f1f5f9; color: #0f766e; }
-.module-card-drag-handle { cursor: grab; touch-action: none; }
+.module-card-head:focus-visible { outline: 3px solid #137a70; outline-offset: -3px; }
 .module-card-position-button:focus-visible { outline: 3px solid #137a70; outline-offset: 2px; }
+.module-card-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .module-overview-card.module-is-floating {
   position: fixed !important;
   box-sizing: border-box;
@@ -10888,47 +10889,59 @@ body.stark-system.is-home .system-submodule-bar {
   box-shadow: 0 18px 48px #0f172a26 !important;
   transition: box-shadow .15s ease !important;
 }
-.module-is-floating .module-card-head,
-.module-is-floating .module-card-foot { flex: 0 0 auto !important; }
-.module-is-floating .module-card-banner { flex: 0 0 88px; }
-.module-is-floating .module-card-links {
+.module-is-floating .module-card-head { flex: 0 0 auto !important; }
+.module-is-floating > .module-card-content { display: none !important; }
+.module-card-expand svg { transition: transform .15s ease; }
+.module-card-expand[aria-expanded="true"] svg { transform: rotate(180deg); }
+.module-card-expand[aria-expanded="true"][data-placement="right"] svg { transform: rotate(-90deg); }
+.module-card-expand[aria-expanded="true"][data-placement="left"] svg { transform: rotate(90deg); }
+.module-floating-menu {
+  position: fixed !important;
+  display: flex !important;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 0;
+  margin: 0 !important;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d8e2eb;
+  border-radius: 13px;
+  box-shadow: 0 18px 48px #0f172a26;
+  z-index: 850;
+}
+.module-floating-menu .module-card-banner { flex: 0 0 88px; }
+.module-floating-menu[data-compact="true"] .module-card-banner { display: none !important; }
+.module-floating-menu .module-card-links {
   flex: 1 1 auto !important;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
 }
-.module-is-floating .module-card-foot { flex-wrap: wrap; gap: 8px; }
-.module-is-dragging .module-card-head,
-.module-is-dragging .module-card-drag-handle { cursor: grabbing; }
+.module-floating-menu .module-card-foot { flex: 0 0 auto; flex-wrap: wrap; gap: 8px; }
+.module-is-dragging .module-card-head { cursor: grabbing; }
 .module-card-placeholder {
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
   min-width: 0;
-  padding: 24px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 14px;
-  color: #64748b;
-  background: #f8fafc;
-  text-align: center;
-  font-size: 12px;
+  visibility: hidden;
+  pointer-events: none;
+  border: 0;
+  background: transparent;
 }
-.module-card-placeholder strong { color: #334155; font-size: 14px; }
+.module-menu-space { grid-column: 1 / -1; visibility: hidden; pointer-events: none; }
 @media (max-width: 440px) {
   .module-overview-grid { grid-template-columns: minmax(0, 1fr) !important; }
 }
 @media (max-height: 520px) {
-  .module-is-floating .module-card-banner { display: none !important; }
+  .module-floating-menu .module-card-banner { display: none !important; }
 }
 @media (pointer: coarse) {
   .module-card-position-button { min-width: 40px; min-height: 44px; }
 }
 @media print {
   .module-overview-card.module-is-floating { position: static !important; width: auto !important; max-height: none !important; }
-  .module-card-placeholder, .module-card-position-controls, .module-arrangement-toolbar { display: none !important; }
-  .module-is-floating .module-card-links { overflow: visible; }
+  .module-card-placeholder, .module-card-position-controls, .module-arrangement-toolbar, .module-menu-space { display: none !important; }
+  .module-is-floating > .module-card-content { display: flex !important; }
+  .module-floating-menu { position: static !important; width: auto !important; max-height: none !important; }
+  .module-floating-menu .module-card-links { overflow: visible; }
 }
