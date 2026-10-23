@@ -9,6 +9,7 @@
 
   const glyph = name => {
     const paths = {
+      copilot: '<path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>',
       home: '<path d="M3 10l9-7 9 7v10H3z M9 20v-7h6v7"/>',
       itemMaster: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
       planning: '<path d="M4 19V9m5 10V5m5 14v-7m5 7V3"/>',
@@ -193,7 +194,7 @@
     }
 
     const all = groups();
-    let group = targetId==='tasks'?['tasks','Tasks & reminders','Follow-ups · Notes · Deadlines','#087f78',[['tasks.html','All tasks']],'tasks.html']:all.find(([id]) => id === targetId);
+    let group = targetId==='copilot'?['copilot','MK Co-Pilot','Orders · Inventory · Customers · Tasks','#087f78',[['mk-copilot.html','Co-Pilot workspace'],['tasks.html','Tasks & reminders']],'mk-copilot.html']:targetId==='tasks'?['tasks','Tasks & reminders','Follow-ups · Notes · Deadlines','#087f78',[['tasks.html','All tasks']],'tasks.html']:all.find(([id]) => id === targetId);
     if (!group) {
       subBar.hidden = true;
       subBar.style.display = 'none';
@@ -266,7 +267,7 @@
       const activeGroup = allGroups.find(([id, label, subtitle, color, items, primaryUrl]) =>
         items.some(([path]) => active(path)) || active(primaryUrl)
       );
-      currentActiveModuleId = active('tasks.html') ? 'tasks' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
+      currentActiveModuleId = active('mk-copilot.html') ? 'copilot' : active('tasks.html') ? 'tasks' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
       renderSubnav(currentActiveModuleId);
     }
   }
@@ -283,7 +284,7 @@
   function search(query) {
     const q = query.toLowerCase().trim(), s = S.getState();
     if (!q) return [];
-    const routeMatches = [...groups(),['tasks','Tasks & reminders','','',[['tasks.html','Tasks & reminders']]]].flatMap(([, group, , , items]) => items.map(([path, label]) => ({ label, kind: group, path }))).filter(x => x.label.toLowerCase().includes(q));
+    const routeMatches = [...groups(),['copilot','MK Co-Pilot','','',[['mk-copilot.html','MK Co-Pilot workspace']]],['tasks','Tasks & reminders','','',[['tasks.html','Tasks & reminders']]]].flatMap(([, group, , , items]) => items.map(([path, label]) => ({ label, kind: group, path }))).filter(x => x.label.toLowerCase().includes(q));
     const records = [
       ...s.enterprise.accounts.map(x => ({ label: x.name, kind: 'Customer Account', path: 'crm/accounts.html', hay: x.name + ' ' + x.email })),
       ...s.enterprise.vendors.map(x => ({ label: x.name, kind: 'Vendor', path: 'vendor-management/vendors.html', hay: x.name + ' ' + x.email })),

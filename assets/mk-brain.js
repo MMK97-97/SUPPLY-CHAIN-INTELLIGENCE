@@ -354,6 +354,7 @@
   }
 
   async function enhanceWithSupplyAI(question, localAnswer) {
+    if (localAnswer.intent === 'copilot') return localAnswer;
     if (LOCAL_ONLY_INTENTS.has(localAnswer.intent) || ["control", "action completed", "action started"].includes(localAnswer.category)) return localAnswer;
     if (!window.MKAI) return localAnswer;
     const result = await window.MKAI.answer(question, localAnswer, { signal: activeController?.signal });
@@ -364,6 +365,10 @@
     feed.querySelectorAll('.mk-restored').forEach(entry => entry.remove());
     for (const item of window.MKAI?.getMessages(window.MKAI.getStatus().scope) || []) {
       const entry = addEntry(item.role === 'user' ? item.content : item.result.answer, item.role === 'user' ? 'user' : 'brain', false, item.role === 'user' ? 'question' : `${item.scope} · saved analysis`, item.result);
+      entry.classList.add('mk-restored');
+    }
+    for (const item of window.MKCopilot?.messages?.() || []) {
+      const entry = addEntry(item.text, item.role, false, 'saved Co-Pilot context');
       entry.classList.add('mk-restored');
     }
   }
@@ -388,6 +393,7 @@
       const answer = await enhanceWithSupplyAI(question, localAnswer);
       if (activeController?.signal.aborted) throw new DOMException('Analysis stopped.', 'AbortError');
       addEntry(answer.message, "brain", true, answer.category || "decision", answer.result);
+      if (answer.intent === 'copilot') window.MKCopilot?.remember(question, answer.message);
       learnTask(answer.intent || "question");
       conversation.lastIntent = answer.intent || "question";
       conversation.lastItemKey = answer.itemKey || conversation.lastItemKey;
@@ -407,6 +413,8 @@
 
   async function routeQuestion(question) {
     const raw = clean(question);
+    const copilot = window.MKCopilot?.handle(raw);
+    if (copilot) return copilot;
     const q = raw.toLowerCase();
 
     if (/^(voice on|enable voice|turn (the )?voice on)/.test(q)) {

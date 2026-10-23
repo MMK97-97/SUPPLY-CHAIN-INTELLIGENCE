@@ -10840,3 +10840,108 @@ body.stark-system.is-home .system-submodule-bar {
 .stark-fab-wrapper.open .stark-fab-item:nth-child(4) { transition-delay: 0.12s !important; }
 
 
+
+/* Keep complete KPI values readable when their sparkline needs another row. */
+.tower-kpi-value-row{flex-wrap:wrap!important;min-width:0}
+.tower-kpi-value-row [data-kpi-value]{white-space:nowrap;overflow-wrap:normal;word-break:normal;font-size:clamp(20px,2.05vw,28px)}
+.tower-kpi-value-row .tower-kpi-sparkline{margin-left:auto}
+.oo-page-btn:disabled{opacity:.4;cursor:default}
+
+/* Existing operational cards can be positioned independently by their headers. */
+.module-arrangement-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+.module-arrangement-toolbar p { margin: 0; font-size: 12px; color: #64748b; }
+.module-card-head { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.module-card-titles { flex: 1; min-width: 0; }
+.module-card-position-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; margin-left: auto; }
+.module-card-position-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  min-height: 34px;
+  padding: 0;
+  color: #64748b;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 20px;
+}
+.module-card-position-button[hidden] { display: none !important; }
+.module-card-position-button:hover { background: #f1f5f9; color: #0f766e; }
+.module-card-head:focus-visible { outline: 3px solid #137a70; outline-offset: -3px; }
+.module-card-position-button:focus-visible { outline: 3px solid #137a70; outline-offset: 2px; }
+.module-card-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.module-overview-card.module-is-floating {
+  position: fixed !important;
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0 !important;
+  transform: none !important;
+  box-shadow: 0 18px 48px #0f172a26 !important;
+  transition: box-shadow .15s ease !important;
+}
+.module-is-floating .module-card-head { flex: 0 0 auto !important; }
+.module-is-floating > .module-card-content { display: none !important; }
+.module-card-expand svg { transition: transform .15s ease; }
+.module-card-expand[aria-expanded="true"] svg { transform: rotate(180deg); }
+.module-card-expand[aria-expanded="true"][data-placement="right"] svg { transform: rotate(-90deg); }
+.module-card-expand[aria-expanded="true"][data-placement="left"] svg { transform: rotate(90deg); }
+.module-floating-menu {
+  position: fixed !important;
+  display: flex !important;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 0;
+  margin: 0 !important;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d8e2eb;
+  border-radius: 13px;
+  box-shadow: 0 18px 48px #0f172a26;
+  z-index: 850;
+}
+.module-floating-menu .module-card-banner { flex: 0 0 88px; }
+.module-floating-menu[data-compact="true"] .module-card-banner { display: none !important; }
+.module-floating-menu .module-card-links {
+  flex: 1 1 auto !important;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.module-floating-menu .module-card-foot { flex: 0 0 auto; flex-wrap: wrap; gap: 8px; }
+.module-is-dragging .module-card-head { cursor: grabbing; }
+.module-card-placeholder {
+  box-sizing: border-box;
+  min-width: 0;
+  visibility: hidden;
+  pointer-events: none;
+  border: 0;
+  background: transparent;
+}
+.module-menu-space { grid-column: 1 / -1; visibility: hidden; pointer-events: none; }
+@media (max-width: 440px) {
+  .module-overview-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-height: 520px) {
+  .module-floating-menu .module-card-banner { display: none !important; }
+}
+@media (pointer: coarse) {
+  .module-card-position-button { min-width: 40px; min-height: 44px; }
+}
+@media print {
+  .module-overview-card.module-is-floating { position: static !important; width: auto !important; max-height: none !important; }
+  .module-card-placeholder, .module-card-position-controls, .module-arrangement-toolbar, .module-menu-space { display: none !important; }
+  .module-is-floating > .module-card-content { display: flex !important; }
+  .module-floating-menu { position: static !important; width: auto !important; max-height: none !important; }
+  .module-floating-menu .module-card-links { overflow: visible; }
+}
