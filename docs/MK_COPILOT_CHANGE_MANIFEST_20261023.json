@@ -1,0 +1,643 @@
+{
+  "release": "2026.10.23.1",
+  "base": "Current project source archive v7; includes the prior delivered module/login/import fix files and required Tasks/notification dependencies.",
+  "install": "Extract at the repository root, preserving relative paths. Follow docs/MK_COPILOT_SETUP_20261023.md for backend configuration.",
+  "files": [
+    {
+      "path": "3pl-management/index.html",
+      "sha256": "d53f136c7f73f0ee03917cd0c549ab4a066198ec1a8f8a70a35d1ad9b28ba56d"
+    },
+    {
+      "path": "3pl-management/integrations.html",
+      "sha256": "b3fe77feb54269647f951f20769ba46c578743933337c68e29481bbd8dff59eb"
+    },
+    {
+      "path": "3pl-management/network.html",
+      "sha256": "e1f4b4a9c09f019913628e4583084fd1b5da0b9ff3bd767e3867751ad2e87d47"
+    },
+    {
+      "path": "3pl-management/order-history.html",
+      "sha256": "1d699e5da344e69670c2bfe540d26c8747739da9626bc9bd4054173dce49d882"
+    },
+    {
+      "path": "3pl-management/orders.html",
+      "sha256": "679793b61382cf1ba1836d2e5a3c751983bcc8ae6d8e0403d76136de892aa0cd"
+    },
+    {
+      "path": "3pl-management/reconciliation.html",
+      "sha256": "53ee7f582d53d1d8d25afdf571732071bc0dbfd93da4ab1a036ba243c31ef0e8"
+    },
+    {
+      "path": "3pl-management/routing.html",
+      "sha256": "1039be40fa44b7c173a4d273d0449112d08fa625cfcd9c2e81804298edca475c"
+    },
+    {
+      "path": "3pl-management/ship-orders.html",
+      "sha256": "f792285ea296df482edcecc1265aba96bec66dc829bab6f1371433db7eb320c4"
+    },
+    {
+      "path": "3pl-management/shipment-requests.html",
+      "sha256": "81313df2172e66bb9c6144db2a1b4e2c5e22850095316220a5c85a7574dbe656"
+    },
+    {
+      "path": "3pl-management/shipments.html",
+      "sha256": "82b9b3bd0c1993621a14e4258e0bde66c5e3682abc13d116da5be89b22a9ecd8"
+    },
+    {
+      "path": "3pl-management/upload-shipments.html",
+      "sha256": "8d4de2a66ad853ee30433024a8cf8b3a71866d347855099a224c60bb308c099f"
+    },
+    {
+      "path": "active-brands-ca.html",
+      "sha256": "0e96bc2b57c3b35c0aa3b893121719e2612063ab9aa39b25d6b63928b9bab36c"
+    },
+    {
+      "path": "active-brands-eu.html",
+      "sha256": "e6b54224879762e595c1feb79508417aab99e54baf50a2262ce21e41177d1a02"
+    },
+    {
+      "path": "active-brands-us.html",
+      "sha256": "52c25893b8277a02af5f865564caf89331b49b85047338f551766df81947d8bd"
+    },
+    {
+      "path": "active-brands.html",
+      "sha256": "b00c0c1b5a3a666c24fea65ed637f0e000b721f7557d96562fbc865784cb244d"
+    },
+    {
+      "path": "activity.html",
+      "sha256": "fed858a26a1ec6921442514739a34d3e4aaab555bada0f894246b8fb272196b3"
+    },
+    {
+      "path": "add-item.html",
+      "sha256": "14a07f307d9843d0d8ddcdfeba7ab5522d0ec9b9eace31c2ddeefc63bf4a0ced"
+    },
+    {
+      "path": "all-open-orders.html",
+      "sha256": "d27795045885105abf6f19681e1a8f46f160df4f62ee1c18ce75122131b7328e"
+    },
+    {
+      "path": "assets/auth-bootstrap.js",
+      "sha256": "b9b9d7d0718cfb68b54d683a43d0ee1a0e979267015fbb5a7add45e0dbf12724"
+    },
+    {
+      "path": "assets/catalog-imports.js",
+      "sha256": "526fca0d4ed74a89ad3b9448769a0d56157a5c0ed7c441afbbc97bd632da4ec8"
+    },
+    {
+      "path": "assets/control-tower.js",
+      "sha256": "adbf231cccb4c96d4dd36ad439e846235aa367097058adf9a6e58d186675c83a"
+    },
+    {
+      "path": "assets/enterprise-layout.css",
+      "sha256": "de02d4ec87892f6bb96f75c91c1b2559a8cb59c13cf6479b199de91b4d8d009c"
+    },
+    {
+      "path": "assets/enterprise-suite.js",
+      "sha256": "f932ab711533e1e47ef568c040340cd997b0536284549db8d5788ea1f495e779"
+    },
+    {
+      "path": "assets/fulfillment-core.js",
+      "sha256": "bb1a0076a767e208d5dcc0163c93a6cc9e610fa9883699aece52fa2a97fef441"
+    },
+    {
+      "path": "assets/item-details.js",
+      "sha256": "38f4dfc08583dc03b9a002bc547795fae5976a0ed432357ded3bfd1ad3a2c60d"
+    },
+    {
+      "path": "assets/item-master.js",
+      "sha256": "48ce0192e9b187e00242f0ac7c3b1a7e367a0014856907dfc104b6db6eef5c5a"
+    },
+    {
+      "path": "assets/mk-brain.js",
+      "sha256": "1820d355b53e88a85e89b66b70c793524f298cb8c318df589bb05eb2d0b43923"
+    },
+    {
+      "path": "assets/mk-copilot-core.js",
+      "sha256": "941b9b23cd3f95680f5415303905eaa1924db3b7f03221d90b3bdfb2ecbc4f3b"
+    },
+    {
+      "path": "assets/mk-copilot.css",
+      "sha256": "dc524197eccd60b8301d72f09a3ed812c03dbb04bc3ab84ac1abd1113ee8162a"
+    },
+    {
+      "path": "assets/mk-copilot.js",
+      "sha256": "6b517d4236121ebdd30eeed15e9a337bb9d29ef451d4a4152548e4d836d42da0"
+    },
+    {
+      "path": "assets/supabase-auth.js",
+      "sha256": "5bcd400baeee2e70ed28f86229fd49ddd4fd42350c8215f89c93e2a1f3be0015"
+    },
+    {
+      "path": "assets/system-cloud.js",
+      "sha256": "fcff9f1fb2abd9e89fc6dfb764a2b18ff236c1b04931f9bfe3c1dbcd46f488f2"
+    },
+    {
+      "path": "assets/system-core.js",
+      "sha256": "13fcbaeb89bc2a66cfe0d46f1c1a64b194652754adeb9396fd26a85ed5883cf7"
+    },
+    {
+      "path": "assets/system-pages.js",
+      "sha256": "f5bfefd64b447867b4e0c50001273f8323fcf6f7ba6220711b0f9a85279a7812"
+    },
+    {
+      "path": "assets/system-shell.js",
+      "sha256": "26e82a70bae11664de94317e6c6bb22b777c1a00744361fe66d14d48aa9946ee"
+    },
+    {
+      "path": "assets/tasks.css",
+      "sha256": "9895bf4cc1801684ac783ee965a83906933cd37c4896bbee5aeed4a232c24423"
+    },
+    {
+      "path": "assets/tasks.js",
+      "sha256": "1d604a7d9d0ea3b83fa1b2903fdc3d709391045550b910a2a7c8ee89eb36c206"
+    },
+    {
+      "path": "ats-eu.html",
+      "sha256": "3456e7f3fe9f335034c8a1da5b2a174152815f85df28fd644a676799169102ee"
+    },
+    {
+      "path": "auth-bootstrap.js",
+      "sha256": "b9b9d7d0718cfb68b54d683a43d0ee1a0e979267015fbb5a7add45e0dbf12724"
+    },
+    {
+      "path": "auth-callback.html",
+      "sha256": "d9d47f642d08bd381e3ee9b2b5f9f9ebabf0409efb5c0b26c0f1a4efa8184051"
+    },
+    {
+      "path": "business-operations.html",
+      "sha256": "baf693239114a38758ed6ef54def6f5e8ba465ee04e18cf523fa9848f33ccccd"
+    },
+    {
+      "path": "catalog-imports.js",
+      "sha256": "526fca0d4ed74a89ad3b9448769a0d56157a5c0ed7c441afbbc97bd632da4ec8"
+    },
+    {
+      "path": "control-tower.js",
+      "sha256": "adbf231cccb4c96d4dd36ad439e846235aa367097058adf9a6e58d186675c83a"
+    },
+    {
+      "path": "create-order.html",
+      "sha256": "bdaddf92f50ba9f639bced7f94ed853f58441b50f8fca8df6ec5a3b019aec82a"
+    },
+    {
+      "path": "create-vendor-po.html",
+      "sha256": "362b7dd8deea1838bc0858e1e7934cdb5c55896131dbe3d5a8b16c9423bc352e"
+    },
+    {
+      "path": "crm.html",
+      "sha256": "03192469b1e7cfad6143f1d7bad813383cfec821944c47c7a97967069c0fe35e"
+    },
+    {
+      "path": "crm/accounts.html",
+      "sha256": "e56b3eccf7f7f412a5773780971ad907fdd05344e353c46d8c612beb608558d3"
+    },
+    {
+      "path": "crm/catalog.html",
+      "sha256": "ee5196c4d6b2165ac1ffd6ee73bb0a36265bdabf9f4c1bd0ba6f44d09c054542"
+    },
+    {
+      "path": "crm/index.html",
+      "sha256": "0ad1c3197a69fdc91cd52774f55e35aae18982037d240102a232a8ef50013efb"
+    },
+    {
+      "path": "crm/partner-portal.html",
+      "sha256": "4ebaa7941121add82f70d3d1ddf8c4530c466803b21068e35891864ce9861449"
+    },
+    {
+      "path": "data-center.html",
+      "sha256": "761e5b55e03295acb502a43c15e3801cb6da33e5653f7dfc3a0d78eaede2bf4b"
+    },
+    {
+      "path": "decision-intelligence-ca.html",
+      "sha256": "b7cd32d53787d0d8f4d58dfe5dfbc71ec5fcf525b180591d7786079d8521443b"
+    },
+    {
+      "path": "decision-intelligence-eu.html",
+      "sha256": "f2359ff22a8959a3c61c0ae06af4cdd61d2acc265c48a77c030907b4cc326ca9"
+    },
+    {
+      "path": "decision-intelligence-us.html",
+      "sha256": "a25fb5c0bd2039888a88fa64c6ed3c7ef92f1b66280e23d98de84484f0fe21a8"
+    },
+    {
+      "path": "docs/MK_COPILOT_SETUP_20261023.md",
+      "sha256": "1ee88d529634d29999f2a3da19dbad5935b23a3ef772ae64c60fb7dec74db874"
+    },
+    {
+      "path": "docs/TASKS_NOTIFICATIONS_20261021.md",
+      "sha256": "bb6092be8a509e60d84c4b9267f729a5fb18b64480eef4ce2f01184a5db77221"
+    },
+    {
+      "path": "docs/crm/accounts.html",
+      "sha256": "cd9b5d119a8f297268ca017329a7090b445fce9f56b5a32fed596e7c1365206b"
+    },
+    {
+      "path": "docs/crm/catalog.html",
+      "sha256": "9823a998427e7422f5d8f196db71958db54704d855b67e5ce702b01739b6ca5c"
+    },
+    {
+      "path": "docs/crm/index.html",
+      "sha256": "2a5c9ec23cfa9c00caadd830079fe3f00b7ad1e4289478fac01d6554ee95a85f"
+    },
+    {
+      "path": "docs/crm/partner-portal.html",
+      "sha256": "90ed81ad5b48ef65a500b61197aee8e335c0f3c00cff536e07b4ce640a951a02"
+    },
+    {
+      "path": "docs/manual.html",
+      "sha256": "d2fe599584e33929ae355e7a44ec57ef4a3b9be76bc8ff51b6a1704799816928"
+    },
+    {
+      "path": "docs/verification-copilot-20261023.json",
+      "sha256": "00a4c7b003fee4eb39c81980c901c25c17bd5d5a7676dcb959d4298f214a9970"
+    },
+    {
+      "path": "docs/verification-copilot-cloud-20261023.json",
+      "sha256": "84869fb0f57e4f260509841d0919e80412ca894d13997fbafe78ede7a56fb3ed"
+    },
+    {
+      "path": "docs/verification-copilot-release-20261023.json",
+      "sha256": "d6916f24d61118fefcfc5e5bf7274b86b145a7127c4d27b1b64fd4c2d053e1a9"
+    },
+    {
+      "path": "docs/verification-copilot-service-20261023.json",
+      "sha256": "688943669616905cb84569784c1915ec2ac972cab9bc194bf7d9e15e84db9933"
+    },
+    {
+      "path": "docs/verification-copilot-sql-20261023.json",
+      "sha256": "6a75aa18ebc1db674a0094ba5bbcffd839238fd5157f89ebb906ee95757c4a8f"
+    },
+    {
+      "path": "dropship-po.html",
+      "sha256": "a76aeaab9ac689da586c805ed0065457a447e668fc6f93c264b7be64f0c5d0b4"
+    },
+    {
+      "path": "enterprise-layout.css",
+      "sha256": "de02d4ec87892f6bb96f75c91c1b2559a8cb59c13cf6479b199de91b4d8d009c"
+    },
+    {
+      "path": "enterprise-suite.js",
+      "sha256": "f932ab711533e1e47ef568c040340cd997b0536284549db8d5788ea1f495e779"
+    },
+    {
+      "path": "events.html",
+      "sha256": "a2333a125c9b376d30c0bf825e62955a375670f485a62a657e2105a2a40154a6"
+    },
+    {
+      "path": "freight-consolidate.html",
+      "sha256": "aa11421a43dad5f5e8ca8e1bb1ed80b6f4766d345cda6a620fead68b249d098d"
+    },
+    {
+      "path": "freight-estimator.html",
+      "sha256": "2786a1fd1cca0485172361ff1a04e6ac15863a1efa158cbe02a91a82bc11921d"
+    },
+    {
+      "path": "fulfillment-core.js",
+      "sha256": "bb1a0076a767e208d5dcc0163c93a6cc9e610fa9883699aece52fa2a97fef441"
+    },
+    {
+      "path": "index.html",
+      "sha256": "0631c8b77d81fa8cf87d01a23d5d347efcd59ac1b84a1371ecef0e5181f4c376"
+    },
+    {
+      "path": "instructions-ca.html",
+      "sha256": "13625fd1802bc985dff698e7e3c6a3df617c2791059794954d103ab8feb43d0a"
+    },
+    {
+      "path": "instructions-eu.html",
+      "sha256": "ba3ca46fafa53b8802b9bad0be00669a59f06d838a6c289aa0a71e07f9cd46c9"
+    },
+    {
+      "path": "instructions-us.html",
+      "sha256": "14c577c59e889d916a24d43fc9f37eb5fc5543e18618c62f113bdf1466865826"
+    },
+    {
+      "path": "instructions.html",
+      "sha256": "1169a7a657b3466d7b1a11cbcb20dc5bae891cfd44cf4b3afea41262aca12a7a"
+    },
+    {
+      "path": "inventory-ca.html",
+      "sha256": "16f2d5d9c6b83e50305d08cf4963680fef92ff76ac28227145ac7199a0d98f2f"
+    },
+    {
+      "path": "inventory-dashboard-ca.html",
+      "sha256": "d9abeea84ef201cd4afbdac498dd3001f7ec16178180e3f0e15f3798e8f59d07"
+    },
+    {
+      "path": "inventory-dashboard-eu.html",
+      "sha256": "e52eebb0e7818590fed4dffacbed4f7e33637244c62ce0e531eb4036ecb752d9"
+    },
+    {
+      "path": "inventory-dashboard-us.html",
+      "sha256": "e5ea778fba365ea84707343bc55dfc9febe3359d023b1b9db95a55b8f1ffcbf2"
+    },
+    {
+      "path": "inventory-dashboard.html",
+      "sha256": "79f481921d161549f307a245872f0ab82c54ad8f6d6685f1e5bdad23642cdd68"
+    },
+    {
+      "path": "inventory-eu.html",
+      "sha256": "44c469d94e7f830d6b92365cbbda57e0d55ec857b6f8ed3188796ab52ba3c9fe"
+    },
+    {
+      "path": "inventory-us.html",
+      "sha256": "af55aed19a0dcc8645eaf51c4b90a642c8b8f77752fc4f62f59973d311922751"
+    },
+    {
+      "path": "inventory.html",
+      "sha256": "fe31db10122126aa009aa2c524a935b341a6910a0834d3326582809c3dbf2eeb"
+    },
+    {
+      "path": "item-details.html",
+      "sha256": "bf7766e81b2aca11a419b4368bd9e312f337a78ca276ed4d5b0bdc2dbb6ae5ae"
+    },
+    {
+      "path": "item-details.js",
+      "sha256": "38f4dfc08583dc03b9a002bc547795fae5976a0ed432357ded3bfd1ad3a2c60d"
+    },
+    {
+      "path": "item-master.html",
+      "sha256": "fd25387135409ebace5bfb804ebcb60b54400db2cbec54015288208ead5c80e0"
+    },
+    {
+      "path": "item-master.js",
+      "sha256": "48ce0192e9b187e00242f0ac7c3b1a7e367a0014856907dfc104b6db6eef5c5a"
+    },
+    {
+      "path": "login.html",
+      "sha256": "04e5770c752777f549e8c76a60b7598eb73a7563357c7dfad84ada1034afde05"
+    },
+    {
+      "path": "manual.html",
+      "sha256": "13f8bff2004208ffef7394e64dc88e9945f3f6b07346782aba89a6a1e75af7d7"
+    },
+    {
+      "path": "mk-brain.html",
+      "sha256": "f9a822b542dff259a835711c67fdb6605b98e66137ff5488c0cb9330e09dbcc6"
+    },
+    {
+      "path": "mk-brain.js",
+      "sha256": "1820d355b53e88a85e89b66b70c793524f298cb8c318df589bb05eb2d0b43923"
+    },
+    {
+      "path": "mk-copilot-core.js",
+      "sha256": "941b9b23cd3f95680f5415303905eaa1924db3b7f03221d90b3bdfb2ecbc4f3b"
+    },
+    {
+      "path": "mk-copilot.css",
+      "sha256": "dc524197eccd60b8301d72f09a3ed812c03dbb04bc3ab84ac1abd1113ee8162a"
+    },
+    {
+      "path": "mk-copilot.html",
+      "sha256": "cde3d6e62788769a8f1c23217cdf8fadcd18ccae9fad10444ff316a2fed0aea2"
+    },
+    {
+      "path": "mk-copilot.js",
+      "sha256": "6b517d4236121ebdd30eeed15e9a337bb9d29ef451d4a4152548e4d836d42da0"
+    },
+    {
+      "path": "order-management.html",
+      "sha256": "9568963d945610ac1e65d31388404093b7a8b986d7bf1510027259a510cd24d9"
+    },
+    {
+      "path": "order-management/bulk-firm.html",
+      "sha256": "42a056b3bbb16229362388c4b0a524da004d2ce0a6b4a069ee0e478c534d2612"
+    },
+    {
+      "path": "order-management/cancelled.html",
+      "sha256": "78b55a1c801eff9de6164451aec151e40028d2fc700141c43a78856505828e35"
+    },
+    {
+      "path": "order-management/hold-redemption.html",
+      "sha256": "3536ec0429703a8dce1faf092819711139b2daa0d1765cca632959de3876cb14"
+    },
+    {
+      "path": "order-management/issues.html",
+      "sha256": "af9e2d06da5fd6ac754394a8940fc0ed4540bd0dbd5885be6960ea9e64195f2d"
+    },
+    {
+      "path": "order-management/unvalidated.html",
+      "sha256": "6fc014502e7430adf63abd8c65e434e18058a0c2e476154d9849468412e9bf98"
+    },
+    {
+      "path": "procurement-planning.html",
+      "sha256": "dbe121b585da3b09aeb341b350403b9904f76d0494c387a3ba5d9fd715f88c63"
+    },
+    {
+      "path": "procurement/index.html",
+      "sha256": "3d0fd48632a54de7036059404e1e89e602d1515c9e22432dbb2fbea084788834"
+    },
+    {
+      "path": "raw-report-ca.html",
+      "sha256": "0be8c78276bec68fc678fbcdeb992a4f3977b9519250399004480b45112f2b49"
+    },
+    {
+      "path": "raw-report-eu.html",
+      "sha256": "0d045b295fae888966068748accbfd83c13be0125bc606df3ee4980690718023"
+    },
+    {
+      "path": "raw-report-us.html",
+      "sha256": "fcd9241d702d9ea6b6e1ebe65f99d01cf4e2bb39adddcedd1a57826c1c7c5c86"
+    },
+    {
+      "path": "raw-report.html",
+      "sha256": "6fd10d2351f61f0e21f235f35e0063fb7806c2aeee54aabf35b3d4b1e1e8586a"
+    },
+    {
+      "path": "reorder-report-ca.html",
+      "sha256": "306976a1cd5693e0c9336c851095312110a7aaee873d9d065871012f8ea1dc96"
+    },
+    {
+      "path": "reorder-report-eu.html",
+      "sha256": "155142cbc310d79fa75657693c691c7f6bfdac0bca7e2aa17ed8f1870ea851ec"
+    },
+    {
+      "path": "reorder-report-us.html",
+      "sha256": "26f556c6c85f400992f99435f4145831c8977c487b1530e7c01f87d0c3b7d5cb"
+    },
+    {
+      "path": "reorder-report.html",
+      "sha256": "6ae0b7b80ac5e1857ada5ae3e8d0eac7cb971a2b30f71ea659200fede53dbec3"
+    },
+    {
+      "path": "sales-analysis.html",
+      "sha256": "427ddf716d27d4ca3ff9efaec39b1e76798e270ea02a45cd608a0e9e70f1671c"
+    },
+    {
+      "path": "scripts/check-copilot-cloud.cjs",
+      "sha256": "a5dce4f49e81a869fec9ca0d87f8729f29e6cb7b9982157601b550aad249bdf4"
+    },
+    {
+      "path": "scripts/check-copilot-service.cjs",
+      "sha256": "504b257e2834fccdb6cda2188698b802af09e9fe065c9f993201306a84f2e889"
+    },
+    {
+      "path": "scripts/check-copilot-sql.cjs",
+      "sha256": "3ececde092ea8c7aa726b05be8c3ae9fc2ba964629b9668393be3d1093814597"
+    },
+    {
+      "path": "scripts/check-copilot.cjs",
+      "sha256": "52fd47a234d961f26c49d8783ca7b57d8a49a477e196a0645261fc4cc90fe2e9"
+    },
+    {
+      "path": "scripts/check-interface.cjs",
+      "sha256": "62717cfcc5bd8f2a6a156ceae44d526b37be5dc146fb7184e4c737df2162ccc9"
+    },
+    {
+      "path": "shipment-tracking.html",
+      "sha256": "eb4ca695900d0beb5db745942af7ee0e5e8c6a174ce361ae4661612ca92d7eec"
+    },
+    {
+      "path": "shipping/daily-report.html",
+      "sha256": "5c042461010ff68d746211c96ea4f25f46abb31d146ed9068e330b4958488d96"
+    },
+    {
+      "path": "shipping/index.html",
+      "sha256": "0f68cfcc6d8187a3fb2d749f0b85ff35d8a96f4fb28f6363d885c191ecadb419"
+    },
+    {
+      "path": "supabase-auth.js",
+      "sha256": "5bcd400baeee2e70ed28f86229fd49ddd4fd42350c8215f89c93e2a1f3be0015"
+    },
+    {
+      "path": "supabase/config.toml",
+      "sha256": "daaea373d86b54db2115f8eaa5eba6d8d1155ed1b13844708757369168c5d4d1"
+    },
+    {
+      "path": "supabase/configure-copilot-schedule.sql",
+      "sha256": "4455ef715f72bd7658dddbf5ca09928b45ba1d2cc52bd60fff6d44147c5ba498"
+    },
+    {
+      "path": "supabase/configure-notification-schedule.sql",
+      "sha256": "65a71611ac67ce26ce396ff1939419b0c2b4fe3d614d7a751c21f7f7a868d75e"
+    },
+    {
+      "path": "supabase/functions/mk-copilot/.env.example",
+      "sha256": "de057cbf509422b56e5ec329d9586ae70a0847f04bd32cc0d14e085188d50599"
+    },
+    {
+      "path": "supabase/functions/mk-copilot/core.js",
+      "sha256": "941b9b23cd3f95680f5415303905eaa1924db3b7f03221d90b3bdfb2ecbc4f3b"
+    },
+    {
+      "path": "supabase/functions/mk-copilot/index.ts",
+      "sha256": "258770a19b77d985b35122de1943f1a14058e0efbb993c085f70b5c55a0fa8f5"
+    },
+    {
+      "path": "supabase/functions/mk-copilot/service.mjs",
+      "sha256": "33e240b501f0d79369e8b2ea0661ecb2caa812c39becdf83fd3b1e84b1410288"
+    },
+    {
+      "path": "supabase/functions/workspace-notifications/.env.example",
+      "sha256": "249a1e59b24e10e0622833bcbe175cf65799077251e35cb1adfc7856b1b9da37"
+    },
+    {
+      "path": "supabase/functions/workspace-notifications/index.ts",
+      "sha256": "e5b5ef7a5f18db953fc608d3e57fbf6762152567cae5709a695313171b2ad181"
+    },
+    {
+      "path": "supabase/functions/workspace-notifications/service.mjs",
+      "sha256": "277135de7a62cdc43cdc80f4e5e96e9a47af80e78c8d41e41b51003b686ca148"
+    },
+    {
+      "path": "supabase/migrations/20261021_tasks_price_notices_permissions.sql",
+      "sha256": "bba6db93b23232ad9cfad79c02773eccfa5d660aa145c2d0f0623d7eaef9b11d"
+    },
+    {
+      "path": "supabase/migrations/20261023_mk_copilot.sql",
+      "sha256": "932b208db9bca2807ef8b612a0a17c65a52babba6989945e009bc3bc6754240b"
+    },
+    {
+      "path": "system-cloud.js",
+      "sha256": "fcff9f1fb2abd9e89fc6dfb764a2b18ff236c1b04931f9bfe3c1dbcd46f488f2"
+    },
+    {
+      "path": "system-core.js",
+      "sha256": "13fcbaeb89bc2a66cfe0d46f1c1a64b194652754adeb9396fd26a85ed5883cf7"
+    },
+    {
+      "path": "system-pages.js",
+      "sha256": "f5bfefd64b447867b4e0c50001273f8323fcf6f7ba6220711b0f9a85279a7812"
+    },
+    {
+      "path": "system-shell.js",
+      "sha256": "26e82a70bae11664de94317e6c6bb22b777c1a00744361fe66d14d48aa9946ee"
+    },
+    {
+      "path": "tasks.css",
+      "sha256": "9895bf4cc1801684ac783ee965a83906933cd37c4896bbee5aeed4a232c24423"
+    },
+    {
+      "path": "tasks.html",
+      "sha256": "3a2e6296a78dfb99266263ed659bc52703e9cf7ff35fd345720970a6de38cc43"
+    },
+    {
+      "path": "tasks.js",
+      "sha256": "1d604a7d9d0ea3b83fa1b2903fdc3d709391045550b910a2a7c8ee89eb36c206"
+    },
+    {
+      "path": "transportation/index.html",
+      "sha256": "cfbab42c3dada6186347eeb209b8ddf69449c00e27c514e4aa8ec698d4e4edce"
+    },
+    {
+      "path": "vendor-management.html",
+      "sha256": "88bea9e1c8d70bd82b95a9bae7ebac37d0b7748ffcc44713b7a50885ec92d6e5"
+    },
+    {
+      "path": "vendor-management/digital-vault.html",
+      "sha256": "ffa5d4271d7656e5e40c04a73449d167512a82a943bece2337add4e759825c2c"
+    },
+    {
+      "path": "vendor-management/index.html",
+      "sha256": "2abd92c52579e8af0550f91dc988489d8560c9f11ce1beefc0948da0c74ff113"
+    },
+    {
+      "path": "vendor-management/procurement.html",
+      "sha256": "31873a0589e6ba4b505b2ce9a74e73866b996ebe08bbfb8c0ad95771c06ade4f"
+    },
+    {
+      "path": "vendor-management/sla.html",
+      "sha256": "818bd04dcad8a8004d253d61533a5adefcef574e7fb8cfb3ae58c01263518eed"
+    },
+    {
+      "path": "vendor-management/vendors.html",
+      "sha256": "5a6960d607d511a948a7f6d18ecd357231cbe8bce728928b7823b8d9e7ac05a8"
+    },
+    {
+      "path": "vendor-po-management.html",
+      "sha256": "a1ffbd679d64c0233716742619fc8708029872af47d6919f81b0127da3ab5d9d"
+    },
+    {
+      "path": "warehouse-management/cycle-count.html",
+      "sha256": "2e4fe5d46d638deae7207b2a983bfa579fced862469bd8bef9785f19874825ba"
+    },
+    {
+      "path": "warehouse-management/cycle-counts.html",
+      "sha256": "2e4fe5d46d638deae7207b2a983bfa579fced862469bd8bef9785f19874825ba"
+    },
+    {
+      "path": "warehouse-management/index.html",
+      "sha256": "d044767f2e19a2bbe9430877a92642150f5d5cdc1cdaf3585279e6c34dfd147b"
+    },
+    {
+      "path": "warehouse-management/inventory-bins.html",
+      "sha256": "a8279f20fdab0ea5281a8d3bbdcd1673ede70049c21b10f36126893f440208f2"
+    },
+    {
+      "path": "warehouse-management/packing-dispatch.html",
+      "sha256": "d3bbf13220643b5d0078c23eee4a5a9d69b5adb9120d1a9f756e7f9bb4fe7b97"
+    },
+    {
+      "path": "warehouse-management/receiving.html",
+      "sha256": "8a64df678634b26de4b82759859373334223b2f364f3468af15754d2f84ff106"
+    },
+    {
+      "path": "warehouse-management/wave-picking.html",
+      "sha256": "778f5455f8073b3a4308c2304aa8769c7019de19a03a59474eb471369acde312"
+    },
+    {
+      "path": "workspace.html",
+      "sha256": "baf693239114a38758ed6ef54def6f5e8ba465ee04e18cf523fa9848f33ccccd"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "passed": 16,
+  "failed": 0,
+  "checks": [
+    "organization membership and editor role are required before order access",
+    "cross-origin requests, unsupported methods, malformed and oversized bodies are rejected",
+    "draft sends and unconfigured mail never change Contacted or call the provider",
+    "confirmed sends derive the recipient and reply thread from CRM and persist exact text",
+    "accepted retries and repeated provider events never send or log twice",
+    "reusing an idempotency key for changed content is rejected",
+    "provider rejection or network uncertainty cannot mark a customer Contacted",
+    "a database failure after provider acceptance retries the log without resending",
+    "shared-workspace conflicts re-read and preserve unrelated concurrent edits",
+    "receiving webhooks fetch original text and make exactly one linked follow-up",
+    "reply matching uses the recipient token and CRM contact, never order text",
+    "customer instructions cannot cancel, allocate stock or escape their order",
+    "oversized or HTML-only receiving bodies require review without a partial log",
+    "invalid signatures stop before inbox or workspace access",
+    "server monitoring requires the cron secret and stores revision-bound alerts",
+    "Svix verification covers the exact raw body, timestamp and signing key"
+  ],
+  "failures": [],
+  "method": "Synthetic authenticated requests, provider responses and durable job store. No live email or credentials."
+}

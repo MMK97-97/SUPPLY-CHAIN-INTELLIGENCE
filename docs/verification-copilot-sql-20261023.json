@@ -1,0 +1,26 @@
+{
+  "passed": 18,
+  "failed": 0,
+  "checks": [
+    "Co-Pilot migration applies after the existing migrations and is repeatable",
+    "browser members cannot write connector tables or call service RPCs",
+    "confirmed reply, contact state and follow-up task commit in one transaction",
+    "duplicate event retries are idempotent even with an old workspace revision",
+    "stale new events fail without inserting a message or task",
+    "message deltas cannot change fulfillment status, quantities or customer access",
+    "invalid task ownership rolls back its message, contact and date changes",
+    "invalid task status is rejected by the existing task guard atomically",
+    "an event cannot be replayed against another order",
+    "members can retain connector evidence during ordinary edits but cannot forge, edit or delete it",
+    "manual records remain explicitly unverified when synced from the browser",
+    "an unrelated account cannot read private communications, threads, jobs or alerts",
+    "outreach leases are durable and repeated claims cannot concurrently send twice",
+    "old uncertain outreach is held for delivery review after the provider window",
+    "accepted outreach is never reclaimed",
+    "urgency alerts are revision-bound and stale scans cannot overwrite current state",
+    "bounded background scan claims prevent overlapping repeated organization scans",
+    "existing editor cancellation restrictions still hold with Co-Pilot installed"
+  ],
+  "failures": [],
+  "method": "Isolated PGlite PostgreSQL with synthetic organizations and users. No live database or email."
+}

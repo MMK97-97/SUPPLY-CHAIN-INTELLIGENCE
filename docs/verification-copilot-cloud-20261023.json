@@ -1,0 +1,16 @@
+{
+  "passed": 8,
+  "failed": 0,
+  "checks": [
+    "clean workspaces adopt newer webhook data on refresh",
+    "unsaved local edits prevent background replacement",
+    "edits made while a remote refresh is loading remain intact",
+    "edits during regional restoration are saved rather than falsely marked synchronized",
+    "a communication response never overwrites editing that began during its request",
+    "same-tab navigation loads newer shared data automatically when the last local revision is clean",
+    "navigation preserves a dirty local workspace when the remote document has also changed",
+    "switching organizations pauses synchronization before sending the previous document"
+  ],
+  "failures": [],
+  "method": "In-memory authenticated workspace adapter with delayed reads and writes. No real organization or network."
+}

@@ -1,0 +1,59 @@
+{
+  "release": "2026.10.23.1",
+  "base_archive_version": 7,
+  "new_checks": [
+    {
+      "file": "docs/verification-copilot-20261023.json",
+      "passed": 32,
+      "failed": 0
+    },
+    {
+      "file": "docs/verification-copilot-service-20261023.json",
+      "passed": 16,
+      "failed": 0
+    },
+    {
+      "file": "docs/verification-copilot-sql-20261023.json",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "file": "docs/verification-copilot-cloud-20261023.json",
+      "passed": 8,
+      "failed": 0
+    }
+  ],
+  "new_checks_passed": 74,
+  "cloud_browser": {
+    "environment": "Internal static preview, synthetic browser workspace",
+    "passed": [
+      "Site-wide MK, order selector and local FIFO reasoning",
+      "Original customer text retained in order timeline",
+      "Named relative date resolved to 2026-10-29",
+      "Linked follow-up task visible in Tasks at 9 AM organization time",
+      "Order, item, filters and conversation retained from Inventory to CRM",
+      "Confirmed outreach sets Contacted; unconfirmed outreach rejects",
+      "Pinned order and follow-up restored in the order register",
+      "Co-Pilot workbench layout and planning settings"
+    ],
+    "production_integration_tested": false
+  },
+  "dependency_checks": {
+    "local_references": 470,
+    "missing": 0,
+    "javascript_syntax": 9,
+    "edge_typescript": "syntax transpilation only; Deno integration requires deployment"
+  },
+  "deployment_required": [
+    "Static updated files",
+    "Supabase Co-Pilot migration and Edge Function",
+    "Verified email sender, receiving domain and signed webhooks",
+    "Vault-backed cron schedule"
+  ],
+  "changes_preserved": [
+    "Original draggable-module behavior",
+    "Organization login fixes",
+    "ATS and price import fixes",
+    "Tasks, reminders and cancellation permissions"
+  ]
+}
