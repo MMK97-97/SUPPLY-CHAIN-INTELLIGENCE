@@ -604,6 +604,7 @@
     validateState(document);const latest=readWorkspace() || state,next=clone(document);
     next.revision=latest.revision+1;next.updatedAt=stamp();persist(next);state=next;notify();
     await restoreRegional(datasets);
+    return next.revision;
   }
   function draftRegionalPO(region, model, vendorId, cost, qty) {
     return transaction('VENDOR_PO_CREATED', `${model}: ${qty} units`, s => {
@@ -634,7 +635,11 @@
       const e = s.enterprise, po = e.purchaseOrders.find(x => x.id === id);
       if (!po || ['RECEIVED', 'CANCELLED'].includes(po.status)) throw new Error('Choose an open vendor PO.');
       if (input.shippingWindow !== undefined) po.shippingWindow = String(input.shippingWindow || '').trim();
-      if (input.eta) po.eta = input.eta;
+      if (input.eta && input.eta!==po.eta) {
+        if(!Number.isFinite(Date.parse(input.eta)))throw new Error('Choose a valid vendor PO ETA.');
+        if(po.eta){po.originalEta ||= po.eta;po.previousEta=po.eta;po.etaHistory ||= [];po.etaHistory.push({from:po.eta,to:input.eta,changedAt:stamp()});po.etaHistory=po.etaHistory.slice(-50);}
+        po.eta=input.eta;
+      }
       if (input.carrier !== undefined) po.carrier = String(input.carrier || '').trim();
       if (input.tracking !== undefined) {
         po.tracking = String(input.tracking || '').trim();
@@ -644,17 +649,19 @@
       if (Array.isArray(input.lines)) {
         input.lines.forEach((l, idx) => {
           if (po.lines[idx]) {
-            if (Number.isFinite(Number(l.received))) po.lines[idx].received = Math.max(0, Number(l.received));
-            if (Number.isFinite(Number(l.shipped))) po.lines[idx].received = Math.max(0, Number(l.shipped));
-            if (Number.isFinite(Number(l.qty)) && Number(l.qty) > 0) po.lines[idx].qty = Number(l.qty);
+            if (l.received!==undefined && Number(l.received)!==number(po.lines[idx].received)) throw new Error('Use warehouse receiving to record received stock. Supplier shipments remain inbound.');
+            const qty=l.qty===undefined?po.lines[idx].qty:Number(l.qty),shipped=l.shipped===undefined?number(po.lines[idx].shipped):Number(l.shipped);
+            if(!Number.isInteger(qty) || qty<=0 || qty<number(po.lines[idx].received) || !Number.isInteger(shipped) || shipped<0 || shipped>qty)throw new Error('Enter whole-unit PO quantities. Shipped and received units cannot exceed ordered units.');
+            po.lines[idx].qty=qty;po.lines[idx].shipped=shipped;
           }
         });
       } else if (input.shippedQty !== undefined && Number.isFinite(Number(input.shippedQty))) {
-        const sq = Math.max(0, Number(input.shippedQty));
-        if (po.lines.length === 1) { po.lines[0].received = sq; }
+        const sq = Number(input.shippedQty);
+        if(!Number.isInteger(sq) || sq<0 || sq>po.lines.reduce((sum,l)=>sum+l.qty,0))throw new Error('Supplier shipped units must be whole units within the ordered quantity.');
+        if (po.lines.length === 1) { po.lines[0].shipped = sq; }
         else {
           let rem = sq;
-          po.lines.forEach(l => { const take = Math.min(l.qty, rem); l.received = take; rem -= take; });
+          po.lines.forEach(l => { const take = Math.min(l.qty, rem); l.shipped = take; rem -= take; });
         }
       }
       po.updatedAt = stamp();

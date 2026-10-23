@@ -17,7 +17,7 @@
   <script src="assets/page-navigation.js?v=20261008-3" defer></script>
   <script src="assets/system-seed.js?v=20261008-3" defer></script>
   <script src="assets/demo-seed.js?v=20261012-2" defer></script>
-  <script src="assets/system-core.js?v=20261021-ops1" defer></script><script src="assets/system-cloud.js?v=20261021-ops1" defer></script>
+  <script src="assets/system-core.js?v=20261023-copilot1" defer></script><script src="assets/system-cloud.js?v=20261023-copilot1" defer></script>
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>All Open Orders · Supply Chain Intelligence</title>
@@ -31,10 +31,10 @@
   <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261021-dragcards1">
   <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
 
-  <script src="assets/system-shell.js?v=20261021-ops1" defer></script>
+  <script src="assets/system-shell.js?v=20261023-copilot1" defer></script>
   <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
   <script src="assets/fulfillment-core.js?v=20261021-fixes1" defer></script>
-</head>
+<script src="mk-copilot-core.js?v=20261023-copilot1" defer></script><script src="mk-copilot.js?v=20261023-copilot1" defer></script><link rel="stylesheet" href="mk-copilot.css?v=20261023-copilot1"><script src="assets/mk-analysis-tools.js?v=20261023-copilot1" defer></script><script src="assets/mk-space.js?v=20261023-copilot1" defer></script><script src="assets/mk-ai.js?v=20261023-copilot1" defer></script><script src="assets/mk-brain.js?v=20261023-copilot1" defer></script></head>
 <body data-system-page="orders">
   <main class="system-page oo-page-container" aria-label="All Open Orders">
     <!-- Breadcrumb -->
@@ -554,6 +554,7 @@
       function updatePanel(order) {
         if (!order) return;
         selectedOrderNum = order.num;
+        window.MKCopilot?.setContext({orderId:order.enterpriseId});
 
         document.querySelector('#oo-panel-order-num').textContent = '#' + order.num;
         const statusBadge = document.querySelector('#oo-panel-status');
@@ -610,6 +611,13 @@
         if (container && panel) {
           container.classList.remove('no-panel');
           panel.style.display = 'block';
+          if(window.MKCopilot){
+            let insight=panel.querySelector('#oo-copilot-summary');if(!insight){insight=document.createElement('section');insight.id='oo-copilot-summary';insight.className='mk-copilot-order-strip';panel.prepend(insight);}
+            const assessment=window.MKCopilot.report().orders.find(a=>a.orderId===order.enterpriseId);
+            const live=S.getState().enterprise.orders.find(o=>o.id===order.enterpriseId);
+            insight.innerHTML='<strong>MK Co-Pilot · '+esc(assessment?.urgency || 'Closed')+'</strong><p>Contact: '+esc(live?.contactStatus || 'Not contacted')+' · Follow-up Date: '+esc(live?.followUpDate || 'Not set')+'</p>'+(assessment?.lines || []).map(l=>'<p>'+esc(l.model)+' · Open PO Quantity: '+l.openPOQuantity+' · '+esc(l.fulfillmentStatus)+'</p>').join('')+'<button type="button" class="sys-btn" id="oo-copilot-file">Open communication timeline &amp; supply queue</button>';
+            insight.querySelector('button').onclick=()=>window.MKCopilot.details(order.enterpriseId);
+          }
         }
       }
 
@@ -726,6 +734,7 @@
         if (!tbody) return;
 
         ORDERS_DATA = getLiveOrders();
+        if(!selectedOrderNum){const contextOrder=window.MKCopilot?.getContext().orderId;selectedOrderNum=ORDERS_DATA.find(o=>o.enterpriseId===contextOrder)?.num || '';}
 
         // Update count badges
         const countAll = ORDERS_DATA.filter(o => o.isOpen).length;

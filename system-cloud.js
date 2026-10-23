@@ -15,7 +15,7 @@
   const publishAccess=()=>window.dispatchEvent(new CustomEvent('stark:access-change'));
   const getAccess=()=>({...access});
   const canCancelOrders=()=>access.ready && !!access.userId && ['owner','admin','manager'].includes(access.role);
-  let client,organization,remoteRevision=0,active=false,suppress=false,pending=false,timer,status='Local browser workspace',remoteDatasets=[];
+  let client,organization,remoteRevision=0,syncedLocalRevision=-1,active=false,suppress=false,pending=false,timer,status='Local browser workspace',remoteDatasets=[];
   const update=message=>{status=message;window.dispatchEvent(new CustomEvent('stark:cloud-status',{detail:{status,active}}));};
   function loadScript(path,test){return new Promise((resolve,reject)=>{if(test())return resolve();const script=document.createElement('script');script.src=path;script.onload=resolve;script.onerror=()=>reject(new Error('Cloud connection could not load. Check your network.'));document.head.append(script);});}
   async function session(requireEditor = true){
@@ -33,7 +33,9 @@
     const verified=await client.auth.getUser();if(verified.error || !verified.data?.user)throw new Error('Your sign-in could not be verified. Sign in again.');
     const membership=await client.from('organization_members').select('organization_id,role').eq('user_id',verified.data.user.id).order('created_at',{ascending:true}).limit(1).maybeSingle();
     if(membership.error)throw membership.error;if(!membership.data)throw new Error('An organization membership is required.');
-    organization=membership.data.organization_id;
+    const selectedOrganization=membership.data.organization_id;
+    if(active && organization && organization!==selectedOrganization){active=false;clearTimeout(timer);update('The signed-in organization changed. Reconnect in Data Center before sharing local data.');throw new Error(status);}
+    organization=selectedOrganization;
     access={ready:true,userId:verified.data.user.id,organizationId:organization,role:String(membership.data.role).toLowerCase()};publishAccess();
     if(requireEditor && !['owner','admin','editor','manager'].includes(String(membership.data.role).toLowerCase()))throw new Error('Cloud editing requires an owner, admin, manager or editor role.');
     return organization;
@@ -46,21 +48,25 @@
     pending=true;update('Saving shared workspace…');
     try{const datasets=await S.collectRegional(), document=S.getState();document.regionalDatasets=datasets.filter(x=>document.regional[x.region]).map(x=>x.dataset?x:(remoteDatasets.find(y=>y.region===x.region)||x));const result=await client.rpc('stark_save_workspace',{p_organization_id:organization,p_expected_revision:remoteRevision,p_document:document});
       if(result.error){if(/workspace_conflict/i.test(result.error.message))throw new Error('Shared data changed on another device. Export your local backup, then load the shared version in Data Center.');throw result.error;}
-      remoteRevision=Number(result.data);remoteDatasets=document.regionalDatasets;localStorage.setItem(LINK,JSON.stringify({organizationId:organization,remoteRevision}));update('Shared workspace saved · revision '+remoteRevision);
+      remoteRevision=Number(result.data);syncedLocalRevision=document.revision;remoteDatasets=document.regionalDatasets;localStorage.setItem(LINK,JSON.stringify({organizationId:organization,remoteRevision,localRevision:syncedLocalRevision}));update('Shared workspace saved · revision '+remoteRevision);
       flushNotifications().catch(()=>{});
     }catch(error){active=false;update('Cloud sync paused: '+error.message);throw error;}finally{pending=false;}
   }
-  async function connect(choice){const remote=await fetchRemote();remoteRevision=remote?.revision||0;remoteDatasets=remote?.document?.regionalDatasets||[];
-    if(remote&&choice==='shared'){suppress=true;try{const document={...remote.document};delete document.regionalDatasets;await S.adoptSharedState(document,remoteDatasets);}finally{suppress=false;}}
+  async function connect(choice){const remote=await fetchRemote();remoteRevision=remote?.revision||0;remoteDatasets=remote?.document?.regionalDatasets||[];let adopted=-1;
+    if(remote&&choice==='shared'){suppress=true;try{const document={...remote.document};delete document.regionalDatasets;adopted=await S.adoptSharedState(document,remoteDatasets);}finally{suppress=false;}}
     else if(remote&&choice!=='local')throw new Error('Choose the shared workspace or upload the local workspace.');
-    active=true;localStorage.setItem(LINK,JSON.stringify({organizationId:organization,remoteRevision}));
-    if(choice==='shared'&&remote)update('Shared workspace loaded · revision '+remoteRevision);else await sync();
+    active=true;syncedLocalRevision=choice==='shared'?adopted:-1;localStorage.setItem(LINK,JSON.stringify({organizationId:organization,remoteRevision,localRevision:syncedLocalRevision}));
+    if(choice==='shared'&&remote){update('Shared workspace loaded · revision '+remoteRevision);if(S.getState().revision!==syncedLocalRevision)await sync();}else await sync();
   }
   function disconnect(){active=false;clearTimeout(timer);localStorage.removeItem(LINK);update('Local browser workspace');}
   async function resume(){let saved;try{saved=JSON.parse(localStorage.getItem(LINK)||'null');}catch(_){}if(!saved)return;
     try{const remote=await fetchRemote();if(saved.organizationId!==organization)throw new Error('Cloud account organization changed. Reconnect from Data Center.');
-      if(Number(remote?.revision||0)!==saved.remoteRevision)throw new Error('The shared workspace has newer changes. Export local changes and load it from Data Center.');
-      remoteRevision=saved.remoteRevision;remoteDatasets=remote?.document?.regionalDatasets||[];active=true;update('Shared workspace connected · revision '+remoteRevision);
+      if(Number(remote?.revision||0)!==saved.remoteRevision){
+        if(!remote || !Number.isInteger(saved.localRevision) || S.getState().revision!==saved.localRevision)throw new Error('The shared workspace has newer changes. Export local changes and load it from Data Center.');
+        suppress=true;try{const document={...remote.document};delete document.regionalDatasets;syncedLocalRevision=await S.adoptSharedState(document,remote.document.regionalDatasets || []);}finally{suppress=false;}
+        remoteRevision=Number(remote.revision);
+      }else{remoteRevision=saved.remoteRevision;syncedLocalRevision=Number.isInteger(saved.localRevision)?saved.localRevision:-1;}
+      remoteDatasets=remote?.document?.regionalDatasets||[];active=true;localStorage.setItem(LINK,JSON.stringify({organizationId:organization,remoteRevision,localRevision:syncedLocalRevision}));update('Shared workspace connected · revision '+remoteRevision);if(S.getState().revision!==syncedLocalRevision)await sync();
     }catch(error){update('Cloud sync paused: '+error.message);}
   }
   window.addEventListener('stark:system-change',()=>{if(!active||suppress)return;clearTimeout(timer);timer=setTimeout(()=>sync().catch(e=>window.StarkSystemUI?.notice(e.message,true)),700);});
@@ -129,5 +135,39 @@
     if(error)throw new Error('Apply the notification database migration to view delivery status.');
     return data || [];
   }
-  window.StarkSystemCloud={inspect,connect,sync,disconnect,analyzeWithAI,send3PLRequest,refreshPermissions,getAccess,canCancelOrders,flushNotifications,notificationRecords,getStatus:()=>({status,active,notificationStatus})};
+  async function refreshCopilot() {
+    if(!active || pending || S.getState().revision!==syncedLocalRevision)return {pendingLocal:true};
+    const localRevision=S.getState().revision;
+    await session(false);
+    const {data,error}=await client.from('stark_unified_workspaces').select('revision,document,updated_at').eq('organization_id',organization).maybeSingle();
+    if(error)throw error;
+    if(!data || Number(data.revision)<=remoteRevision || pending || S.getState().revision!==localRevision)return {changed:false};
+    suppress=true;
+    try{const document={...data.document},datasets=document.regionalDatasets || [];delete document.regionalDatasets;const adopted=await S.adoptSharedState(document,datasets);remoteRevision=Number(data.revision);remoteDatasets=datasets;syncedLocalRevision=adopted;localStorage.setItem(LINK,JSON.stringify({organizationId:organization,remoteRevision,localRevision:syncedLocalRevision}));update('Shared workspace refreshed · revision '+remoteRevision);}
+    finally{suppress=false;if(S.getState().revision!==syncedLocalRevision)sync().catch(()=>{});}
+    return {changed:true};
+  }
+  async function copilotRequest(payload) {
+    if(!active)throw new Error('Connect the shared organization workspace to use the Co-Pilot email service.');
+    await session(true);
+    const end=Date.now()+15000;
+    while(pending && Date.now()<end)await new Promise(resolve=>setTimeout(resolve,60));
+    if(pending)throw new Error('A workspace save is still running. Wait before recording communication.');
+    await sync();if(!active || pending)throw new Error('Workspace synchronization is paused. Reconnect first.');
+    const localRevision=S.getState().revision,current=await client.auth.getSession();
+    if(!current.data?.session?.access_token)throw new Error('Sign in to use the Co-Pilot service.');
+    const config=window.STARK_SUPABASE_CONFIG;
+    const response=await fetch(config.url.replace(/\/$/,'')+'/functions/v1/mk-copilot',{method:'POST',headers:{Authorization:'Bearer '+current.data.session.access_token,apikey:config.publishableKey,'Content-Type':'application/json'},body:JSON.stringify({...payload,organization_id:organization}),signal:AbortSignal.timeout(40000)});
+    const raw=await response.text();if(raw.length>16000000)throw new Error('The Co-Pilot service returned an oversized workspace.');
+    let result;try{result=JSON.parse(raw);}catch(_){throw new Error('Deploy the Co-Pilot backend and database migration before using email capture.');}
+    if(!response.ok)throw new Error(result.error || 'The Co-Pilot request could not complete.');
+    if(result.document){
+      if(S.getState().revision!==localRevision){active=false;update('Communication saved remotely. Local edits were preserved; reconnect and load the shared workspace to view the new timeline.');throw new Error(status);}
+      suppress=true;
+      try{const document={...result.document},datasets=document.regionalDatasets || [];delete document.regionalDatasets;const adopted=await S.adoptSharedState(document,datasets);remoteRevision=Number(result.revision);remoteDatasets=datasets;syncedLocalRevision=adopted;localStorage.setItem(LINK,JSON.stringify({organizationId:organization,remoteRevision,localRevision:syncedLocalRevision}));}
+      finally{suppress=false;if(S.getState().revision!==syncedLocalRevision)sync().catch(()=>{});}
+    }
+    return result;
+  }
+  window.StarkSystemCloud={inspect,connect,sync,disconnect,analyzeWithAI,send3PLRequest,refreshPermissions,getAccess,canCancelOrders,flushNotifications,notificationRecords,copilotRequest,refreshCopilot,getStatus:()=>({status,active,notificationStatus})};
 })();
