@@ -1645,6 +1645,24 @@ Stark Supply Chain Operations</textarea>
     if (!root) return;
 
     root.innerHTML = `
+      <div class="mail-workspace-nav" role="navigation" aria-label="Workspace View">
+        <div class="workspace-view-switch" role="tablist" aria-label="Workspace View">
+          <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=modules') : 'workspace.html?view=modules'}" role="tab" aria-label="Operational Modules" title="Operational Modules">
+            ▦ Operational Modules
+          </a>
+          <a class="workspace-view-tab workspace-mail-tab active" href="${S ? S.url('mail.html') : 'mail.html'}" role="tab" aria-selected="true" aria-current="page" aria-label="STARK Mail" title="STARK Mail · Enterprise email for supply chain operations">
+            <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>STARK Mail</span>
+            <span class="workspace-mail-pill">12</span>
+          </a>
+          <a class="workspace-view-tab" href="${S ? S.url('tasks.html') : 'tasks.html'}" role="tab" aria-label="Tasks workspace" title="Tasks &amp; Operational Reminders">
+            ☑ Tasks
+          </a>
+          <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=telemetry') : 'workspace.html?view=telemetry'}" role="tab" aria-label="Telemetry &amp; KPIs" title="Fulfillment &amp; Demand Telemetry">
+            📊 Telemetry &amp; KPIs
+          </a>
+        </div>
+      </div>
       <div class="stark-mail-container">
         ${renderSubHeader()}
         <div class="stark-mail-workspace">

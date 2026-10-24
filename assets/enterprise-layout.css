@@ -12717,3 +12717,86 @@ body.stark-system.is-home .system-submodule-bar {
   width: min(720px, calc(100vw - 28px)) !important;
   height: min(850px, calc(100dvh - 80px)) !important;
 }
+
+/* ---------------- HOME & STARK MAIL PAGE NAVIGATION REFINEMENT ---------------- */
+/* Remove module rail and submodule bar completely on Home page and STARK Mail page */
+body.is-home #system-module-tabs,
+body.is-home #system-submodule-bar,
+body[data-system-page="dashboard"] #system-module-tabs,
+body[data-system-page="dashboard"] #system-submodule-bar,
+body.is-mail #system-module-tabs,
+body.is-mail #system-submodule-bar,
+body[data-system-page="mail"] #system-module-tabs,
+body[data-system-page="mail"] #system-submodule-bar,
+.stark-mail-page #system-module-tabs,
+.stark-mail-page #system-submodule-bar {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+
+/* STARK Mail Page Top Navigation Bar (Image 2) */
+.mail-workspace-nav {
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 24px 8px 24px !important;
+  background: #f4f7fc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.mail-workspace-nav .workspace-view-switch {
+  display: inline-flex !important;
+  background: #f1f5f9 !important;
+  border-radius: 10px !important;
+  padding: 3px !important;
+  border: 1px solid #e2e8f0 !important;
+  margin: 0 !important;
+  gap: 3px !important;
+}
+
+.mail-workspace-nav .workspace-view-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 16px !important;
+  border-radius: 7px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  background: transparent !important;
+  color: #0f766e !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.mail-workspace-nav .workspace-view-tab:hover {
+  background: #ffffff !important;
+  color: #0f766e !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+
+.mail-workspace-nav .workspace-view-tab.workspace-mail-tab.active {
+  background: #f0fdfa !important;
+  color: #0f766e !important;
+  border: 1px solid #99f6e4 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 4px rgba(13, 148, 136, 0.12) !important;
+}
+
+.mail-workspace-nav .workspace-mail-pill {
+  background: #0f766e !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 1px 7px !important;
+  border-radius: 10px !important;
+  line-height: 1.35 !important;
+}
+

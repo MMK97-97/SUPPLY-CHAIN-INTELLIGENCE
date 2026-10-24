@@ -184,12 +184,14 @@
     const subBar = document.querySelector('#system-submodule-bar');
     if (!subBar) return;
 
-    const isHome = active('workspace.html') || active('index.html') || targetId === 'home';
-    if (isHome) {
+    const isHome = active('workspace.html') || active('index.html') || targetId === 'home' || document.body.dataset.systemPage === 'dashboard';
+    const isMail = active('mail.html') || active('email.html') || targetId === 'mail' || document.body.dataset.systemPage === 'mail';
+    if (isHome || isMail) {
       subBar.hidden = true;
       subBar.style.display = 'none';
       subBar.innerHTML = '';
-      document.body.classList.add('is-home');
+      if (isHome) document.body.classList.add('is-home');
+      if (isMail) document.body.classList.add('is-mail');
       return;
     }
 
@@ -269,6 +271,16 @@
       );
       currentActiveModuleId = active('mk-copilot.html') ? 'copilot' : active('tasks.html') ? 'tasks' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
       renderSubnav(currentActiveModuleId);
+
+      if (homeActive || document.body.dataset.systemPage === 'dashboard' || active('mail.html') || active('email.html') || document.body.dataset.systemPage === 'mail') {
+        tabs.hidden = true;
+        tabs.style.display = 'none';
+        const subBar = document.querySelector('#system-submodule-bar');
+        if (subBar) {
+          subBar.hidden = true;
+          subBar.style.display = 'none';
+        }
+      }
     }
   }
 
@@ -387,11 +399,21 @@
     subnav.className = 'system-submodule-bar';
     subnav.setAttribute('aria-label', 'Active Module Navigation');
 
-    const isHomePage = active('workspace.html') || active('index.html');
+    const isHomePage = active('workspace.html') || active('index.html') || document.body.dataset.systemPage === 'dashboard';
+    const isMailPage = active('mail.html') || active('email.html') || document.body.dataset.systemPage === 'mail';
     if (isHomePage) {
+      rail.hidden = true;
+      rail.style.display = 'none';
       subnav.hidden = true;
       subnav.style.display = 'none';
       document.body.classList.add('is-home');
+    }
+    if (isMailPage) {
+      rail.hidden = true;
+      rail.style.display = 'none';
+      subnav.hidden = true;
+      subnav.style.display = 'none';
+      document.body.classList.add('is-mail');
     }
 
     const scrim = document.createElement('button');
