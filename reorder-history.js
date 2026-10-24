@@ -251,6 +251,6 @@
     await refresh();
   }
 
-  global.StarkReorderHistory = { archiveDataset, listReports, downloadReport, deleteReport, limit: HISTORY_LIMIT };
+  global.MK97ReorderHistory = global.StarkReorderHistory = { archiveDataset, listReports, downloadReport, deleteReport, limit: HISTORY_LIMIT };
   document.addEventListener("DOMContentLoaded", renderHistoryPanel);
 })(window);

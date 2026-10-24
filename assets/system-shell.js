@@ -317,10 +317,10 @@
     header.className = 'system-header';
     header.innerHTML = `
       <!-- Brand Block -->
-      <a class="system-brand" href="${S.url('workspace.html')}" aria-label="STARK Premium Supply Chain Intelligence Home">
+      <a class="system-brand" href="${S.url('workspace.html')}" aria-label="MK97 ERP Home">
         <span class="system-wordmark">SK<span>◆</span></span>
         <div class="system-brand-text">
-          <b>STARK PREMIUM</b>
+          <b>MK97 ERP</b>
           <small>Supply Chain Intelligence</small>
         </div>
       </a>
@@ -435,7 +435,7 @@
 
     const footer = document.createElement('footer');
     footer.className = 'system-workspace-footer';
-    footer.innerHTML = '<span id="system-data-status"></span><span>STARK Premium Supply Chain Intelligence · Portfolio Edition</span>';
+    footer.innerHTML = '<span id="system-data-status"></span><span>MK97 ERP · Enterprise Supply Chain Platform</span>';
     document.body.append(footer);
 
     renderNavigation();
@@ -661,7 +661,7 @@
       };
     }
 
-    window.StarkModuleNavigation = {
+    window.MK97ModuleNavigation = window.StarkModuleNavigation = {
       open: (id) => {
         const btn = document.querySelector(`.system-module-item[data-module-id="${id}"] .system-module-tab`);
         if (btn) btn.click();
@@ -741,7 +741,7 @@
   }
 
   window.addEventListener('stark:storage-error', event => notice(event.detail.message, true));
-  window.StarkSystemUI = { notice, escape, glyph, dialog };
+  window.MK97SystemUI = window.StarkSystemUI = { notice, escape, glyph, dialog };
   if (!document.querySelector('link[href*="tasks.css"]')) {const style=document.createElement('link');style.rel='stylesheet';style.href=S.url('tasks.css?v=20261021-ops1');document.head.append(style);}
   if (!document.querySelector('script[src*="tasks.js"]')) {
     const tasks = document.createElement('script');tasks.src=S.url('tasks.js?v=20261021-ops1');

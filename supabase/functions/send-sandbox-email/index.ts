@@ -32,7 +32,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             from: fromEmail,
             to: [to],
-            subject: subject || "Stark Supply Chain Communication",
+            subject: subject || "MK97 ERP Communication",
             text: body || ""
           })
         });

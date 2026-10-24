@@ -169,5 +169,5 @@
     }
     return result;
   }
-  window.StarkSystemCloud={inspect,connect,sync,disconnect,analyzeWithAI,send3PLRequest,refreshPermissions,getAccess,canCancelOrders,flushNotifications,notificationRecords,copilotRequest,refreshCopilot,getStatus:()=>({status,active,notificationStatus})};
+  window.MK97SystemCloud = window.StarkSystemCloud = {inspect,connect,sync,disconnect,analyzeWithAI,send3PLRequest,refreshPermissions,getAccess,canCancelOrders,flushNotifications,notificationRecords,copilotRequest,refreshCopilot,getStatus:()=>({status,active,notificationStatus})};
 })();

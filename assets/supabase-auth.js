@@ -94,7 +94,7 @@
         organization_slug: config.organizationSlug
       });
       if (error) {
-        if (error.code === "23505") throw new Error("This account is authenticated but has not been assigned to the Stark organization. Ask an organization owner to add it.");
+        if (error.code === "23505") throw new Error("This account is authenticated but has not been assigned to the MK97 ERP organization. Ask an organization owner to add it.");
         throw error;
       }
       membership = await loadMembership();
@@ -375,7 +375,7 @@
     getOrganizationId: () => state.organizationId,
     getAccessToken: () => state.session?.access_token || ""
   };
-  window.StarkAuth = api;
+  window.MK97Auth = window.StarkAuth = api;
   client.auth.onAuthStateChange((event, session) => {
     state.session = session || null;
     state.user = session?.user || null;

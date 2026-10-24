@@ -400,5 +400,5 @@
       return result;
     }catch(error){if(!statusOnly)markTransmission(id,error.deliveryState || 'UNKNOWN',{error:error.message});throw error;}
   }
-  window.StarkFulfillment={WAREHOUSES,SHIPPING_SERVICES,ADDRESS_KEYS,cleanAddress,customerAddresses,saveCustomerAddresses,shippingCarrier,shippingInput,inventoryLevels,suggestWarehouse,ISSUES,final,pending,total,warehouseId,warehouseName,resolveItem,cleanInput,assess,createDraft,editDraft,validateDraft,orderSearch,updateDelivery,shipWarehouse,request3PL,ship3PL,importPlan,applyImport,dailyShipments,createPO,updatePO,attachmentFromFile,attachPO,removeAttachment,sendForProcessing};
+  window.MK97Fulfillment = window.StarkFulfillment = {WAREHOUSES,SHIPPING_SERVICES,ADDRESS_KEYS,cleanAddress,customerAddresses,saveCustomerAddresses,shippingCarrier,shippingInput,inventoryLevels,suggestWarehouse,ISSUES,final,pending,total,warehouseId,warehouseName,resolveItem,cleanInput,assess,createDraft,editDraft,validateDraft,orderSearch,updateDelivery,shipWarehouse,request3PL,ship3PL,importPlan,applyImport,dailyShipments,createPO,updatePO,attachmentFromFile,attachPO,removeAttachment,sendForProcessing};
 })();

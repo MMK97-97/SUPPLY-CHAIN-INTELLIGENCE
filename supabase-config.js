@@ -11,11 +11,14 @@
     SUPABASE_PUBLISHABLE_KEY: window.ENV?.SUPABASE_PUBLISHABLE_KEY || window.ENV?.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY
   });
 
-  window.STARK_SUPABASE_CONFIG = Object.freeze({
+  const config = Object.freeze({
     url: window.ENV.SUPABASE_URL,
     publishableKey: window.ENV.SUPABASE_ANON_KEY,
     anonKey: window.ENV.SUPABASE_ANON_KEY,
-    organizationName: "Stark Supply Chain Intelligence",
-    organizationSlug: "stark-supply-chain-intelligence"
+    organizationName: "MK97 ERP",
+    organizationSlug: "mk97-erp"
   });
+
+  window.MK97_SUPABASE_CONFIG = config;
+  window.STARK_SUPABASE_CONFIG = config;
 })();

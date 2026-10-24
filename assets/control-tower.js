@@ -281,9 +281,9 @@
           <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
             ▦ Operational Modules
           </button>
-          <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="STARK Mail" title="STARK Mail · Enterprise email for supply chain operations">
+          <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="MK97 Mail" title="MK97 Mail · Enterprise email for operations">
             <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            <span>STARK Mail</span>
+            <span>MK97 Mail</span>
             <span class="workspace-mail-pill">12</span>
           </a>
           <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
@@ -916,9 +916,9 @@
             <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
               ▦ Operational Modules
             </button>
-            <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="STARK Mail" title="STARK Mail · Enterprise email for supply chain operations">
+            <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="MK97 Mail" title="MK97 Mail · Enterprise email for operations">
               <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <span>STARK Mail</span>
+              <span>MK97 Mail</span>
               <span class="workspace-mail-pill">12</span>
             </a>
             <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
@@ -1149,7 +1149,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           </span>
           <span class="stark-fab-item-text">
-            <strong>STARK Mail</strong>
+            <strong>MK97 Mail</strong>
             <small>Supply chain correspondence</small>
           </span>
         </a>
@@ -1340,7 +1340,7 @@
     });
   }
 
-  window.StarkControlTower={render,snapshot,queues,initFloatingActionModule};
+  window.MK97ControlTower = window.StarkControlTower = {render,snapshot,queues,initFloatingActionModule};
   window.addEventListener('stark:region-change', render);
   window.addEventListener('stark:system-change', render);
 })();

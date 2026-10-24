@@ -125,7 +125,7 @@
     if(document.querySelector('#tasks-content')){const id=new URLSearchParams(location.search).get('task');if(id)detail(id);}
     timer=setInterval(()=>{checkReminders();},30000);
   }
-  window.StarkTasks={save,addNote,setStatus,tasks,edit,detail,dueReminders,dismiss,checkReminders,localISO};
+  window.MK97Tasks = window.StarkTasks = {save,addNote,setStatus,tasks,edit,detail,dueReminders,dismiss,checkReminders,localISO};
   window.addEventListener('stark:system-change',()=>{render();checkReminders();});
   window.addEventListener('stark:cloud-status',render);
   window.addEventListener('focus',checkReminders);

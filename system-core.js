@@ -733,7 +733,7 @@
     return { format: 'stark-unified-backup', exportedAt: stamp(), state: clone(state), regionalDatasets, extras };
   }
   function importBackup(backup) {
-    if (backup.format !== 'stark-unified-backup') throw new Error('Choose a Supply Chain Intelligence backup.');
+    if (backup.format !== 'stark-unified-backup' && backup.format !== 'mk97-unified-backup') throw new Error('Choose an MK97 ERP backup.');
     validateState(backup.state);
     transaction('BACKUP_RESTORED', `Backup from ${backup.exportedAt}`, s => { const revision = s.revision; Object.assign(s, clone(backup.state)); s.revision = revision; });
     for (const [key, value] of Object.entries(backup.extras || {})) if (/^(stark-active-brands-|stark-inventory-settings-|stark.*events)/.test(key) && typeof value === 'string') localStorage.setItem(key,value);
@@ -758,6 +758,6 @@
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});
     return rows;
   }
-  window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, canCancelOrders, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, shipOrder, deleteOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
+  window.MK97System = window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, canCancelOrders, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, shipOrder, deleteOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
   expireHolds();
 })();

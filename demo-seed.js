@@ -51,8 +51,8 @@
     l.packing=enterprise().orders.filter(o=>['SHIPPED','DELIVERED'].includes(o.status)).map(o=>({id:'demo_pack_'+o.id,orderId:o.id,order:o.po,sku:o.lines[0].sku,qty:2,status:'SHIPPED',carrier:'UPS',service:'UPS_GROUND',tracking:o.tracking,shippedAt:iso(-Number(o.id.split('_').at(-1))),warehouseId:'SARASOTA'}));
     return l;
   }
-  window.StarkSystemSeeds={enterprise,logistics};
-  window.StarkDemoFixtures={regional};
+  window.MK97SystemSeeds = window.StarkSystemSeeds = {enterprise,logistics};
+  window.MK97DemoFixtures = window.StarkDemoFixtures = {regional};
   // Seed local analyst preferences; demo analysis works without a remote AI request.
   if(!W.localStorage.getItem('mk-analyst-v4'))W.localStorage.setItem('mk-analyst-v4',JSON.stringify({aiEnabled:false,monitor:true,autoAI:false,depth:'Deep'}));
 })();

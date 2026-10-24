@@ -3,7 +3,7 @@
   'use strict';
   const model = factory();
   if (typeof module === 'object' && module.exports) module.exports = model;
-  else root.StarkReorderModel = model;
+  else root.MK97ReorderModel = root.StarkReorderModel = model;
 })(typeof globalThis === 'object' ? globalThis : this, function () {
   'use strict';
   const EPS = 1e-8, MIN_MONTHS = 6;

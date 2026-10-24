@@ -82,5 +82,5 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => queueMicrotask(ready), { once: true });
   else ready();
-  window.StarkNavigation = Object.freeze({ navigate(url) { indicate(); location.assign(url); }, reset });
+  window.MK97Navigation = window.StarkNavigation = Object.freeze({ navigate(url) { indicate(); location.assign(url); }, reset });
 })();

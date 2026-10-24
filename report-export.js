@@ -18,8 +18,8 @@
   })();
   const pageTitle = () => document.querySelector("main h1, .hero h1, .inventory-page-heading h1, h1")?.textContent?.trim()
     || document.title.split("|")[0].trim()
-    || "Stark Report";
-  const safeName = value => String(value || "Stark Report").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
+    || "MK97 ERP Report";
+  const safeName = value => String(value || "MK97 ERP Report").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
   const visible = node => Boolean(node && node.getClientRects().length && getComputedStyle(node).visibility !== "hidden");
   const text = node => String(node?.textContent || "").replace(/\s+/g, " ").trim();
 
@@ -334,7 +334,7 @@
       );
     }
     const dashboardRows = [
-      ["STARK PREMIUM — SUPPLY CHAIN INTELLIGENCE"],
+      ["MK97 ERP — ENTERPRISE OPERATIONS"],
       [title],
       [`${region} market`, `Exported ${exportedAt.toLocaleString()}`],
       [],
@@ -451,5 +451,5 @@
     notifyUnavailable.timer = setTimeout(() => notice.remove(), 6500);
   }
 
-  window.StarkReportExport = { exportReport: () => exportReport(null), captureChartImages, embedCharts };
+  window.MK97ReportExport = window.StarkReportExport = { exportReport: () => exportReport(null), captureChartImages, embedCharts };
 })();

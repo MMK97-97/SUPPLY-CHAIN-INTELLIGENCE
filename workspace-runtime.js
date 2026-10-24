@@ -62,6 +62,6 @@
     location.assign(new URL('workspace.html?demo=1', rootURL).href);
   }
 
-  window.StarkWorkspace = Object.freeze({ mode, isDemo: demo, rootURL, prefix, localStorage: local, sessionStorage: session, indexedDB: scopedDB, BroadcastChannel: ScopedChannel, storageKey: keyFor, getDataset, setDataset, destination, modeURL, navigateMode, resetDemo });
+  window.MK97Workspace = window.StarkWorkspace = Object.freeze({ mode, isDemo: demo, rootURL, prefix, localStorage: local, sessionStorage: session, indexedDB: scopedDB, BroadcastChannel: ScopedChannel, storageKey: keyFor, getDataset, setDataset, destination, modeURL, navigateMode, resetDemo });
   document.documentElement.dataset.workspaceMode = mode;
 })();

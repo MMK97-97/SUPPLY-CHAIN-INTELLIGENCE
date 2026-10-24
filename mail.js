@@ -11,8 +11,8 @@
       senderName: 'James Smith',
       senderCompany: 'Global Parts Co.',
       senderEmail: 'james.smith@globalpartsco.com',
-      to: 'supply.chain@stark.com',
-      cc: 'procurement@stark.com, logistics@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'procurement@mk97.com, logistics@mk97.com',
       subject: 'PO #87366 - Confirmed for Shipment',
       timestamp: '10:24 AM',
       fullDate: 'Mon, Apr 21, 2026 10:24 AM',
@@ -59,8 +59,8 @@
       senderName: 'Rachel Lee',
       senderCompany: 'Northstar Auto',
       senderEmail: 'rachel.lee@northstarauto.com',
-      to: 'supply.chain@stark.com',
-      cc: 'sales@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'sales@mk97.com',
       subject: 'Re: Inventory Availability - Brake Pads',
       timestamp: '9:41 AM',
       fullDate: 'Mon, Apr 21, 2026 9:41 AM',
@@ -94,8 +94,8 @@
       senderName: 'DHL Transportation',
       senderCompany: 'DHL Logistics Hub',
       senderEmail: 'notifications@dhl.com',
-      to: 'supply.chain@stark.com',
-      cc: 'logistics@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'logistics@mk97.com',
       subject: 'Shipment Delivered - Tracking #DHL4567823',
       timestamp: '8:17 AM',
       fullDate: 'Mon, Apr 21, 2026 8:17 AM',
@@ -135,10 +135,10 @@
     {
       id: 'thread-4',
       senderName: 'Michael Khan',
-      senderCompany: 'Stark Internal',
-      senderEmail: 'm.khan@stark.com',
-      to: 'supply.chain@stark.com',
-      cc: 'executive@stark.com',
+      senderCompany: 'MK97 Internal',
+      senderEmail: 'm.khan@mk97.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'executive@mk97.com',
       subject: 'Q3 Procurement Plan - Review',
       timestamp: 'Yesterday',
       fullDate: 'Sun, Apr 20, 2026 4:15 PM',
@@ -156,13 +156,13 @@
       ],
       snippet: 'Attaching the updated Q3 plan. Please review th...',
       body: 'Attaching the updated Q3 procurement and reorder balancing plan. We have calibrated demand projections taking into account lead-time variations from our key European component suppliers.\n\nPlease review before our weekly planning session tomorrow at 2:00 PM.',
-      signOff: 'Michael Khan\nDirector of Supply Chain Planning\nStark Premium Operations',
+      signOff: 'Michael Khan\nDirector of Supply Chain Planning\nMK97 Operations',
       attachments: [
-        { name: 'Stark_Q3_Procurement_Plan.pdf', size: '1.2 MB', type: 'pdf' }
+        { name: 'MK97_Q3_Procurement_Plan.pdf', size: '1.2 MB', type: 'pdf' }
       ],
       related: {
         poNumber: 'PLAN-Q3-2026',
-        vendor: 'Stark Planning Dept',
+        vendor: 'MK97 Planning Dept',
         tracking: 'Internal Strategy',
         estimatedDelivery: 'Q3 Rollout',
         orderUrl: 'procurement-planning.html'
@@ -173,8 +173,8 @@
       senderName: 'Sarah Patel',
       senderCompany: 'AutoTech Supplies',
       senderEmail: 's.patel@autotechsupplies.com',
-      to: 'supply.chain@stark.com',
-      cc: 'procurement@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'procurement@mk97.com',
       subject: 'Invoice INV-77821 Available',
       timestamp: 'Yesterday',
       fullDate: 'Sun, Apr 20, 2026 2:10 PM',
@@ -210,7 +210,7 @@
       senderName: 'John Lewis',
       senderCompany: 'Parts Distribution',
       senderEmail: 'j.lewis@partsdist.com',
-      to: 'supply.chain@stark.com',
+      to: 'supply.chain@mk97.com',
       cc: '',
       subject: 'Re: Price Update Request',
       timestamp: 'Yesterday',
@@ -244,8 +244,8 @@
       senderName: 'Amazon Carrier',
       senderCompany: 'Amazon Freight Logistics',
       senderEmail: 'carrier-linehaul@amazonfreight.com',
-      to: 'supply.chain@stark.com',
-      cc: 'warehouse@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'warehouse@mk97.com',
       subject: 'In Transit - PO #87366',
       timestamp: 'Apr 18',
       fullDate: 'Fri, Apr 18, 2026 3:20 PM',
@@ -262,7 +262,7 @@
         { name: 'Shipment', type: 'shipment' }
       ],
       snippet: 'Your shipment is in transit and expected to deliv...',
-      body: 'Your shipment is in transit and expected to deliver on schedule. Carrier linehaul driver has checked into the regional transit corridor. Real-time GPS coordinates are streaming into the Stark Control Tower.',
+      body: 'Your shipment is in transit and expected to deliver on schedule. Carrier linehaul driver has checked into the regional transit corridor. Real-time GPS coordinates are streaming into the MK97 Control Tower.',
       shipmentDetails: {
         poNumber: '87366',
         trackingNumber: 'AF-87366-22X',
@@ -287,8 +287,8 @@
       senderName: 'Emily Rodriguez',
       senderCompany: 'Northstar Auto',
       senderEmail: 'e.rodriguez@northstarauto.com',
-      to: 'supply.chain@stark.com',
-      cc: 'planning@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'planning@mk97.com',
       subject: 'New Order Forecast - Q3',
       timestamp: 'Apr 18',
       fullDate: 'Fri, Apr 18, 2026 11:05 AM',
@@ -321,9 +321,9 @@
     {
       id: 'thread-9',
       senderName: 'Tom Wilson',
-      senderCompany: 'Stark Internal',
-      senderEmail: 't.wilson@stark.com',
-      to: 'supply.chain@stark.com',
+      senderCompany: 'MK97 Internal',
+      senderEmail: 't.wilson@mk97.com',
+      to: 'supply.chain@mk97.com',
       cc: '',
       subject: 'Re: Warehouse Capacity',
       timestamp: 'Apr 17',
@@ -357,7 +357,7 @@
       senderName: 'Linda Scott',
       senderCompany: 'Metro Supply',
       senderEmail: 'l.scott@metrosupply.com',
-      to: 'supply.chain@stark.com',
+      to: 'supply.chain@mk97.com',
       cc: '',
       subject: 'PO #88112 - Acknowledgement',
       timestamp: 'Apr 17',
@@ -392,8 +392,8 @@
       senderName: 'David Wu',
       senderCompany: 'Pacific Logistics Linehaul',
       senderEmail: 'd.wu@pacificlinehaul.com',
-      to: 'supply.chain@stark.com',
-      cc: 'logistics@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'logistics@mk97.com',
       subject: 'ASN Dispatch #PC-9912 - Dock Staging Notice',
       timestamp: 'Apr 16',
       fullDate: 'Wed, Apr 16, 2026 3:45 PM',
@@ -437,8 +437,8 @@
       senderName: 'Marcus Vance',
       senderCompany: 'Apex Incentives',
       senderEmail: 'm.vance@apexincentives.com',
-      to: 'supply.chain@stark.com',
-      cc: 'sales@stark.com',
+      to: 'supply.chain@mk97.com',
+      cc: 'sales@mk97.com',
       subject: 'Urgent Order #315980 - Delivery Schedule Confirmation',
       timestamp: 'Apr 16',
       fullDate: 'Wed, Apr 16, 2026 1:15 PM',
@@ -474,7 +474,7 @@
       senderName: 'FastTrack Cargo',
       senderCompany: 'FastTrack Freight',
       senderEmail: 'dispatch@fasttrackcargo.com',
-      to: 'supply.chain@stark.com',
+      to: 'supply.chain@mk97.com',
       cc: '',
       subject: 'Dock Appointment Confirmation #FT-4410',
       timestamp: 'Apr 15',
@@ -507,7 +507,7 @@
       senderName: 'FedEx Freight',
       senderCompany: 'FedEx Logistics',
       senderEmail: 'freight-notice@fedex.com',
-      to: 'supply.chain@stark.com',
+      to: 'supply.chain@mk97.com',
       cc: '',
       subject: 'Intermodal Transfer Notification #FX-88219',
       timestamp: 'Apr 14',
@@ -538,10 +538,10 @@
     {
       id: 'thread-draft-1',
       senderName: 'Me',
-      senderCompany: 'Stark Operations',
-      senderEmail: 'supply.chain@stark.com',
+      senderCompany: 'MK97 Operations',
+      senderEmail: 'supply.chain@mk97.com',
       to: 'james.smith@globalpartsco.com',
-      cc: 'procurement@stark.com',
+      cc: 'procurement@mk97.com',
       subject: 'Draft: Revised Delivery Schedule for PO #87366',
       timestamp: 'Draft',
       fullDate: 'Mon, Apr 21, 2026 10:45 AM',
@@ -557,7 +557,7 @@
       tags: [{ name: 'PO', type: 'po' }],
       snippet: 'Hi James, please find updated delivery windows for PO...',
       body: 'Hi James,\n\nPlease find updated delivery windows for PO #87366. We have coordinated with receiving to ensure Bay 3 is available.',
-      signOff: 'Stark Supply Chain Operations',
+      signOff: 'MK97 Supply Chain Operations',
       attachments: [],
       related: {
         poNumber: '#87366',
@@ -570,10 +570,10 @@
     {
       id: 'thread-draft-2',
       senderName: 'Me',
-      senderCompany: 'Stark Operations',
-      senderEmail: 'supply.chain@stark.com',
+      senderCompany: 'MK97 Operations',
+      senderEmail: 'supply.chain@mk97.com',
       to: 'rachel.lee@northstarauto.com',
-      cc: 'sales@stark.com',
+      cc: 'sales@mk97.com',
       subject: 'Draft: Ceramic Brake Pads Allocation Confirmation',
       timestamp: 'Draft',
       fullDate: 'Mon, Apr 21, 2026 9:55 AM',
@@ -589,7 +589,7 @@
       tags: [{ name: 'Customer', type: 'customer' }],
       snippet: 'Hi Rachel, confirming 450 units ATS reserved for your East Coast hub...',
       body: 'Hi Rachel,\n\nConfirming that 450 units of Ceramic Brake Pads ATS have been reserved for your East Coast fulfillment hub.',
-      signOff: 'Stark Supply Chain Operations',
+      signOff: 'MK97 Supply Chain Operations',
       attachments: [],
       related: {
         poNumber: '#ORD-NSA-9921',
@@ -602,10 +602,10 @@
     {
       id: 'thread-draft-3',
       senderName: 'Me',
-      senderCompany: 'Stark Operations',
-      senderEmail: 'supply.chain@stark.com',
+      senderCompany: 'MK97 Operations',
+      senderEmail: 'supply.chain@mk97.com',
       to: 's.patel@autotechsupplies.com',
-      cc: 'finance@stark.com',
+      cc: 'finance@mk97.com',
       subject: 'Draft: Wire Transfer Approval for INV-77821',
       timestamp: 'Draft',
       fullDate: 'Sun, Apr 20, 2026 3:30 PM',
@@ -621,7 +621,7 @@
       tags: [{ name: 'Invoice', type: 'invoice' }],
       snippet: 'Hi Sarah, the AP voucher has been authorized for invoice...',
       body: 'Hi Sarah,\n\nThe AP voucher has been authorized for invoice INV-77821 under standard 2/10 Net 30 terms.',
-      signOff: 'Stark Finance & Supply Chain',
+      signOff: 'MK97 Finance & Supply Chain',
       attachments: [],
       related: {
         poNumber: '#87210-INV',
@@ -634,10 +634,10 @@
     {
       id: 'thread-sent-1',
       senderName: 'Me',
-      senderCompany: 'Stark Operations',
-      senderEmail: 'supply.chain@stark.com',
+      senderCompany: 'MK97 Operations',
+      senderEmail: 'supply.chain@mk97.com',
       to: 'james.smith@globalpartsco.com',
-      cc: 'procurement@stark.com',
+      cc: 'procurement@mk97.com',
       subject: 'Re: Staging Bay Confirmation PO #87366',
       timestamp: 'Yesterday',
       fullDate: 'Sun, Apr 20, 2026 5:00 PM',
@@ -653,7 +653,7 @@
       tags: [{ name: 'PO', type: 'po' }],
       snippet: 'Confirmed staging slot at Sarasota DC Bay 3...',
       body: 'Confirmed staging slot at Sarasota DC Bay 3. Our dock crew will be standing by for freight unloading on arrival.',
-      signOff: 'Stark Supply Chain Operations',
+      signOff: 'MK97 Supply Chain Operations',
       attachments: [],
       related: {
         poNumber: '#87366',
@@ -666,9 +666,9 @@
     {
       id: 'thread-sent-2',
       senderName: 'Me',
-      senderCompany: 'Stark Operations',
-      senderEmail: 'supply.chain@stark.com',
-      to: 'm.khan@stark.com',
+      senderCompany: 'MK97 Operations',
+      senderEmail: 'supply.chain@mk97.com',
+      to: 'm.khan@mk97.com',
       cc: '',
       subject: 'Re: Q3 Procurement Forecast Feedback',
       timestamp: 'Apr 19',
@@ -685,11 +685,11 @@
       tags: [],
       snippet: 'Michael, demand projections aligned with warehouse capacity...',
       body: 'Michael,\n\nDemand projections have been aligned with warehouse capacity models. Ready for Monday review.',
-      signOff: 'Stark Operations Lead',
+      signOff: 'MK97 Operations Lead',
       attachments: [],
       related: {
         poNumber: 'PLAN-Q3-2026',
-        vendor: 'Stark Planning Dept',
+        vendor: 'MK97 Planning Dept',
         tracking: 'Internal Strategy',
         estimatedDelivery: 'Q3 Rollout',
         orderUrl: 'procurement-planning.html'
@@ -700,8 +700,8 @@
       senderName: 'Sophia Martinez',
       senderCompany: 'Pinnacle Fleet Solutions',
       senderEmail: 'smartinez@pinnaclefleet.com',
-      to: 'customer.orders@stark.com',
-      cc: 'sales@stark.com',
+      to: 'customer.orders@mk97.com',
+      cc: 'sales@mk97.com',
       subject: 'Expedited Reorder - Transmission Bearings #ORD-7729',
       timestamp: 'Apr 16',
       fullDate: 'Wed, Apr 16, 2026 11:40 AM',
@@ -733,7 +733,7 @@
       senderName: 'Kevin Chen',
       senderCompany: 'Horizon Dynamics',
       senderEmail: 'kchen@horizondynamics.com',
-      to: 'customer.orders@stark.com',
+      to: 'customer.orders@mk97.com',
       cc: '',
       subject: 'Purchase Agreement #HD-2026-B Batch Release',
       timestamp: 'Apr 15',
@@ -766,7 +766,7 @@
       senderName: 'Amanda Scott',
       senderCompany: 'Quantum Mobility',
       senderEmail: 'ascott@quantummobility.com',
-      to: 'customer.orders@stark.com',
+      to: 'customer.orders@mk97.com',
       cc: '',
       subject: 'Order #314002 Delivery Routing Update',
       timestamp: 'Apr 14',
@@ -847,12 +847,12 @@
   // --- Supabase Client & Environment Configuration ---
   function getSupabaseConfig() {
     const url = window.ENV?.SUPABASE_URL ||
-                window.STARK_SUPABASE_CONFIG?.url ||
+                (window.MK97_SUPABASE_CONFIG?.url || window.STARK_SUPABASE_CONFIG?.url) ||
                 'https://cbvkxqokqsuwywkpzvuq.supabase.co';
     const anonKey = window.ENV?.SUPABASE_ANON_KEY ||
                     window.ENV?.SUPABASE_PUBLISHABLE_KEY ||
-                    window.STARK_SUPABASE_CONFIG?.anonKey ||
-                    window.STARK_SUPABASE_CONFIG?.publishableKey ||
+                    (window.MK97_SUPABASE_CONFIG?.anonKey || window.STARK_SUPABASE_CONFIG?.anonKey) ||
+                    (window.MK97_SUPABASE_CONFIG?.publishableKey || window.STARK_SUPABASE_CONFIG?.publishableKey) ||
                     'sb_publishable_N1k0kUllTRgzc0lWXYbopQ_LTUrswsT';
     return { url, anonKey };
   }
@@ -873,8 +873,8 @@
   function mapEmailRecordToThread(row) {
     const isOutbound = String(row.direction || '').toLowerCase() === 'outbound';
     const senderName = row.sender_name || row.sender || (isOutbound ? 'You (Supply Chain)' : (row.from || 'External Partner'));
-    const senderCompany = row.sender_company || (isOutbound ? 'Stark Operations' : (row.company || 'Enterprise Partner'));
-    const senderEmail = row.sender_email || (isOutbound ? 'supply.chain@stark.com' : (row.from || 'partner@example.com'));
+    const senderCompany = row.sender_company || (isOutbound ? 'MK97 Operations' : (row.company || 'Enterprise Partner'));
+    const senderEmail = row.sender_email || (isOutbound ? 'supply.chain@mk97.com' : (row.from || 'partner@example.com'));
     const subject = row.subject || '(No Subject)';
     const body = row.body || row.content || row.text || '';
     const snippet = row.snippet || (body ? body.slice(0, 85) + (body.length > 85 ? '…' : '') : '(No content)');
@@ -1070,8 +1070,8 @@
             </svg>
           </div>
           <div>
-            <h1 class="stark-mail-title">STARK Mail</h1>
-            <p class="stark-mail-subtitle">Enterprise email for supply chain operations</p>
+            <h1 class="stark-mail-title">MK97 Mail</h1>
+            <p class="stark-mail-subtitle">MK97 ERP Enterprise Mail</p>
           </div>
         </div>
 
@@ -1091,9 +1091,9 @@
           <div class="stark-mail-filter-dropdowns">
             <select id="mail-sel-mailbox" aria-label="Mailbox filter">
               <option value="all" ${mailboxFilter === 'all' ? 'selected' : ''}>All mailboxes</option>
-              <option value="supply" ${mailboxFilter === 'supply' ? 'selected' : ''}>supply.chain@stark.com</option>
-              <option value="procurement" ${mailboxFilter === 'procurement' ? 'selected' : ''}>procurement@stark.com</option>
-              <option value="logistics" ${mailboxFilter === 'logistics' ? 'selected' : ''}>logistics@stark.com</option>
+              <option value="supply" ${mailboxFilter === 'supply' ? 'selected' : ''}>supply.chain@mk97.com</option>
+              <option value="procurement" ${mailboxFilter === 'procurement' ? 'selected' : ''}>procurement@mk97.com</option>
+              <option value="logistics" ${mailboxFilter === 'logistics' ? 'selected' : ''}>logistics@mk97.com</option>
             </select>
 
             <select id="mail-sel-folder" aria-label="Folder filter">
@@ -1171,7 +1171,7 @@
           <div class="mail-section-title">MAILBOX</div>
           <div class="mail-account-badge">
             <span class="mail-account-avatar">SC</span>
-            <span class="mail-account-email">supply.chain@stark.com</span>
+            <span class="mail-account-email">supply.chain@mk97.com</span>
             <span class="mail-caret">▾</span>
           </div>
 
@@ -1845,7 +1845,7 @@
                 <input id="compose-to" type="email" placeholder="e.g. james.smith@globalpartsco.com" value="procurement@globalpartsco.com">
               </label>
               <label>Cc (Operations &amp; Logistics)
-                <input id="compose-cc" type="text" placeholder="e.g. logistics@stark.com" value="supply.chain@stark.com">
+                <input id="compose-cc" type="text" placeholder="e.g. logistics@mk97.com" value="supply.chain@mk97.com">
               </label>
               <label>Subject / PO Reference
                 <input id="compose-subject" type="text" placeholder="e.g. PO #87366 - Delivery Schedule Confirmation" value="PO #87366 - Warehouse Staging Confirmation">
@@ -1856,7 +1856,7 @@
 We have verified staging slot allocations for incoming PO #87366 at the Sarasota DC hub. Please ensure the BOL and packing slips are transmitted prior to transit departure.
 
 Best regards,
-Stark Supply Chain Operations</textarea>
+MK97 Supply Chain Operations</textarea>
               </label>
             </div>
           </div>
@@ -2004,7 +2004,7 @@ Stark Supply Chain Operations</textarea>
     const sigBtn = root.querySelector('#btn-mail-signatures');
     if (sigBtn) {
       sigBtn.onclick = () => {
-        notice('Signatures manager: Stark Operations standard HTML signature is active.');
+        notice('Signatures manager: MK97 Operations standard HTML signature is active.');
       };
     }
 
@@ -2080,8 +2080,8 @@ Stark Supply Chain Operations</textarea>
             snippet: text.slice(0, 85) + (text.length > 85 ? '…' : ''),
             sender: 'You (Supply Chain)',
             sender_name: 'You (Supply Chain)',
-            sender_email: 'supply.chain@stark.com',
-            sender_company: 'Stark Operations',
+            sender_email: 'supply.chain@mk97.com',
+            sender_company: 'MK97 Operations',
             status: 'sent',
             created_at: new Date().toISOString()
           };
@@ -2256,10 +2256,10 @@ Stark Supply Chain Operations</textarea>
       threads.unshift({
         id: 'thread-' + Date.now(),
         senderName: 'You (Supply Chain)',
-        senderCompany: 'Stark Premium Operations',
-        senderEmail: 'supply.chain@stark.com',
+        senderCompany: 'MK97 Operations',
+        senderEmail: 'supply.chain@mk97.com',
         to,
-        cc: 'procurement@stark.com',
+        cc: 'procurement@mk97.com',
         subject,
         timestamp: 'Just now',
         fullDate: new Date().toLocaleString(),
@@ -2343,9 +2343,9 @@ Stark Supply Chain Operations</textarea>
           <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=modules') : 'workspace.html?view=modules'}" role="tab" aria-label="Operational Modules" title="Operational Modules">
             ▦ Operational Modules
           </a>
-          <a class="workspace-view-tab workspace-mail-tab active" href="${S ? S.url('mail.html') : 'mail.html'}" role="tab" aria-selected="true" aria-current="page" aria-label="STARK Mail" title="STARK Mail · Enterprise email for supply chain operations">
+          <a class="workspace-view-tab workspace-mail-tab active" href="${S ? S.url('mail.html') : 'mail.html'}" role="tab" aria-selected="true" aria-current="page" aria-label="MK97 Mail" title="MK97 Mail · MK97 ERP Enterprise Mail">
             <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            <span>STARK Mail</span>
+            <span>MK97 Mail</span>
             <span class="workspace-mail-pill">12</span>
           </a>
           <a class="workspace-view-tab" href="${S ? S.url('tasks.html') : 'tasks.html'}" role="tab" aria-label="Tasks workspace" title="Tasks &amp; Operational Reminders">
@@ -2383,7 +2383,7 @@ Stark Supply Chain Operations</textarea>
     init();
   }
 
-  window.StarkMail = {
+  window.MK97Mail = window.StarkMail = {
     render: renderApp,
     getThreads: () => threads,
     selectThread: id => {

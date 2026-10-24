@@ -22,5 +22,5 @@
       } catch (_) { link.removeAttribute('href'); }
     });
   }
-  window.StarkSafeOutput = Object.freeze({ render });
+  window.MK97SafeOutput = window.StarkSafeOutput = Object.freeze({ render });
 })();

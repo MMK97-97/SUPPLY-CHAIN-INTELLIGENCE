@@ -45,7 +45,7 @@
     if (source && !source.startsWith(location.origin) && !source.startsWith("file:")) return;
     const message = String(event.error?.message || event.message || "").trim();
     if (isBenignRuntimeIssue(message)) return;
-    console.error("Stark runtime error", event.error || event.message);
+    console.error("MK97 ERP runtime error", event.error || event.message);
     announceRuntimeIssue(readableRuntimeMessage(message));
   });
 
@@ -60,7 +60,7 @@
       console.warn("Ignored external runtime rejection", reason);
       return;
     }
-    console.error("Stark runtime rejection", reason);
+    console.error("MK97 ERP runtime rejection", reason);
     announceRuntimeIssue(readableRuntimeMessage(message));
   });
 

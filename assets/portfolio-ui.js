@@ -82,6 +82,6 @@
     }catch(error){host.textContent='Analysis could not finish: '+error.message;}
   }
   function init(){refreshDemo();renderLab();if(W?.isDemo&&document.getElementById('tracking-number')&&!document.getElementById('tracking-number').value){const order=S.getState().enterprise.orders.find(o=>o.region===S.getRegion()&&o.tracking);if(order)document.getElementById('tracking-number').value=order.tracking;}const existingRibbon=document.querySelector('.portfolio-demo-ribbon');if(existingRibbon)existingRibbon.remove();window.addEventListener('stark:tower-rendered',refreshDemo);window.addEventListener('stark:system-change',()=>{refreshDemo();renderLab();});window.addEventListener('stark:region-change',()=>{refreshDemo();renderLab();});window.addEventListener('mk:analyst-change',renderLab);}
-  window.StarkPortfolio={workspaceMenu,createScenarioOrder,validateScenarioOrder,shipScenarioOrder,receiveScenarioPO,getAnalysis:()=>lastAnalysis,demoTracking};
+  window.MK97Portfolio = window.StarkPortfolio = {workspaceMenu,createScenarioOrder,validateScenarioOrder,shipScenarioOrder,receiveScenarioPO,getAnalysis:()=>lastAnalysis,demoTracking};
   document.addEventListener('DOMContentLoaded',init,{once:true});
 })();

@@ -6,8 +6,8 @@
     html{background:#f4f7fc;min-height:100%}
     @view-transition{navigation:auto}::view-transition-group(root){animation-duration:160ms}::view-transition-old(root){animation:none;mix-blend-mode:normal}::view-transition-new(root){animation:stark-document-reveal 160ms ease-out both;mix-blend-mode:normal}@keyframes stark-document-reveal{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
     html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
-    html.stark-page-loading::after,html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
-    html.stark-auth-pending::after{content:"Supply Chain Intelligence\A Verifying secure access…"}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"MK97 ERP\A Opening your workspace…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+    html.stark-auth-pending::after{content:"MK97 ERP\A Verifying secure access…"}
     html.stark-navigation-pending::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:2147483647;background:linear-gradient(90deg,#087f78,#53c6c0,#087f78);background-size:200% 100%;animation:stark-navigation-progress 1.2s linear infinite;pointer-events:none}
     @keyframes stark-navigation-progress{to{background-position:-200% 0}}
     @media(prefers-reduced-motion:reduce){html.stark-navigation-pending::before{animation:none}}
@@ -20,7 +20,7 @@
   <script src="assets/system-core.js?v=20261023-copilot1" defer></script><script src="assets/system-cloud.js?v=20261023-copilot1" defer></script>
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Create Customer Order · Supply Chain Intelligence</title>
+  <title>Create Customer Order · MK97 ERP</title>
   <meta name="description" content="Add customer and delivery details, select items, shipping method and review before creating the order.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

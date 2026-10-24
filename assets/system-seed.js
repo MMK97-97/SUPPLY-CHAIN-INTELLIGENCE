@@ -77,7 +77,7 @@ function enterprise(){
 function logistics(){
  return {version:2,
   warehouses:[
-   {id:'wh_stark_se',name:'Stark Southeast Distribution Center',code:'SE-01',city:'Tampa',state:'FL',status:'ACTIVE',timezone:'America/New_York',dockDoors:6,cutoff:'16:30',manager:'Warehouse Operations'},
+   {id:'wh_stark_se',name:'MK97 Southeast Distribution Center',code:'SE-01',city:'Tampa',state:'FL',status:'ACTIVE',timezone:'America/New_York',dockDoors:6,cutoff:'16:30',manager:'Warehouse Operations'},
   ],
   bins:[
    {id:'RCV-01',zone:'RECEIVING',aisle:'RCV',rack:'01',level:'FLOOR',maxWeightKg:1800,capacity:240,used:74,active:true},
@@ -156,5 +156,5 @@ function logistics(){
   ]
  };
 }
-window.StarkSystemSeeds={enterprise,logistics};
+window.MK97SystemSeeds = window.StarkSystemSeeds = {enterprise,logistics};
 })();
