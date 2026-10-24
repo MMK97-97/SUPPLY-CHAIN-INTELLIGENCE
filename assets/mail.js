@@ -2057,13 +2057,26 @@ MK97 Supply Chain Operations</textarea>
         };
 
         try {
-          // 1. Invoke the Supabase Edge Function named 'send-sandbox-email'
-          const { data: funcData, error: funcError } = await sb.functions.invoke('send-sandbox-email', {
+          // 1. Invoke the Supabase Edge Function named 'send-sandbox-email' (with fallback to 'index-ts')
+          let funcData = null;
+          let funcError = null;
+
+          const primaryInvoke = await sb.functions.invoke('send-sandbox-email', {
             body: payload
           });
 
-          if (funcError) {
-            console.warn('send-sandbox-email Edge Function warning:', funcError);
+          if (!primaryInvoke.error) {
+            funcData = primaryInvoke.data;
+          } else {
+            const fallbackInvoke = await sb.functions.invoke('index-ts', {
+              body: payload
+            });
+            if (!fallbackInvoke.error) {
+              funcData = fallbackInvoke.data;
+            } else {
+              funcError = primaryInvoke.error;
+              console.warn('Edge Function invoke warning:', primaryInvoke.error);
+            }
           }
 
           // 2. On success: clear out the text input frame
