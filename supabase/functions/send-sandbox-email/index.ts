@@ -20,9 +20,9 @@ serve(async (req: Request) => {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     let providerStatus = "sandbox_simulated";
 
-    if (resendApiKey && to && !to.includes("example.com")) {
+    if (resendApiKey) {
       try {
-        const fromEmail = Deno.env.get("STARK_NOTIFICATION_FROM") || "onboarding@resend.dev";
+        const fromEmail = "onboarding@resend.dev";
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -31,13 +31,19 @@ serve(async (req: Request) => {
           },
           body: JSON.stringify({
             from: fromEmail,
-            to: [to],
+            to: ["manoj.k.manne@gmail.com"],
             subject: subject || "MK97 ERP Communication",
-            text: body || ""
+            html: `<div>${body || ""}</div>`
           })
         });
+
+        const responseData = await res.json();
+        console.log("Resend API Logs:", responseData);
+
         if (res.ok) {
           providerStatus = "dispatched_via_resend";
+        } else {
+          console.warn("Resend API error status:", res.status, responseData);
         }
       } catch (err) {
         console.warn("Resend dispatch notice:", err);
@@ -50,8 +56,9 @@ serve(async (req: Request) => {
         message: "Sandbox email successfully transmitted",
         status: providerStatus,
         deliveryId: "sandbox-" + crypto.randomUUID(),
-        to,
-        subject,
+        to: "manoj.k.manne@gmail.com",
+        originalRecipient: to,
+        subject: subject || "MK97 ERP Communication",
         timestamp: new Date().toISOString()
       }),
       {
