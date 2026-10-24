@@ -3799,7 +3799,7 @@ body.stark-system.is-mail .system-submodule-bar {
    ALL OPEN ORDERS PAGE STYLES (.oo-*)
    ========================================================================== */
 .oo-page-container {
-  padding: 20px 28px 60px 28px !important;
+  padding: 12px 24px 36px 24px !important;
   max-width: 1720px !important;
   margin: 0 auto !important;
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
@@ -3917,8 +3917,9 @@ body.stark-system.is-mail .system-submodule-bar {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  padding: 16px 20px !important;
-  margin-bottom: 16px !important;
+  padding: 14px 18px !important;
+  margin-top: 0 !important;
+  margin-bottom: 14px !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
 }
 
