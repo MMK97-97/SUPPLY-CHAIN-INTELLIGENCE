@@ -84,8 +84,6 @@
         ['order-management/issues.html','Order issues'],
         ['order-management/unvalidated.html','Unvalidated orders'],
         ['order-management/cancelled.html','Cancelled orders'],
-        ['order-management/hold-redemption.html','Hold & redemption'],
-        ['order-management/bulk-firm.html','Bulk & firm orders'],
         ['events.html?region='+region,'Event planning'],
         ['events-tv.html?region='+region,'Events display']
       ],'all-open-orders.html',{label:'+ Create customer order',path:'create-order.html'}],

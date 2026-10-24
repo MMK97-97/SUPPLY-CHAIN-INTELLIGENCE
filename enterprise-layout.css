@@ -12902,3 +12902,273 @@ body[data-system-page="mail"] main#stark-mail-content {
     padding-top: 70px !important;
   }
 }
+
+
+/* ==========================================================================
+   Order Fulfillment Timeline & Stepper Styles
+   ========================================================================== */
+.oo-timeline-banner {
+  margin: 10px 14px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.oo-timeline-banner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.oo-timeline-banner-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #0f172a;
+}
+.oo-timeline-rule-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+.oo-stepper-track {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  gap: 4px;
+}
+.oo-stepper-track::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: #cbd5e1;
+  z-index: 1;
+}
+.oo-stepper-step {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+.oo-stepper-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #94a3b8;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+}
+.oo-stepper-step.done .oo-stepper-dot {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+.oo-stepper-step.active .oo-stepper-dot {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+}
+.oo-stepper-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.2;
+}
+.oo-stepper-step.done .oo-stepper-label {
+  color: #0f172a;
+}
+.oo-stepper-step.active .oo-stepper-label {
+  color: #0284c7;
+  font-weight: 700;
+}
+.oo-timeline-card-detail {
+  margin-top: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.oo-ptd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.oo-ptd-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #0f172a;
+}
+.oo-ptd-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+.oo-ptd-sim-btn {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.oo-ptd-sim-btn:hover {
+  background: #dcfce7;
+  color: #166534;
+}
+.oo-ptd-flow {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 28px;
+}
+.oo-ptd-flow::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 24px;
+  left: 9px;
+  width: 2px;
+  background: #cbd5e1;
+}
+.oo-ptd-item {
+  position: relative;
+  padding-bottom: 14px;
+}
+.oo-ptd-item:last-child {
+  padding-bottom: 0;
+}
+.oo-ptd-node {
+  position: absolute;
+  left: -28px;
+  top: 1px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #94a3b8;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  z-index: 2;
+}
+.oo-ptd-item.done .oo-ptd-node {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+.oo-ptd-item.active .oo-ptd-node {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+}
+.oo-ptd-item.pending .oo-ptd-node {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+}
+.oo-ptd-item-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.oo-ptd-step-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.oo-ptd-item.done .oo-ptd-step-title {
+  color: #0f172a;
+}
+.oo-ptd-item.active .oo-ptd-step-title {
+  color: #0284c7;
+}
+.oo-ptd-item.pending .oo-ptd-step-title {
+  color: #64748b;
+}
+.oo-ptd-time {
+  font-size: 11px;
+  color: #64748b;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.oo-ptd-desc {
+  font-size: 11.5px;
+  color: #475569;
+  line-height: 1.4;
+  margin-bottom: 3px;
+}
+.oo-ptd-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.oo-ptd-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.oo-ptd-status-pill.done {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.oo-ptd-status-pill.active {
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+.oo-ptd-status-pill.pending {
+  background: #f8fafc;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+}
+.oo-ptd-did-before {
+  font-size: 10px;
+  font-weight: 600;
+  color: #059669;
+  background: #f0fdf4;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #bbf7d0;
+}

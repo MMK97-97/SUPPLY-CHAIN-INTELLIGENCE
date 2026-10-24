@@ -35,6 +35,276 @@
   <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
   <script src="assets/fulfillment-core.js?v=20261021-fixes1" defer></script>
   <script src="mk-copilot-core.js?v=20261023-copilot1" defer></script><script src="mk-copilot.js?v=20261023-copilot1" defer></script><link rel="stylesheet" href="mk-copilot.css?v=20261023-copilot1"><script src="assets/mk-analysis-tools.js?v=20261023-copilot1" defer></script><script src="assets/mk-space.js?v=20261023-copilot1" defer></script><script src="assets/mk-ai.js?v=20261023-copilot1" defer></script><script src="assets/mk-brain.js?v=20261023-copilot1" defer></script>
+<style id="oo-timeline-custom-styles">
+    /* Fulfillment Timeline & Stepper */
+    .oo-timeline-banner {
+      margin: 10px 14px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .oo-timeline-banner-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .oo-timeline-banner-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #0f172a;
+    }
+    .oo-timeline-rule-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    .oo-stepper-track {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      position: relative;
+      gap: 4px;
+    }
+    .oo-stepper-track::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      right: 12px;
+      height: 2px;
+      background: #cbd5e1;
+      z-index: 1;
+    }
+    .oo-stepper-step {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex: 1;
+    }
+    .oo-stepper-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #94a3b8;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 4px;
+      transition: all 0.2s ease;
+    }
+    .oo-stepper-step.done .oo-stepper-dot {
+      background: #10b981;
+      border-color: #10b981;
+      color: #ffffff;
+    }
+    .oo-stepper-step.active .oo-stepper-dot {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+    }
+    .oo-stepper-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #64748b;
+      line-height: 1.2;
+    }
+    .oo-stepper-step.done .oo-stepper-label {
+      color: #0f172a;
+    }
+    .oo-stepper-step.active .oo-stepper-label {
+      color: #0284c7;
+      font-weight: 700;
+    }
+
+    /* Detailed Timeline Card */
+    .oo-timeline-card-detail {
+      margin-top: 14px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .oo-ptd-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .oo-ptd-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #0f172a;
+    }
+    .oo-ptd-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+    }
+    .oo-ptd-sim-btn {
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .oo-ptd-sim-btn:hover {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .oo-ptd-flow {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-left: 28px;
+    }
+    .oo-ptd-flow::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      bottom: 24px;
+      left: 9px;
+      width: 2px;
+      background: #cbd5e1;
+    }
+    .oo-ptd-item {
+      position: relative;
+      padding-bottom: 14px;
+    }
+    .oo-ptd-item:last-child {
+      padding-bottom: 0;
+    }
+    .oo-ptd-node {
+      position: absolute;
+      left: -28px;
+      top: 1px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #94a3b8;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      z-index: 2;
+    }
+    .oo-ptd-item.done .oo-ptd-node {
+      background: #10b981;
+      border-color: #10b981;
+      color: #ffffff;
+    }
+    .oo-ptd-item.active .oo-ptd-node {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+    }
+    .oo-ptd-item.pending .oo-ptd-node {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #94a3b8;
+    }
+    .oo-ptd-item-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .oo-ptd-step-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .oo-ptd-item.done .oo-ptd-step-title {
+      color: #0f172a;
+    }
+    .oo-ptd-item.active .oo-ptd-step-title {
+      color: #0284c7;
+    }
+    .oo-ptd-item.pending .oo-ptd-step-title {
+      color: #64748b;
+    }
+    .oo-ptd-time {
+      font-size: 11px;
+      color: #64748b;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .oo-ptd-desc {
+      font-size: 11.5px;
+      color: #475569;
+      line-height: 1.4;
+      margin-bottom: 3px;
+    }
+    .oo-ptd-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .oo-ptd-status-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .oo-ptd-status-pill.done {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+    }
+    .oo-ptd-status-pill.active {
+      background: #f0f9ff;
+      color: #0284c7;
+      border: 1px solid #bae6fd;
+    }
+    .oo-ptd-status-pill.pending {
+      background: #f8fafc;
+      color: #94a3b8;
+      border: 1px solid #e2e8f0;
+    }
+    .oo-ptd-did-before {
+      font-size: 10px;
+      font-weight: 600;
+      color: #059669;
+      background: #f0fdf4;
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid #bbf7d0;
+    }
+</style>
 </head>
 <body data-system-page="orders">
   <main class="system-page oo-page-container" aria-label="All Open Orders">
@@ -306,9 +576,24 @@
           </div>
         </div>
 
-        <!-- Panel Tabs (5 Distinct Tabs: Summary, Items, Shipping, Notes, History) -->
+        <!-- Fulfillment Stage Tracker / Rule Badge -->
+        <div class="oo-timeline-banner" id="oo-timeline-banner">
+          <div class="oo-timeline-banner-head">
+            <span class="oo-timeline-banner-title">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Fulfillment Timeline
+            </span>
+            <span class="oo-timeline-rule-pill" id="oo-timeline-rule-pill">Single item (3m / 3m SLA)</span>
+          </div>
+          <div class="oo-stepper-track" id="oo-stepper-track">
+            <!-- 5 milestones rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Panel Tabs (6 Distinct Tabs: Summary, Timeline, Items, Shipping, Notes, History) -->
         <div class="oo-panel-tabs" role="tablist">
           <button type="button" class="oo-panel-tab active" data-ptab="summary" role="tab" aria-selected="true">Summary</button>
+          <button type="button" class="oo-panel-tab" data-ptab="timeline" role="tab" aria-selected="false">Timeline</button>
           <button type="button" class="oo-panel-tab" data-ptab="items" role="tab" aria-selected="false">Items (<span id="oo-tab-items-count">3</span>)</button>
           <button type="button" class="oo-panel-tab" data-ptab="shipping" role="tab" aria-selected="false">Shipping</button>
           <button type="button" class="oo-panel-tab" data-ptab="notes" role="tab" aria-selected="false">Notes</button>
@@ -337,6 +622,37 @@
             <div class="oo-panel-kv-row" id="oo-row-hold-expiry" style="display:none;">
               <span class="oo-panel-k">Hold expiry</span>
               <span class="oo-panel-v" id="oo-p-expiry">-</span>
+            </div>
+          </div>
+
+          <!-- Fulfillment Detail Timeline in Summary Pane -->
+          <div class="oo-timeline-card-detail" id="oo-timeline-card-detail">
+            <div class="oo-ptd-header">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="oo-ptd-title">Fulfillment Timeline</span>
+                <span class="oo-ptd-badge" id="oo-ptd-rule-badge">Single item (3m / 3m)</span>
+              </div>
+              <button type="button" class="oo-ptd-sim-btn" id="oo-btn-sim-toggle" title="Test / simulate live timing progression">
+                ⚡ Test Live Timing
+              </button>
+            </div>
+            <div class="oo-ptd-flow" id="oo-ptd-flow-summary">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TIMELINE DEDICATED TAB PANE -->
+        <div class="oo-panel-tab-pane" id="oo-pane-timeline" role="tabpanel">
+          <div class="oo-timeline-card-detail" style="margin-top:0;">
+            <div class="oo-ptd-header">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="oo-ptd-title">Fulfillment Execution Log</span>
+                <span class="oo-ptd-badge" id="oo-ptd-rule-badge-dedicated">SLA Milestones</span>
+              </div>
+            </div>
+            <div class="oo-ptd-flow" id="oo-ptd-flow-dedicated">
+              <!-- Dynamically populated -->
             </div>
           </div>
         </div>
@@ -594,6 +910,246 @@
         }
       }
 
+      
+      // --- Fulfillment Detail Timeline Logic ---
+      let liveTimelineTimer = null;
+      let simulatedStartTimes = {};
+
+      function getTimelineConfig(itemCount) {
+        const count = Number(itemCount) || 1;
+        if (count <= 1) {
+          return {
+            tier: 'single',
+            label: 'Single item (3m / 3m SLA)',
+            pickToPackMins: 3,
+            packToCompleteMins: 3,
+            totalMins: 6,
+            ruleText: 'Single item: Picking >> change to packing in 3 mins >> packing slip printed >> in 3 mins Completed'
+          };
+        } else if (count >= 2 && count <= 5) {
+          return {
+            tier: '2-5',
+            label: `${count} items (2–5 items: 6m / 6m SLA)`,
+            pickToPackMins: 6,
+            packToCompleteMins: 6,
+            totalMins: 12,
+            ruleText: 'Items 2–5: Picking >> change to packing in 6 mins >> packing slip printed >> in 6 mins Completed'
+          };
+        } else {
+          return {
+            tier: '5-10',
+            label: `${count} items (5–10 items: 12m / 12m SLA)`,
+            pickToPackMins: 12,
+            packToCompleteMins: 12,
+            totalMins: 24,
+            ruleText: 'Items 5–10: Picking >> change to packing in 12 mins >> packing slip printed >> next 12 mins Completed'
+          };
+        }
+      }
+
+      function computeOrderTimeline(order, now = Date.now()) {
+        const itemCount = Number(order.itemCount || (order.items && order.items.length) || 1);
+        const cfg = getTimelineConfig(itemCount);
+
+        let baseTime;
+        if (simulatedStartTimes[order.num]) {
+          baseTime = simulatedStartTimes[order.num];
+        } else if (order.createdAt && !isNaN(new Date(order.createdAt).getTime())) {
+          baseTime = new Date(order.createdAt).getTime();
+        } else {
+          baseTime = now - (cfg.totalMins + 15) * 60 * 1000;
+        }
+
+        const tLabel = baseTime;
+        const tPicking = baseTime + 15 * 1000;
+        const tPacking = baseTime + cfg.pickToPackMins * 60 * 1000;
+        const tSlip = tPacking + 15 * 1000;
+        const tCompleted = tPacking + cfg.packToCompleteMins * 60 * 1000;
+
+        const isClosed = ['shipped', 'delivered', 'completed'].includes(String(order.rawStatus || order.status).toLowerCase());
+
+        const step1Done = isClosed || now >= tLabel;
+        const step2Done = isClosed || now >= tPacking;
+        const step2Active = !step2Done && now >= tPicking;
+        const step3Done = isClosed || now >= tPacking;
+        const step4Done = isClosed || now >= tSlip;
+        const step5Done = isClosed || now >= tCompleted;
+        const step5Active = !step5Done && now >= tPacking;
+
+        const fmt = ts => new Date(ts).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+        });
+
+        const fmtSecs = s => {
+          const m = Math.floor(s / 60);
+          const remS = s % 60;
+          return `${m}m ${remS < 10 ? '0' : ''}${remS}s`;
+        };
+
+        const secUntilPack = Math.max(0, Math.floor((tPacking - now) / 1000));
+        const secUntilComp = Math.max(0, Math.floor((tCompleted - now) / 1000));
+
+        const steps = [
+          {
+            id: 'label',
+            number: 1,
+            title: 'Label printed',
+            subTitle: 'Carton barcode & carrier dispatch label',
+            status: step1Done ? 'done' : 'pending',
+            badgeText: step1Done ? '✓ Completed' : 'Pending',
+            didBefore: step1Done,
+            timestamp: fmt(tLabel),
+            desc: 'Label printed and assigned to Sarasota Hub fulfillment staging line.'
+          },
+          {
+            id: 'picking',
+            number: 2,
+            title: 'Picking',
+            subTitle: `Picking >> change to packing in ${cfg.pickToPackMins} mins`,
+            status: step2Done ? 'done' : (step2Active ? 'active' : 'pending'),
+            badgeText: step2Done ? '✓ Completed' : (step2Active ? `⏳ In Progress (${fmtSecs(secUntilPack)})` : 'Pending'),
+            didBefore: step2Done,
+            timestamp: fmt(tPicking),
+            desc: step2Done
+              ? `Picking completed. Changed to packing in ${cfg.pickToPackMins} mins (item tier: ${cfg.tier}).`
+              : (step2Active
+                  ? `Picking in progress. Changes to packing in ${fmtSecs(secUntilPack)} (SLA: ${cfg.pickToPackMins}m).`
+                  : `Scheduled for picking. Will change to packing in ${cfg.pickToPackMins} mins.`)
+          },
+          {
+            id: 'packing',
+            number: 3,
+            title: 'Changed to packing',
+            subTitle: `Transferred to packing bench (${cfg.pickToPackMins} mins after pick start)`,
+            status: step3Done ? 'done' : 'pending',
+            badgeText: step3Done ? '✓ Completed' : 'Pending',
+            didBefore: step3Done,
+            timestamp: fmt(tPacking),
+            desc: step3Done
+              ? `Changed to packing after ${cfg.pickToPackMins} mins picking cycle.`
+              : `Pending transition to packing bench in ${cfg.pickToPackMins} mins.`
+          },
+          {
+            id: 'slip',
+            number: 4,
+            title: 'Packing slip printed',
+            subTitle: 'Inner manifest and item documentation generated',
+            status: step4Done ? 'done' : 'pending',
+            badgeText: step4Done ? '✓ Completed' : 'Pending',
+            didBefore: step4Done,
+            timestamp: fmt(tSlip),
+            desc: 'Packing slip printed and enclosed in shipping carton with items.'
+          },
+          {
+            id: 'completed',
+            number: 5,
+            title: 'Completed',
+            subTitle: `In ${cfg.packToCompleteMins} mins Completed`,
+            status: step5Done ? 'done' : (step5Active ? 'active' : 'pending'),
+            badgeText: step5Done ? '✓ Completed' : (step5Active ? `⏳ In Progress (${fmtSecs(secUntilComp)})` : 'Pending'),
+            didBefore: step5Done,
+            timestamp: fmt(tCompleted),
+            desc: step5Done
+              ? `Fulfillment completed in ${cfg.packToCompleteMins} mins. Carton sealed and staged for carrier dispatch.`
+              : (step5Active
+                  ? `Packing in progress. Completes in ${fmtSecs(secUntilComp)} (SLA: ${cfg.packToCompleteMins}m).`
+                  : `Scheduled completion in ${cfg.packToCompleteMins} mins from packing.`)
+          }
+        ];
+
+        return {
+          cfg,
+          steps,
+          allCompleted: step5Done,
+          activeStepIdx: step5Done ? 5 : (step5Active ? 4 : (step3Done ? 3 : (step2Active ? 1 : 0)))
+        };
+      }
+
+      function renderOrderTimelineUI(order) {
+        if (!order) return;
+        const tl = computeOrderTimeline(order);
+
+        // 1. Update top Stepper Banner
+        const rulePill = document.querySelector('#oo-timeline-rule-pill');
+        if (rulePill) rulePill.textContent = tl.cfg.label;
+
+        const trackEl = document.querySelector('#oo-stepper-track');
+        if (trackEl) {
+          trackEl.innerHTML = tl.steps.map(s => `
+            <div class="oo-stepper-step ${s.status}">
+              <div class="oo-stepper-dot">${s.status === 'done' ? '✓' : s.number}</div>
+              <div class="oo-stepper-label">${esc(s.title)}</div>
+            </div>
+          `).join('');
+        }
+
+        // 2. Render Vertical Timeline Flow (Summary & Dedicated Panes)
+        const renderFlowHTML = (isDedicated = false) => `
+          ${tl.steps.map((s, idx) => `
+            <div class="oo-ptd-item ${s.status}">
+              <div class="oo-ptd-node">${s.status === 'done' ? '✓' : s.number}</div>
+              <div class="oo-ptd-content">
+                <div class="oo-ptd-item-header">
+                  <span class="oo-ptd-step-title">${esc(s.title)}</span>
+                  <time class="oo-ptd-time">${esc(s.timestamp)}</time>
+                </div>
+                <div class="oo-ptd-desc">${esc(s.desc)}</div>
+                <div class="oo-ptd-tags">
+                  <span class="oo-ptd-status-pill ${s.status}">${esc(s.badgeText)}</span>
+                  ${s.didBefore ? '<span class="oo-ptd-did-before">✓ Did before</span>' : ''}
+                  <span style="font-size:10px; color:#64748b; font-style:italic;">${esc(s.subTitle)}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        `;
+
+        const summaryFlow = document.querySelector('#oo-ptd-flow-summary');
+        if (summaryFlow) summaryFlow.innerHTML = renderFlowHTML(false);
+
+        const dedicatedFlow = document.querySelector('#oo-ptd-flow-dedicated');
+        if (dedicatedFlow) dedicatedFlow.innerHTML = renderFlowHTML(true);
+
+        const ruleBadgeSummary = document.querySelector('#oo-ptd-rule-badge');
+        if (ruleBadgeSummary) ruleBadgeSummary.textContent = tl.cfg.label;
+
+        const ruleBadgeDed = document.querySelector('#oo-ptd-rule-badge-dedicated');
+        if (ruleBadgeDed) ruleBadgeDed.textContent = tl.cfg.ruleText;
+
+        // Hook simulation toggle button
+        const simBtn = document.querySelector('#oo-btn-sim-toggle');
+        if (simBtn) {
+          simBtn.onclick = () => {
+            const isSimulating = !!simulatedStartTimes[order.num];
+            if (isSimulating) {
+              delete simulatedStartTimes[order.num];
+              simBtn.textContent = '⚡ Test Live Timing';
+              notice(`Order #${order.num} timeline reset to historical record.`);
+            } else {
+              // Start simulated progression right now!
+              simulatedStartTimes[order.num] = Date.now();
+              simBtn.textContent = '↺ Reset to Record';
+              notice(`Live timing simulation active for Order #${order.num} (${tl.cfg.ruleText})`);
+            }
+            renderOrderTimelineUI(order);
+          };
+        }
+
+        // Maintain 1-second live ticker if any step is in progress
+        if (liveTimelineTimer) clearInterval(liveTimelineTimer);
+        const hasActiveStep = tl.steps.some(s => s.status === 'active');
+        if (hasActiveStep) {
+          liveTimelineTimer = setInterval(() => {
+            if (selectedOrderNum === order.num) {
+              renderOrderTimelineUI(order);
+            } else {
+              clearInterval(liveTimelineTimer);
+            }
+          }, 1000);
+        }
+      }
+
       function updatePanel(order) {
         if (!order) return;
         selectedOrderNum = order.num;
@@ -607,6 +1163,9 @@
           statusBadge.className = order.status === 'Cancelled' ? 'oo-badge-type oo-badge-cancelled' : 'oo-badge-status-open';
         }
         document.querySelector('#oo-panel-cust-po').textContent = 'Customer PO#: ' + (order.po !== '-' && order.po !== '—' ? order.po : 'None');
+
+        // Render Fulfillment Detail Timeline
+        renderOrderTimelineUI(order);
 
         // 2. Summary Pane: Just customer, order type, sales order, in-hands date, hold expiry (only if any)
         document.querySelector('#oo-p-cust').textContent = order.customer;
