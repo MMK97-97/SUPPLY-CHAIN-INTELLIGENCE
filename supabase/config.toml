@@ -5,3 +5,7 @@ verify_jwt = false
 # Public webhook verifies its signature; browser actions verify JWT and membership in handler.
 [functions.mk-copilot]
 verify_jwt = false
+
+# Sandboxed email dispatcher for STARK Mail
+[functions.send-sandbox-email]
+verify_jwt = false

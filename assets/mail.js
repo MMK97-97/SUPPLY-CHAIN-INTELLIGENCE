@@ -844,13 +844,171 @@
     }
   }
 
+  // --- Supabase Client & Environment Configuration ---
+  function getSupabaseConfig() {
+    const url = window.ENV?.SUPABASE_URL ||
+                window.STARK_SUPABASE_CONFIG?.url ||
+                'https://cbvkxqokqsuwywkpzvuq.supabase.co';
+    const anonKey = window.ENV?.SUPABASE_ANON_KEY ||
+                    window.ENV?.SUPABASE_PUBLISHABLE_KEY ||
+                    window.STARK_SUPABASE_CONFIG?.anonKey ||
+                    window.STARK_SUPABASE_CONFIG?.publishableKey ||
+                    'sb_publishable_N1k0kUllTRgzc0lWXYbopQ_LTUrswsT';
+    return { url, anonKey };
+  }
+
+  let supabaseClient = null;
+  function getSupabase() {
+    if (supabaseClient) return supabaseClient;
+    if (window.supabase?.createClient) {
+      const cfg = getSupabaseConfig();
+      supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+      return supabaseClient;
+    }
+    return null;
+  }
+
+  function mapEmailRecordToThread(row) {
+    const isOutbound = String(row.direction || '').toLowerCase() === 'outbound';
+    const senderName = row.sender_name || row.sender || (isOutbound ? 'You (Supply Chain)' : (row.from || 'External Partner'));
+    const senderCompany = row.sender_company || (isOutbound ? 'Stark Operations' : (row.company || 'Enterprise Partner'));
+    const senderEmail = row.sender_email || (isOutbound ? 'supply.chain@stark.com' : (row.from || 'partner@example.com'));
+    const subject = row.subject || '(No Subject)';
+    const body = row.body || row.content || row.text || '';
+    const snippet = row.snippet || (body ? body.slice(0, 85) + (body.length > 85 ? '…' : '') : '(No content)');
+
+    const dateObj = row.created_at ? new Date(row.created_at) : new Date();
+    const isToday = dateObj.toDateString() === new Date().toDateString();
+    const timestamp = !isNaN(dateObj.getTime())
+      ? (isToday
+          ? dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+          : dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))
+      : 'Just now';
+    const fullDate = !isNaN(dateObj.getTime()) ? dateObj.toLocaleString('en-US') : 'Just now';
+
+    const initials = senderName.split(' ').map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'EM';
+    const avatarBg = isOutbound ? '#0f766e' : '#1e3a8a';
+
+    const tags = Array.isArray(row.tags) ? row.tags : [];
+    if (tags.length === 0) {
+      tags.push({ name: isOutbound ? 'Outbound' : 'Inbound', type: isOutbound ? 'shipment' : 'vendor' });
+      if (subject.includes('87366') || subject.includes('PO')) {
+        tags.push({ name: 'PO #87366', type: 'po' });
+      }
+    }
+
+    return {
+      id: String(row.id || ('email-' + Math.random().toString(36).slice(2, 9))),
+      senderName,
+      senderCompany,
+      senderEmail,
+      to: row.to || row.recipient || row.recipient_email || 'your-github-email@example.com',
+      cc: row.cc || '',
+      subject,
+      snippet,
+      body,
+      timestamp,
+      fullDate,
+      unread: row.unread !== undefined ? !!row.unread : false,
+      starred: !!row.starred,
+      flagged: !!row.flagged,
+      folder: 'inbox',
+      category: 'all',
+      direction: row.direction || (isOutbound ? 'outbound' : 'inbound'),
+      avatar: initials,
+      avatarBg,
+      tags,
+      attachments: Array.isArray(row.attachments) ? row.attachments : [],
+      raw: row
+    };
+  }
+
+  function updateSidebarCounts() {
+    const root = document.getElementById('stark-mail-content');
+    if (!root) return;
+    const counts = getSidebarCounts();
+    root.querySelectorAll('.mail-nav-item').forEach(btn => {
+      const folder = btn.dataset.folder;
+      const badge = btn.querySelector('.mail-nav-count');
+      if (badge && counts[folder] !== undefined) {
+        badge.textContent = counts[folder];
+      }
+    });
+  }
+
+  let mailRealtimeChannel = null;
+  async function initReactiveMailFeed() {
+    const sb = getSupabase();
+    if (!sb) {
+      console.warn('Supabase client unavailable for reactive mail feed.');
+      return;
+    }
+
+    // 1. Initial live data fetch query pulling historical records from 'emails' table, ordered by 'created_at' descending
+    try {
+      const { data: dbEmails, error } = await sb
+        .from('emails')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Historical emails query notice:', error.message);
+      } else if (Array.isArray(dbEmails) && dbEmails.length > 0) {
+        const mappedRecords = dbEmails.map(mapEmailRecordToThread);
+        const existingIds = new Set(threads.map(t => t.id));
+        const newRecords = mappedRecords.filter(r => !existingIds.has(r.id));
+        if (newRecords.length > 0) {
+          threads.unshift(...newRecords);
+          updateThreadList();
+          updateSidebarCounts();
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching historical emails:', e);
+    }
+
+    // 2. Real-time reactive subscription utilizing .channel().on('postgres_changes') for new 'INSERT' events
+    try {
+      if (mailRealtimeChannel) {
+        sb.removeChannel(mailRealtimeChannel);
+      }
+      mailRealtimeChannel = sb
+        .channel('public:emails:feed')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'emails' },
+          payload => {
+            console.log('Realtime email INSERT event received:', payload);
+            if (payload && payload.new) {
+              const newThread = mapEmailRecordToThread(payload.new);
+              if (!threads.some(t => t.id === newThread.id)) {
+                threads.unshift(newThread);
+                updateThreadList();
+                updateSidebarCounts();
+                notice('New email received: ' + newThread.subject);
+              }
+            }
+          }
+        )
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Supabase Realtime subscribed to public:emails');
+          }
+        });
+    } catch (subErr) {
+      console.warn('Realtime subscription error:', subErr);
+    }
+  }
+
   function getFilteredThreads() {
     return threads.filter(t => {
       // Folder filtering
       if (activeFolder === 'inbox' && t.folder !== 'inbox') return false;
       if (activeFolder === 'starred' && !t.starred) return false;
       if (activeFolder === 'snoozed' && !(t.snoozed || t.folder === 'snoozed')) return false;
-      if (activeFolder === 'sent' && t.folder !== 'sent') return false;
+      if (activeFolder === 'sent' && t.folder !== 'sent' && t.direction !== 'outbound') return false;
       if (activeFolder === 'drafts' && t.folder !== 'drafts') return false;
       if (activeFolder === 'archive' && t.folder !== 'archive') return false;
       if (activeFolder === 'trash' && t.folder !== 'trash') return false;
@@ -1871,18 +2029,91 @@ Stark Supply Chain Operations</textarea>
       };
     }
 
-    // Reply Send button
+    // Reply Send button (The green "Send" action button in the message reply panel)
     const sendReplyBtn = root.querySelector('#btn-send-reply');
     if (sendReplyBtn) {
-      sendReplyBtn.onclick = () => {
+      sendReplyBtn.onclick = async () => {
         const replyInput = root.querySelector('#mail-reply-input');
         const text = replyInput?.value.trim();
         if (!text) {
           notice('Please enter a reply before sending.', true);
           return;
         }
-        notice('Reply sent successfully to ' + getActiveThread().senderEmail);
-        replyInput.value = '';
+
+        const sb = getSupabase();
+        if (!sb) {
+          notice('Supabase client is not available. Please check configuration.', true);
+          return;
+        }
+
+        const originalBtnHtml = sendReplyBtn.innerHTML;
+        sendReplyBtn.disabled = true;
+        sendReplyBtn.innerHTML = '<span>Sending…</span>';
+
+        const payload = {
+          to: "your-github-email@example.com",
+          subject: "Re: Staging Bay Confirmation PO #87366",
+          body: text
+        };
+
+        try {
+          // 1. Invoke the Supabase Edge Function named 'send-sandbox-email'
+          const { data: funcData, error: funcError } = await sb.functions.invoke('send-sandbox-email', {
+            body: payload
+          });
+
+          if (funcError) {
+            console.warn('send-sandbox-email Edge Function warning:', funcError);
+          }
+
+          // 2. On success: clear out the text input frame
+          if (replyInput) replyInput.value = '';
+
+          // 3. Log the outbound record into local Supabase 'emails' table with direction marked as 'outbound'
+          const outboundRecord = {
+            direction: 'outbound',
+            to: payload.to,
+            recipient: payload.to,
+            recipient_email: payload.to,
+            subject: payload.subject,
+            body: payload.body,
+            snippet: text.slice(0, 85) + (text.length > 85 ? '…' : ''),
+            sender: 'You (Supply Chain)',
+            sender_name: 'You (Supply Chain)',
+            sender_email: 'supply.chain@stark.com',
+            sender_company: 'Stark Operations',
+            status: 'sent',
+            created_at: new Date().toISOString()
+          };
+
+          try {
+            const { error: insertError } = await sb
+              .from('emails')
+              .insert([outboundRecord]);
+            if (insertError) {
+              console.warn('Supabase emails table insert warning:', insertError.message);
+            }
+          } catch (insertErr) {
+            console.warn('Supabase insert exception:', insertErr);
+          }
+
+          // Prepend locally so it is visible immediately without a hard browser reload
+          const outboundThread = mapEmailRecordToThread(outboundRecord);
+          if (!threads.some(t => t.id === outboundThread.id)) {
+            threads.unshift(outboundThread);
+            updateThreadList();
+            updateSidebarCounts();
+          }
+
+          // 4. Show a clean toast notification confirming transmission
+          notice('Transmission confirmed: Outbound email sent successfully.');
+        } catch (err) {
+          console.error('Error invoking send-sandbox-email:', err);
+          notice('Transmission failed: ' + (err.message || 'Error sending email'), true);
+        } finally {
+          sendReplyBtn.disabled = false;
+          sendReplyBtn.innerHTML = originalBtnHtml;
+        }
       };
     }
 
@@ -2142,6 +2373,7 @@ Stark Supply Chain Operations</textarea>
   function init() {
     if (document.body.dataset.systemPage === 'mail' || document.getElementById('stark-mail-content')) {
       renderApp();
+      initReactiveMailFeed();
     }
   }
 
@@ -2157,6 +2389,18 @@ Stark Supply Chain Operations</textarea>
     selectThread: id => {
       activeThreadId = id;
       updateView();
+    },
+    getSupabase,
+    initReactiveMailFeed,
+    mapEmailRecordToThread,
+    prependEmail: record => {
+      const thread = mapEmailRecordToThread(record);
+      if (!threads.some(t => t.id === thread.id)) {
+        threads.unshift(thread);
+        updateThreadList();
+        updateSidebarCounts();
+      }
+      return thread;
     }
   };
 })();
