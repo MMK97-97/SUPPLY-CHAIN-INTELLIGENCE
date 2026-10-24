@@ -127,56 +127,136 @@
 
   function regionKey(code = regionCode()) { return DB_CONFIG[code].key; }
 
+  function renderWelcomeView() {
+    if (!feed) return;
+    feed.innerHTML = `
+      <div class="mk-copilot-welcome">
+        <div class="mk-copilot-sparkle-circle">
+          <svg viewBox="0 0 24 24">
+            <defs>
+              <linearGradient id="sparkle-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3b82f6" />
+                <stop offset="50%" stop-color="#8b5cf6" />
+                <stop offset="100%" stop-color="#ec4899" />
+              </linearGradient>
+            </defs>
+            <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="url(#sparkle-grad)" />
+          </svg>
+        </div>
+        <h2>Hi, I'm MK 👋</h2>
+        <p>Your Supply Chain Co-Pilot across orders, oders, inventory, vendors, and more.</p>
+      </div>
+      <div class="mk-copilot-cards-list">
+        <button type="button" class="mk-copilot-action-card" data-prompt="Check inventory for WH-1000XM6">
+          <span class="mk-card-icon-wrap mk-card-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </span>
+          <span class="mk-card-text">Check inventory for WH-1000XM6</span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Show open orders for Sony">
+          <span class="mk-card-icon-wrap mk-card-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"/>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 8"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </span>
+          <span class="mk-card-text">Show open orders for Sony</span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Generate reorder report">
+          <span class="mk-card-icon-wrap mk-card-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </span>
+          <span class="mk-card-text">Generate reorder report</span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Track PO-2026-00125">
+          <span class="mk-card-icon-wrap mk-card-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </span>
+          <span class="mk-card-text">Track PO-2026-00125</span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Summarize vendor performance">
+          <span class="mk-card-icon-wrap mk-card-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </span>
+          <span class="mk-card-text">Summarize vendor performance</span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+      </div>`;
+    feed.querySelectorAll('[data-prompt]').forEach(card => {
+      card.onclick = () => execute(card.dataset.prompt);
+    });
+  }
+
   function buildInterface() {
     launcher = document.createElement("button");
     launcher.type = "button";
     launcher.className = "mk-brain-launcher";
-    launcher.setAttribute("aria-label", "Open MK Supply Chain Brain");
+    launcher.setAttribute("aria-label", "Open MK AI Co-Pilot");
     launcher.setAttribute("aria-expanded", "false");
     launcher.innerHTML = 'MK<span class="mk-badge" hidden>1</span>';
     badge = launcher.querySelector(".mk-badge");
 
     panel = document.createElement("section");
     panel.className = "mk-brain-panel";
-    panel.setAttribute("aria-label", "MK Supply Chain Brain");
+    panel.setAttribute("aria-label", "MK AI Co-Pilot");
     panel.setAttribute("role", "region");
     panel.innerHTML = `
-      <header class="mk-brain-head">
-        <div class="mk-brain-mark">MK</div>
-        <div class="mk-brain-title"><strong>MK — Supply Chain Brain</strong><span>${ENGINE_VERSION}</span></div>
-        <button class="mk-icon-button mk-space-toggle" type="button" aria-label="Enable AI analysis" aria-pressed="false" data-state="local" title="Local analyst ready">
-          <svg viewBox="0 0 24 24"><path d="M8 17H6a4 4 0 0 1-.4-8A6.5 6.5 0 0 1 18 8a4.5 4.5 0 0 1 0 9h-2"/><path d="m9 14 3-3 3 3M12 11v9"/></svg>
-        </button>
-        <button class="mk-icon-button mk-voice-toggle" type="button" aria-label="Enable voice" aria-pressed="false" title="Voice off">
-          <svg viewBox="0 0 24 24"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path d="M17 9c1.3 1.7 1.3 4.3 0 6M19.5 6.5c3 3 3 8 0 11"/></svg>
-        </button>
-        <button class="mk-icon-button mk-close" type="button" aria-label="Close MK">
-          <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
-        </button>
+      <header class="mk-copilot-header-white">
+        <div class="mk-avatar-badge">MK</div>
+        <div class="mk-header-titles">
+          <h3>MK — AI Co-Pilot</h3>
+          <div class="mk-status-line">
+            <span class="dot"></span>
+            <span>Online</span>
+          </div>
+        </div>
+        <div class="mk-header-controls">
+          <button class="mk-header-control-btn mk-minimize" type="button" aria-label="Minimize MK" title="Minimize">—</button>
+          <button class="mk-header-control-btn mk-expand" type="button" aria-label="Expand MK" title="Expand / restore">⤢</button>
+          <button class="mk-header-control-btn mk-close" type="button" aria-label="Close MK" title="Close">✕</button>
+        </div>
       </header>
-      <div class="mk-brain-state"><b>${esc(REGION_NAMES[regionCode()])}</b><span>Verified report analysis · AI available after setup</span></div>
+      <div class="mk-brain-state" style="display:none;"><b>${esc(REGION_NAMES[regionCode()])}</b><span>Verified report analysis · AI available after setup</span></div>
       <div class="mk-brain-feed" role="log" aria-live="polite"></div>
-      <div class="mk-quick-actions" aria-label="MK actions">
-        <button type="button" data-mk-question="Analyze my current data">Analyze data</button>
-        <button type="button" data-mk-question="Show open vendor POs with shipping windows and tracking">Vendor POs &amp; Tracking</button>
-        <button type="button" data-mk-question="Show top stockout risks">Stockout risks</button>
-        <button type="button" data-mk-question="Show reorder summary">Reorder summary</button>
-        <button type="button" data-mk-question="Explain demand">Explain demand</button>
-        <button type="button" data-mk-question="Build my action plan">Action plan</button>
-        <button type="button" data-mk-question="Audit data quality">Data quality</button>
-        <button type="button" data-mk-question="Compare all regions">Compare regions</button>
-        <a class="mk-workspace-link" href="${esc(window.StarkSystem?.url('mk-brain.html') || 'mk-brain.html')}">Open analyst workspace</a>
-      </div>
-      <form class="mk-brain-compose">
-        <textarea rows="1" aria-label="Ask MK or give MK a task" placeholder="Ask a question or give MK a task…"></textarea>
-        <button class="mk-mic" type="button" aria-label="Speak to MK" title="Speak to MK">
-          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>
-        </button>
+      <form class="mk-brain-compose" style="padding: 10px 14px 4px 14px; background: #fff; border-top: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 4px 6px 4px 14px; flex: 1;">
+          <textarea rows="1" aria-label="Ask anything about orders, inventory, vendors..." placeholder="Ask anything about orders, inventory, vendors..." style="border: none; background: transparent; resize: none; font-size: 13px; color: #1e293b; outline: none; flex: 1; padding: 6px 0; font-family: inherit;"></textarea>
+          <button class="mk-send" type="submit" aria-label="Send" style="width: 32px; height: 32px; border-radius: 50%; background: #0f4c47; border: none; color: #ffffff; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; margin-left: 6px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
         <button class="mk-stop" type="button" hidden>Stop</button>
-        <button class="mk-send" type="submit" aria-label="Run task">
-          <svg viewBox="0 0 24 24"><path d="m4 12 16-8-5 16-3-6-8-2Z"/><path d="m12 14 8-10"/></svg>
+      </form>
+      <div class="mk-copilot-bottom-actions">
+        <button type="button" class="mk-copilot-sub-btn" id="mk-btn-paperclip" title="Attach file or report" aria-label="Attach file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         </button>
-      </form>`;
+        <button type="button" class="mk-copilot-sub-btn" id="mk-btn-search" title="Search catalog & orders" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button type="button" class="mk-copilot-sub-btn" id="mk-btn-plus" title="New Co-Pilot session" aria-label="New session">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>`;
 
     const anchor = document.getElementById("mk-chat-anchor");
     if (anchor) { anchor.append(panel); panel.classList.add("mk-docked", "open"); launcher.hidden = true; }
@@ -190,11 +270,29 @@
     syncVoiceUi();
     syncSpaceUi();
 
-    addEntry("MK is ready. Ask about a model, brand, region or report. I can investigate risks, compare regions, simulate changes and propose actions with report evidence. Local monitoring checks new reports while this website is open. Your Supply AI Chain Hub provides deeper conversational analysis when AI is enabled.", "brain", false);
+    renderWelcomeView();
     launcher.addEventListener("click", () => togglePanel(!panel.classList.contains("open")));
     panel.querySelector(".mk-close").addEventListener("click", () => togglePanel(false));
-    voiceButton.addEventListener("click", toggleVoice);
-    spaceButton.addEventListener("click", () => setSpaceEnabled(!window.MKAI?.getStatus().aiEnabled, true));
+    panel.querySelector(".mk-minimize")?.addEventListener("click", () => togglePanel(false));
+    panel.querySelector(".mk-expand")?.addEventListener("click", () => panel.classList.toggle("expanded"));
+    panel.querySelector("#mk-btn-paperclip")?.addEventListener("click", () => {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".csv,.xlsx,.json";
+      fileInput.onchange = e => {
+        const file = e.target.files[0];
+        if (file) execute(`Upload and analyze report: ${file.name}`);
+      };
+      fileInput.click();
+    });
+    panel.querySelector("#mk-btn-search")?.addEventListener("click", () => {
+      input.value = "Search: ";
+      input.focus();
+    });
+    panel.querySelector("#mk-btn-plus")?.addEventListener("click", () => {
+      resetConversation(window.MKAI?.getStatus().scope || regionCode());
+      renderWelcomeView();
+    });
     panel.querySelector(".mk-stop").addEventListener("click", () => activeController?.abort());
     window.addEventListener("mk:analyst-change", () => {
       syncSpaceUi();
@@ -202,9 +300,9 @@
       if (selected === conversation.scope) return;
       activeController?.abort();
       resetConversation(selected); feed.innerHTML = ""; restoreConversation();
-      if (!feed.children.length) addEntry(`${selected === "ALL" ? "All regions" : REGION_NAMES[selected]} conversation ready. Ask MK about your reports.`, "brain", false);
+      if (!feed.children.length) renderWelcomeView();
     });
-    window.addEventListener("mk:conversation-clear", () => { resetConversation(window.MKAI?.getStatus().scope || regionCode()); feed.innerHTML = ""; addEntry("New conversation started. Ask MK about your reports.", "brain", false); });
+    window.addEventListener("mk:conversation-clear", () => { resetConversation(window.MKAI?.getStatus().scope || regionCode()); feed.innerHTML = ""; renderWelcomeView(); });
     panel.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
       const question = input.value.trim();
@@ -243,6 +341,8 @@
   }
 
   function addEntry(message, role = "brain", speak = true, category = "answer", result = null) {
+    const welcome = feed.querySelector(".mk-copilot-welcome");
+    if (welcome) feed.innerHTML = "";
     const entry = document.createElement("div");
     entry.className = `mk-entry ${role === "user" ? "user" : "brain"}`;
     const controls = role === "brain" ? `<div class="mk-feedback"><button type="button" data-feedback="useful">Useful</button><button type="button" data-feedback="correction">Needs correction</button></div>` : "";

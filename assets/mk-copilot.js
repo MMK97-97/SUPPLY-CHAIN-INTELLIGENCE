@@ -139,27 +139,19 @@
     },'Save planning settings',{system:true});
   }
   function bindBrain() {
-    const panel=document.querySelector('.mk-brain-panel');if(!panel || panel.querySelector('.mk-copilot-context'))return;
-    const bar=document.createElement('section');bar.className='mk-copilot-context';bar.setAttribute('aria-label','Co-Pilot order context');
-    bar.innerHTML='<div><label for="mk-copilot-order">Order context</label><select id="mk-copilot-order"><option value="">Select an order</option></select><button type="button" class="sys-btn" id="mk-copilot-open-order">Order file</button><a href="'+S.url('mk-copilot.html')+'">Co-Pilot workspace ↗</a></div><p id="mk-copilot-context-status" role="status"></p>';
-    panel.querySelector('.mk-brain-state').after(bar);
-    panel.querySelector('.mk-brain-title strong').textContent='MK — AI Co-Pilot';
-    panel.querySelector('.mk-brain-title span').textContent='Orders · Inventory · Customers · Tasks';
+    const panel=document.querySelector('.mk-brain-panel');if(!panel)return;
+    const titleStrong = panel.querySelector('.mk-brain-title strong, .mk-header-titles h3');
+    if (titleStrong) titleStrong.textContent='MK — AI Co-Pilot';
     document.querySelector('.mk-brain-launcher')?.setAttribute('aria-label','Open MK AI Co-Pilot');
     panel.setAttribute('aria-label','MK AI Co-Pilot');
-    bar.querySelector('select').onchange=e=>setContext({orderId:e.target.value});
-    bar.querySelector('button').onclick=()=>{if(context.orderId)details(context.orderId);else window.StarkSystemUI.notice('Select an order first.');};
-    for(const question of ['Review urgent orders','Can this order be fulfilled?','Show demand trend']){const button=document.createElement('button');button.type='button';button.textContent=question;button.onclick=()=>window.MKBrain.ask(question);panel.querySelector('.mk-quick-actions').prepend(button);}
     window.MKBrain?.restoreConversation?.();
   }
   function paint() {
     if(!document.body)return;readContext();bindBrain();const r=report(),state=S.getState();
     const select=document.querySelector('#mk-copilot-order');
-    if(select){const value=select.value,items=state.enterprise.orders.filter(o=>!['CANCELLED','EXPIRED'].includes(o.status));const sig=items.map(o=>o.id+o.po).join('|');if(select.dataset.items!==sig){select.innerHTML='<option value="">Select an order</option>'+items.map(o=>`<option value="${esc(o.id)}">${esc(o.po)} · ${esc(state.enterprise.accounts.find(a=>a.id===o.accountId)?.name || '')}</option>`).join('');select.dataset.items=sig;}select.value=context.orderId || '';const a=r.orders.find(o=>o.orderId===context.orderId);document.querySelector('#mk-copilot-context-status').textContent=a?`${a.urgency} · ${a.allocatable?'Quantity covered':'Review supply / validation'} · ${a.followUpDate?'Follow-up '+a.followUpDate:'No follow-up date'}${context.intent?' · '+context.intent.slice(0,70):''}`:'Choose an order, or ask about urgency across all open orders.';}
-    const main=document.querySelector('#system-page-content,#item-master-content,#item-details-content,#tasks-content,#mk-copilot-content,main');
-    let alert=document.querySelector('#mk-copilot-alert');
-    if(r.alerts.length && main){if(!alert){alert=document.createElement('aside');alert.id='mk-copilot-alert';alert.className='mk-copilot-alert';alert.setAttribute('aria-label','Proactive Co-Pilot alerts');main.prepend(alert);}const row=r.alerts.slice().sort((a,b)=>Number(b.tier==='Critical')-Number(a.tier==='Critical'))[0],text=r.alerts.length+' orders need attention. '+row.message;if(alert.dataset.text!==text){alert.dataset.text=text;alert.innerHTML='<span class="mk-copilot-tier '+row.tier.toLowerCase()+'">'+esc(row.tier)+'</span><p>'+esc(text)+'</p><a href="'+S.url('mk-copilot.html')+'">Review orders ↗</a>';}}
-    else alert?.remove();
+    if(select){const value=select.value,items=state.enterprise.orders.filter(o=>!['CANCELLED','EXPIRED'].includes(o.status));const sig=items.map(o=>o.id+o.po).join('|');if(select.dataset.items!==sig){select.innerHTML='<option value="">Select an order</option>'+items.map(o=>`<option value="${esc(o.id)}">${esc(o.po)} · ${esc(state.enterprise.accounts.find(a=>a.id===o.accountId)?.name || '')}</option>`).join('');select.dataset.items=sig;}select.value=context.orderId || '';const a=r.orders.find(o=>o.orderId===context.orderId);const statusNode=document.querySelector('#mk-copilot-context-status');if(statusNode)statusNode.textContent=a?`${a.urgency} · ${a.allocatable?'Quantity covered':'Review supply / validation'} · ${a.followUpDate?'Follow-up '+a.followUpDate:'No follow-up date'}${context.intent?' · '+context.intent.slice(0,70):''}`:'Choose an order, or ask about urgency across all open orders.';}
+    const alert=document.querySelector('#mk-copilot-alert');
+    if(alert) alert.remove();
     renderWorkbench();
   }
   function renderWorkbench() {
@@ -177,7 +169,7 @@
   function schedulePaint(){if(paintQueued)return;paintQueued=true;queueMicrotask(()=>{paintQueued=false;try{paint();}catch(error){console.error('MK Co-Pilot:',error.message);}});}
   async function refreshShared(){if(cloudBusy || !window.StarkSystemCloud?.getStatus().active || document.hidden)return;cloudBusy=true;try{await window.StarkSystemCloud.refreshCopilot?.();}catch(_){}finally{cloudBusy=false;}}
   window.MKCopilot={version:C.VERSION,getContext:()=>({...readContext()}),setContext,report,orderSummary,itemSummary,handle,remember,messages,record,details,communicationDialog,planningSettings,refresh:()=>{cache=null;paint();}};
-  function initialize(){capturePage();paint();timer=setInterval(()=>{cache=null;schedulePaint();},60000);refreshTimer=setInterval(refreshShared,30000);const main=document.querySelector('main');if(main)new MutationObserver(()=>{if(!document.querySelector('#mk-copilot-alert') && report().alerts.length)schedulePaint();}).observe(main,{childList:true});}
+  function initialize(){capturePage();paint();timer=setInterval(()=>{cache=null;schedulePaint();},60000);refreshTimer=setInterval(refreshShared,30000);}
   window.addEventListener('mk:ready',schedulePaint);
   window.addEventListener('stark:system-change',()=>{cache=null;schedulePaint();});
   for(const type of ['stark:region-change','stark:access-change'])window.addEventListener(type,()=>{cache=null;readContext();signature='';schedulePaint();});

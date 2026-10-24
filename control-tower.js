@@ -286,6 +286,11 @@
           <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
             ▦ Operational Modules
           </button>
+          <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="STARK Mail" title="STARK Mail · Enterprise email for supply chain operations">
+            <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>STARK Mail</span>
+            <span class="workspace-mail-pill">12</span>
+          </a>
           <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
           <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
             📊 Telemetry &amp; KPIs
@@ -921,8 +926,13 @@
             <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
               ▦ Operational Modules
             </button>
+            <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="STARK Mail" title="STARK Mail · Enterprise email for supply chain operations">
+              <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <span>STARK Mail</span>
+              <span class="workspace-mail-pill">12</span>
+            </a>
             <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
-          <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
+            <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
               📊 Telemetry &amp; KPIs
             </button>
           </div>
@@ -964,7 +974,7 @@
 
         <section class="tower-hero">
           <div class="tower-hero-top">
-            <span class="tower-live"><i></i>${window.StarkWorkspace?.isDemo?'Portfolio demo':model.state.mode==='sample'?'Sample workspace':'Current workspace'}</span>
+            <span class="tower-live"><i></i>${model.state.mode==='sample'?'Sample workspace':'Live workspace'}</span>
             <span>${esc(model.regionName)} · Enterprise control tower</span>
           </div>
           <div class="tower-hero-title">Global supply chain.<br>Total visibility. Smarter decisions.</div>
@@ -1144,6 +1154,15 @@
             <small>UPS / FedEx transit telemetry</small>
           </span>
         </button>
+        <a href="${S.url('mail.html')}" class="stark-fab-item" role="menuitem" data-action="stark-mail">
+          <span class="stark-fab-item-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </span>
+          <span class="stark-fab-item-text">
+            <strong>STARK Mail</strong>
+            <small>Supply chain correspondence</small>
+          </span>
+        </a>
       </nav>
       <button type="button" class="stark-fab-button" id="stark-fab-btn" aria-haspopup="true" aria-expanded="false" aria-label="Toggle Quick Actions">
         <span class="stark-fab-badge" aria-hidden="true"></span>

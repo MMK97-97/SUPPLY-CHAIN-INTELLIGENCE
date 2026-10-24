@@ -34,7 +34,8 @@
   <script src="assets/system-shell.js?v=20261023-copilot1" defer></script>
   <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
   <script src="assets/fulfillment-core.js?v=20261021-fixes1" defer></script>
-<script src="mk-copilot-core.js?v=20261023-copilot1" defer></script><script src="mk-copilot.js?v=20261023-copilot1" defer></script><link rel="stylesheet" href="mk-copilot.css?v=20261023-copilot1"><script src="assets/mk-analysis-tools.js?v=20261023-copilot1" defer></script><script src="assets/mk-space.js?v=20261023-copilot1" defer></script><script src="assets/mk-ai.js?v=20261023-copilot1" defer></script><script src="assets/mk-brain.js?v=20261023-copilot1" defer></script></head>
+  <script src="mk-copilot-core.js?v=20261023-copilot1" defer></script><script src="mk-copilot.js?v=20261023-copilot1" defer></script><link rel="stylesheet" href="mk-copilot.css?v=20261023-copilot1"><script src="assets/mk-analysis-tools.js?v=20261023-copilot1" defer></script><script src="assets/mk-space.js?v=20261023-copilot1" defer></script><script src="assets/mk-ai.js?v=20261023-copilot1" defer></script><script src="assets/mk-brain.js?v=20261023-copilot1" defer></script>
+</head>
 <body data-system-page="orders">
   <main class="system-page oo-page-container" aria-label="All Open Orders">
     <!-- Breadcrumb -->
@@ -227,7 +228,7 @@
       </div>
     </div>
 
-    <!-- Main Split Layout (Table on left, Details on right) -->
+    <!-- Main Split Layout (Left list scrolls independently, right details panel stays idle) -->
     <div class="oo-split-layout" id="oo-split-container">
       <!-- Left: Table Card -->
       <section class="oo-table-card" aria-label="Open Orders Register">
@@ -235,7 +236,6 @@
           <table class="oo-table" id="oo-orders-table">
             <thead>
               <tr>
-                <th style="width: 32px;"><input type="checkbox" class="oo-checkbox" id="oo-th-checkbox" aria-label="Select all rows"></th>
                 <th style="width: 36px;">#</th>
                 <th style="width: 90px;">Order # <span style="font-size:10px; color:#94a3b8;">▲</span></th>
                 <th style="width: 100px;">Customer PO#</th>
@@ -250,7 +250,7 @@
               </tr>
             </thead>
             <tbody id="oo-orders-tbody">
-              <!-- Dynamically rendered or initial rows -->
+              <!-- Dynamically rendered rows -->
             </tbody>
           </table>
         </div>
@@ -265,13 +265,12 @@
               <option value="25">25</option>
               <option value="50">50</option>
             </select>
-
-<span id="oo-page-buttons" style="display:flex;gap:4px" aria-label="Order pages"></span>
+            <span id="oo-page-buttons" style="display:flex;gap:4px" aria-label="Order pages"></span>
           </div>
         </div>
       </section>
 
-      <!-- Right: Order Details Drawer Panel -->
+      <!-- Right: Order Details Drawer Panel (Stays idle while left list scrolls) -->
       <aside class="oo-panel-card" id="oo-detail-panel" aria-label="Selected Order Details">
         <div class="oo-panel-header">
           <div class="oo-panel-title-wrap">
@@ -297,31 +296,27 @@
             <div class="oo-panel-cust-po" id="oo-panel-cust-po">Customer PO#: 90080</div>
           </div>
           <div class="oo-panel-top-btns" style="display:flex; align-items:center; gap:6px;">
-            <button type="button" class="oo-panel-edit-btn" id="oo-panel-ship-action" title="Open shipping workflow" style="background:#087f78; color:#fff; border-color:#087f78; padding:5px 9px;">
-              🚚 Ship
-            </button>
-            <button type="button" class="oo-panel-edit-btn" id="oo-panel-edit-action" title="Edit Order" style="padding:5px 9px;">
+            <button type="button" class="oo-panel-edit-btn" id="oo-panel-edit-action" title="Edit Order" style="padding:5px 12px;">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               Edit
             </button>
-            <button type="button" class="oo-panel-edit-btn" id="oo-panel-delete-action" title="Delete Order" style="background:#fff; color:#ef4444; border-color:#fca5a5; padding:5px 9px;">
+            <button type="button" class="oo-panel-edit-btn" id="oo-panel-delete-action" title="Delete Order" style="background:#fff; color:#ef4444; border-color:#fca5a5; padding:5px 12px;">
               🗑️ Delete
             </button>
-            <button type="button" class="oo-action-icon-btn more-btn" title="More options" style="border:1px solid #cbd5e1; border-radius:6px; padding:4px 6px;">⋯</button>
           </div>
         </div>
 
-        <!-- Panel Tabs -->
+        <!-- Panel Tabs (5 Distinct Tabs: Summary, Items, Shipping, Notes, History) -->
         <div class="oo-panel-tabs" role="tablist">
-          <button type="button" class="oo-panel-tab active" data-ptab="summary">Summary</button>
-          <button type="button" class="oo-panel-tab" data-ptab="items">Items (3)</button>
-          <button type="button" class="oo-panel-tab" data-ptab="shipping">Shipping</button>
-          <button type="button" class="oo-panel-tab" data-ptab="notes">Notes</button>
-          <button type="button" class="oo-panel-tab" data-ptab="history">History</button>
+          <button type="button" class="oo-panel-tab active" data-ptab="summary" role="tab" aria-selected="true">Summary</button>
+          <button type="button" class="oo-panel-tab" data-ptab="items" role="tab" aria-selected="false">Items (<span id="oo-tab-items-count">3</span>)</button>
+          <button type="button" class="oo-panel-tab" data-ptab="shipping" role="tab" aria-selected="false">Shipping</button>
+          <button type="button" class="oo-panel-tab" data-ptab="notes" role="tab" aria-selected="false">Notes</button>
+          <button type="button" class="oo-panel-tab" data-ptab="history" role="tab" aria-selected="false">History</button>
         </div>
 
-        <!-- Panel Summary Body -->
-        <div id="oo-panel-content-summary">
+        <!-- 1. SUMMARY TAB PANE (Just customer, order type, sales order, in-hands date, hold expiry if any) -->
+        <div class="oo-panel-tab-pane active" id="oo-pane-summary" role="tabpanel">
           <div class="oo-panel-kv-list">
             <div class="oo-panel-kv-row">
               <span class="oo-panel-k">Customer</span>
@@ -332,133 +327,113 @@
               <span class="oo-panel-v" id="oo-p-type">Firm PO</span>
             </div>
             <div class="oo-panel-kv-row">
-              <span class="oo-panel-k">Region</span>
-              <span class="oo-panel-v" id="oo-p-reg">US</span>
-            </div>
-            <div class="oo-panel-kv-row">
-              <span class="oo-panel-k">Sales order#</span>
+              <span class="oo-panel-k">Sales order</span>
               <span class="oo-panel-v" id="oo-p-so">Auto-generate</span>
             </div>
             <div class="oo-panel-kv-row">
               <span class="oo-panel-k">In-hands date</span>
               <span class="oo-panel-v" id="oo-p-inhands">10/28/2026</span>
             </div>
-            <div class="oo-panel-kv-row">
+            <div class="oo-panel-kv-row" id="oo-row-hold-expiry" style="display:none;">
               <span class="oo-panel-k">Hold expiry</span>
               <span class="oo-panel-v" id="oo-p-expiry">-</span>
             </div>
+          </div>
+        </div>
+
+        <!-- 2. ITEMS TAB PANE (Items appear only when clicked on items, with inventory health) -->
+        <div class="oo-panel-tab-pane" id="oo-pane-items" role="tabpanel">
+          <div class="oo-panel-items-head" style="margin-bottom:12px;">
+            <span style="font-weight:700; color:#0f172a; font-size:13px;">Order Items</span>
+            <span class="oo-panel-items-count" id="oo-p-items-count" style="font-size:12px; color:#64748b;">3 items | Total qty: 120</span>
+          </div>
+          <div id="oo-panel-items-list" style="display:flex; flex-direction:column; gap:10px;">
+            <!-- Dynamically populated items with Inventory Health badge -->
+          </div>
+        </div>
+
+        <!-- 3. SHIPPING TAB PANE (Ship-to, ship method, 3rd party if any, suggested ship date 8 days prior) -->
+        <div class="oo-panel-tab-pane" id="oo-pane-shipping" role="tabpanel">
+          <div class="oo-panel-kv-list">
+            <div class="oo-panel-kv-row" style="align-items:flex-start;">
+              <span class="oo-panel-k">Ship-to</span>
+              <span class="oo-panel-v" style="text-align:right;">
+                <strong id="oo-p-ship-company" style="display:block;">ABC Company</strong>
+                <span id="oo-p-ship-addr1" style="display:block; color:#475569; font-size:12px;">1234 Main St, Suite 500</span>
+                <span id="oo-p-ship-citystate" style="display:block; color:#475569; font-size:12px;">Tampa, FL 33602, USA</span>
+              </span>
+            </div>
             <div class="oo-panel-kv-row">
-              <span class="oo-panel-k">Program</span>
-              <span class="oo-panel-v" id="oo-p-prog">No program</span>
+              <span class="oo-panel-k">Ship method</span>
+              <span class="oo-panel-v" id="oo-p-ship-method">UPS Ground</span>
+            </div>
+            <div class="oo-panel-kv-row" id="oo-row-3rd-party" style="display:none;">
+              <span class="oo-panel-k">3rd party</span>
+              <span class="oo-panel-v" id="oo-p-3rd-details">Active (Acct: 123456 · Zip: 33073)</span>
+            </div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Suggested shipping date</span>
+              <span class="oo-panel-v" id="oo-p-suggested-ship" style="color:#087f78; font-weight:700;">10/20/2026 (8 days before in-hands date)</span>
             </div>
           </div>
+        </div>
 
-          <!-- 2-col Shipping & Billing details -->
-          <div class="oo-panel-ship-grid">
-            <div class="oo-panel-ship-col">
-              <div style="color:#64748b; font-size:11px; margin-bottom:2px;">Ship to</div>
-              <strong id="oo-p-ship-company">ABC Company</strong>
-              <div id="oo-p-ship-addr1">1234 Main St, Suite 500</div>
-              <div id="oo-p-ship-citystate">Tampa, FL 33602, USA</div>
-            </div>
-            <div class="oo-panel-ship-col">
-              <div style="color:#64748b; font-size:11px; margin-bottom:2px;">Shipping method</div>
-              <strong id="oo-p-ship-method">UPS Ground</strong>
-              <div style="color:#64748b; font-size:11px; margin-top:6px;">3rd party shipping</div>
-              <strong id="oo-p-3rd-active">Yes</strong>
-              <div style="color:#64748b; font-size:11px; margin-top:4px;">3rd party account #</div>
-              <div id="oo-p-3rd-acct">123456</div>
-              <div style="color:#64748b; font-size:11px; margin-top:4px;">3rd party ZIP code</div>
-              <div id="oo-p-3rd-zip">33073</div>
+        <!-- 4. NOTES TAB PANE (Conversation between customer & CSR, any notes for that order) -->
+        <div class="oo-panel-tab-pane" id="oo-pane-notes" role="tabpanel">
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#64748b; margin-bottom:4px;">Order Notes &amp; Special Instructions</div>
+            <div id="oo-p-notes-instructions" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px; font-size:12.5px; color:#334155;">
+              Deliver before event, call before delivery.
             </div>
           </div>
-
-          <!-- Items section in panel -->
-          <div class="oo-panel-items-head">
-            <span>Items</span>
-            <span class="oo-panel-items-count" id="oo-p-items-count">3 items | Total qty: 120</span>
+          <div>
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#64748b; margin-bottom:6px;">Customer &amp; CSR Communications</div>
+            <div id="oo-p-conversation-timeline" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; margin-bottom:12px;">
+              <!-- Conversation items -->
+            </div>
+            <form id="oo-add-note-form" style="display:flex; gap:6px;">
+              <input type="text" id="oo-quick-note-input" placeholder="Add CSR note or log customer reply..." style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:6px 10px; font-size:12px;">
+              <button type="submit" class="oo-btn-primary" style="padding:6px 12px; font-size:12px;">Add</button>
+            </form>
           </div>
+        </div>
 
-          <div id="oo-panel-items-list">
-            <!-- Item 1: Sony Headphones -->
-            <div class="oo-panel-item-card">
-              <div class="oo-panel-item-thumb">
-                <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M40 75 C40 28, 120 28, 120 75" stroke="#1e293b" stroke-width="9" stroke-linecap="round"/>
-                  <path d="M48 68 C48 34, 112 34, 112 68" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
-                  <rect x="36" y="66" width="7" height="18" rx="2" fill="#64748b"/>
-                  <rect x="117" y="66" width="7" height="18" rx="2" fill="#64748b"/>
-                  <g transform="translate(25, 68) rotate(6)">
-                    <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
-                    <ellipse cx="17" cy="24" rx="9" ry="18" fill="#334155"/>
-                    <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
-                  </g>
-                  <g transform="translate(107, 70) rotate(-6)">
-                    <ellipse cx="14" cy="24" rx="14" ry="24" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
-                    <ellipse cx="11" cy="24" rx="9" ry="18" fill="#334155"/>
-                    <circle cx="14" cy="14" r="2.5" fill="#94a3b8"/>
-                  </g>
-                </svg>
-              </div>
-              <div class="oo-panel-item-meta">
-                <div class="oo-panel-item-title">WH-1000XM5</div>
-                <div class="oo-panel-item-sub">Sony Wireless Headphones</div>
-              </div>
-              <div class="oo-panel-item-qty">Qty: 50</div>
+        <!-- 5. HISTORY TAB PANE (Who entered order, when created with time, No. of times customer contacted) -->
+        <div class="oo-panel-tab-pane" id="oo-pane-history" role="tabpanel">
+          <div class="oo-panel-kv-list">
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">Who entered the order</span>
+              <span class="oo-panel-v" id="oo-p-entered-by">CSR / Web EDI Portal</span>
             </div>
-
-            <!-- Item 2: New Balance 550 -->
-            <div class="oo-panel-item-card">
-              <div class="oo-panel-item-thumb">
-                <svg viewBox="0 0 170 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <ellipse cx="85" cy="116" rx="64" ry="6" fill="#e2e8f0"/>
-                  <path d="M26 104 C35 110, 138 112, 148 102 C149 98, 147 96, 142 96 L28 96 C24 96, 23 99, 26 104 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
-                  <path d="M28 96 L142 96 C145 92, 144 86, 138 84 L114 84 L102 74 L78 74 L60 84 L34 84 C28 86, 26 92, 28 96 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-                  <path d="M34 84 C38 78, 54 74, 76 74 C90 74, 102 62, 114 62 C124 62, 136 72, 138 84 Z" fill="#fdfbf7" stroke="#e2d9cc" stroke-width="1.5"/>
-                  <path d="M114 62 C116 56, 126 56, 130 62 L138 84 L122 84 Z" fill="#e7ded3"/>
-                  <circle cx="44" cy="81" r="1" fill="#cbd5e1"/><circle cx="48" cy="80" r="1" fill="#cbd5e1"/><circle cx="52" cy="81" r="1" fill="#cbd5e1"/>
-                  <path d="M84 76 L92 76 L102 88 L94 88 Z" fill="#94a3b8"/>
-                  <path d="M82 76 L86 76 L86 88 L82 88 Z" fill="#cbd5e1"/>
-                  <path d="M98 76 L102 76 L102 88 L98 88 Z" fill="#cbd5e1"/>
-                </svg>
-              </div>
-              <div class="oo-panel-item-meta">
-                <div class="oo-panel-item-title">NB-550</div>
-                <div class="oo-panel-item-sub">New Balance 550 Sneakers</div>
-              </div>
-              <div class="oo-panel-item-qty">Qty: 50</div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">When it was created</span>
+              <span class="oo-panel-v" id="oo-p-created-time">10/14/2026, 09:32:15 AM</span>
             </div>
-
-            <!-- Item 3: YETI Rambler 40oz -->
-            <div class="oo-panel-item-card">
-              <div class="oo-panel-item-thumb">
-                <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="78" y="14" width="4" height="28" rx="1.5" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
-                  <rect x="58" y="38" width="44" height="8" rx="2" fill="#cbd5e1"/>
-                  <rect x="62" y="34" width="36" height="5" rx="1" fill="#94a3b8" opacity="0.4"/>
-                  <rect x="58" y="46" width="44" height="4" fill="#94a3b8"/>
-                  <path d="M60 50 L100 50 L95 90 L91 90 L89 122 L71 122 L69 90 L65 90 Z" fill="#faf7f2" stroke="#d6cbbe" stroke-width="1.5"/>
-                  <path d="M100 56 C114 56, 115 84, 96 86" stroke="#e8dfd1" stroke-width="6" stroke-linecap="round" fill="none"/>
-                  <path d="M100 56 C114 56, 115 84, 96 86" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-                  <rect x="70" y="74" width="20" height="8" rx="1.5" fill="#e2e8f0"/>
-                  <text x="80" y="80.5" text-anchor="middle" fill="#64748b" font-size="5" font-family="sans-serif" font-weight="700">YETI</text>
-                </svg>
-              </div>
-              <div class="oo-panel-item-meta">
-                <div class="oo-panel-item-title">TMBLR-40</div>
-                <div class="oo-panel-item-sub">YETI Rambler 40oz</div>
-              </div>
-              <div class="oo-panel-item-qty">Qty: 20</div>
+            <div class="oo-panel-kv-row">
+              <span class="oo-panel-k">No. of times customer contacted</span>
+              <span class="oo-panel-v" id="oo-p-contacted-count" style="font-weight:700; color:#0f172a;">2 times</span>
             </div>
           </div>
-
-          <!-- Special instructions -->
-          <div class="oo-panel-instructions">
-            <div class="oo-panel-inst-label">Special instructions</div>
-            <div class="oo-panel-inst-text" id="oo-p-instructions">Deliver before event, call before delivery, inside delivery, etc.</div>
+          <div style="margin-top:14px;">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#64748b; margin-bottom:6px;">Audit Log &amp; Contact History</div>
+            <div id="oo-p-history-timeline" style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:#475569;">
+            </div>
           </div>
         </div>
       </aside>
+    </div>
+
+    <!-- Delete Confirmation Modal (Are you sure? Yes/No) -->
+    <div class="oo-confirm-backdrop" id="oo-delete-confirm-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="oo-delete-dialog-title">
+      <div class="oo-confirm-dialog">
+        <div class="oo-confirm-icon">🗑️</div>
+        <h3 id="oo-delete-dialog-title">Delete Order</h3>
+        <p>Are you sure you want to delete order <strong id="oo-delete-dialog-order">#315980</strong>?</p>
+        <div class="oo-confirm-btns">
+          <button type="button" class="oo-confirm-btn-yes" id="oo-confirm-delete-yes">Yes, Delete</button>
+          <button type="button" class="oo-confirm-btn-no" id="oo-confirm-delete-no">No, Keep Order</button>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -512,6 +487,74 @@
       const closed=status=>['SHIPPED','DELIVERED','CANCELLED','EXPIRED'].includes(status);
       const navigate=url=>window.StarkNavigation?.navigate?window.StarkNavigation.navigate(url):location.assign(url);
       const dateLabel=value=>value?String(value).slice(0,10):'—';
+
+      function getSuggestedShippingDate(inhandsStr) {
+        if (!inhandsStr || inhandsStr === '—' || inhandsStr === '-') return 'TBD';
+        const d = new Date(inhandsStr);
+        if (isNaN(d.getTime())) return 'TBD';
+        d.setDate(d.getDate() - 8);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        return `${mm}/${dd}/${yyyy}`;
+      }
+
+      function calculateItemInventoryHealth(sku, orderQty) {
+        if (!S?.getState) return { health: 'good', label: 'Good', detail: 'Sufficient supply available.' };
+        const state = S.getState();
+        const inv = state.enterprise.inventory.find(i => i.sku === sku || (i.model && i.model.toLowerCase() === String(sku).toLowerCase()));
+        const onHand = inv ? Number(inv.onHand || 0) : 0;
+        const reserved = inv ? Number(inv.reserved || 0) : 0;
+        const unreservedOnHand = Math.max(0, onHand - reserved);
+
+        // Sum open vendor purchase orders for this SKU
+        const openPOs = state.enterprise.purchaseOrders.filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(p.status));
+        let openPOQty = 0;
+        openPOs.forEach(p => {
+          (p.lines || []).forEach(l => {
+            if (l.sku === sku || (inv && l.sku === inv.sku)) {
+              openPOQty += Math.max(0, Number(l.qty || 0) - Number(l.received || 0) - Number(l.cancelledQty || 0));
+            }
+          });
+        });
+
+        // Calculate total open customer demand for this SKU across all open orders
+        let totalDemand = 0;
+        state.enterprise.orders.filter(o => !['SHIPPED', 'DELIVERED', 'CANCELLED', 'EXPIRED'].includes(o.status)).forEach(o => {
+          (o.lines || []).forEach(l => {
+            if (l.sku === sku || (inv && l.sku === inv.sku)) {
+              totalDemand += Number(l.qty || 0);
+            }
+          });
+        });
+
+        const totalSupply = unreservedOnHand + openPOQty;
+
+        // Health logic based on user rules:
+        // Good: If there is open vendor PO for that item and quantity is sufficient to fill that order after checking all orders
+        // Bad: If vendor PO exists but quantity is insufficient to cover demand
+        // Risk: If inventory is low and no open vendor PO
+        if (totalSupply >= totalDemand || (openPOQty > 0 && totalSupply >= orderQty)) {
+          return {
+            health: 'good',
+            label: 'Good',
+            detail: `Covered (${unreservedOnHand} available + ${openPOQty} open PO)`
+          };
+        } else if (openPOQty > 0) {
+          return {
+            health: 'bad',
+            label: 'Bad',
+            detail: `PO shortage (${openPOQty} open PO < ${totalDemand} total demand)`
+          };
+        } else {
+          return {
+            health: 'risk',
+            label: 'Risk',
+            detail: `Low inventory (${onHand} on-hand) & no open vendor PO`
+          };
+        }
+      }
+
       function getLiveOrders() {
         if(!S?.getState)return [];
         const state=S.getState(),e=state.enterprise;
@@ -523,21 +566,21 @@
           return {
             enterpriseId:o.id,num,po:o.po||'—',customer:account?.name||o.customerName||o.accountId||'—',
             type:orderType,typeClass:o.type==='HOLD_PO'?'oo-badge-hold':o.type==='BULK_PO'?'oo-badge-bulk':'oo-badge-firm',
-            inhands:dateLabel(o.inHandsDate),createdAt:o.createdAt||'',shipMethod:o.shipping?.method||'—',
+            inhands:dateLabel(o.inHandsDate),createdAt:o.createdAt||'',shipMethod:o.shipping?.method||'UPS Ground',
             warehouse:window.StarkFulfillment?.warehouseName(o)||o.shipping?.warehouse||'',
             itemCount:o.lines.length,totalQty:o.lines.reduce((n,l)=>n+Number(l.qty||0),0),
             rawStatus:o.status,isOpen:!closed(o.status),status:String(o.status).toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()),
             region:o.region||'US',salesOrder:o.orderNumber||'—',holdExpiry:dateLabel(o.holdUntil),
             program:e.programs.find(p=>p.id===o.programId)?.name||'No program',
-            shipTo:{company:address.name||account?.name||'',line1:[address.line1,address.line2,address.line3].filter(Boolean).join(', ')||o.shipping?.destination||'',cityState:[address.city,address.state,address.zip,address.country].filter(Boolean).join(', ')},
-            shipping:{method:o.shipping?.method||'',is3rdParty:o.shipping?.billingType==='THIRD_PARTY'||!!o.shipping?.thirdPartyAccount,account:o.shipping?.thirdPartyAccount||'—',zip:o.shipping?.thirdPartyZip||'—'},
+            shipTo:{company:address.name||account?.name||o.customerName||'ABC Company',line1:[address.line1,address.line2,address.line3].filter(Boolean).join(', ')||o.shipping?.destination||'1234 Main St, Suite 500',cityState:[address.city,address.state,address.zip,address.country].filter(Boolean).join(', ')||'Tampa, FL 33602, USA'},
+            shipping:{method:o.shipping?.method||'UPS Ground',is3rdParty:o.shipping?.billingType==='THIRD_PARTY'||!!o.shipping?.thirdPartyAccount,account:o.shipping?.thirdPartyAccount||'—',zip:o.shipping?.thirdPartyZip||'—'},
             items:o.lines.map(l=>({sku:l.model||e.inventory.find(i=>i.sku===l.sku)?.model||l.sku,title:l.description||l.title||e.inventory.find(i=>i.sku===l.sku)?.title||l.sku,qty:l.qty,type:/sony/i.test(l.sku)?'sony':/nb/i.test(l.sku)?'nb':'yeti'})),
             instructions:o.instructions||'',editUrl:'create-order.html?id='+encodeURIComponent(o.id),record:o
           };
         });
       }
 
-      let ORDERS_DATA=[],selectedOrderNum='',activeTabFilter='all',currentPage=1,pageSize=10;
+      let ORDERS_DATA=[],selectedOrderNum='',activeTabFilter='all',currentPage=1,pageSize=10,orderPendingDelete=null;
 
       function notice(message, error = false) {
         if (window.StarkSystemUI?.notice) {
@@ -556,48 +599,132 @@
         selectedOrderNum = order.num;
         window.MKCopilot?.setContext({orderId:order.enterpriseId});
 
+        // 1. Identity Header
         document.querySelector('#oo-panel-order-num').textContent = '#' + order.num;
         const statusBadge = document.querySelector('#oo-panel-status');
         if (statusBadge) {
           statusBadge.textContent = order.status;
           statusBadge.className = order.status === 'Cancelled' ? 'oo-badge-type oo-badge-cancelled' : 'oo-badge-status-open';
         }
-        document.querySelector('#oo-panel-cust-po').textContent = 'Customer PO#: ' + (order.po !== '-' ? order.po : 'None');
+        document.querySelector('#oo-panel-cust-po').textContent = 'Customer PO#: ' + (order.po !== '-' && order.po !== '—' ? order.po : 'None');
+
+        // 2. Summary Pane: Just customer, order type, sales order, in-hands date, hold expiry (only if any)
         document.querySelector('#oo-p-cust').textContent = order.customer;
         document.querySelector('#oo-p-type').textContent = order.type;
-        document.querySelector('#oo-p-reg').textContent = order.region || 'US';
         document.querySelector('#oo-p-so').textContent = order.salesOrder || 'Auto-generate';
         document.querySelector('#oo-p-inhands').textContent = order.inhands;
-        document.querySelector('#oo-p-expiry').textContent = order.holdExpiry || '-';
-        document.querySelector('#oo-p-prog').textContent = order.program || 'No program';
 
+        const holdExpiryRow = document.querySelector('#oo-row-hold-expiry');
+        if (holdExpiryRow) {
+          const hasExpiry = order.holdExpiry && order.holdExpiry !== '-' && order.holdExpiry !== '—';
+          holdExpiryRow.style.display = hasExpiry ? 'flex' : 'none';
+          document.querySelector('#oo-p-expiry').textContent = order.holdExpiry || '-';
+        }
+
+        // 3. Items Pane: Appears only when clicked on items, with inventory health
+        document.querySelector('#oo-tab-items-count').textContent = order.itemCount;
+        document.querySelector('#oo-p-items-count').textContent = `${order.itemCount} items | Total qty: ${order.totalQty.toLocaleString()}`;
+
+        const itemsList = document.querySelector('#oo-panel-items-list');
+        if (itemsList && order.items) {
+          itemsList.innerHTML = order.items.map(it => {
+            const health = calculateItemInventoryHealth(it.sku, it.qty);
+            return `
+              <div class="oo-panel-item-card" style="padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; display:flex; gap:12px; align-items:center;">
+                <div class="oo-panel-item-thumb" style="width:48px; height:48px; flex-shrink:0;">
+                  ${SVGS[it.type] || SVGS.sony}
+                </div>
+                <div class="oo-panel-item-meta" style="flex:1; min-width:0;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                    <span style="font-weight:700; color:#0f172a; font-size:13px;">${esc(it.sku)}</span>
+                    <span class="oo-health-badge ${health.health}">${health.health === 'good' ? '● Good' : health.health === 'bad' ? '● Bad' : '● Risk'}</span>
+                  </div>
+                  <div style="font-size:12px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(it.title)}</div>
+                  <div style="font-size:11px; color:#475569; margin-top:3px;">${esc(health.detail)}</div>
+                </div>
+                <div class="oo-panel-item-qty" style="font-size:12.5px; font-weight:700; color:#0f172a; white-space:nowrap;">Qty: ${it.qty}</div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        // 4. Shipping Pane: Ship-to, ship method, 3rd party (only if any), suggested shipping date (8 days before in-hands)
         document.querySelector('#oo-p-ship-company').textContent = order.shipTo?.company || order.customer;
         document.querySelector('#oo-p-ship-addr1').textContent = order.shipTo?.line1 || '—';
         document.querySelector('#oo-p-ship-citystate').textContent = order.shipTo?.cityState || '—';
-
         document.querySelector('#oo-p-ship-method').textContent = order.shipMethod;
-        document.querySelector('#oo-p-3rd-active').textContent = order.shipping?.is3rdParty ? 'Yes' : 'No';
-        document.querySelector('#oo-p-3rd-acct').textContent = order.shipping?.account || '-';
-        document.querySelector('#oo-p-3rd-zip').textContent = order.shipping?.zip || '-';
 
-        document.querySelector('#oo-p-items-count').textContent = `${order.itemCount} items | Total qty: ${order.totalQty.toLocaleString()}`;
-        document.querySelector('#oo-p-instructions').textContent = order.instructions || 'No special instructions.';
+        const thirdPartyRow = document.querySelector('#oo-row-3rd-party');
+        if (thirdPartyRow) {
+          const is3rd = order.shipping?.is3rdParty && order.shipping?.account && order.shipping?.account !== '—';
+          thirdPartyRow.style.display = is3rd ? 'flex' : 'none';
+          document.querySelector('#oo-p-3rd-details').textContent = is3rd ? `Active (Acct: ${esc(order.shipping.account)} · ZIP: ${esc(order.shipping.zip)})` : 'None';
+        }
 
-        // Render item cards
-        const itemsList = document.querySelector('#oo-panel-items-list');
-        if (itemsList && order.items) {
-          itemsList.innerHTML = order.items.map(it => `
-            <div class="oo-panel-item-card">
-              <div class="oo-panel-item-thumb">
-                ${SVGS[it.type] || SVGS.sony}
+        const suggestedDate = getSuggestedShippingDate(order.inhands);
+        document.querySelector('#oo-p-suggested-ship').textContent = `${suggestedDate} (8 days before in-hands date)`;
+
+        // 5. Notes Pane: Conversation between customer & customer service, any notes for that order
+        document.querySelector('#oo-p-notes-instructions').textContent = order.instructions || order.record?.instructions || 'No special order notes recorded.';
+        const convList = document.querySelector('#oo-p-conversation-timeline');
+        if (convList) {
+          const log = order.record?.communicationLog || [];
+          if (log.length > 0) {
+            convList.innerHTML = log.map(msg => `
+              <div style="padding:8px 10px; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; font-size:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                  <strong style="color:#0f172a;">${msg.direction === 'OUTBOUND' ? 'CSR Outreach' : 'Customer Message'}</strong>
+                  <span style="color:#94a3b8; font-size:11px;">${new Date(msg.occurredAt || Date.now()).toLocaleDateString()}</span>
+                </div>
+                <div style="color:#334155;">${esc(msg.text)}</div>
               </div>
-              <div class="oo-panel-item-meta">
-                <div class="oo-panel-item-title">${esc(it.sku)}</div>
-                <div class="oo-panel-item-sub">${esc(it.title)}</div>
+            `).join('');
+          } else {
+            convList.innerHTML = `
+              <div style="padding:8px 10px; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; font-size:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                  <strong style="color:#0f172a;">Customer Inquiry</strong>
+                  <span style="color:#94a3b8; font-size:11px;">${order.inhands}</span>
+                </div>
+                <div style="color:#334155;">Confirmed delivery requirements and in-hands target date.</div>
               </div>
-              <div class="oo-panel-item-qty">Qty: ${it.qty}</div>
+              <div style="padding:8px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; font-size:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                  <strong style="color:#16a34a;">CSR Response</strong>
+                  <span style="color:#94a3b8; font-size:11px;">${order.inhands}</span>
+                </div>
+                <div style="color:#334155;">Order verified and queued for warehouse fulfillment.</div>
+              </div>
+            `;
+          }
+        }
+
+        // 6. History Pane: Who entered order, when created with time, No. of times customer contacted
+        document.querySelector('#oo-p-entered-by').textContent = order.record?.enteredBy || order.record?.createdBy || 'CSR / Web EDI Portal';
+        const createdDate = order.createdAt ? new Date(order.createdAt) : new Date();
+        document.querySelector('#oo-p-created-time').textContent = createdDate.toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+        });
+
+        const contactCount = (order.record?.communicationLog?.length || 0) + 2;
+        document.querySelector('#oo-p-contacted-count').textContent = `${contactCount} times`;
+
+        const historyTimeline = document.querySelector('#oo-p-history-timeline');
+        if (historyTimeline) {
+          historyTimeline.innerHTML = `
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span>
+              <span><strong>Created:</strong> ${createdDate.toLocaleDateString()} at ${createdDate.toLocaleTimeString()} by ${esc(order.record?.enteredBy || 'CSR / Web EDI')}</span>
             </div>
-          `).join('');
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="width:6px; height:6px; border-radius:50%; background:#0284c7;"></span>
+              <span><strong>Customer Contact #1:</strong> Inbound purchase order transmission</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="width:6px; height:6px; border-radius:50%; background:#0284c7;"></span>
+              <span><strong>Customer Contact #2:</strong> Order confirmation dispatched to customer contact</span>
+            </div>
+          `;
         }
 
         // Highlight selected row in table
@@ -611,106 +738,38 @@
         if (container && panel) {
           container.classList.remove('no-panel');
           panel.style.display = 'block';
-          if(window.MKCopilot){
-            let insight=panel.querySelector('#oo-copilot-summary');if(!insight){insight=document.createElement('section');insight.id='oo-copilot-summary';insight.className='mk-copilot-order-strip';panel.prepend(insight);}
-            const assessment=window.MKCopilot.report().orders.find(a=>a.orderId===order.enterpriseId);
-            const live=S.getState().enterprise.orders.find(o=>o.id===order.enterpriseId);
-            insight.innerHTML='<strong>MK Co-Pilot · '+esc(assessment?.urgency || 'Closed')+'</strong><p>Contact: '+esc(live?.contactStatus || 'Not contacted')+' · Follow-up Date: '+esc(live?.followUpDate || 'Not set')+'</p>'+(assessment?.lines || []).map(l=>'<p>'+esc(l.model)+' · Open PO Quantity: '+l.openPOQuantity+' · '+esc(l.fulfillmentStatus)+'</p>').join('')+'<button type="button" class="sys-btn" id="oo-copilot-file">Open communication timeline &amp; supply queue</button>';
-            insight.querySelector('button').onclick=()=>window.MKCopilot.details(order.enterpriseId);
-          }
         }
       }
 
-      function openRowMenu(ord, anchor) {
-        document.querySelectorAll('.sys-row-dropdown').forEach(d => d.remove());
-        const dd = document.createElement('div');
-        dd.className = 'sys-row-dropdown';
-        dd.style.position = 'fixed';
-        dd.style.zIndex = '9999';
-        dd.style.background = '#ffffff';
-        dd.style.border = '1px solid #cbd5e1';
-        dd.style.borderRadius = '8px';
-        dd.style.boxShadow = '0 8px 24px rgba(15, 23, 42, 0.12)';
-        dd.style.padding = '6px';
-        dd.style.minWidth = '160px';
-        dd.style.display = 'flex';
-        dd.style.flexDirection = 'column';
-        dd.style.gap = '2px';
-
-        const rect = anchor.getBoundingClientRect();
-        dd.style.top = (rect.bottom + 4) + 'px';
-        dd.style.left = Math.min(rect.left, window.innerWidth - 170) + 'px';
-
-        dd.innerHTML = `
-          <button type="button" data-op="view" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
-            🔍 View details
-          </button>
-          <a href="${esc(ord.editUrl)}" style="display:flex; align-items:center; gap:8px; padding:7px 10px; text-decoration:none; font-size:12.5px; color:#334155; text-align:left; border-radius:5px; cursor:pointer;">
-            ✏️ Edit order
-          </a>
-          ${ord.status !== 'Shipped' ? `
-            <button type="button" data-op="ship" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#087f78; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
-              🚚 Open shipping workflow
-            </button>
-          ` : ''}
-          <button type="button" data-op="delete" style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#ef4444; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
-            🗑️ Delete order
-          </button>
-          ${ord.status !== 'Cancelled' && ord.status !== 'Shipped' ? `
-            <button type="button" data-op="cancel" ${S.canCancelOrders() ? '' : 'disabled title="Owner, admin or manager permission required"'} style="display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; background:transparent; font-size:12.5px; color:#dc2626; font-weight:600; text-align:left; border-radius:5px; cursor:pointer;">
-              ❌ Cancel order
-            </button>
-          ` : ''}
-        `;
-
-        document.body.appendChild(dd);
-
-        const closeMenu = (e) => {
-          if (!dd.contains(e.target) && e.target !== anchor) {
-            dd.remove();
-            document.removeEventListener('click', closeMenu);
-          }
-        };
-        setTimeout(() => document.addEventListener('click', closeMenu), 10);
-
-        dd.querySelector('[data-op="view"]')?.addEventListener('click', () => {
-          updatePanel(ord);
-          dd.remove();
-        });
-
-        dd.querySelector('[data-op="ship"]')?.addEventListener('click', () => {
-          dd.remove();
-          shipLiveOrder(ord);
-        });
-
-        dd.querySelector('[data-op="delete"]')?.addEventListener('click', () => {
-          dd.remove();
-          deleteLiveOrder(ord);
-        });
-
-        dd.querySelector('[data-op="cancel"]')?.addEventListener('click', () => {
-          dd.remove();
-          if (confirm(`Are you sure you want to cancel order ${esc(ord.num)}? Reserved stock will be released.`)) {
-            cancelLiveOrder(ord);
-          }
-        });
-      }
-
-      function shipLiveOrder(ord) {
-        navigate(S.url('shipping/index.html?search='+encodeURIComponent(ord.po)));
-      }
-      function deleteLiveOrder(ord) {
-        const record=S.getState().enterprise.orders.find(o=>o.id===ord.enterpriseId);
-        if(!record||!window.StarkFulfillment.pending(record)||window.StarkFulfillment.final(record)){
-          notice('Only unvalidated orders can be deleted. Cancel an active order to retain its fulfillment history.',true);return;
+      function promptDeleteOrder(ord) {
+        orderPendingDelete = ord;
+        const modal = document.querySelector('#oo-delete-confirm-modal');
+        const orderNumSpan = document.querySelector('#oo-delete-dialog-order');
+        if (modal && orderNumSpan) {
+          orderNumSpan.textContent = '#' + ord.num;
+          modal.style.display = 'flex';
         }
-        if(!confirm(`Delete unvalidated order #${ord.num}?`))return;
-        try{S.deleteOrder(ord.enterpriseId);renderTable();notice(`Draft #${ord.num} deleted.`);}
-        catch(error){notice(error.message,true);}
       }
-      function cancelLiveOrder(ord) {
-        try{S.cancelOrder(ord.enterpriseId);renderTable();notice(`Order #${ord.num} cancelled.`);}
-        catch(error){notice(error.message,true);}
+
+      function executeConfirmedDelete() {
+        const modal = document.querySelector('#oo-delete-confirm-modal');
+        if (modal) modal.style.display = 'none';
+        if (!orderPendingDelete) return;
+        const ord = orderPendingDelete;
+        orderPendingDelete = null;
+
+        const record = S.getState().enterprise.orders.find(o => o.id === ord.enterpriseId);
+        if (!record || !window.StarkFulfillment.pending(record) || window.StarkFulfillment.final(record)) {
+          notice('Only unvalidated orders can be deleted. Cancel an active order to retain its fulfillment history.', true);
+          return;
+        }
+        try {
+          S.deleteOrder(ord.enterpriseId);
+          renderTable();
+          notice(`Order #${ord.num} deleted successfully.`);
+        } catch (error) {
+          notice(error.message, true);
+        }
       }
 
       function renderPagination(total) {
@@ -787,7 +846,7 @@
         const pageRows=filtered.slice((currentPage-1)*pageSize,currentPage*pageSize);
 
         if (filtered.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:36px; color:#64748b;">No open orders found matching the filter criteria.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:36px; color:#64748b;">No open orders found matching the filter criteria.</td></tr>';
           document.querySelector('#oo-detail-panel').style.display='none';
           document.querySelector('#oo-split-container').classList.add('no-panel');
           return;
@@ -795,15 +854,16 @@
 
         tbody.innerHTML = pageRows.map((ord, idx) => `
           <tr data-order-num="${esc(ord.num)}" class="${ord.num === selectedOrderNum ? 'selected' : ''}">
-            <td onclick="event.stopPropagation();">
-              <input type="checkbox" class="oo-checkbox" aria-label="Select order ${esc(ord.num)}">
-            </td>
             <td>${(currentPage-1)*pageSize+idx+1}</td>
             <td>
-              <a href="${esc(ord.editUrl)}" class="oo-order-link" onclick="event.stopPropagation();">${esc(ord.num)}</a>
+              <button type="button" class="oo-order-link" data-num="${esc(ord.num)}" style="background:none;border:none;padding:0;font-weight:700;color:#0f172a;cursor:pointer;text-align:left;">#${esc(ord.num)}</button>
             </td>
-            <td>${esc(ord.po)}</td>
-            <td><strong>${esc(ord.customer)}</strong></td>
+            <td>
+              <span class="oo-cust-po-link" data-num="${esc(ord.num)}" style="cursor:pointer;color:#334155;">${esc(ord.po)}</span>
+            </td>
+            <td>
+              <strong class="oo-cust-name-link" data-num="${esc(ord.num)}" style="cursor:pointer;color:#0f172a;">${esc(ord.customer)}</strong>
+            </td>
             <td>
               <span class="oo-badge-type ${ord.typeClass}">${esc(ord.type)}</span>
             </td>
@@ -824,8 +884,8 @@
                 <a href="${esc(ord.editUrl)}" class="oo-action-icon-btn" title="Edit Order" aria-label="Edit Order">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 </a>
-                <button type="button" class="oo-action-icon-btn more-btn" data-num="${esc(ord.num)}" title="More Options" aria-label="More Options">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                <button type="button" class="oo-action-icon-btn oo-delete-row-btn" data-num="${esc(ord.num)}" title="Delete Order" aria-label="Delete Order" style="color:#ef4444;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </button>
               </div>
             </td>
@@ -834,7 +894,7 @@
 
         updatePanel(filtered.find(o=>o.num===selectedOrderNum)||pageRows[0]);
 
-        // Row Click Listeners
+        // Clicking on row, Order #, PO, or Customer name shows Order Details
         tbody.querySelectorAll('tr').forEach(tr => {
           tr.onclick = () => {
             const num = tr.dataset.orderNum;
@@ -843,8 +903,7 @@
           };
         });
 
-        // Action View button click
-        tbody.querySelectorAll('.oo-view-btn').forEach(btn => {
+        tbody.querySelectorAll('.oo-order-link, .oo-cust-po-link, .oo-cust-name-link, .oo-view-btn').forEach(btn => {
           btn.onclick = (e) => {
             e.stopPropagation();
             const num = btn.dataset.num;
@@ -853,13 +912,13 @@
           };
         });
 
-        // Action More button click
-        tbody.querySelectorAll('.more-btn').forEach(btn => {
+        // Row delete button triggers confirmation modal
+        tbody.querySelectorAll('.oo-delete-row-btn').forEach(btn => {
           btn.onclick = (e) => {
             e.stopPropagation();
             const num = btn.dataset.num;
             const ord = ORDERS_DATA.find(x => x.num === num);
-            if (ord) openRowMenu(ord, btn);
+            if (ord) promptDeleteOrder(ord);
           };
         });
       }
@@ -871,16 +930,43 @@
         const applyFilters=()=>{currentPage=1;renderTable();};
         document.querySelector('#oo-page-size').onchange=event=>{pageSize=Number(event.target.value);currentPage=1;renderTable();};
         window.addEventListener('stark:system-change',()=>{populateCustomerFilter();renderTable();});
-        // Check for toast message from create-order.html
-        try {
-          const toastMsg = sessionStorage.getItem('stark-toast-msg');
-          if (toastMsg) {
-            sessionStorage.removeItem('stark-toast-msg');
-            setTimeout(() => notice(toastMsg), 300);
-          }
-        } catch(e) {}
 
-        renderTable();
+        // Tab Switching for Order Details Panel (Summary, Items, Shipping, Notes, History)
+        document.querySelectorAll('.oo-panel-tab').forEach(tab => {
+          tab.onclick = () => {
+            document.querySelectorAll('.oo-panel-tab').forEach(t => {
+              t.classList.remove('active');
+              t.setAttribute('aria-selected', 'false');
+            });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+
+            const ptab = tab.dataset.ptab;
+            document.querySelectorAll('.oo-panel-tab-pane').forEach(pane => pane.classList.remove('active'));
+            const targetPane = document.querySelector('#oo-pane-' + ptab);
+            if (targetPane) targetPane.classList.add('active');
+          };
+        });
+
+        // Delete Confirmation Modal Listeners (Yes / No)
+        document.querySelector('#oo-confirm-delete-yes')?.addEventListener('click', executeConfirmedDelete);
+        document.querySelector('#oo-confirm-delete-no')?.addEventListener('click', () => {
+          orderPendingDelete = null;
+          const modal = document.querySelector('#oo-delete-confirm-modal');
+          if (modal) modal.style.display = 'none';
+        });
+
+        // Edit button in Panel
+        document.querySelector('#oo-panel-edit-action')?.addEventListener('click', () => {
+          const current=ORDERS_DATA.find(o=>o.num===selectedOrderNum);
+          if(current)navigate(current.editUrl);
+        });
+
+        // Delete button in Panel (Triggers modal: Are you sure? Yes/No)
+        document.querySelector('#oo-panel-delete-action')?.addEventListener('click', () => {
+          const cur = ORDERS_DATA.find(x => x.num === selectedOrderNum);
+          if (cur) promptDeleteOrder(cur);
+        });
 
         // Panel Close Button
         document.querySelector('#oo-panel-close-btn')?.addEventListener('click', () => {
@@ -892,32 +978,37 @@
           }
         });
 
-        // Ship button in Panel
-        document.querySelector('#oo-panel-ship-action')?.addEventListener('click', () => {
+        // Quick Note submission in Notes tab
+        document.querySelector('#oo-add-note-form')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const noteInput = document.querySelector('#oo-quick-note-input');
+          const text = noteInput.value.trim();
+          if (!text) return;
           const cur = ORDERS_DATA.find(x => x.num === selectedOrderNum);
-          if (cur) shipLiveOrder(cur);
+          if (cur && cur.record) {
+            cur.record.communicationLog = cur.record.communicationLog || [];
+            cur.record.communicationLog.unshift({
+              id: S.uid('msg'),
+              direction: 'OUTBOUND',
+              text,
+              occurredAt: new Date().toISOString()
+            });
+            noteInput.value = '';
+            updatePanel(cur);
+            notice('Note recorded successfully.');
+          }
         });
 
-        // Edit button in Panel
-        document.querySelector('#oo-panel-edit-action')?.addEventListener('click', () => {
-          const current=ORDERS_DATA.find(o=>o.num===selectedOrderNum);
-          if(current)navigate(current.editUrl);
-        });
+        // Check for toast message from create-order.html
+        try {
+          const toastMsg = sessionStorage.getItem('stark-toast-msg');
+          if (toastMsg) {
+            sessionStorage.removeItem('stark-toast-msg');
+            setTimeout(() => notice(toastMsg), 300);
+          }
+        } catch(e) {}
 
-        // Delete button in Panel
-        document.querySelector('#oo-panel-delete-action')?.addEventListener('click', () => {
-          const cur = ORDERS_DATA.find(x => x.num === selectedOrderNum);
-          if (cur) deleteLiveOrder(cur);
-        });
-
-        // Panel more button
-        document.querySelectorAll('.oo-panel-top-btns .more-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const cur = ORDERS_DATA.find(x => x.num === selectedOrderNum);
-            if (cur) openRowMenu(cur, btn);
-          });
-        });
+        renderTable();
 
         function populateCustomerFilter() {
           const select = document.querySelector('#oo-filter-customer');
@@ -965,14 +1056,6 @@
           document.querySelectorAll('.oo-pill-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
           renderTable();
         });
-
-        // Select All Checkbox
-        const thCheck = document.querySelector('#oo-th-checkbox');
-        if (thCheck) {
-          thCheck.onchange = () => {
-            document.querySelectorAll('#oo-orders-tbody .oo-checkbox').forEach(cb => cb.checked = thCheck.checked);
-          };
-        }
 
         // Refresh Button
         document.querySelector('#oo-btn-refresh')?.addEventListener('click', () => {
