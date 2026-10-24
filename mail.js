@@ -64,7 +64,7 @@
       subject: 'Re: Inventory Availability - Brake Pads',
       timestamp: '9:41 AM',
       fullDate: 'Mon, Apr 21, 2026 9:41 AM',
-      unread: false,
+      unread: true,
       starred: true,
       flagged: true,
       folder: 'inbox',
@@ -215,13 +215,13 @@
       subject: 'Re: Price Update Request',
       timestamp: 'Yesterday',
       fullDate: 'Sun, Apr 20, 2026 11:32 AM',
-      unread: false,
+      unread: true,
       starred: false,
       flagged: false,
       folder: 'inbox',
       category: 'all',
       mentions: false,
-      orderRelated: false,
+      orderRelated: true,
       avatar: 'JL',
       avatarBg: '#64748b',
       tags: [
@@ -249,7 +249,7 @@
       subject: 'In Transit - PO #87366',
       timestamp: 'Apr 18',
       fullDate: 'Fri, Apr 18, 2026 3:20 PM',
-      unread: false,
+      unread: true,
       starred: false,
       flagged: false,
       folder: 'inbox',
@@ -298,7 +298,7 @@
       folder: 'inbox',
       category: 'forecast',
       mentions: false,
-      orderRelated: false,
+      orderRelated: true,
       avatar: 'ER',
       avatarBg: '#0284c7',
       tags: [
@@ -328,7 +328,7 @@
       subject: 'Re: Warehouse Capacity',
       timestamp: 'Apr 17',
       fullDate: 'Thu, Apr 17, 2026 5:40 PM',
-      unread: false,
+      unread: true,
       starred: false,
       flagged: false,
       folder: 'inbox',
@@ -362,7 +362,7 @@
       subject: 'PO #88112 - Acknowledgement',
       timestamp: 'Apr 17',
       fullDate: 'Thu, Apr 17, 2026 10:15 AM',
-      unread: false,
+      unread: true,
       starred: false,
       flagged: false,
       folder: 'inbox',
@@ -386,6 +386,413 @@
         estimatedDelivery: 'Apr 25, 2026',
         orderUrl: 'vendor-management/procurement.html'
       }
+    },
+    {
+      id: 'thread-11',
+      senderName: 'David Wu',
+      senderCompany: 'Pacific Logistics Linehaul',
+      senderEmail: 'd.wu@pacificlinehaul.com',
+      to: 'supply.chain@stark.com',
+      cc: 'logistics@stark.com',
+      subject: 'ASN Dispatch #PC-9912 - Dock Staging Notice',
+      timestamp: 'Apr 16',
+      fullDate: 'Wed, Apr 16, 2026 3:45 PM',
+      unread: true,
+      starred: true,
+      flagged: true,
+      folder: 'inbox',
+      category: 'shipping',
+      mentions: false,
+      orderRelated: true,
+      avatar: 'DW',
+      avatarBg: '#0891b2',
+      tags: [
+        { name: 'Shipment', type: 'shipment' }
+      ],
+      snippet: 'Advance Shipping Notice for container freight PC-9912...',
+      body: 'Advance Shipping Notice for container freight PC-9912. Driver has been assigned and electronic seals verified. Consignment scheduled to dock at Tampa Logistics Hub Bay 4 on Monday morning.\n\nAttached packing slip contains full unit serialization.',
+      shipmentDetails: {
+        poNumber: 'PC-9912',
+        trackingNumber: 'PAC-9912-EXP',
+        carrier: 'Pacific Logistics',
+        estimatedDelivery: 'Apr 27, 2026',
+        status: 'In Transit',
+        statusClass: 'status-transit',
+        trackingUrl: 'shipment-tracking.html'
+      },
+      signOff: 'David Wu\nFleet Dispatch Supervisor\nPacific Logistics Linehaul',
+      attachments: [
+        { name: 'ASN_Packing_Slip_PC9912.pdf', size: '380 KB', type: 'pdf' }
+      ],
+      related: {
+        poNumber: 'PC-9912',
+        vendor: 'Pacific Logistics',
+        tracking: 'PAC-9912-EXP',
+        estimatedDelivery: 'Apr 27, 2026',
+        orderUrl: 'shipment-tracking.html'
+      }
+    },
+    {
+      id: 'thread-12',
+      senderName: 'Marcus Vance',
+      senderCompany: 'Apex Incentives',
+      senderEmail: 'm.vance@apexincentives.com',
+      to: 'supply.chain@stark.com',
+      cc: 'sales@stark.com',
+      subject: 'Urgent Order #315980 - Delivery Schedule Confirmation',
+      timestamp: 'Apr 16',
+      fullDate: 'Wed, Apr 16, 2026 1:15 PM',
+      unread: true,
+      starred: true,
+      flagged: true,
+      folder: 'inbox',
+      category: 'customer',
+      mentions: true,
+      orderRelated: true,
+      avatar: 'MV',
+      avatarBg: '#9333ea',
+      tags: [
+        { name: 'Customer', type: 'customer' },
+        { name: 'Urgent', type: 'urgent' }
+      ],
+      snippet: 'Please verify the expedited in-hands delivery date...',
+      body: 'Please verify the expedited in-hands delivery date for purchase order #315980. Our regional distribution centres are preparing display endcaps for May 4th.\n\nWe require tracking identification as soon as pallet staging is completed.',
+      signOff: 'Sincerely,\nMarcus Vance\nSupply Operations\nApex Incentives',
+      attachments: [
+        { name: 'Apex_PO_315980_Specs.pdf', size: '420 KB', type: 'pdf' }
+      ],
+      related: {
+        poNumber: '#315980',
+        vendor: 'Apex Incentives (Client)',
+        tracking: 'Order Staged',
+        estimatedDelivery: 'May 04, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
+    },
+    {
+      id: 'thread-snoozed-1',
+      senderName: 'FastTrack Cargo',
+      senderCompany: 'FastTrack Freight',
+      senderEmail: 'dispatch@fasttrackcargo.com',
+      to: 'supply.chain@stark.com',
+      cc: '',
+      subject: 'Dock Appointment Confirmation #FT-4410',
+      timestamp: 'Apr 15',
+      fullDate: 'Tue, Apr 15, 2026 9:00 AM',
+      folder: 'snoozed',
+      snoozed: true,
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: true,
+      category: 'shipping',
+      mentions: false,
+      avatar: 'FT',
+      avatarBg: '#0284c7',
+      tags: [{ name: 'Shipment', type: 'shipment' }],
+      snippet: 'Your dock appointment has been confirmed for Friday...',
+      body: 'Your dock appointment has been confirmed for Friday at Bay 2. Staging slots have been reserved for linehaul carrier arrival.',
+      signOff: 'FastTrack Dispatch Operations',
+      attachments: [],
+      related: {
+        poNumber: 'FT-4410',
+        vendor: 'FastTrack Freight',
+        tracking: 'FT-4410-DOCK',
+        estimatedDelivery: 'Apr 25, 2026',
+        orderUrl: 'shipment-tracking.html'
+      }
+    },
+    {
+      id: 'thread-snoozed-2',
+      senderName: 'FedEx Freight',
+      senderCompany: 'FedEx Logistics',
+      senderEmail: 'freight-notice@fedex.com',
+      to: 'supply.chain@stark.com',
+      cc: '',
+      subject: 'Intermodal Transfer Notification #FX-88219',
+      timestamp: 'Apr 14',
+      fullDate: 'Mon, Apr 14, 2026 4:30 PM',
+      folder: 'snoozed',
+      snoozed: true,
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: true,
+      category: 'shipping',
+      mentions: false,
+      avatar: 'FX',
+      avatarBg: '#4f46e5',
+      tags: [{ name: 'Shipment', type: 'shipment' }],
+      snippet: 'Freight has completed intermodal rail exchange...',
+      body: 'Freight consignment has completed intermodal rail exchange in Atlanta terminal and is scheduled for final leg linehaul departure tomorrow morning.',
+      signOff: 'FedEx Priority Freight Hub',
+      attachments: [],
+      related: {
+        poNumber: 'FX-88219',
+        vendor: 'FedEx Freight',
+        tracking: 'FX-88219-EXP',
+        estimatedDelivery: 'Apr 26, 2026',
+        orderUrl: 'shipment-tracking.html'
+      }
+    },
+    {
+      id: 'thread-draft-1',
+      senderName: 'Me',
+      senderCompany: 'Stark Operations',
+      senderEmail: 'supply.chain@stark.com',
+      to: 'james.smith@globalpartsco.com',
+      cc: 'procurement@stark.com',
+      subject: 'Draft: Revised Delivery Schedule for PO #87366',
+      timestamp: 'Draft',
+      fullDate: 'Mon, Apr 21, 2026 10:45 AM',
+      folder: 'drafts',
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: true,
+      category: 'drafts',
+      mentions: false,
+      avatar: 'ME',
+      avatarBg: '#0f766e',
+      tags: [{ name: 'PO', type: 'po' }],
+      snippet: 'Hi James, please find updated delivery windows for PO...',
+      body: 'Hi James,\n\nPlease find updated delivery windows for PO #87366. We have coordinated with receiving to ensure Bay 3 is available.',
+      signOff: 'Stark Supply Chain Operations',
+      attachments: [],
+      related: {
+        poNumber: '#87366',
+        vendor: 'Global Parts Co.',
+        tracking: 'Pending Dispatch',
+        estimatedDelivery: 'Apr 24, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
+    },
+    {
+      id: 'thread-draft-2',
+      senderName: 'Me',
+      senderCompany: 'Stark Operations',
+      senderEmail: 'supply.chain@stark.com',
+      to: 'rachel.lee@northstarauto.com',
+      cc: 'sales@stark.com',
+      subject: 'Draft: Ceramic Brake Pads Allocation Confirmation',
+      timestamp: 'Draft',
+      fullDate: 'Mon, Apr 21, 2026 9:55 AM',
+      folder: 'drafts',
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: true,
+      category: 'drafts',
+      mentions: false,
+      avatar: 'ME',
+      avatarBg: '#0f766e',
+      tags: [{ name: 'Customer', type: 'customer' }],
+      snippet: 'Hi Rachel, confirming 450 units ATS reserved for your East Coast hub...',
+      body: 'Hi Rachel,\n\nConfirming that 450 units of Ceramic Brake Pads ATS have been reserved for your East Coast fulfillment hub.',
+      signOff: 'Stark Supply Chain Operations',
+      attachments: [],
+      related: {
+        poNumber: '#ORD-NSA-9921',
+        vendor: 'Northstar Auto (Client)',
+        tracking: 'Staged Allocation',
+        estimatedDelivery: 'Apr 26, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
+    },
+    {
+      id: 'thread-draft-3',
+      senderName: 'Me',
+      senderCompany: 'Stark Operations',
+      senderEmail: 'supply.chain@stark.com',
+      to: 's.patel@autotechsupplies.com',
+      cc: 'finance@stark.com',
+      subject: 'Draft: Wire Transfer Approval for INV-77821',
+      timestamp: 'Draft',
+      fullDate: 'Sun, Apr 20, 2026 3:30 PM',
+      folder: 'drafts',
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: false,
+      category: 'drafts',
+      mentions: false,
+      avatar: 'ME',
+      avatarBg: '#0f766e',
+      tags: [{ name: 'Invoice', type: 'invoice' }],
+      snippet: 'Hi Sarah, the AP voucher has been authorized for invoice...',
+      body: 'Hi Sarah,\n\nThe AP voucher has been authorized for invoice INV-77821 under standard 2/10 Net 30 terms.',
+      signOff: 'Stark Finance & Supply Chain',
+      attachments: [],
+      related: {
+        poNumber: '#87210-INV',
+        vendor: 'AutoTech Supplies',
+        tracking: 'Wire Pending',
+        estimatedDelivery: 'May 20, 2026',
+        orderUrl: 'vendor-management/vendors.html'
+      }
+    },
+    {
+      id: 'thread-sent-1',
+      senderName: 'Me',
+      senderCompany: 'Stark Operations',
+      senderEmail: 'supply.chain@stark.com',
+      to: 'james.smith@globalpartsco.com',
+      cc: 'procurement@stark.com',
+      subject: 'Re: Staging Bay Confirmation PO #87366',
+      timestamp: 'Yesterday',
+      fullDate: 'Sun, Apr 20, 2026 5:00 PM',
+      folder: 'sent',
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: true,
+      category: 'sent',
+      mentions: false,
+      avatar: 'ME',
+      avatarBg: '#0f766e',
+      tags: [{ name: 'PO', type: 'po' }],
+      snippet: 'Confirmed staging slot at Sarasota DC Bay 3...',
+      body: 'Confirmed staging slot at Sarasota DC Bay 3. Our dock crew will be standing by for freight unloading on arrival.',
+      signOff: 'Stark Supply Chain Operations',
+      attachments: [],
+      related: {
+        poNumber: '#87366',
+        vendor: 'Global Parts Co.',
+        tracking: 'DHL4567823',
+        estimatedDelivery: 'Apr 24, 2026',
+        orderUrl: 'shipment-tracking.html'
+      }
+    },
+    {
+      id: 'thread-sent-2',
+      senderName: 'Me',
+      senderCompany: 'Stark Operations',
+      senderEmail: 'supply.chain@stark.com',
+      to: 'm.khan@stark.com',
+      cc: '',
+      subject: 'Re: Q3 Procurement Forecast Feedback',
+      timestamp: 'Apr 19',
+      fullDate: 'Sat, Apr 19, 2026 11:20 AM',
+      folder: 'sent',
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: false,
+      category: 'sent',
+      mentions: false,
+      avatar: 'ME',
+      avatarBg: '#0f766e',
+      tags: [],
+      snippet: 'Michael, demand projections aligned with warehouse capacity...',
+      body: 'Michael,\n\nDemand projections have been aligned with warehouse capacity models. Ready for Monday review.',
+      signOff: 'Stark Operations Lead',
+      attachments: [],
+      related: {
+        poNumber: 'PLAN-Q3-2026',
+        vendor: 'Stark Planning Dept',
+        tracking: 'Internal Strategy',
+        estimatedDelivery: 'Q3 Rollout',
+        orderUrl: 'procurement-planning.html'
+      }
+    },
+    {
+      id: 'thread-cust-3',
+      senderName: 'Sophia Martinez',
+      senderCompany: 'Pinnacle Fleet Solutions',
+      senderEmail: 'smartinez@pinnaclefleet.com',
+      to: 'customer.orders@stark.com',
+      cc: 'sales@stark.com',
+      subject: 'Expedited Reorder - Transmission Bearings #ORD-7729',
+      timestamp: 'Apr 16',
+      fullDate: 'Wed, Apr 16, 2026 11:40 AM',
+      folder: 'customer',
+      teamMailbox: 'customer',
+      unread: false,
+      starred: false,
+      flagged: true,
+      orderRelated: true,
+      category: 'customer',
+      mentions: false,
+      avatar: 'SM',
+      avatarBg: '#db2777',
+      tags: [{ name: 'Customer', type: 'customer' }, { name: 'Urgent', type: 'urgent' }],
+      snippet: 'Requesting priority shipment for 300 transmission bearings...',
+      body: 'Requesting priority shipment for 300 transmission bearings under purchase order #ORD-7729 to replenish Midwest service centers.',
+      signOff: 'Sophia Martinez\nPinnacle Fleet Logistics',
+      attachments: [{ name: 'Transmission_Bearings_RFQ_7729.pdf', size: '210 KB', type: 'pdf' }],
+      related: {
+        poNumber: '#ORD-7729',
+        vendor: 'Pinnacle Fleet Solutions',
+        tracking: 'Priority Prep',
+        estimatedDelivery: 'Apr 28, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
+    },
+    {
+      id: 'thread-cust-4',
+      senderName: 'Kevin Chen',
+      senderCompany: 'Horizon Dynamics',
+      senderEmail: 'kchen@horizondynamics.com',
+      to: 'customer.orders@stark.com',
+      cc: '',
+      subject: 'Purchase Agreement #HD-2026-B Batch Release',
+      timestamp: 'Apr 15',
+      fullDate: 'Tue, Apr 15, 2026 2:15 PM',
+      folder: 'customer',
+      teamMailbox: 'customer',
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: true,
+      category: 'customer',
+      mentions: false,
+      avatar: 'KC',
+      avatarBg: '#2563eb',
+      tags: [{ name: 'Customer', type: 'customer' }],
+      snippet: 'Batch release request for contract shipment HD-2026-B...',
+      body: 'Submitting formal release request for Batch 4 under master agreement #HD-2026-B. Delivery to be routed to Charlotte depot.',
+      signOff: 'Kevin Chen\nHorizon Dynamics Procurement',
+      attachments: [],
+      related: {
+        poNumber: '#HD-2026-B',
+        vendor: 'Horizon Dynamics',
+        tracking: 'Scheduled Release',
+        estimatedDelivery: 'May 02, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
+    },
+    {
+      id: 'thread-cust-5',
+      senderName: 'Amanda Scott',
+      senderCompany: 'Quantum Mobility',
+      senderEmail: 'ascott@quantummobility.com',
+      to: 'customer.orders@stark.com',
+      cc: '',
+      subject: 'Order #314002 Delivery Routing Update',
+      timestamp: 'Apr 14',
+      fullDate: 'Mon, Apr 14, 2026 10:10 AM',
+      folder: 'customer',
+      teamMailbox: 'customer',
+      unread: false,
+      starred: false,
+      flagged: false,
+      orderRelated: true,
+      category: 'customer',
+      mentions: false,
+      avatar: 'AS',
+      avatarBg: '#d97706',
+      tags: [{ name: 'Customer', type: 'customer' }],
+      snippet: 'Updated delivery instructions for order #314002...',
+      body: 'Updated delivery instructions for order #314002. Please ensure dock liftgate service is designated on carrier dispatch.',
+      signOff: 'Amanda Scott\nQuantum Mobility Materials Lead',
+      attachments: [],
+      related: {
+        poNumber: '#314002',
+        vendor: 'Quantum Mobility',
+        tracking: 'Routing Verified',
+        estimatedDelivery: 'May 05, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
     }
   ];
 
@@ -397,6 +804,33 @@
   let mailboxFilter = 'all';
   let labelFilter = 'all';
   let timeFilter = 'all';
+
+  // Category & Folder helpers
+  const isInternal = t => t.id === 'thread-4' || t.id === 'thread-9';
+  const isVendor = t => ['thread-1', 'thread-5', 'thread-6', 'thread-10'].includes(t.id);
+  const isCustomer = t => ['thread-2', 'thread-8', 'thread-12', 'thread-cust-3', 'thread-cust-4', 'thread-cust-5'].includes(t.id);
+  const isProcurement = t => ['thread-1', 'thread-4', 'thread-5'].includes(t.id);
+  const isShipping = t => ['thread-3', 'thread-7', 'thread-11', 'thread-snoozed-1', 'thread-snoozed-2'].includes(t.id);
+  const isShared = t => ['thread-1', 'thread-2', 'thread-3', 'thread-5', 'thread-6', 'thread-7', 'thread-8', 'thread-10'].includes(t.id);
+
+  function getSidebarCounts() {
+    return {
+      inbox: threads.filter(t => t.folder === 'inbox').length,
+      starred: threads.filter(t => t.starred).length,
+      snoozed: threads.filter(t => t.snoozed || t.folder === 'snoozed').length,
+      drafts: threads.filter(t => t.folder === 'drafts').length,
+      shared: threads.filter(isShared).length,
+      vendor: threads.filter(isVendor).length,
+      customer: threads.filter(isCustomer).length,
+      procurement: threads.filter(isProcurement).length,
+      shipping: threads.filter(isShipping).length,
+      internal: threads.filter(isInternal).length,
+      unread: threads.filter(t => t.unread).length,
+      flagged: threads.filter(t => t.flagged).length,
+      attachments: threads.filter(t => t.attachments && t.attachments.length > 0).length,
+      orderRelated: threads.filter(t => t.orderRelated && t.folder === 'inbox').length
+    };
+  }
 
   function notice(msg, error = false) {
     if (window.StarkSystemUI?.notice) {
@@ -413,11 +847,23 @@
   function getFilteredThreads() {
     return threads.filter(t => {
       // Folder filtering
+      if (activeFolder === 'inbox' && t.folder !== 'inbox') return false;
       if (activeFolder === 'starred' && !t.starred) return false;
+      if (activeFolder === 'snoozed' && !(t.snoozed || t.folder === 'snoozed')) return false;
+      if (activeFolder === 'sent' && t.folder !== 'sent') return false;
+      if (activeFolder === 'drafts' && t.folder !== 'drafts') return false;
+      if (activeFolder === 'archive' && t.folder !== 'archive') return false;
+      if (activeFolder === 'trash' && t.folder !== 'trash') return false;
+      if (activeFolder === 'shared' && !isShared(t)) return false;
+      if (activeFolder === 'vendor' && !isVendor(t)) return false;
+      if (activeFolder === 'customer' && !isCustomer(t)) return false;
+      if (activeFolder === 'procurement' && !isProcurement(t)) return false;
+      if (activeFolder === 'shipping' && !isShipping(t)) return false;
+      if (activeFolder === 'internal' && !isInternal(t)) return false;
       if (activeFolder === 'unread' && !t.unread) return false;
       if (activeFolder === 'flagged' && !t.flagged) return false;
       if (activeFolder === 'attachments' && (!t.attachments || t.attachments.length === 0)) return false;
-      if (activeFolder === 'orderRelated' && !t.orderRelated) return false;
+      if (activeFolder === 'orderRelated' && !(t.orderRelated && t.folder === 'inbox')) return false;
 
       // Tab filtering
       if (activeFilterTab === 'unread' && !t.unread) return false;
@@ -553,6 +999,7 @@
   }
 
   function renderSidebar() {
+    const c = getSidebarCounts();
     return `
       <aside class="mail-col-sidebar" aria-label="Mailbox folders and categories">
         <button type="button" class="mail-compose-btn" id="btn-mail-compose">
@@ -578,7 +1025,7 @@
                   <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
                 </svg>
                 <span class="mail-nav-label">Inbox</span>
-                <span class="mail-nav-count active-count">12</span>
+                <span class="mail-nav-count active-count">${c.inbox}</span>
               </button>
             </li>
             <li>
@@ -587,7 +1034,7 @@
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
                 <span class="mail-nav-label">Starred</span>
-                <span class="mail-nav-count">4</span>
+                <span class="mail-nav-count">${c.starred}</span>
               </button>
             </li>
             <li>
@@ -596,7 +1043,7 @@
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
                 <span class="mail-nav-label">Snoozed</span>
-                <span class="mail-nav-count">2</span>
+                <span class="mail-nav-count">${c.snoozed}</span>
               </button>
             </li>
             <li>
@@ -614,7 +1061,7 @@
                   <polyline points="14 2 14 8 20 8"/>
                 </svg>
                 <span class="mail-nav-label">Drafts</span>
-                <span class="mail-nav-count">3</span>
+                <span class="mail-nav-count">${c.drafts}</span>
               </button>
             </li>
             <li>
@@ -645,7 +1092,7 @@
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
                 <span class="mail-nav-label">Shared Mailbox</span>
-                <span class="mail-nav-count">8</span>
+                <span class="mail-nav-count">${c.shared}</span>
               </button>
             </li>
             <li>
@@ -654,7 +1101,7 @@
                   <path d="M3 21h18M5 21V9l7-6 7 6v12M9 21v-6h6v6"/>
                 </svg>
                 <span class="mail-nav-label">Vendor Communications</span>
-                <span class="mail-nav-count">4</span>
+                <span class="mail-nav-count">${c.vendor}</span>
               </button>
             </li>
             <li>
@@ -663,7 +1110,7 @@
                   <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                 </svg>
                 <span class="mail-nav-label">Customer Orders</span>
-                <span class="mail-nav-count">6</span>
+                <span class="mail-nav-count">${c.customer}</span>
               </button>
             </li>
             <li>
@@ -672,7 +1119,7 @@
                   <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
                 </svg>
                 <span class="mail-nav-label">Procurement</span>
-                <span class="mail-nav-count">3</span>
+                <span class="mail-nav-count">${c.procurement}</span>
               </button>
             </li>
             <li>
@@ -681,7 +1128,7 @@
                   <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
                 </svg>
                 <span class="mail-nav-label">Shipping Updates</span>
-                <span class="mail-nav-count">5</span>
+                <span class="mail-nav-count">${c.shipping}</span>
               </button>
             </li>
             <li>
@@ -690,7 +1137,7 @@
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                 </svg>
                 <span class="mail-nav-label">Internal Ops</span>
-                <span class="mail-nav-count">2</span>
+                <span class="mail-nav-count">${c.internal}</span>
               </button>
             </li>
           </ul>
@@ -705,7 +1152,7 @@
                   <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
                 </svg>
                 <span class="mail-nav-label">Unread</span>
-                <span class="mail-nav-count">12</span>
+                <span class="mail-nav-count">${c.unread}</span>
               </button>
             </li>
             <li>
@@ -714,7 +1161,7 @@
                   <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
                 </svg>
                 <span class="mail-nav-label">Flagged</span>
-                <span class="mail-nav-count">4</span>
+                <span class="mail-nav-count">${c.flagged}</span>
               </button>
             </li>
             <li>
@@ -723,7 +1170,7 @@
                   <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
                 <span class="mail-nav-label">With Attachments</span>
-                <span class="mail-nav-count">7</span>
+                <span class="mail-nav-count">${c.attachments}</span>
               </button>
             </li>
             <li>
@@ -732,7 +1179,7 @@
                   <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
                 </svg>
                 <span class="mail-nav-label">Order Related</span>
-                <span class="mail-nav-count">10</span>
+                <span class="mail-nav-count">${c.orderRelated}</span>
               </button>
             </li>
           </ul>
@@ -1341,11 +1788,26 @@ Stark Supply Chain Operations</textarea>
     root.querySelectorAll('.mail-nav-item').forEach(btn => {
       btn.onclick = () => {
         activeFolder = btn.dataset.folder;
-        root.querySelectorAll('.mail-nav-item').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        updateThreadList();
+        const filtered = getFilteredThreads();
+        if (filtered.length > 0 && !filtered.some(t => t.id === activeThreadId)) {
+          activeThreadId = filtered[0].id;
+        }
+        updateView();
       };
     });
+
+    // Reset filters button
+    const resetFiltersBtn = root.querySelector('#btn-reset-filters');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.onclick = () => {
+        activeFolder = 'inbox';
+        activeFilterTab = 'all';
+        searchQuery = '';
+        labelFilter = 'all';
+        mailboxFilter = 'all';
+        updateView();
+      };
+    }
 
     // List header tabs
     root.querySelectorAll('.mail-list-tab').forEach(tab => {

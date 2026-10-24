@@ -11318,9 +11318,20 @@ body.stark-system.is-mail .system-submodule-bar {
 }
 
 .mail-nav-item.active {
-  background: #e0f2fe;
-  color: #0369a1;
-  font-weight: 600;
+  background: #f0f4f8 !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+.mail-nav-item.active svg {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+.mail-nav-item.active .mail-nav-count {
+  color: #0f172a !important;
+  font-weight: 600 !important;
 }
 
 .mail-nav-item svg {
