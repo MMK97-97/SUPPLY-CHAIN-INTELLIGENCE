@@ -70,19 +70,16 @@ body.stark-system:has(.portfolio-demo-ribbon) {
   padding-top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px) + var(--sys-subnav-h, 38px) + 34px) !important;
 }
 
-body.stark-system.is-home {
-  padding-top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px)) !important;
+body.stark-system.is-home,
+body.stark-system[data-system-page="dashboard"],
+body.stark-system.is-mail,
+body.stark-system[data-system-page="mail"],
+body.stark-system.stark-mail-page {
+  padding-top: var(--sys-header-h, 68px) !important;
 }
 
-body.stark-system.is-home:has(.portfolio-demo-ribbon) {
-  padding-top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px) + 34px) !important;
-}
-
-body.stark-system.is-home .portfolio-demo-ribbon {
-  top: calc(var(--sys-header-h, 68px) + var(--sys-tabs-h, 46px)) !important;
-}
-
-body.stark-system.is-home .system-submodule-bar {
+body.stark-system.is-home .system-submodule-bar,
+body.stark-system.is-mail .system-submodule-bar {
   display: none !important;
 }
 
@@ -12800,3 +12797,97 @@ body[data-system-page="mail"] #system-submodule-bar,
   line-height: 1.35 !important;
 }
 
+
+/* ---------------- HOME & STARK MAIL PAGE SPACING REFINEMENT ---------------- */
+body.is-home,
+body[data-system-page="dashboard"] {
+  padding-top: var(--sys-header-h, 68px) !important;
+}
+
+body.is-home .system-page,
+body[data-system-page="dashboard"] .system-page {
+  padding-top: 14px !important;
+  padding-bottom: 32px !important;
+}
+
+/* Home Clean Header with Tabs & Layout Restore */
+.workspace-overview-header.workspace-clean-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 16px !important;
+  padding: 4px 0 14px 0 !important;
+  border-bottom: 1px solid var(--sys-slate-200) !important;
+}
+
+.workspace-overview-header.workspace-clean-header .workspace-view-switch {
+  margin-left: 0 !important;
+}
+
+.workspace-overview-header.workspace-clean-header .reset-layout-btn {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 6px 14px !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.workspace-overview-header.workspace-clean-header .reset-layout-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+/* STARK Mail Clean Top Spacing */
+body.is-mail,
+body[data-system-page="mail"],
+.stark-mail-page {
+  padding-top: var(--sys-header-h, 68px) !important;
+}
+
+body.is-mail main#stark-mail-content,
+body[data-system-page="mail"] main#stark-mail-content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mail-workspace-nav {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 24px !important;
+  background: #f4f7fc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  min-height: 52px !important;
+  box-sizing: border-box !important;
+}
+
+.stark-mail-container {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: calc(100vh - 120px) !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  box-sizing: border-box !important;
+}
+
+.stark-mail-subheader {
+  padding: 10px 24px !important;
+}
+
+.stark-mail-workspace {
+  min-height: calc(100vh - 180px) !important;
+}
+
+@media (max-width: 820px) {
+  body.stark-system.is-home,
+  body.stark-system[data-system-page="dashboard"],
+  body.stark-system.is-mail,
+  body.stark-system[data-system-page="mail"] {
+    padding-top: 70px !important;
+  }
+}

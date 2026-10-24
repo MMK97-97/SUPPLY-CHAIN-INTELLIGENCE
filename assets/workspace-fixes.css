@@ -16,3 +16,19 @@ body.stark-system .reorder-title,body.stark-system .reorder-title :is(h1,h2,h3,p
 #system-module-tabs > a[href*="inventory-analysis-report"],#system-navigation a[href*="inventory-analysis-report"],.premium-side-rail a[href*="inventory-analysis-report"],.system-header #system-ai-toggle,#system-module-tabs > a[href*="mk-brain.html"]{display:none!important}
 @media(max-width:720px){body.stark-system :is(.modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop){padding:12px}body.stark-system :is(.modal,.sys-modal){max-height:calc(100dvh - 24px);padding:18px}.reorder-history-grid{grid-template-columns:1fr}.reorder-history-toolbar{width:100%}.reorder-history-toolbar button{flex:1}.reorder-history-heading{gap:12px}body.stark-system .mk-brain-head{padding:12px!important;gap:8px}body.stark-system .mk-brain-title strong{font-size:13px}}
 html.stark-page-loading::before, html.stark-auth-pending::before { pointer-events: none !important; }
+
+
+/* Home Page & STARK Mail Tight Spacing */
+body.stark-system.is-home,
+body.stark-system[data-system-page="dashboard"],
+body.stark-system.is-mail,
+body.stark-system[data-system-page="mail"],
+body.stark-system.stark-mail-page {
+  padding-top: var(--sys-header-h, 68px) !important;
+}
+
+body.is-home .system-page,
+body[data-system-page="dashboard"] .system-page {
+  padding-top: 14px !important;
+  padding-bottom: 32px !important;
+}

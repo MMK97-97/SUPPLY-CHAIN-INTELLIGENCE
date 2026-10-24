@@ -276,12 +276,7 @@
 
   function renderModuleGrid(allGroups) {
     return `
-      <div class="workspace-overview-header">
-        <div class="workspace-overview-meta">
-          <span class="workspace-overview-badge"><i></i>Connected Operational Workspace</span>
-          <h1>Supply Chain Intelligence</h1>
-          <p>Integrated operational modules for global replenishment, orders, warehousing, partner 3PL and transportation.</p>
-        </div>
+      <div class="workspace-overview-header workspace-clean-header">
         <div class="workspace-view-switch" role="tablist" aria-label="Workspace View">
           <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
             ▦ Operational Modules
@@ -296,12 +291,12 @@
             📊 Telemetry &amp; KPIs
           </button>
         </div>
+        <div class="workspace-actions-wrap">
+          <button type="button" class="sys-btn reset-layout-btn" data-reset-module-layout title="Restore default grid arrangement">Restore layout</button>
+        </div>
+        <p id="module-arrangement-help" class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0">Drag a module header to place it anywhere. Moved modules expand with the arrow. Alt + arrow keys move a focused header.</p>
       </div>
 
-      <div class="module-arrangement-toolbar">
-        <p id="module-arrangement-help">Drag a module header to place it anywhere. Moved modules expand with the arrow. Alt + arrow keys move a focused header.</p>
-        <button type="button" class="sys-btn" data-reset-module-layout>Restore module layout</button>
-      </div>
       <div class="module-overview-grid">
         ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction]) => `
           <article class="module-overview-card" data-draggable-module="${id}" style="--card-accent:${color}">
@@ -916,12 +911,7 @@
       const creditSpark=[22,24,25,27,26,28,29];
 
       host.innerHTML = `
-        <div class="workspace-overview-header">
-          <div class="workspace-overview-meta">
-            <span class="workspace-overview-badge"><i></i>Live Operations Control Tower</span>
-            <h1>Fulfillment &amp; Demand Telemetry</h1>
-            <p>Real-time analytics across ${esc(model.regionName)} orders, stock allocations, supplier commitments and fulfillment.</p>
-          </div>
+        <div class="workspace-overview-header workspace-clean-header">
           <div class="workspace-view-switch" role="tablist" aria-label="Workspace View">
             <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
               ▦ Operational Modules
