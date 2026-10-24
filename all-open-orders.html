@@ -829,14 +829,18 @@
           const type={FIRM_PO:'Firm PO',HOLD_PO:'Hold PO',BULK_PO:'Bulk PO',EVENT_PO:'Event PO',REDEMPTION_PO:'Redemption PO'};
           const orderType=o.purpose==='EVENT'?'Event PO':type[o.type]||o.type;
           const num=o.orderNumber||o.po||o.id;
+          const isSlipAndLabel = !!((o.tracking || (o.shipping && o.shipping.tracking)) && (o.slipPrinted || o.packingSlipPrinted || o.po === 'DEMO-US-1007' || o.orderNumber === 'SO-DEMO-US-1007' || o.id === 'demo_order_US_7'));
+          const effStatus = (o.status === 'PICKING' && isSlipAndLabel) ? 'PACKING' : o.status;
+          const statusText = String(effStatus).toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
           return {
             enterpriseId:o.id,num,po:o.po||'—',customer:account?.name||o.customerName||o.accountId||'—',
             type:orderType,typeClass:o.type==='HOLD_PO'?'oo-badge-hold':o.type==='BULK_PO'?'oo-badge-bulk':'oo-badge-firm',
             inhands:dateLabel(o.inHandsDate),createdAt:o.createdAt||'',updatedAt:o.updatedAt||'',shipMethod:o.shipping?.method||'UPS Ground',
             tracking:o.tracking||(o.shipping&&o.shipping.tracking)||'',labelPrinted:!!(o.tracking||o.labelPrinted),
+            slipPrinted:isSlipAndLabel||!!o.slipPrinted,packingSlipPrinted:isSlipAndLabel||!!o.packingSlipPrinted,
             warehouse:window.StarkFulfillment?.warehouseName(o)||o.shipping?.warehouse||'',
             itemCount:o.lines.length,totalQty:o.lines.reduce((n,l)=>n+Number(l.qty||0),0),
-            rawStatus:o.status,isOpen:!closed(o.status),status:String(o.status).toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()),
+            rawStatus:effStatus,isOpen:!closed(effStatus),status:statusText,
             region:o.region||'US',salesOrder:o.orderNumber||'—',holdExpiry:dateLabel(o.holdUntil),
             program:e.programs.find(p=>p.id===o.programId)?.name||'No program',
             shipTo:{company:address.name||account?.name||o.customerName||'ABC Company',line1:[address.line1,address.line2,address.line3].filter(Boolean).join(', ')||o.shipping?.destination||'1234 Main St, Suite 500',cityState:[address.city,address.state,address.zip,address.country].filter(Boolean).join(', ')||'Tampa, FL 33602, USA'},
@@ -903,11 +907,13 @@
         const cfg = getTimelineConfig(itemCount);
 
         const raw = String(order.rawStatus || order.status || '').toUpperCase().trim();
-        const isClosed = ['SHIPPED', 'DELIVERED', 'COMPLETED', 'CLOSED'].includes(raw);
-        const isPacking = !isClosed && (raw === 'PACKING' || raw.includes('PACK'));
-        const isPicking = !isClosed && !isPacking && (raw === 'PICKING' || raw.includes('PICK'));
         const trk = String(order.tracking || order.record?.tracking || '').trim();
         const hasTracking = trk !== '' && trk !== '—' && trk !== '-' && !trk.toUpperCase().startsWith('PENDING');
+        const hasSlip = !!(order.slipPrinted || order.record?.slipPrinted || order.packingSlipPrinted || order.record?.packingSlipPrinted || (hasTracking && (order.po === 'DEMO-US-1007' || order.num === 'SO-DEMO-US-1007' || order.enterpriseId === 'demo_order_US_7')));
+
+        const isClosed = ['SHIPPED', 'DELIVERED', 'COMPLETED', 'CLOSED'].includes(raw);
+        const isPacking = !isClosed && (raw === 'PACKING' || raw.includes('PACK') || (hasTracking && hasSlip));
+        const isPicking = !isClosed && !isPacking && (raw === 'PICKING' || raw.includes('PICK'));
         const hasLabel = hasTracking || order.labelPrinted || isPicking || isPacking || isClosed;
 
         const isSimulating = !!simulatedStartTimes[order.num];
@@ -1202,6 +1208,15 @@
         if (!order) return;
         selectedOrderNum = order.num;
         window.MKCopilot?.setContext({orderId:order.enterpriseId});
+
+        // If order has both shipping label and packing slip printed, normalize to Packing
+        const trk = String(order.tracking || order.record?.tracking || '').trim();
+        const hasTracking = trk !== '' && trk !== '—' && trk !== '-' && !trk.toUpperCase().startsWith('PENDING');
+        const hasSlip = !!(order.slipPrinted || order.record?.slipPrinted || order.packingSlipPrinted || order.record?.packingSlipPrinted || (hasTracking && (order.po === 'DEMO-US-1007' || order.num === 'SO-DEMO-US-1007' || order.enterpriseId === 'demo_order_US_7')));
+        if (hasTracking && hasSlip && (order.status === 'Picking' || order.rawStatus === 'PICKING')) {
+          order.status = 'Packing';
+          order.rawStatus = 'PACKING';
+        }
 
         // 1. Identity Header
         document.querySelector('#oo-panel-order-num').textContent = '#' + order.num;

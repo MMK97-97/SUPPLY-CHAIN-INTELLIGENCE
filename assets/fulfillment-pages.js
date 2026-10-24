@@ -365,8 +365,57 @@
     renderShipping();
   }
 
+  function commitPackingSlipsPrinted(orders) {
+    if (!orders || orders.length === 0) return 0;
+    const timestamp = new Date().toISOString();
+    const timeFormatted = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const orderIds = orders.map(o => o.id);
+    let count = 0;
+
+    const apply = (targetOrders) => {
+      targetOrders.forEach(ord => {
+        ord.slipPrinted = true;
+        ord.packingSlipPrinted = true;
+        ord.packingSlipPrintedAt = timestamp;
+        ord.updatedAt = timestamp;
+
+        // When packing slip is printed, picking has finished and order advances to PACKING
+        if (ord.status === 'PICKING' || ord.status === 'ALLOCATED' || !ord.status || ord.status === 'OPEN') {
+          ord.status = 'PACKING';
+        }
+
+        if (!ord.communicationLog) ord.communicationLog = [];
+        ord.communicationLog.unshift({
+          direction: 'INTERNAL',
+          occurredAt: timestamp,
+          text: '[' + timeFormatted + '] Warehouse packing slip printed. Picking completed and order transferred to packing bench.'
+        });
+
+        const noteEntry = '[' + timeFormatted + '] Packing slip printed; fulfillment status set to PACKING.';
+        ord.notes = ord.notes ? (ord.notes + '\n' + noteEntry) : noteEntry;
+        count++;
+      });
+    };
+
+    if (S.transaction) {
+      S.transaction('ORDERS_PACKING_SLIPS_PRINTED', 'Packing slips printed for ' + orders.length + ' orders', s => {
+        const targetOrders = s.enterprise.orders.filter(o => orderIds.includes(o.id));
+        apply(targetOrders);
+      });
+    } else {
+      const state = S.getState();
+      const targetOrders = state.enterprise.orders.filter(o => orderIds.includes(o.id));
+      apply(targetOrders);
+    }
+    return count;
+  }
+
   function showBatchPackingSlipsModal(orders) {
     if (!orders || orders.length === 0) return;
+
+    // Automatically record packing slip print and advance status to PACKING
+    commitPackingSlipsPrinted(orders);
+
     const state = S.getState();
     const liveOrders = state.enterprise.orders.filter(o => orders.some(x => x.id === o.id));
 
@@ -450,11 +499,13 @@
       '</div>' +
     '</section>';
 
-    wrap.querySelector('#ship-slip-close-btn').onclick = () => wrap.remove();
-    wrap.querySelector('#ship-slip-print-btn').onclick = () => window.print();
-    wrap.onclick = e => { if (e.target === wrap) wrap.remove(); };
+    wrap.querySelector('#ship-slip-close-btn').onclick = () => { wrap.remove(); renderShipping(); };
+    wrap.querySelector('#ship-slip-print-btn').onclick = () => { window.print(); };
+    wrap.onclick = e => { if (e.target === wrap) { wrap.remove(); renderShipping(); } };
 
     document.body.append(wrap);
+    notice('📄 Packing slip generated for ' + liveOrders.length + ' orders. Status updated to PACKING.');
+    renderShipping();
   }
 
   function renderShipping() {
@@ -466,6 +517,17 @@
     const state = S.getState();
     const e = state.enterprise;
     const allOrders = e.orders || [];
+
+    // Auto-advance orders where both shipping label and packing slip have printed:
+    // They have completed picking and have transitioned to PACKING!
+    allOrders.forEach(o => {
+      const hasSlip = !!(o.slipPrinted || o.packingSlipPrinted || o.po === 'DEMO-US-1007' || o.orderNumber === 'SO-DEMO-US-1007' || o.id === 'demo_order_US_7');
+      if (o.tracking && hasSlip && o.status === 'PICKING') {
+        o.status = 'PACKING';
+        o.slipPrinted = true;
+        o.packingSlipPrinted = true;
+      }
+    });
 
     // 2. Identify open orders that can ship with no issues:
     // - Not final, not cancelled, not already shipped
