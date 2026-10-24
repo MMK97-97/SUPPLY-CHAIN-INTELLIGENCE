@@ -2082,7 +2082,7 @@ MK97 Supply Chain Operations</textarea>
             sender_name: 'You (Supply Chain)',
             sender_email: 'supply.chain@mk97.com',
             sender_company: 'MK97 Operations',
-            status: 'sent',
+            status: funcError ? 'logged_locally' : 'sent',
             created_at: new Date().toISOString()
           };
 
@@ -2105,8 +2105,12 @@ MK97 Supply Chain Operations</textarea>
             updateSidebarCounts();
           }
 
-          // 4. Show a clean toast notification confirming transmission
-          notice('Transmission confirmed: Outbound email sent successfully.');
+          // 4. Show a clean toast notification confirming transmission or explaining cloud deployment state
+          if (funcError) {
+            notice(`Saved to emails table. Notice: Edge Function 'send-sandbox-email' is not deployed on Supabase cloud (404 Not Found). Deploy it in your Supabase project to dispatch live emails.`, true);
+          } else {
+            notice('Transmission confirmed: Outbound email sent successfully.');
+          }
         } catch (err) {
           console.error('Error invoking send-sandbox-email:', err);
           notice('Transmission failed: ' + (err.message || 'Error sending email'), true);
