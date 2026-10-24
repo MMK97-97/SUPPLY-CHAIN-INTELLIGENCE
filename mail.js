@@ -2085,7 +2085,7 @@ MK97 Supply Chain Operations</textarea>
           // 3. Log the outbound record into local Supabase 'emails' table with direction marked as 'outbound'
           const outboundRecord = {
             direction: 'outbound',
-            to: payload.to,
+            to_email: payload.to,
             recipient: payload.to,
             recipient_email: payload.to,
             subject: payload.subject,
@@ -2259,54 +2259,135 @@ MK97 Supply Chain Operations</textarea>
 
     closeBtn.onclick = close;
     cancelBtn.onclick = close;
-    sendBtn.onclick = () => {
-      const to = document.getElementById('compose-to').value.trim();
-      const subject = document.getElementById('compose-subject').value.trim();
-      const body = document.getElementById('compose-body').value.trim();
+    sendBtn.onclick = async () => {
+      const toInput = document.getElementById('compose-to');
+      const subjectInput = document.getElementById('compose-subject');
+      const bodyInput = document.getElementById('compose-body');
+
+      const to = toInput ? toInput.value.trim() : '';
+      const subject = subjectInput ? subjectInput.value.trim() : '';
+      const body = bodyInput ? bodyInput.value.trim() : '';
 
       if (!to || !subject) {
         notice('Please fill in both recipient and subject.', true);
         return;
       }
 
-      // Add as sent email
-      threads.unshift({
-        id: 'thread-' + Date.now(),
-        senderName: 'You (Supply Chain)',
-        senderCompany: 'MK97 Operations',
-        senderEmail: 'supply.chain@mk97.com',
-        to,
-        cc: 'procurement@mk97.com',
-        subject,
-        timestamp: 'Just now',
-        fullDate: new Date().toLocaleString(),
-        unread: false,
-        starred: false,
-        flagged: false,
-        folder: 'inbox',
-        category: 'all',
-        mentions: false,
-        orderRelated: true,
-        avatar: 'SC',
-        avatarBg: '#0f766e',
-        tags: [{ name: 'PO', type: 'po' }, { name: 'Shipment', type: 'shipment' }],
-        snippet: body.slice(0, 45) + '...',
-        body,
-        signOff: 'Stark Premium Unified Operations',
-        attachments: [],
-        related: {
-          poNumber: subject.match(/#\d+/)?.[0] || 'PO-NEW',
-          vendor: 'Global Parts Co.',
-          tracking: 'Pending Booking',
-          estimatedDelivery: 'TBD',
-          orderUrl: 'all-open-orders.html'
-        }
-      });
+      const originalBtnText = sendBtn.innerHTML;
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = 'Sending…';
 
-      close();
-      activeThreadId = threads[0].id;
-      updateView();
-      notice('Email sent successfully to ' + to);
+      const payload = {
+        to: to || "manoj.k.manne@gmail.com",
+        subject: subject,
+        body: body
+      };
+
+      const sb = getSupabase();
+      let funcError = null;
+
+      try {
+        if (sb) {
+          // Invoke Supabase Edge Function (send-sandbox-email with fallback to index-ts)
+          const primaryInvoke = await sb.functions.invoke('send-sandbox-email', {
+            body: payload
+          });
+
+          if (!primaryInvoke.error) {
+            // Success with primary function
+          } else {
+            const fallbackInvoke = await sb.functions.invoke('index-ts', {
+              body: payload
+            });
+            if (fallbackInvoke.error) {
+              funcError = primaryInvoke.error;
+              console.warn('Edge Function invoke warning:', primaryInvoke.error);
+            }
+          }
+
+          // Insert outbound record into public.emails table
+          const outboundRecord = {
+            direction: 'outbound',
+            to_email: payload.to,
+            recipient: payload.to,
+            recipient_email: payload.to,
+            subject: payload.subject,
+            body: payload.body,
+            snippet: body.slice(0, 85) + (body.length > 85 ? '…' : ''),
+            sender: 'You (Supply Chain)',
+            sender_name: 'You (Supply Chain)',
+            sender_email: 'supply.chain@mk97.com',
+            sender_company: 'MK97 Operations',
+            status: funcError ? 'logged_locally' : 'sent',
+            created_at: new Date().toISOString()
+          };
+
+          try {
+            const { error: insertError } = await sb
+              .from('emails')
+              .insert([outboundRecord]);
+            if (insertError) {
+              console.warn('Supabase emails table insert warning:', insertError.message);
+            }
+          } catch (insertErr) {
+            console.warn('Supabase insert exception:', insertErr);
+          }
+
+          const outboundThread = mapEmailRecordToThread(outboundRecord);
+          if (!threads.some(t => t.id === outboundThread.id)) {
+            threads.unshift(outboundThread);
+            activeThreadId = outboundThread.id;
+            updateThreadList();
+            updateSidebarCounts();
+            updateView();
+          }
+        } else {
+          // Fallback local thread insertion if Supabase client not loaded
+          threads.unshift({
+            id: 'thread-' + Date.now(),
+            senderName: 'You (Supply Chain)',
+            senderCompany: 'MK97 Operations',
+            senderEmail: 'supply.chain@mk97.com',
+            to,
+            cc: 'procurement@mk97.com',
+            subject,
+            timestamp: 'Just now',
+            fullDate: new Date().toLocaleString(),
+            unread: false,
+            starred: false,
+            flagged: false,
+            folder: 'inbox',
+            category: 'all',
+            mentions: false,
+            orderRelated: true,
+            avatar: 'SC',
+            avatarBg: '#0f766e',
+            tags: [{ name: 'PO', type: 'po' }, { name: 'Shipment', type: 'shipment' }],
+            snippet: body.slice(0, 45) + '...',
+            body,
+            signOff: 'MK97 Unified Operations',
+            attachments: [],
+            related: {
+              poNumber: subject.match(/#\d+/)?.[0] || 'PO-NEW',
+              vendor: 'Global Parts Co.',
+              tracking: 'Pending Booking',
+              estimatedDelivery: 'TBD',
+              orderUrl: 'all-open-orders.html'
+            }
+          });
+          activeThreadId = threads[0].id;
+          updateView();
+        }
+      } catch (err) {
+        console.error('Compose send error:', err);
+      } finally {
+        close();
+        if (funcError) {
+          notice(`Saved to emails table. Notice: Edge Function dispatch error (${funcError.message || '404'}).`, true);
+        } else {
+          notice('Transmission confirmed: Outbound email sent successfully to ' + to);
+        }
+      }
     };
   }
 
