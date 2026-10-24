@@ -159,7 +159,8 @@ server.listen(8095, '127.0.0.1', async () => {
       openOrdersCheck.stepper[1].dot === '✓' && // Picking done
       openOrdersCheck.stepper[2].dot === '✓' && // Changed to packing done
       openOrdersCheck.stepper[3].dot === '✓' && // Packing slip printed done
-      openOrdersCheck.stepper[4].status.includes('active'); // Completed in progress
+      openOrdersCheck.stepper[4].status.includes('pending') && // Completed is pending while order is Packing
+      openOrdersCheck.stepper[4].dot === '5';
 
     console.log('\n========================================');
     console.log(passed ? '>>> VERIFICATION PASSED: 100% OPERATIONAL! <<<' : '>>> SOME VERIFICATIONS FAILED <<<');

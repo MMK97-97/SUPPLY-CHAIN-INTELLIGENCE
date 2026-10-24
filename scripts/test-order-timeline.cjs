@@ -181,24 +181,28 @@ server.listen(8098, '127.0.0.1', async () => {
     })()`);
     console.log('Tier Checks for Orders:', JSON.stringify(tierChecks, null, 2));
 
-    console.log('\n--- 4. Testing Live Simulation Toggle ---');
+    console.log('\n--- 4. Testing Removal of Time Logic & Sim Button & Packing Timeline Status ---');
     const simCheck = await evaluate(`(() => {
       const simBtn = document.querySelector('#oo-btn-sim-toggle');
-      if (!simBtn) return { error: 'Sim button not found' };
-      simBtn.click();
+      const allRows = Array.from(document.querySelectorAll('#oo-orders-tbody tr'));
+      const packingRow = allRows.find(r => r.textContent.includes('Packing') || r.textContent.includes('1007'));
+      if (packingRow) packingRow.click();
 
-      const flowActive = Array.from(document.querySelectorAll('#oo-ptd-flow-summary .oo-ptd-item')).map(s => ({
-        title: s.querySelector('.oo-ptd-step-title')?.textContent,
-        badge: s.querySelector('.oo-ptd-status-pill')?.textContent,
-        status: s.className
+      const stepperSteps = Array.from(document.querySelectorAll('#oo-stepper-track .oo-stepper-step')).map(s => ({
+        label: s.querySelector('.oo-stepper-label')?.textContent,
+        status: s.className,
+        dot: s.querySelector('.oo-stepper-dot')?.textContent
       }));
+      const step5 = stepperSteps.find(s => s.label === 'Completed');
 
       return {
-        simBtnText: simBtn.textContent,
-        flowActive
+        hasSimBtn: !!simBtn,
+        step5Dot: step5?.dot,
+        step5Status: step5?.status,
+        step5IsPending: step5?.dot === '5' && step5?.status.includes('pending') && !step5?.status.includes('active') && !step5?.status.includes('done')
       };
     })()`);
-    console.log('Simulation State:', JSON.stringify(simCheck, null, 2));
+    console.log('Time Logic & Sim Removal State:', JSON.stringify(simCheck, null, 2));
 
     console.log('\n--- 5. Testing Dedicated Timeline Tab Switch ---');
     const tabSwitchCheck = await evaluate(`(() => {
@@ -227,6 +231,8 @@ server.listen(8098, '127.0.0.1', async () => {
       timelineCheck.flowSteps[2].title === 'Changed to packing' &&
       timelineCheck.flowSteps[3].title === 'Packing slip printed' &&
       timelineCheck.flowSteps[4].title === 'Completed' &&
+      !simCheck.hasSimBtn &&
+      simCheck.step5IsPending &&
       tabSwitchCheck.paneActive &&
       tabSwitchCheck.dedicatedFlowCount === 5;
 
