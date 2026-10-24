@@ -832,7 +832,8 @@
           return {
             enterpriseId:o.id,num,po:o.po||'—',customer:account?.name||o.customerName||o.accountId||'—',
             type:orderType,typeClass:o.type==='HOLD_PO'?'oo-badge-hold':o.type==='BULK_PO'?'oo-badge-bulk':'oo-badge-firm',
-            inhands:dateLabel(o.inHandsDate),createdAt:o.createdAt||'',shipMethod:o.shipping?.method||'UPS Ground',
+            inhands:dateLabel(o.inHandsDate),createdAt:o.createdAt||'',updatedAt:o.updatedAt||'',shipMethod:o.shipping?.method||'UPS Ground',
+            tracking:o.tracking||(o.shipping&&o.shipping.tracking)||'',labelPrinted:!!(o.tracking||o.labelPrinted),
             warehouse:window.StarkFulfillment?.warehouseName(o)||o.shipping?.warehouse||'',
             itemCount:o.lines.length,totalQty:o.lines.reduce((n,l)=>n+Number(l.qty||0),0),
             rawStatus:o.status,isOpen:!closed(o.status),status:String(o.status).toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()),
@@ -901,44 +902,136 @@
         const itemCount = Number(order.itemCount || (order.items && order.items.length) || 1);
         const cfg = getTimelineConfig(itemCount);
 
-        let baseTime;
-        if (simulatedStartTimes[order.num]) {
-          baseTime = simulatedStartTimes[order.num];
-        } else if (order.createdAt && !isNaN(new Date(order.createdAt).getTime())) {
-          baseTime = new Date(order.createdAt).getTime();
+        const raw = String(order.rawStatus || order.status || '').toUpperCase().trim();
+        const isClosed = ['SHIPPED', 'DELIVERED', 'COMPLETED', 'CLOSED'].includes(raw);
+        const isPacking = !isClosed && (raw === 'PACKING' || raw.includes('PACK'));
+        const isPicking = !isClosed && !isPacking && (raw === 'PICKING' || raw.includes('PICK'));
+        const trk = String(order.tracking || order.record?.tracking || '').trim();
+        const hasTracking = trk !== '' && trk !== '—' && trk !== '-' && !trk.toUpperCase().startsWith('PENDING');
+        const hasLabel = hasTracking || order.labelPrinted || isPicking || isPacking || isClosed;
+
+        const isSimulating = !!simulatedStartTimes[order.num];
+
+        let step1Done = false, step1Active = false;
+        let step2Done = false, step2Active = false;
+        let step3Done = false;
+        let step4Done = false;
+        let step5Done = false, step5Active = false;
+
+        let secUntilPack = 0;
+        let secUntilComp = 0;
+
+        let tLabel = null;
+        let tPicking = null;
+        let tPacking = null;
+        let tSlip = null;
+        let tCompleted = null;
+
+        if (isSimulating) {
+          const baseTime = simulatedStartTimes[order.num];
+          const elapsedSec = Math.max(0, Math.floor((now - baseTime) / 1000));
+          const pickToPackSec = cfg.pickToPackMins * 60;
+          const totalSec = cfg.totalMins * 60;
+
+          tLabel = baseTime;
+          tPicking = baseTime + 15 * 1000;
+          tPacking = baseTime + pickToPackSec * 1000;
+          tSlip = tPacking + 15 * 1000;
+          tCompleted = baseTime + totalSec * 1000;
+
+          step1Done = true;
+          step2Done = elapsedSec >= pickToPackSec;
+          step2Active = !step2Done;
+          secUntilPack = Math.max(0, pickToPackSec - elapsedSec);
+
+          step3Done = elapsedSec >= pickToPackSec;
+          step4Done = elapsedSec >= (pickToPackSec + 5);
+          step5Done = elapsedSec >= totalSec;
+          step5Active = !step5Done && step3Done;
+          secUntilComp = Math.max(0, totalSec - elapsedSec);
+        } else if (isClosed) {
+          const baseTime = order.createdAt && !isNaN(new Date(order.createdAt).getTime())
+            ? new Date(order.createdAt).getTime()
+            : (now - (cfg.totalMins + 15) * 60 * 1000);
+          tLabel = baseTime;
+          tPicking = baseTime + 15 * 1000;
+          tPacking = baseTime + cfg.pickToPackMins * 60 * 1000;
+          tSlip = tPacking + 15 * 1000;
+          tCompleted = tPacking + cfg.packToCompleteMins * 60 * 1000;
+
+          step1Done = true;
+          step2Done = true;
+          step3Done = true;
+          step4Done = true;
+          step5Done = true;
+        } else if (isPacking) {
+          const refTime = order.updatedAt && !isNaN(new Date(order.updatedAt).getTime())
+            ? new Date(order.updatedAt).getTime()
+            : (now - 30 * 1000);
+          tLabel = refTime - (cfg.pickToPackMins * 60 * 1000) - 15 * 1000;
+          tPicking = refTime - (cfg.pickToPackMins * 60 * 1000);
+          tPacking = refTime;
+          tSlip = refTime + 5 * 1000;
+          tCompleted = refTime + cfg.packToCompleteMins * 60 * 1000;
+
+          step1Done = true;
+          step2Done = true;
+          step3Done = true;
+          step4Done = true;
+          step5Done = false;
+          step5Active = true;
+          secUntilComp = Math.max(0, Math.floor((tCompleted - now) / 1000)) || (cfg.packToCompleteMins * 60);
+        } else if (isPicking) {
+          const refTime = order.updatedAt && !isNaN(new Date(order.updatedAt).getTime())
+            ? new Date(order.updatedAt).getTime()
+            : (now - 30 * 1000);
+          tLabel = refTime - 15 * 1000;
+          tPicking = refTime;
+          tPacking = refTime + cfg.pickToPackMins * 60 * 1000;
+          tSlip = tPacking + 15 * 1000;
+          tCompleted = tPacking + cfg.packToCompleteMins * 60 * 1000;
+
+          step1Done = true;
+          step2Done = false;
+          step2Active = true;
+          secUntilPack = Math.max(0, Math.floor((tPacking - now) / 1000)) || (cfg.pickToPackMins * 60);
+
+          step3Done = false;
+          step4Done = false;
+          step5Done = false;
         } else {
-          baseTime = now - (cfg.totalMins + 15) * 60 * 1000;
+          // Allocated, Hold, Open, Unvalidated
+          const refTime = order.createdAt && !isNaN(new Date(order.createdAt).getTime())
+            ? new Date(order.createdAt).getTime()
+            : now;
+          tLabel = hasLabel ? refTime : null;
+          tPicking = null;
+          tPacking = null;
+          tSlip = null;
+          tCompleted = null;
+
+          step1Done = hasLabel;
+          step2Done = false;
+          step3Done = false;
+          step4Done = false;
+          step5Done = false;
         }
 
-        const tLabel = baseTime;
-        const tPicking = baseTime + 15 * 1000;
-        const tPacking = baseTime + cfg.pickToPackMins * 60 * 1000;
-        const tSlip = tPacking + 15 * 1000;
-        const tCompleted = tPacking + cfg.packToCompleteMins * 60 * 1000;
-
-        const isClosed = ['shipped', 'delivered', 'completed'].includes(String(order.rawStatus || order.status).toLowerCase());
-
-        const step1Done = isClosed || now >= tLabel;
-        const step2Done = isClosed || now >= tPacking;
-        const step2Active = !step2Done && now >= tPicking;
-        const step3Done = isClosed || now >= tPacking;
-        const step4Done = isClosed || now >= tSlip;
-        const step5Done = isClosed || now >= tCompleted;
-        const step5Active = !step5Done && now >= tPacking;
-
-        const fmt = ts => new Date(ts).toLocaleString('en-US', {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
-        });
+        const fmt = ts => {
+          if (!ts) return 'Pending schedule';
+          const d = new Date(ts);
+          if (isNaN(d.getTime())) return String(ts);
+          return d.toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+          });
+        };
 
         const fmtSecs = s => {
           const m = Math.floor(s / 60);
           const remS = s % 60;
           return `${m}m ${remS < 10 ? '0' : ''}${remS}s`;
         };
-
-        const secUntilPack = Math.max(0, Math.floor((tPacking - now) / 1000));
-        const secUntilComp = Math.max(0, Math.floor((tCompleted - now) / 1000));
 
         const steps = [
           {
@@ -948,9 +1041,11 @@
             subTitle: 'Carton barcode & carrier dispatch label',
             status: step1Done ? 'done' : 'pending',
             badgeText: step1Done ? '✓ Completed' : 'Pending',
-            didBefore: step1Done,
+            didBefore: step1Done && (isPicking || isPacking || isClosed),
             timestamp: fmt(tLabel),
-            desc: 'Label printed and assigned to Sarasota Hub fulfillment staging line.'
+            desc: step1Done
+              ? 'Label printed and assigned to Sarasota Hub fulfillment staging line.'
+              : 'Awaiting shipping label generation.'
           },
           {
             id: 'picking',
@@ -958,13 +1053,13 @@
             title: 'Picking',
             subTitle: `Picking >> change to packing in ${cfg.pickToPackMins} mins`,
             status: step2Done ? 'done' : (step2Active ? 'active' : 'pending'),
-            badgeText: step2Done ? '✓ Completed' : (step2Active ? `⏳ In Progress (${fmtSecs(secUntilPack)})` : 'Pending'),
+            badgeText: step2Done ? '✓ Completed' : (step2Active ? (isSimulating ? `⏳ In Progress (${fmtSecs(secUntilPack)})` : `⏳ In Progress (${cfg.pickToPackMins}m SLA)`) : 'Pending'),
             didBefore: step2Done,
             timestamp: fmt(tPicking),
             desc: step2Done
               ? `Picking completed. Changed to packing in ${cfg.pickToPackMins} mins (item tier: ${cfg.tier}).`
               : (step2Active
-                  ? `Picking in progress. Changes to packing in ${fmtSecs(secUntilPack)} (SLA: ${cfg.pickToPackMins}m).`
+                  ? `Picking currently in progress. Changes to packing in ${isSimulating ? fmtSecs(secUntilPack) : cfg.pickToPackMins + ' mins'} (SLA: ${cfg.pickToPackMins}m).`
                   : `Scheduled for picking. Will change to packing in ${cfg.pickToPackMins} mins.`)
           },
           {
@@ -989,7 +1084,9 @@
             badgeText: step4Done ? '✓ Completed' : 'Pending',
             didBefore: step4Done,
             timestamp: fmt(tSlip),
-            desc: 'Packing slip printed and enclosed in shipping carton with items.'
+            desc: step4Done
+              ? 'Packing slip printed and enclosed in shipping carton with items.'
+              : 'Packing slip will be printed when carton reaches packing bench.'
           },
           {
             id: 'completed',
@@ -997,13 +1094,13 @@
             title: 'Completed',
             subTitle: `In ${cfg.packToCompleteMins} mins Completed`,
             status: step5Done ? 'done' : (step5Active ? 'active' : 'pending'),
-            badgeText: step5Done ? '✓ Completed' : (step5Active ? `⏳ In Progress (${fmtSecs(secUntilComp)})` : 'Pending'),
+            badgeText: step5Done ? '✓ Completed' : (step5Active ? (isSimulating ? `⏳ In Progress (${fmtSecs(secUntilComp)})` : `⏳ In Progress (${cfg.packToCompleteMins}m SLA)`) : 'Pending'),
             didBefore: step5Done,
             timestamp: fmt(tCompleted),
             desc: step5Done
               ? `Fulfillment completed in ${cfg.packToCompleteMins} mins. Carton sealed and staged for carrier dispatch.`
               : (step5Active
-                  ? `Packing in progress. Completes in ${fmtSecs(secUntilComp)} (SLA: ${cfg.packToCompleteMins}m).`
+                  ? `Packing in progress. Completes in ${isSimulating ? fmtSecs(secUntilComp) : cfg.packToCompleteMins + ' mins'} (SLA: ${cfg.packToCompleteMins}m).`
                   : `Scheduled completion in ${cfg.packToCompleteMins} mins from packing.`)
           }
         ];
@@ -1012,7 +1109,7 @@
           cfg,
           steps,
           allCompleted: step5Done,
-          activeStepIdx: step5Done ? 5 : (step5Active ? 4 : (step3Done ? 3 : (step2Active ? 1 : 0)))
+          activeStepIdx: step5Done ? 5 : (step5Active ? 4 : (step3Done ? 3 : (step2Active ? 1 : (step1Done ? 0 : -1))))
         };
       }
 
@@ -1070,12 +1167,13 @@
         // Hook simulation toggle button
         const simBtn = document.querySelector('#oo-btn-sim-toggle');
         if (simBtn) {
+          const isSimulating = !!simulatedStartTimes[order.num];
+          simBtn.textContent = isSimulating ? '↺ Reset to Record' : '⚡ Test Live Timing';
           simBtn.onclick = () => {
-            const isSimulating = !!simulatedStartTimes[order.num];
             if (isSimulating) {
               delete simulatedStartTimes[order.num];
               simBtn.textContent = '⚡ Test Live Timing';
-              notice(`Order #${order.num} timeline reset to historical record.`);
+              notice(`Order #${order.num} timeline reset to current order status.`);
             } else {
               // Start simulated progression right now!
               simulatedStartTimes[order.num] = Date.now();
