@@ -22,7 +22,7 @@ serve(async (req: Request) => {
 
     if (resendApiKey && to && !to.includes("example.com")) {
       try {
-        const fromEmail = Deno.env.get("STARK_NOTIFICATION_FROM") || "notifications@resend.dev";
+        const fromEmail = Deno.env.get("STARK_NOTIFICATION_FROM") || "onboarding@resend.dev";
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
