@@ -4,7 +4,7 @@
   const S = window.StarkSystem;
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // 10 Detailed Threads matching the screenshot exactly
+    // 10 Detailed Threads matching the screenshot exactly
   const initialThreads = [
     {
       id: 'thread-1',
@@ -12,26 +12,27 @@
       senderCompany: 'Global Parts Co.',
       senderEmail: 'james.smith@globalpartsco.com',
       to: 'supply.chain@mk97.com',
-      cc: 'procurement@mk97.com, logistics@mk97.com',
+      cc: 'procurement@mk97.com, ops@mk97.com',
       subject: 'PO #87366 - Confirmed for Shipment',
       timestamp: '10:24 AM',
       fullDate: 'Mon, Apr 21, 2026 10:24 AM',
       unread: true,
-      starred: false,
+      starred: true,
       flagged: false,
       folder: 'inbox',
       category: 'all',
       mentions: false,
       orderRelated: true,
       avatar: 'JS',
-      avatarBg: '#0f766e',
+      avatarBg: '#f1f5f9',
+      avatarColor: '#334155',
       tags: [
-        { name: 'PO', type: 'po' },
-        { name: 'Vendor', type: 'vendor' },
-        { name: 'Shipment', type: 'shipment' }
+        { name: 'PO #87366', type: 'po' },
+        { name: 'Shipment', type: 'shipment' },
+        { name: 'Follow-up', type: 'invoice' }
       ],
-      snippet: 'Hi team, we have confirmed the shipment for PO...',
-      body: 'Hi team,\n\nWe have confirmed the shipment for PO #87366. The goods were picked up today and are in transit to your main warehouse. Please find the tracking details and commercial invoice attached below.',
+      snippet: 'The staging bay #4 is allocated and ready...',
+      body: 'Hi James,\n\nPlease find the confirmation for PO #87366.\n\nThe staging bay #4 is allocated and ready for shipment.\n\nTracking will be shared by tomorrow.\n\nThanks,\nManoj',
       shipmentDetails: {
         poNumber: '87366',
         trackingNumber: 'DHL4567823',
@@ -47,7 +48,7 @@
         { name: 'Packing_List_87366.xlsx', size: '128 KB', type: 'xls' }
       ],
       related: {
-        poNumber: '#87366-HOLD',
+        poNumber: '#87366',
         vendor: 'Global Parts Co.',
         tracking: 'DHL4567823',
         estimatedDelivery: 'Apr 24, 2026',
@@ -56,49 +57,51 @@
     },
     {
       id: 'thread-2',
-      senderName: 'Rachel Lee',
-      senderCompany: 'Northstar Auto',
-      senderEmail: 'rachel.lee@northstarauto.com',
+      senderName: 'Global Parts Co.',
+      senderCompany: 'Global Parts Co.',
+      senderEmail: 'orders@globalpartsco.com',
       to: 'supply.chain@mk97.com',
-      cc: 'sales@mk97.com',
-      subject: 'Re: Inventory Availability - Brake Pads',
-      timestamp: '9:41 AM',
-      fullDate: 'Mon, Apr 21, 2026 9:41 AM',
+      cc: 'logistics@mk97.com',
+      subject: 'Re: 3PL Order – Tracking Request',
+      timestamp: '9:18 AM',
+      fullDate: 'Mon, Apr 21, 2026 9:18 AM',
       unread: true,
-      starred: true,
-      flagged: true,
+      starred: false,
+      flagged: false,
       folder: 'inbox',
-      category: 'urgent',
-      mentions: true,
+      category: 'all',
+      mentions: false,
       orderRelated: true,
-      avatar: 'RL',
-      avatarBg: '#475569',
+      avatar: 'GP',
+      avatarBg: '#dbeafe',
+      avatarColor: '#1e40af',
       tags: [
-        { name: 'Customer', type: 'customer' },
-        { name: 'Urgent', type: 'urgent' }
+        { name: 'Tracking', type: 'internal' },
+        { name: 'Outbound', type: 'po' }
       ],
-      snippet: 'Thanks for the quick update. Can you also share...',
-      body: 'Thanks for the quick update. Can you also share the anticipated ATS availability for the upcoming production run of Ceramic Brake Pads? We need to reserve 450 units for our East Coast fulfillment hub before Thursday.\n\nPlease confirm if this can be fulfilled from Tampa DC or if a bin transfer from Texas is required.',
-      signOff: 'Best regards,\nRachel Lee\nProcurement Specialist\nNorthstar Auto',
-      attachments: [],
+      snippet: 'Please provide the tracking number for...',
+      body: 'Hello Support,\n\nPlease provide the tracking number for the outbound 3PL transfer consignment. Staging bays require registration before midday.\n\nThank you,\nGlobal Parts Dispatch Team',
+      attachments: [
+        { name: 'Transfer_Manifest_3PL.pdf', size: '150 KB', type: 'pdf' }
+      ],
       related: {
-        poNumber: '#ORD-NSA-9921',
-        vendor: 'Northstar Auto (Client)',
+        poNumber: '#3PL-GP-918',
+        vendor: 'Global Parts Co.',
         tracking: 'Pending Dispatch',
-        estimatedDelivery: 'Apr 26, 2026',
+        estimatedDelivery: 'Apr 25, 2026',
         orderUrl: 'all-open-orders.html'
       }
     },
     {
       id: 'thread-3',
-      senderName: 'DHL Transportation',
-      senderCompany: 'DHL Logistics Hub',
-      senderEmail: 'notifications@dhl.com',
+      senderName: 'Saint Vendor',
+      senderCompany: 'Saint Vendor Solutions',
+      senderEmail: 'orders@saintvendor.com',
       to: 'supply.chain@mk97.com',
-      cc: 'logistics@mk97.com',
-      subject: 'Shipment Delivered - Tracking #DHL4567823',
-      timestamp: '8:17 AM',
-      fullDate: 'Mon, Apr 21, 2026 8:17 AM',
+      cc: '',
+      subject: 'Order Confirmation – Gucci',
+      timestamp: '8:05 AM',
+      fullDate: 'Mon, Apr 21, 2026 8:05 AM',
       unread: true,
       starred: false,
       flagged: false,
@@ -106,697 +109,284 @@
       category: 'all',
       mentions: false,
       orderRelated: true,
-      avatar: 'DT',
-      avatarBg: '#1e293b',
+      avatar: 'SV',
+      avatarBg: '#f3e8ff',
+      avatarColor: '#7e22ce',
       tags: [
-        { name: 'Shipment', type: 'shipment' }
+        { name: 'Confirmation', type: 'shipment' },
+        { name: 'Customer', type: 'po' }
       ],
-      snippet: 'Your shipment has been delivered to Northstar...',
-      body: 'Your freight consignment has been successfully delivered and signed for by Northstar Receiving Staging Bay 3 at 08:14 AM local time.\n\nCarrier reference: DHL Express Priority Ground. Electronic Proof of Delivery (e-POD) is available in the telemetry tracking ledger.',
-      shipmentDetails: {
-        poNumber: '87366',
-        trackingNumber: 'DHL4567823',
-        carrier: 'DHL Express',
-        estimatedDelivery: 'Delivered (Apr 21, 2026)',
-        status: 'Delivered',
-        statusClass: 'status-delivered',
-        trackingUrl: 'shipment-tracking.html?tracking=DHL4567823'
-      },
-      signOff: 'DHL Express Telematics Division',
+      snippet: 'Order confirmed. PO will be created shortly.',
+      body: 'Good morning,\n\nOrder confirmed for the Gucci luxury boutique fulfillment consignment. PO will be created shortly and forwarded to your procurement desk.\n\nBest,\nSaint Vendor Support',
       attachments: [],
       related: {
-        poNumber: '#87366',
-        vendor: 'DHL Express',
-        tracking: 'DHL4567823',
-        estimatedDelivery: 'Delivered Today',
-        orderUrl: 'shipment-tracking.html?tracking=DHL4567823'
-      }
-    },
-    {
-      id: 'thread-4',
-      senderName: 'Michael Khan',
-      senderCompany: 'MK97 Internal',
-      senderEmail: 'm.khan@mk97.com',
-      to: 'supply.chain@mk97.com',
-      cc: 'executive@mk97.com',
-      subject: 'Q3 Procurement Plan - Review',
-      timestamp: 'Yesterday',
-      fullDate: 'Sun, Apr 20, 2026 4:15 PM',
-      unread: true,
-      starred: false,
-      flagged: false,
-      folder: 'inbox',
-      category: 'internal',
-      mentions: true,
-      orderRelated: false,
-      avatar: 'MK',
-      avatarBg: '#1d4ed8',
-      tags: [
-        { name: 'Internal', type: 'internal' }
-      ],
-      snippet: 'Attaching the updated Q3 plan. Please review th...',
-      body: 'Attaching the updated Q3 procurement and reorder balancing plan. We have calibrated demand projections taking into account lead-time variations from our key European component suppliers.\n\nPlease review before our weekly planning session tomorrow at 2:00 PM.',
-      signOff: 'Michael Khan\nDirector of Supply Chain Planning\nMK97 Operations',
-      attachments: [
-        { name: 'MK97_Q3_Procurement_Plan.pdf', size: '1.2 MB', type: 'pdf' }
-      ],
-      related: {
-        poNumber: 'PLAN-Q3-2026',
-        vendor: 'MK97 Planning Dept',
-        tracking: 'Internal Strategy',
-        estimatedDelivery: 'Q3 Rollout',
-        orderUrl: 'procurement-planning.html'
-      }
-    },
-    {
-      id: 'thread-5',
-      senderName: 'Sarah Patel',
-      senderCompany: 'AutoTech Supplies',
-      senderEmail: 's.patel@autotechsupplies.com',
-      to: 'supply.chain@mk97.com',
-      cc: 'procurement@mk97.com',
-      subject: 'Invoice INV-77821 Available',
-      timestamp: 'Yesterday',
-      fullDate: 'Sun, Apr 20, 2026 2:10 PM',
-      unread: true,
-      starred: false,
-      flagged: false,
-      folder: 'inbox',
-      category: 'invoice',
-      mentions: false,
-      orderRelated: true,
-      avatar: 'SP',
-      avatarBg: '#059669',
-      tags: [
-        { name: 'Invoice', type: 'invoice' },
-        { name: 'Vendor', type: 'vendor' }
-      ],
-      snippet: 'Please find the invoice for last week\'s shipment...',
-      body: 'Please find the invoice for last week\'s shipment of precision motor sensors under PO #87210. Billed amount: $48,250.00 with standard payment terms 2/10 Net 30 as stipulated in the master supplier contract.',
-      signOff: 'Thank you,\nSarah Patel\nAutoTech Supplies Billing Department',
-      attachments: [
-        { name: 'Invoice_INV-77821.pdf', size: '312 KB', type: 'pdf' }
-      ],
-      related: {
-        poNumber: '#87210-INV',
-        vendor: 'AutoTech Supplies',
-        tracking: 'INV-77821',
-        estimatedDelivery: 'Net 30 Due May 20',
-        orderUrl: 'vendor-management/vendors.html'
-      }
-    },
-    {
-      id: 'thread-6',
-      senderName: 'John Lewis',
-      senderCompany: 'Parts Distribution',
-      senderEmail: 'j.lewis@partsdist.com',
-      to: 'supply.chain@mk97.com',
-      cc: '',
-      subject: 'Re: Price Update Request',
-      timestamp: 'Yesterday',
-      fullDate: 'Sun, Apr 20, 2026 11:32 AM',
-      unread: true,
-      starred: false,
-      flagged: false,
-      folder: 'inbox',
-      category: 'all',
-      mentions: false,
-      orderRelated: true,
-      avatar: 'JL',
-      avatarBg: '#64748b',
-      tags: [
-        { name: 'Pricing', type: 'pricing' }
-      ],
-      snippet: 'We can offer a revised price starting next month...',
-      body: 'Following up on your request regarding bulk volume pricing for heavy-duty suspension assemblies. We can offer a revised rate of $214.50/unit for orders exceeding 500 units, effective May 1st.\n\nLet us know if you would like us to update your enterprise catalog listing accordingly.',
-      signOff: 'Best regards,\nJohn Lewis\nVP of Wholesale\nParts Distribution Network',
-      attachments: [],
-      related: {
-        poNumber: 'PRICE-CAT-2026',
-        vendor: 'Parts Distribution',
-        tracking: 'Tier 2 Wholesale',
-        estimatedDelivery: 'Valid thru Q4',
-        orderUrl: 'crm/catalog.html'
-      }
-    },
-    {
-      id: 'thread-7',
-      senderName: 'Amazon Carrier',
-      senderCompany: 'Amazon Freight Logistics',
-      senderEmail: 'carrier-linehaul@amazonfreight.com',
-      to: 'supply.chain@mk97.com',
-      cc: 'warehouse@mk97.com',
-      subject: 'In Transit - PO #87366',
-      timestamp: 'Apr 18',
-      fullDate: 'Fri, Apr 18, 2026 3:20 PM',
-      unread: true,
-      starred: false,
-      flagged: false,
-      folder: 'inbox',
-      category: 'all',
-      mentions: false,
-      orderRelated: true,
-      avatar: 'AC',
-      avatarBg: '#374151',
-      tags: [
-        { name: 'Shipment', type: 'shipment' }
-      ],
-      snippet: 'Your shipment is in transit and expected to deliv...',
-      body: 'Your shipment is in transit and expected to deliver on schedule. Carrier linehaul driver has checked into the regional transit corridor. Real-time GPS coordinates are streaming into the MK97 Control Tower.',
-      shipmentDetails: {
-        poNumber: '87366',
-        trackingNumber: 'AF-87366-22X',
-        carrier: 'Amazon Freight',
-        estimatedDelivery: 'Apr 24, 2026',
-        status: 'In Transit',
-        statusClass: 'status-transit',
-        trackingUrl: 'shipment-tracking.html'
-      },
-      signOff: 'Amazon Freight Operations Center',
-      attachments: [],
-      related: {
-        poNumber: '#87366',
-        vendor: 'Amazon Freight',
-        tracking: 'AF-87366-22X',
-        estimatedDelivery: 'Apr 24, 2026',
-        orderUrl: 'shipment-tracking.html'
-      }
-    },
-    {
-      id: 'thread-8',
-      senderName: 'Emily Rodriguez',
-      senderCompany: 'Northstar Auto',
-      senderEmail: 'e.rodriguez@northstarauto.com',
-      to: 'supply.chain@mk97.com',
-      cc: 'planning@mk97.com',
-      subject: 'New Order Forecast - Q3',
-      timestamp: 'Apr 18',
-      fullDate: 'Fri, Apr 18, 2026 11:05 AM',
-      unread: true,
-      starred: true,
-      flagged: false,
-      folder: 'inbox',
-      category: 'forecast',
-      mentions: false,
-      orderRelated: true,
-      avatar: 'ER',
-      avatarBg: '#0284c7',
-      tags: [
-        { name: 'Forecast', type: 'forecast' }
-      ],
-      snippet: 'Sharing the forecast for Q3. Let\'s sync this week...',
-      body: 'Sharing our replenishment demand forecast for Q3. We are projecting a 22% increase in regional EV powertrain components. Let\'s sync this week to lock down inventory buffers and delivery allocations.',
-      signOff: 'Warm regards,\nEmily Rodriguez\nDemand Planning Lead\nNorthstar Auto',
-      attachments: [
-        { name: 'Northstar_Q3_Forecast_Model.xlsx', size: '540 KB', type: 'xls' }
-      ],
-      related: {
-        poNumber: 'FC-NSA-Q3',
-        vendor: 'Northstar Auto',
-        tracking: 'Demand Model',
-        estimatedDelivery: 'Q3 Buffer',
-        orderUrl: 'sales-analysis.html'
-      }
-    },
-    {
-      id: 'thread-9',
-      senderName: 'Tom Wilson',
-      senderCompany: 'MK97 Internal',
-      senderEmail: 't.wilson@mk97.com',
-      to: 'supply.chain@mk97.com',
-      cc: '',
-      subject: 'Re: Warehouse Capacity',
-      timestamp: 'Apr 17',
-      fullDate: 'Thu, Apr 17, 2026 5:40 PM',
-      unread: true,
-      starred: false,
-      flagged: false,
-      folder: 'inbox',
-      category: 'internal',
-      mentions: false,
-      orderRelated: false,
-      avatar: 'TW',
-      avatarBg: '#7c3aed',
-      tags: [
-        { name: 'Internal', type: 'internal' }
-      ],
-      snippet: 'Current capacity is at 78%. We should be good fo...',
-      body: 'Current capacity at Sarasota DC is at 78%, and Tampa DC is at 64%. We should be good for the incoming container deliveries scheduled for next Tuesday without needing overflow rack reconfiguration.',
-      signOff: 'Tom Wilson\nWarehouse General Operations Manager',
-      attachments: [],
-      related: {
-        poNumber: 'WMS-CAP-SRQ',
-        vendor: 'Sarasota DC Hub',
-        tracking: 'Bin Utilization 78%',
-        estimatedDelivery: 'Normal Operations',
-        orderUrl: 'warehouse-management/index.html'
-      }
-    },
-    {
-      id: 'thread-10',
-      senderName: 'Linda Scott',
-      senderCompany: 'Metro Supply',
-      senderEmail: 'l.scott@metrosupply.com',
-      to: 'supply.chain@mk97.com',
-      cc: '',
-      subject: 'PO #88112 - Acknowledgement',
-      timestamp: 'Apr 17',
-      fullDate: 'Thu, Apr 17, 2026 10:15 AM',
-      unread: true,
-      starred: false,
-      flagged: false,
-      folder: 'inbox',
-      category: 'all',
-      mentions: false,
-      orderRelated: true,
-      avatar: 'LS',
-      avatarBg: '#ea580c',
-      tags: [
-        { name: 'PO', type: 'po' },
-        { name: 'Vendor', type: 'vendor' }
-      ],
-      snippet: 'Confirmed. We will process this order today...',
-      body: 'Confirmed receipt of PO #88112. We have placed the units in staging and dispatch will proceed on schedule via carrier freight tomorrow morning.',
-      signOff: 'Linda Scott\nMetro Supply Co.',
-      attachments: [],
-      related: {
-        poNumber: '#88112',
-        vendor: 'Metro Supply Co.',
-        tracking: 'Scheduled Dispatch',
-        estimatedDelivery: 'Apr 25, 2026',
-        orderUrl: 'vendor-management/procurement.html'
-      }
-    },
-    {
-      id: 'thread-11',
-      senderName: 'David Wu',
-      senderCompany: 'Pacific Logistics Linehaul',
-      senderEmail: 'd.wu@pacificlinehaul.com',
-      to: 'supply.chain@mk97.com',
-      cc: 'logistics@mk97.com',
-      subject: 'ASN Dispatch #PC-9912 - Dock Staging Notice',
-      timestamp: 'Apr 16',
-      fullDate: 'Wed, Apr 16, 2026 3:45 PM',
-      unread: true,
-      starred: true,
-      flagged: true,
-      folder: 'inbox',
-      category: 'shipping',
-      mentions: false,
-      orderRelated: true,
-      avatar: 'DW',
-      avatarBg: '#0891b2',
-      tags: [
-        { name: 'Shipment', type: 'shipment' }
-      ],
-      snippet: 'Advance Shipping Notice for container freight PC-9912...',
-      body: 'Advance Shipping Notice for container freight PC-9912. Driver has been assigned and electronic seals verified. Consignment scheduled to dock at Tampa Logistics Hub Bay 4 on Monday morning.\n\nAttached packing slip contains full unit serialization.',
-      shipmentDetails: {
-        poNumber: 'PC-9912',
-        trackingNumber: 'PAC-9912-EXP',
-        carrier: 'Pacific Logistics',
-        estimatedDelivery: 'Apr 27, 2026',
-        status: 'In Transit',
-        statusClass: 'status-transit',
-        trackingUrl: 'shipment-tracking.html'
-      },
-      signOff: 'David Wu\nFleet Dispatch Supervisor\nPacific Logistics Linehaul',
-      attachments: [
-        { name: 'ASN_Packing_Slip_PC9912.pdf', size: '380 KB', type: 'pdf' }
-      ],
-      related: {
-        poNumber: 'PC-9912',
-        vendor: 'Pacific Logistics',
-        tracking: 'PAC-9912-EXP',
-        estimatedDelivery: 'Apr 27, 2026',
-        orderUrl: 'shipment-tracking.html'
-      }
-    },
-    {
-      id: 'thread-12',
-      senderName: 'Marcus Vance',
-      senderCompany: 'Apex Incentives',
-      senderEmail: 'm.vance@apexincentives.com',
-      to: 'supply.chain@mk97.com',
-      cc: 'sales@mk97.com',
-      subject: 'Urgent Order #315980 - Delivery Schedule Confirmation',
-      timestamp: 'Apr 16',
-      fullDate: 'Wed, Apr 16, 2026 1:15 PM',
-      unread: true,
-      starred: true,
-      flagged: true,
-      folder: 'inbox',
-      category: 'customer',
-      mentions: true,
-      orderRelated: true,
-      avatar: 'MV',
-      avatarBg: '#9333ea',
-      tags: [
-        { name: 'Customer', type: 'customer' },
-        { name: 'Urgent', type: 'urgent' }
-      ],
-      snippet: 'Please verify the expedited in-hands delivery date...',
-      body: 'Please verify the expedited in-hands delivery date for purchase order #315980. Our regional distribution centres are preparing display endcaps for May 4th.\n\nWe require tracking identification as soon as pallet staging is completed.',
-      signOff: 'Sincerely,\nMarcus Vance\nSupply Operations\nApex Incentives',
-      attachments: [
-        { name: 'Apex_PO_315980_Specs.pdf', size: '420 KB', type: 'pdf' }
-      ],
-      related: {
-        poNumber: '#315980',
-        vendor: 'Apex Incentives (Client)',
-        tracking: 'Order Staged',
-        estimatedDelivery: 'May 04, 2026',
-        orderUrl: 'all-open-orders.html'
-      }
-    },
-    {
-      id: 'thread-snoozed-1',
-      senderName: 'FastTrack Cargo',
-      senderCompany: 'FastTrack Freight',
-      senderEmail: 'dispatch@fasttrackcargo.com',
-      to: 'supply.chain@mk97.com',
-      cc: '',
-      subject: 'Dock Appointment Confirmation #FT-4410',
-      timestamp: 'Apr 15',
-      fullDate: 'Tue, Apr 15, 2026 9:00 AM',
-      folder: 'snoozed',
-      snoozed: true,
-      unread: false,
-      starred: false,
-      flagged: false,
-      orderRelated: true,
-      category: 'shipping',
-      mentions: false,
-      avatar: 'FT',
-      avatarBg: '#0284c7',
-      tags: [{ name: 'Shipment', type: 'shipment' }],
-      snippet: 'Your dock appointment has been confirmed for Friday...',
-      body: 'Your dock appointment has been confirmed for Friday at Bay 2. Staging slots have been reserved for linehaul carrier arrival.',
-      signOff: 'FastTrack Dispatch Operations',
-      attachments: [],
-      related: {
-        poNumber: 'FT-4410',
-        vendor: 'FastTrack Freight',
-        tracking: 'FT-4410-DOCK',
-        estimatedDelivery: 'Apr 25, 2026',
-        orderUrl: 'shipment-tracking.html'
-      }
-    },
-    {
-      id: 'thread-snoozed-2',
-      senderName: 'FedEx Freight',
-      senderCompany: 'FedEx Logistics',
-      senderEmail: 'freight-notice@fedex.com',
-      to: 'supply.chain@mk97.com',
-      cc: '',
-      subject: 'Intermodal Transfer Notification #FX-88219',
-      timestamp: 'Apr 14',
-      fullDate: 'Mon, Apr 14, 2026 4:30 PM',
-      folder: 'snoozed',
-      snoozed: true,
-      unread: false,
-      starred: false,
-      flagged: false,
-      orderRelated: true,
-      category: 'shipping',
-      mentions: false,
-      avatar: 'FX',
-      avatarBg: '#4f46e5',
-      tags: [{ name: 'Shipment', type: 'shipment' }],
-      snippet: 'Freight has completed intermodal rail exchange...',
-      body: 'Freight consignment has completed intermodal rail exchange in Atlanta terminal and is scheduled for final leg linehaul departure tomorrow morning.',
-      signOff: 'FedEx Priority Freight Hub',
-      attachments: [],
-      related: {
-        poNumber: 'FX-88219',
-        vendor: 'FedEx Freight',
-        tracking: 'FX-88219-EXP',
-        estimatedDelivery: 'Apr 26, 2026',
-        orderUrl: 'shipment-tracking.html'
-      }
-    },
-    {
-      id: 'thread-draft-1',
-      senderName: 'Me',
-      senderCompany: 'MK97 Operations',
-      senderEmail: 'supply.chain@mk97.com',
-      to: 'james.smith@globalpartsco.com',
-      cc: 'procurement@mk97.com',
-      subject: 'Draft: Revised Delivery Schedule for PO #87366',
-      timestamp: 'Draft',
-      fullDate: 'Mon, Apr 21, 2026 10:45 AM',
-      folder: 'drafts',
-      unread: false,
-      starred: false,
-      flagged: false,
-      orderRelated: true,
-      category: 'drafts',
-      mentions: false,
-      avatar: 'ME',
-      avatarBg: '#0f766e',
-      tags: [{ name: 'PO', type: 'po' }],
-      snippet: 'Hi James, please find updated delivery windows for PO...',
-      body: 'Hi James,\n\nPlease find updated delivery windows for PO #87366. We have coordinated with receiving to ensure Bay 3 is available.',
-      signOff: 'MK97 Supply Chain Operations',
-      attachments: [],
-      related: {
-        poNumber: '#87366',
-        vendor: 'Global Parts Co.',
-        tracking: 'Pending Dispatch',
-        estimatedDelivery: 'Apr 24, 2026',
-        orderUrl: 'all-open-orders.html'
-      }
-    },
-    {
-      id: 'thread-draft-2',
-      senderName: 'Me',
-      senderCompany: 'MK97 Operations',
-      senderEmail: 'supply.chain@mk97.com',
-      to: 'rachel.lee@northstarauto.com',
-      cc: 'sales@mk97.com',
-      subject: 'Draft: Ceramic Brake Pads Allocation Confirmation',
-      timestamp: 'Draft',
-      fullDate: 'Mon, Apr 21, 2026 9:55 AM',
-      folder: 'drafts',
-      unread: false,
-      starred: false,
-      flagged: false,
-      orderRelated: true,
-      category: 'drafts',
-      mentions: false,
-      avatar: 'ME',
-      avatarBg: '#0f766e',
-      tags: [{ name: 'Customer', type: 'customer' }],
-      snippet: 'Hi Rachel, confirming 450 units ATS reserved for your East Coast hub...',
-      body: 'Hi Rachel,\n\nConfirming that 450 units of Ceramic Brake Pads ATS have been reserved for your East Coast fulfillment hub.',
-      signOff: 'MK97 Supply Chain Operations',
-      attachments: [],
-      related: {
-        poNumber: '#ORD-NSA-9921',
-        vendor: 'Northstar Auto (Client)',
-        tracking: 'Staged Allocation',
-        estimatedDelivery: 'Apr 26, 2026',
-        orderUrl: 'all-open-orders.html'
-      }
-    },
-    {
-      id: 'thread-draft-3',
-      senderName: 'Me',
-      senderCompany: 'MK97 Operations',
-      senderEmail: 'supply.chain@mk97.com',
-      to: 's.patel@autotechsupplies.com',
-      cc: 'finance@mk97.com',
-      subject: 'Draft: Wire Transfer Approval for INV-77821',
-      timestamp: 'Draft',
-      fullDate: 'Sun, Apr 20, 2026 3:30 PM',
-      folder: 'drafts',
-      unread: false,
-      starred: false,
-      flagged: false,
-      orderRelated: false,
-      category: 'drafts',
-      mentions: false,
-      avatar: 'ME',
-      avatarBg: '#0f766e',
-      tags: [{ name: 'Invoice', type: 'invoice' }],
-      snippet: 'Hi Sarah, the AP voucher has been authorized for invoice...',
-      body: 'Hi Sarah,\n\nThe AP voucher has been authorized for invoice INV-77821 under standard 2/10 Net 30 terms.',
-      signOff: 'MK97 Finance & Supply Chain',
-      attachments: [],
-      related: {
-        poNumber: '#87210-INV',
-        vendor: 'AutoTech Supplies',
-        tracking: 'Wire Pending',
-        estimatedDelivery: 'May 20, 2026',
-        orderUrl: 'vendor-management/vendors.html'
-      }
-    },
-    {
-      id: 'thread-sent-1',
-      senderName: 'Me',
-      senderCompany: 'MK97 Operations',
-      senderEmail: 'supply.chain@mk97.com',
-      to: 'james.smith@globalpartsco.com',
-      cc: 'procurement@mk97.com',
-      subject: 'Re: Staging Bay Confirmation PO #87366',
-      timestamp: 'Yesterday',
-      fullDate: 'Sun, Apr 20, 2026 5:00 PM',
-      folder: 'sent',
-      unread: false,
-      starred: false,
-      flagged: false,
-      orderRelated: true,
-      category: 'sent',
-      mentions: false,
-      avatar: 'ME',
-      avatarBg: '#0f766e',
-      tags: [{ name: 'PO', type: 'po' }],
-      snippet: 'Confirmed staging slot at Sarasota DC Bay 3...',
-      body: 'Confirmed staging slot at Sarasota DC Bay 3. Our dock crew will be standing by for freight unloading on arrival.',
-      signOff: 'MK97 Supply Chain Operations',
-      attachments: [],
-      related: {
-        poNumber: '#87366',
-        vendor: 'Global Parts Co.',
-        tracking: 'DHL4567823',
-        estimatedDelivery: 'Apr 24, 2026',
-        orderUrl: 'shipment-tracking.html'
-      }
-    },
-    {
-      id: 'thread-sent-2',
-      senderName: 'Me',
-      senderCompany: 'MK97 Operations',
-      senderEmail: 'supply.chain@mk97.com',
-      to: 'm.khan@mk97.com',
-      cc: '',
-      subject: 'Re: Q3 Procurement Forecast Feedback',
-      timestamp: 'Apr 19',
-      fullDate: 'Sat, Apr 19, 2026 11:20 AM',
-      folder: 'sent',
-      unread: false,
-      starred: false,
-      flagged: false,
-      orderRelated: false,
-      category: 'sent',
-      mentions: false,
-      avatar: 'ME',
-      avatarBg: '#0f766e',
-      tags: [],
-      snippet: 'Michael, demand projections aligned with warehouse capacity...',
-      body: 'Michael,\n\nDemand projections have been aligned with warehouse capacity models. Ready for Monday review.',
-      signOff: 'MK97 Operations Lead',
-      attachments: [],
-      related: {
-        poNumber: 'PLAN-Q3-2026',
-        vendor: 'MK97 Planning Dept',
-        tracking: 'Internal Strategy',
-        estimatedDelivery: 'Q3 Rollout',
-        orderUrl: 'procurement-planning.html'
-      }
-    },
-    {
-      id: 'thread-cust-3',
-      senderName: 'Sophia Martinez',
-      senderCompany: 'Pinnacle Fleet Solutions',
-      senderEmail: 'smartinez@pinnaclefleet.com',
-      to: 'customer.orders@mk97.com',
-      cc: 'sales@mk97.com',
-      subject: 'Expedited Reorder - Transmission Bearings #ORD-7729',
-      timestamp: 'Apr 16',
-      fullDate: 'Wed, Apr 16, 2026 11:40 AM',
-      folder: 'customer',
-      teamMailbox: 'customer',
-      unread: false,
-      starred: false,
-      flagged: true,
-      orderRelated: true,
-      category: 'customer',
-      mentions: false,
-      avatar: 'SM',
-      avatarBg: '#db2777',
-      tags: [{ name: 'Customer', type: 'customer' }, { name: 'Urgent', type: 'urgent' }],
-      snippet: 'Requesting priority shipment for 300 transmission bearings...',
-      body: 'Requesting priority shipment for 300 transmission bearings under purchase order #ORD-7729 to replenish Midwest service centers.',
-      signOff: 'Sophia Martinez\nPinnacle Fleet Logistics',
-      attachments: [{ name: 'Transmission_Bearings_RFQ_7729.pdf', size: '210 KB', type: 'pdf' }],
-      related: {
-        poNumber: '#ORD-7729',
-        vendor: 'Pinnacle Fleet Solutions',
-        tracking: 'Priority Prep',
+        poNumber: '#ORD-GUCCI-884',
+        vendor: 'Saint Vendor Solutions',
+        tracking: 'In Processing',
         estimatedDelivery: 'Apr 28, 2026',
         orderUrl: 'all-open-orders.html'
       }
     },
     {
-      id: 'thread-cust-4',
-      senderName: 'Kevin Chen',
-      senderCompany: 'Horizon Dynamics',
-      senderEmail: 'kchen@horizondynamics.com',
-      to: 'customer.orders@mk97.com',
+      id: 'thread-4',
+      senderName: 'Lighthouse Logistics',
+      senderCompany: 'Lighthouse Logistics Hub',
+      senderEmail: 'dispatch@lighthouselogistics.com',
+      to: 'supply.chain@mk97.com',
       cc: '',
-      subject: 'Purchase Agreement #HD-2026-B Batch Release',
-      timestamp: 'Apr 15',
-      fullDate: 'Tue, Apr 15, 2026 2:15 PM',
-      folder: 'customer',
-      teamMailbox: 'customer',
-      unread: false,
+      subject: 'Delivery Availability Update',
+      timestamp: 'Yesterday',
+      fullDate: 'Sun, Apr 20, 2026 4:30 PM',
+      unread: true,
       starred: false,
       flagged: false,
-      orderRelated: true,
-      category: 'customer',
+      folder: 'inbox',
+      category: 'all',
       mentions: false,
-      avatar: 'KC',
-      avatarBg: '#2563eb',
-      tags: [{ name: 'Customer', type: 'customer' }],
-      snippet: 'Batch release request for contract shipment HD-2026-B...',
-      body: 'Submitting formal release request for Batch 4 under master agreement #HD-2026-B. Delivery to be routed to Charlotte depot.',
-      signOff: 'Kevin Chen\nHorizon Dynamics Procurement',
+      orderRelated: true,
+      avatar: 'LL',
+      avatarBg: '#ffedd5',
+      avatarColor: '#c2410c',
+      tags: [
+        { name: 'Shipment', type: 'shipment' },
+        { name: 'Inventory', type: 'po' }
+      ],
+      snippet: 'Items confirmed and ready to ship.',
+      body: 'Hello Operations,\n\nDelivery availability update: All items confirmed and ready to ship from the regional consolidation yard. Freight booking ref is attached.',
+      attachments: [
+        { name: 'Availability_Manifest.xlsx', size: '210 KB', type: 'xls' }
+      ],
+      related: {
+        poNumber: '#LL-AVAIL-402',
+        vendor: 'Lighthouse Logistics',
+        tracking: 'LL-FRT-992',
+        estimatedDelivery: 'Apr 26, 2026',
+        orderUrl: 'shipment-tracking.html'
+      }
+    },
+    {
+      id: 'thread-5',
+      senderName: 'Aramex EU',
+      senderCompany: 'Aramex Freight Europe',
+      senderEmail: 'tracking@aramex.eu',
+      to: 'supply.chain@mk97.com',
+      cc: '',
+      subject: 'Shipment Delivered – EU',
+      timestamp: 'Yesterday',
+      fullDate: 'Sun, Apr 20, 2026 2:15 PM',
+      unread: true,
+      starred: false,
+      flagged: false,
+      folder: 'inbox',
+      category: 'all',
+      mentions: false,
+      orderRelated: true,
+      avatar: 'AE',
+      avatarBg: '#fee2e2',
+      avatarColor: '#b91c1c',
+      tags: [
+        { name: 'Delivered', type: 'shipment' },
+        { name: '3PL', type: 'internal' },
+        { name: 'Customer', type: 'po' }
+      ],
+      snippet: 'Your shipment has been delivered successfully.',
+      body: 'Your shipment has been delivered successfully to the European distribution hub in Rotterdam. Proof of delivery signature captured at dock 12.',
       attachments: [],
       related: {
-        poNumber: '#HD-2026-B',
-        vendor: 'Horizon Dynamics',
-        tracking: 'Scheduled Release',
-        estimatedDelivery: 'May 02, 2026',
+        poNumber: '#EU-ARX-4421',
+        vendor: 'Aramex EU',
+        tracking: 'ARX-EU-88210',
+        estimatedDelivery: 'Delivered',
+        orderUrl: 'shipment-tracking.html'
+      }
+    },
+    {
+      id: 'thread-6',
+      senderName: 'Vince Inc.',
+      senderCompany: 'Vince Inc.',
+      senderEmail: 'vince.support@vinceinc.com',
+      to: 'supply.chain@mk97.com',
+      cc: '',
+      subject: '3PL Orders – Priority',
+      timestamp: 'Yesterday',
+      fullDate: 'Sun, Apr 20, 2026 11:45 AM',
+      unread: true,
+      starred: false,
+      flagged: false,
+      folder: 'inbox',
+      category: 'all',
+      mentions: false,
+      orderRelated: true,
+      avatar: 'VI',
+      avatarBg: '#f3e8ff',
+      avatarColor: '#7e22ce',
+      tags: [],
+      snippet: 'Please find the 3PL order file. Need tracking by EOD.',
+      body: 'Hi Manoj,\n\nPlease find the 3PL order file attached. Need tracking by EOD to finalize customer dispatch slots.',
+      attachments: [
+        { name: '3PL_Priority_Orders.csv', size: '94 KB', type: 'csv' }
+      ],
+      related: {
+        poNumber: '#VI-PRIORITY-91',
+        vendor: 'Vince Inc.',
+        tracking: 'Need EOD',
+        estimatedDelivery: 'Apr 26, 2026',
         orderUrl: 'all-open-orders.html'
       }
     },
     {
-      id: 'thread-cust-5',
-      senderName: 'Amanda Scott',
-      senderCompany: 'Quantum Mobility',
-      senderEmail: 'ascott@quantummobility.com',
-      to: 'customer.orders@mk97.com',
+      id: 'thread-7',
+      senderName: 'Sarasota Warehouse',
+      senderCompany: 'MK97 Sarasota DC',
+      senderEmail: 'sarasota.dc@mk97.com',
+      to: 'supply.chain@mk97.com',
       cc: '',
-      subject: 'Order #314002 Delivery Routing Update',
-      timestamp: 'Apr 14',
-      fullDate: 'Mon, Apr 14, 2026 10:10 AM',
-      folder: 'customer',
-      teamMailbox: 'customer',
-      unread: false,
+      subject: 'Daily Shipment Report',
+      timestamp: 'Oct 21',
+      fullDate: 'Tue, Oct 21, 2026 5:00 PM',
+      unread: true,
+      starred: true,
+      flagged: false,
+      folder: 'inbox',
+      category: 'all',
+      mentions: false,
+      orderRelated: true,
+      avatar: 'SW',
+      avatarBg: '#dbeafe',
+      avatarColor: '#1d4ed8',
+      tags: [
+        { name: 'Report', type: 'po' },
+        { name: 'Warehouse', type: 'po' }
+      ],
+      snippet: 'Daily shipment summary report for Sarasota fulfillment...',
+      body: 'Attached is the daily shipment throughput and pallet staging audit report for Sarasota Facility A.',
+      attachments: [
+        { name: 'Sarasota_Daily_Shipment_Oct21.pdf', size: '420 KB', type: 'pdf' }
+      ],
+      related: {
+        poNumber: 'RPT-SRQ-1021',
+        vendor: 'Sarasota DC Hub',
+        tracking: 'Daily Audit',
+        estimatedDelivery: 'Completed',
+        orderUrl: 'warehouse-management/index.html'
+      }
+    },
+    {
+      id: 'thread-8',
+      senderName: 'Customer - Nordhstar',
+      senderCompany: 'Nordhstar Automotive',
+      senderEmail: 'procurement@nordhstar.com',
+      to: 'supply.chain@mk97.com',
+      cc: '',
+      subject: 'Inventory Request',
+      timestamp: 'Oct 21',
+      fullDate: 'Tue, Oct 21, 2026 1:10 PM',
+      unread: true,
       starred: false,
       flagged: false,
-      orderRelated: true,
-      category: 'customer',
+      folder: 'inbox',
+      category: 'all',
       mentions: false,
-      avatar: 'AS',
-      avatarBg: '#d97706',
-      tags: [{ name: 'Customer', type: 'customer' }],
-      snippet: 'Updated delivery instructions for order #314002...',
-      body: 'Updated delivery instructions for order #314002. Please ensure dock liftgate service is designated on carrier dispatch.',
-      signOff: 'Amanda Scott\nQuantum Mobility Materials Lead',
+      orderRelated: true,
+      avatar: 'CN',
+      avatarBg: '#ccfbf1',
+      avatarColor: '#0f766e',
+      tags: [
+        { name: 'Inventory', type: 'shipment' },
+        { name: 'Customer', type: 'po' }
+      ],
+      snippet: 'Can you check availability for model #2S6H9D...',
+      body: 'Can you check availability for model #2S6H9D powertrain subassemblies? We are requesting 150 additional units for delivery next week.',
       attachments: [],
       related: {
-        poNumber: '#314002',
-        vendor: 'Quantum Mobility',
-        tracking: 'Routing Verified',
-        estimatedDelivery: 'May 05, 2026',
+        poNumber: 'ORD-NS-2S6H9D',
+        vendor: 'Nordhstar Auto (Client)',
+        tracking: 'Availability Check',
+        estimatedDelivery: 'Oct 29, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
+    },
+    {
+      id: 'thread-9',
+      senderName: 'Lux Lab',
+      senderCompany: 'Lux Lab Supply Co.',
+      senderEmail: 'dispatch@luxlab.com',
+      to: 'supply.chain@mk97.com',
+      cc: '',
+      subject: 'Order Ready',
+      timestamp: 'Oct 20',
+      fullDate: 'Mon, Oct 20, 2026 4:15 PM',
+      unread: true,
+      starred: false,
+      flagged: false,
+      folder: 'inbox',
+      category: 'all',
+      mentions: false,
+      orderRelated: true,
+      avatar: 'LL',
+      avatarBg: '#e2e8f0',
+      avatarColor: '#475569',
+      tags: [],
+      snippet: 'Order is ready for pickup.',
+      body: 'Order #LL-9921 is packed, weighed, and ready for carrier pickup at bay 2.',
+      attachments: [],
+      related: {
+        poNumber: '#LL-9921',
+        vendor: 'Lux Lab Supply Co.',
+        tracking: 'Ready at Bay 2',
+        estimatedDelivery: 'Oct 24, 2026',
+        orderUrl: 'all-open-orders.html'
+      }
+    },
+    {
+      id: 'thread-10',
+      senderName: 'Excello 3PL',
+      senderCompany: 'Excello 3PL Logistics',
+      senderEmail: 'receiving@excello3pl.com',
+      to: 'supply.chain@mk97.com',
+      cc: '',
+      subject: 'Items received and putaway completed.',
+      timestamp: 'Oct 20',
+      fullDate: 'Mon, Oct 20, 2026 10:30 AM',
+      unread: true,
+      starred: false,
+      flagged: false,
+      folder: 'inbox',
+      category: 'all',
+      mentions: false,
+      orderRelated: true,
+      avatar: 'E3',
+      avatarBg: '#f3e8ff',
+      avatarColor: '#6b21a8',
+      tags: [],
+      snippet: 'Items received and putaway completed.',
+      body: 'All pallet items for consignment EX-482 have been received and putaway is completed in warehouse zone C.',
+      attachments: [],
+      related: {
+        poNumber: '#EX-482',
+        vendor: 'Excello 3PL Logistics',
+        tracking: 'Putaway Completed',
+        estimatedDelivery: 'Completed',
         orderUrl: 'all-open-orders.html'
       }
     }
   ];
 
   let threads = [...initialThreads];
+  let isComposeActive = false;
+  if (typeof window !== 'undefined' && window.location && window.location.search && (window.location.search.includes('compose=true') || window.location.search.includes('compose=1'))) {
+    isComposeActive = true;
+  }
+
+  const composeState = {
+    toRecipients: ['james.smith@globalpartsco.com'],
+    ccRecipients: ['supply.chain@mk97.com', 'ops@mk97.com'],
+    bccRecipients: [],
+    showCc: true,
+    showBcc: false,
+    subject: 'PO #87366 - Confirmed for Shipment',
+    body: 'Hi James,\n\nPlease find the confirmation for PO #87366.\n\nThe staging bay #4 is allocated and ready for shipment.\n\nTracking will be shared by tomorrow.\n\nThanks,\nManoj'
+  };
   let activeThreadId = 'thread-1';
   let activeFilterTab = 'all'; // all, unread, mentions, orderRelated
   let activeFolder = 'inbox'; // inbox, starred, snoozed, sent, drafts, archive, trash, shared, vendor, customer, procurement, shipping, internal
@@ -813,22 +403,26 @@
   const isShipping = t => ['thread-3', 'thread-7', 'thread-11', 'thread-snoozed-1', 'thread-snoozed-2'].includes(t.id);
   const isShared = t => ['thread-1', 'thread-2', 'thread-3', 'thread-5', 'thread-6', 'thread-7', 'thread-8', 'thread-10'].includes(t.id);
 
-  function getSidebarCounts() {
+    function getSidebarCounts() {
     return {
-      inbox: threads.filter(t => t.folder === 'inbox').length,
-      starred: threads.filter(t => t.starred).length,
-      snoozed: threads.filter(t => t.snoozed || t.folder === 'snoozed').length,
-      drafts: threads.filter(t => t.folder === 'drafts').length,
-      shared: threads.filter(isShared).length,
-      vendor: threads.filter(isVendor).length,
-      customer: threads.filter(isCustomer).length,
-      procurement: threads.filter(isProcurement).length,
-      shipping: threads.filter(isShipping).length,
-      internal: threads.filter(isInternal).length,
+      inbox: 24,
+      starred: 5,
+      snoozed: 3,
+      sent: 0,
+      drafts: 7,
+      archive: 12,
+      trash: 0,
+      customers: 8,
+      vendors: 6,
+      orders: 10,
+      shipping: 4,
+      procurement: 3,
+      '3pl': 2,
+      internal: 8,
       unread: threads.filter(t => t.unread).length,
       flagged: threads.filter(t => t.flagged).length,
       attachments: threads.filter(t => t.attachments && t.attachments.length > 0).length,
-      orderRelated: threads.filter(t => t.orderRelated && t.folder === 'inbox').length
+      orderRelated: threads.filter(t => t.orderRelated).length
     };
   }
 
@@ -1002,7 +596,7 @@
     }
   }
 
-  function getFilteredThreads() {
+    function getFilteredThreads() {
     return threads.filter(t => {
       // Folder filtering
       if (activeFolder === 'inbox' && t.folder !== 'inbox') return false;
@@ -1012,12 +606,13 @@
       if (activeFolder === 'drafts' && t.folder !== 'drafts') return false;
       if (activeFolder === 'archive' && t.folder !== 'archive') return false;
       if (activeFolder === 'trash' && t.folder !== 'trash') return false;
-      if (activeFolder === 'shared' && !isShared(t)) return false;
-      if (activeFolder === 'vendor' && !isVendor(t)) return false;
-      if (activeFolder === 'customer' && !isCustomer(t)) return false;
-      if (activeFolder === 'procurement' && !isProcurement(t)) return false;
-      if (activeFolder === 'shipping' && !isShipping(t)) return false;
-      if (activeFolder === 'internal' && !isInternal(t)) return false;
+      if (activeFolder === 'customers' && !(t.folder === 'customers' || isCustomer(t))) return false;
+      if (activeFolder === 'vendors' && !(t.folder === 'vendors' || isVendor(t))) return false;
+      if (activeFolder === 'orders' && !(t.folder === 'orders' || t.orderRelated)) return false;
+      if (activeFolder === 'shipping' && !(t.folder === 'shipping' || isShipping(t))) return false;
+      if (activeFolder === 'procurement' && !(t.folder === 'procurement' || isProcurement(t))) return false;
+      if (activeFolder === '3pl' && !(t.folder === '3pl' || t.id === 'thread-2' || t.id === 'thread-5' || t.id === 'thread-6' || t.id === 'thread-10')) return false;
+      if (activeFolder === 'internal' && !(t.folder === 'internal' || isInternal(t))) return false;
       if (activeFolder === 'unread' && !t.unread) return false;
       if (activeFolder === 'flagged' && !t.flagged) return false;
       if (activeFolder === 'attachments' && (!t.attachments || t.attachments.length === 0)) return false;
@@ -1025,7 +620,9 @@
 
       // Tab filtering
       if (activeFilterTab === 'unread' && !t.unread) return false;
+      if (activeFilterTab === 'starred' && !t.starred) return false;
       if (activeFilterTab === 'mentions' && !t.mentions) return false;
+      if (activeFilterTab === 'attachments' && (!t.attachments || t.attachments.length === 0)) return false;
       if (activeFilterTab === 'orderRelated' && !t.orderRelated) return false;
 
       // Label filter
@@ -1071,7 +668,7 @@
           </div>
           <div>
             <h1 class="stark-mail-title">MK97 Mail</h1>
-            <p class="stark-mail-subtitle">MK97 ERP Enterprise Mail</p>
+            <p class="stark-mail-subtitle">Manage supply-chain communication, forwarding, dispatch, and thread history.</p>
           </div>
         </div>
 
@@ -1156,25 +753,18 @@
     `;
   }
 
-  function renderSidebar() {
+    function renderSidebar() {
     const c = getSidebarCounts();
     return `
       <aside class="mail-col-sidebar" aria-label="Mailbox folders and categories">
         <button type="button" class="mail-compose-btn" id="btn-mail-compose">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
           </svg>
           <span>Compose</span>
         </button>
 
         <div class="mail-nav-section">
-          <div class="mail-section-title">MAILBOX</div>
-          <div class="mail-account-badge">
-            <span class="mail-account-avatar">SC</span>
-            <span class="mail-account-email">supply.chain@mk97.com</span>
-            <span class="mail-caret">▾</span>
-          </div>
-
           <ul class="mail-nav-list" role="list">
             <li>
               <button type="button" class="mail-nav-item ${activeFolder === 'inbox' ? 'active' : ''}" data-folder="inbox">
@@ -1228,6 +818,7 @@
                   <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
                 </svg>
                 <span class="mail-nav-label">Archive</span>
+                <span class="mail-nav-count">${c.archive}</span>
               </button>
             </li>
             <li>
@@ -1242,102 +833,58 @@
         </div>
 
         <div class="mail-nav-section">
-          <div class="mail-section-title">SHARED &amp; TEAM MAILBOXES</div>
+          <div class="mail-section-title" style="display:flex;justify-content:space-between;align-items:center;padding-right:4px;">
+            <span>Shared Mailboxes</span>
+            <button type="button" class="btn-add-shared" style="background:none;border:none;color:#64748b;font-size:16px;cursor:pointer;line-height:1;font-weight:700;" title="Add shared mailbox">+</button>
+          </div>
           <ul class="mail-nav-list" role="list">
             <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'shared' ? 'active' : ''}" data-folder="shared">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <span class="mail-nav-label">Shared Mailbox</span>
-                <span class="mail-nav-count">${c.shared}</span>
+              <button type="button" class="mail-nav-item ${activeFolder === 'customers' ? 'active' : ''}" data-folder="customers">
+                <span class="mail-shared-dot" style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block;margin-right:10px;"></span>
+                <span class="mail-nav-label">Customers</span>
+                <span class="mail-nav-count">${c.customers}</span>
               </button>
             </li>
             <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'vendor' ? 'active' : ''}" data-folder="vendor">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 21h18M5 21V9l7-6 7 6v12M9 21v-6h6v6"/>
-                </svg>
-                <span class="mail-nav-label">Vendor Communications</span>
-                <span class="mail-nav-count">${c.vendor}</span>
+              <button type="button" class="mail-nav-item ${activeFolder === 'vendors' ? 'active' : ''}" data-folder="vendors">
+                <span class="mail-shared-dot" style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;display:inline-block;margin-right:10px;"></span>
+                <span class="mail-nav-label">Vendors</span>
+                <span class="mail-nav-count">${c.vendors}</span>
               </button>
             </li>
             <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'customer' ? 'active' : ''}" data-folder="customer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                </svg>
-                <span class="mail-nav-label">Customer Orders</span>
-                <span class="mail-nav-count">${c.customer}</span>
+              <button type="button" class="mail-nav-item ${activeFolder === 'orders' ? 'active' : ''}" data-folder="orders">
+                <span class="mail-shared-dot" style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block;margin-right:10px;"></span>
+                <span class="mail-nav-label">Orders</span>
+                <span class="mail-nav-count">${c.orders}</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="mail-nav-item ${activeFolder === 'shipping' ? 'active' : ''}" data-folder="shipping">
+                <span class="mail-shared-dot" style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;margin-right:10px;"></span>
+                <span class="mail-nav-label">Shipping</span>
+                <span class="mail-nav-count">${c.shipping}</span>
               </button>
             </li>
             <li>
               <button type="button" class="mail-nav-item ${activeFolder === 'procurement' ? 'active' : ''}" data-folder="procurement">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
+                <span class="mail-shared-dot" style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:10px;"></span>
                 <span class="mail-nav-label">Procurement</span>
                 <span class="mail-nav-count">${c.procurement}</span>
               </button>
             </li>
             <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'shipping' ? 'active' : ''}" data-folder="shipping">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-                </svg>
-                <span class="mail-nav-label">Shipping Updates</span>
-                <span class="mail-nav-count">${c.shipping}</span>
+              <button type="button" class="mail-nav-item ${activeFolder === '3pl' ? 'active' : ''}" data-folder="3pl">
+                <span class="mail-shared-dot" style="width:8px;height:8px;border-radius:50%;background:#6b7280;display:inline-block;margin-right:10px;"></span>
+                <span class="mail-nav-label">3PL Partners</span>
+                <span class="mail-nav-count">${c['3pl']}</span>
               </button>
             </li>
             <li>
               <button type="button" class="mail-nav-item ${activeFolder === 'internal' ? 'active' : ''}" data-folder="internal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
-                <span class="mail-nav-label">Internal Ops</span>
+                <span class="mail-shared-dot" style="width:8px;height:8px;border-radius:50%;background:#eab308;display:inline-block;margin-right:10px;"></span>
+                <span class="mail-nav-label">Internal</span>
                 <span class="mail-nav-count">${c.internal}</span>
-              </button>
-            </li>
-          </ul>
-        </div>
-
-        <div class="mail-nav-section">
-          <div class="mail-section-title">QUICK VIEWS</div>
-          <ul class="mail-nav-list" role="list">
-            <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'unread' ? 'active' : ''}" data-folder="unread">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
-                </svg>
-                <span class="mail-nav-label">Unread</span>
-                <span class="mail-nav-count">${c.unread}</span>
-              </button>
-            </li>
-            <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'flagged' ? 'active' : ''}" data-folder="flagged">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
-                </svg>
-                <span class="mail-nav-label">Flagged</span>
-                <span class="mail-nav-count">${c.flagged}</span>
-              </button>
-            </li>
-            <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'attachments' ? 'active' : ''}" data-folder="attachments">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                </svg>
-                <span class="mail-nav-label">With Attachments</span>
-                <span class="mail-nav-count">${c.attachments}</span>
-              </button>
-            </li>
-            <li>
-              <button type="button" class="mail-nav-item ${activeFolder === 'orderRelated' ? 'active' : ''}" data-folder="orderRelated">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>
-                </svg>
-                <span class="mail-nav-label">Order Related</span>
-                <span class="mail-nav-count">${c.orderRelated}</span>
               </button>
             </li>
           </ul>
@@ -1346,33 +893,37 @@
     `;
   }
 
-  function renderThreadList() {
+    function renderThreadList() {
     const list = getFilteredThreads();
-    const unreadCount = threads.filter(t => t.unread).length;
-    const mentionsCount = threads.filter(t => t.mentions).length;
 
     return `
       <section class="mail-col-list" aria-label="Email conversation list">
         <div class="mail-list-header">
           <div class="mail-list-tabs" role="tablist">
-            <button type="button" class="mail-list-tab ${activeFilterTab === 'all' ? 'active' : ''}" data-tab="all" role="tab" aria-selected="${activeFilterTab === 'all'}">
-              All Mail
-            </button>
-            <button type="button" class="mail-list-tab ${activeFilterTab === 'unread' ? 'active' : ''}" data-tab="unread" role="tab" aria-selected="${activeFilterTab === 'unread'}">
-              Unread <span class="tab-pill-badge">${unreadCount}</span>
-            </button>
-            <button type="button" class="mail-list-tab ${activeFilterTab === 'mentions' ? 'active' : ''}" data-tab="mentions" role="tab" aria-selected="${activeFilterTab === 'mentions'}">
-              Mentions <span class="tab-pill-badge red-pill">${mentionsCount}</span>
-            </button>
-            <button type="button" class="mail-list-tab ${activeFilterTab === 'orderRelated' ? 'active' : ''}" data-tab="orderRelated" role="tab" aria-selected="${activeFilterTab === 'orderRelated'}">
-              Order Related
-            </button>
+            <button type="button" class="mail-list-tab ${activeFilterTab === 'all' ? 'active' : ''}" data-tab="all" role="tab" aria-selected="${activeFilterTab === 'all'}">All</button>
+            <button type="button" class="mail-list-tab ${activeFilterTab === 'unread' ? 'active' : ''}" data-tab="unread" role="tab" aria-selected="${activeFilterTab === 'unread'}">Unread</button>
+            <button type="button" class="mail-list-tab ${activeFilterTab === 'starred' ? 'active' : ''}" data-tab="starred" role="tab" aria-selected="${activeFilterTab === 'starred'}">Starred</button>
+            <button type="button" class="mail-list-tab ${activeFilterTab === 'mentions' ? 'active' : ''}" data-tab="mentions" role="tab" aria-selected="${activeFilterTab === 'mentions'}">Mentions</button>
+            <button type="button" class="mail-list-tab ${activeFilterTab === 'attachments' ? 'active' : ''}" data-tab="attachments" role="tab" aria-selected="${activeFilterTab === 'attachments'}">Attachments</button>
           </div>
-          <button type="button" class="mail-list-sort-btn" id="btn-toggle-sort" title="Sort threads" aria-label="Sort threads">
+          <button type="button" class="mail-list-filter-btn" id="btn-toggle-filter" title="Filter" aria-label="Filter threads">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
             </svg>
           </button>
+        </div>
+        <div class="mail-list-search-row">
+          <div class="mail-search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:#94a3b8;flex-shrink:0;">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="text" class="mail-list-search-input" id="stark-mail-search" placeholder="Search in mailbox..." value="${esc(searchQuery)}">
+            <button type="button" class="mail-filter-sliders-btn" id="btn-mail-sliders" title="Filter options">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="mail-thread-scroll" role="list">
@@ -1383,33 +934,42 @@
             </div>
           ` : list.map(item => `
             <article class="mail-thread-item ${item.id === activeThreadId ? 'selected' : ''} ${item.unread ? 'is-unread' : ''}" data-thread-id="${item.id}" tabindex="0" role="listitem">
-              <div class="mail-thread-left">
-                ${item.unread ? '<span class="unread-dot" title="Unread"></span>' : '<span class="unread-placeholder"></span>'}
-                <div class="mail-avatar" style="background:${item.avatarBg}">${esc(item.avatar)}</div>
+              <div class="mail-thread-select-box">
+                <input type="checkbox" class="thread-checkbox" data-thread-id="${item.id}" onclick="event.stopPropagation()">
               </div>
+              <div class="mail-avatar" style="background:${item.avatarBg};color:${item.avatarColor || '#ffffff'}">${esc(item.avatar)}</div>
 
               <div class="mail-thread-main">
                 <div class="mail-thread-top">
-                  <div class="mail-thread-sender-wrap">
-                    <strong class="mail-thread-sender">${esc(item.senderName)}</strong>
-                    <span class="mail-thread-company">${esc(item.senderCompany)}</span>
-                  </div>
+                  <strong class="mail-thread-sender">${esc(item.senderName)}</strong>
                   <time class="mail-thread-time">${esc(item.timestamp)}</time>
                 </div>
 
-                <h3 class="mail-thread-subject">${esc(item.subject)}</h3>
+                <div class="mail-thread-subject-row">
+                  <h3 class="mail-thread-subject">${esc(item.subject)}</h3>
+                  <div class="mail-thread-icons">
+                    ${item.attachments && item.attachments.length > 0 ? `
+                      <span class="mail-attach-icon" title="Attachments">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                      </span>
+                    ` : ''}
+                    <button type="button" class="mail-star-btn ${item.starred ? 'is-starred' : ''}" data-thread-id="${item.id}" title="${item.starred ? 'Unstar' : 'Star'}" onclick="event.stopPropagation()">
+                      <svg viewBox="0 0 24 24" fill="${item.starred ? '#eab308' : 'none'}" stroke="${item.starred ? '#eab308' : '#94a3b8'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
                 <p class="mail-thread-snippet">${esc(item.snippet)}</p>
 
-                <div class="mail-thread-badges">
-                  ${item.tags.map(tag => `<span class="mail-tag-pill tag-${tag.type}">${esc(tag.name)}</span>`).join('')}
-                  ${item.attachments && item.attachments.length > 0 ? `
-                    <span class="mail-has-attach" title="${item.attachments.length} attachment(s)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                      </svg>
-                    </span>
-                  ` : ''}
-                </div>
+                ${item.tags && item.tags.length > 0 ? `
+                  <div class="mail-thread-badges">
+                    ${item.tags.map(tag => `<span class="mail-tag-pill tag-${tag.type}">${esc(tag.name)}</span>`).join('')}
+                  </div>
+                ` : ''}
               </div>
             </article>
           `).join('')}
@@ -1418,7 +978,200 @@
     `;
   }
 
-  function renderDetailView() {
+    function renderComposePane() {
+    return `
+      <section class="mail-compose-pane" aria-label="Compose Supply Chain Email">
+        <!-- Header -->
+        <div class="mail-compose-pane-head">
+          <h2 class="mail-compose-title">Compose Supply Chain Email</h2>
+          <div class="mail-compose-win-controls">
+            <button type="button" class="mail-win-btn" id="btn-compose-min" title="Minimize">─</button>
+            <button type="button" class="mail-win-btn" id="btn-compose-expand" title="Maximize">⤢</button>
+            <button type="button" class="mail-win-btn" id="btn-compose-close" title="Close">✕</button>
+          </div>
+        </div>
+
+        <!-- ERP Action Chips Bar -->
+        <div class="mail-compose-chips-bar" role="toolbar" aria-label="ERP Quick Actions">
+          <button type="button" class="compose-action-chip" data-action="order">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <span>Insert Order Data</span>
+          </button>
+          <button type="button" class="compose-action-chip" data-action="tracking">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            <span>Insert Tracking</span>
+          </button>
+          <button type="button" class="compose-action-chip" data-action="invoice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span>Insert Invoice</span>
+          </button>
+          <button type="button" class="compose-action-chip" data-action="address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>Customer Address</span>
+          </button>
+          <button type="button" class="compose-action-chip" data-action="notes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <span>Insert Notes</span>
+          </button>
+        </div>
+
+        <!-- Recipients & Subject -->
+        <div class="mail-compose-fields">
+          <!-- To -->
+          <div class="compose-field-row">
+            <span class="compose-field-lbl">To</span>
+            <div class="compose-chips-wrap" id="compose-to-chips">
+              ${composeState.toRecipients.map((rec, i) => `
+                <span class="compose-recipient-chip">
+                  <span>${esc(rec)}</span>
+                  <button type="button" class="chip-remove" data-type="to" data-idx="${i}" aria-label="Remove recipient">✕</button>
+                </span>
+              `).join('')}
+              <input type="text" class="compose-chip-input" id="pane-compose-to-input" placeholder="${composeState.toRecipients.length === 0 ? 'Recipient email...' : ''}">
+            </div>
+            <div class="compose-field-actions">
+              <button type="button" class="compose-toggle-btn" id="btn-toggle-cc">Cc</button>
+              <button type="button" class="compose-toggle-btn" id="btn-toggle-bcc">Bcc</button>
+            </div>
+          </div>
+
+          <!-- Cc -->
+          <div class="compose-field-row" id="row-compose-cc" style="${composeState.showCc ? '' : 'display:none;'}">
+            <span class="compose-field-lbl">Cc</span>
+            <div class="compose-chips-wrap" id="compose-cc-chips">
+              ${composeState.ccRecipients.map((rec, i) => `
+                <span class="compose-recipient-chip">
+                  <span>${esc(rec)}</span>
+                  <button type="button" class="chip-remove" data-type="cc" data-idx="${i}" aria-label="Remove Cc">✕</button>
+                </span>
+              `).join('')}
+              <input type="text" class="compose-chip-input" id="pane-compose-cc-input" placeholder="${composeState.ccRecipients.length === 0 ? 'Cc email...' : ''}">
+            </div>
+          </div>
+
+          <!-- Bcc -->
+          <div class="compose-field-row" id="row-compose-bcc" style="${composeState.showBcc ? '' : 'display:none;'}">
+            <span class="compose-field-lbl">Bcc</span>
+            <div class="compose-chips-wrap" id="compose-bcc-chips">
+              ${composeState.bccRecipients.map((rec, i) => `
+                <span class="compose-recipient-chip">
+                  <span>${esc(rec)}</span>
+                  <button type="button" class="chip-remove" data-type="bcc" data-idx="${i}" aria-label="Remove Bcc">✕</button>
+                </span>
+              `).join('')}
+              <input type="text" class="compose-chip-input" id="pane-compose-bcc-input" placeholder="${composeState.bccRecipients.length === 0 ? 'Bcc email...' : ''}">
+            </div>
+          </div>
+
+          <!-- Subject -->
+          <div class="compose-field-row">
+            <span class="compose-field-lbl">Subject</span>
+            <input type="text" class="compose-subject-input" id="pane-compose-subject" value="${esc(composeState.subject)}" placeholder="Email subject line...">
+          </div>
+        </div>
+
+        <!-- Rich Toolbar -->
+        <div class="mail-compose-toolbar" role="toolbar" aria-label="Formatting options">
+          <select class="compose-format-select" id="pane-format-block" aria-label="Text format">
+            <option value="p">Paragraph ▾</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+          </select>
+          <span class="toolbar-divider"></span>
+          <button type="button" class="compose-toolbar-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+          <span class="toolbar-divider"></span>
+          <button type="button" class="compose-toolbar-btn" data-cmd="insertUnorderedList" title="Bulleted list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          </button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="insertOrderedList" title="Numbered list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>
+            </svg>
+          </button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="strikeThrough" title="Strikethrough">
+            <s>S</s>
+          </button>
+          <span class="toolbar-divider"></span>
+          <button type="button" class="compose-toolbar-btn" data-cmd="createLink" title="Insert link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+          </button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="insertImage" title="Insert image">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="schedule" title="Schedule appointment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="emoji" title="Insert emoji">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </button>
+          <button type="button" class="compose-toolbar-btn" data-cmd="more" title="More options">•••</button>
+        </div>
+
+        <!-- Body Editor Area -->
+        <div class="mail-compose-editor-wrap">
+          <textarea class="mail-compose-textarea" id="pane-compose-body" placeholder="Write supply chain email or notes...">${esc(composeState.body)}</textarea>
+        </div>
+
+        <!-- Footer Bar -->
+        <div class="mail-compose-footer">
+          <button type="button" class="compose-attach-btn" id="btn-pane-attach">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+            <span>Attach files ▾</span>
+          </button>
+
+          <div class="compose-footer-right">
+            <div class="compose-draft-status">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>
+              </svg>
+              <span>Draft saved at 10:24 AM</span>
+            </div>
+            <button type="button" class="compose-action-link-btn" id="btn-pane-schedule">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Schedule Send</span>
+            </button>
+            <button type="button" class="compose-action-link-btn" id="btn-pane-save-draft">Save Draft</button>
+            <button type="button" class="compose-send-primary-btn" id="btn-pane-send-email">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+              </svg>
+              <span>Send Email ▾</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+function renderDetailView() {
     const thread = getActiveThread();
     if (!thread) {
       return `<section class="mail-col-detail mail-empty-detail"><p>Select an email to view details.</p></section>`;
@@ -2087,12 +1840,285 @@
     // Select thread
     bindThreadClicks();
 
-    // Compose button
+        // Compose button toggle
     const composeBtn = root.querySelector('#btn-mail-compose');
     if (composeBtn) {
       composeBtn.onclick = () => {
-        openComposeModal();
+        isComposeActive = !isComposeActive;
+        updateView();
       };
+    }
+
+    if (isComposeActive) {
+      const closeBtn = root.querySelector('#btn-compose-close');
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          isComposeActive = false;
+          updateView();
+        };
+      }
+
+      const minBtn = root.querySelector('#btn-compose-min');
+      if (minBtn) {
+        minBtn.onclick = () => {
+          isComposeActive = false;
+          updateView();
+        };
+      }
+
+      // ERP Action Chips
+      root.querySelectorAll('.compose-action-chip').forEach(chip => {
+        chip.onclick = () => {
+          const action = chip.dataset.action;
+          const bodyEl = root.querySelector('#pane-compose-body');
+          let textToInsert = '';
+          if (action === 'order') {
+            textToInsert = '\n\n[Order Details]\nPO Number: #87366\nLine Items: 450x Ceramic Brake Pad Consignment\nStaging Bay: Bay #4 (Dock A)';
+          } else if (action === 'tracking') {
+            textToInsert = '\n\n[Tracking Telemetry]\nCarrier: DHL Express\nTracking Number: DHL4567823\nStatus: In Transit (ETA: Apr 24, 2026)';
+          } else if (action === 'invoice') {
+            textToInsert = '\n\n[Commercial Invoice]\nInvoice Number: INV-87366-C\nAmount: $18,450.00 USD\nPayment Terms: Net 30';
+          } else if (action === 'address') {
+            textToInsert = '\n\n[Shipping Destination]\nGlobal Parts Co. Distribution Hub\n1044 Logistics Pkwy, Suite B\nTampa, FL 33602';
+          } else if (action === 'notes') {
+            textToInsert = '\n\n[Internal Operations Note]\nConsignment cleared QA inspection at 09:30 AM. Ready for freight staging.';
+          }
+          if (bodyEl && textToInsert) {
+            bodyEl.value += textToInsert;
+            composeState.body = bodyEl.value;
+            notice(`Inserted ${chip.textContent.trim()}`);
+          }
+        };
+      });
+
+      // Cc / Bcc toggles
+      const btnToggleCc = root.querySelector('#btn-toggle-cc');
+      if (btnToggleCc) {
+        btnToggleCc.onclick = () => {
+          composeState.showCc = !composeState.showCc;
+          const ccRow = root.querySelector('#row-compose-cc');
+          if (ccRow) ccRow.style.display = composeState.showCc ? '' : 'none';
+        };
+      }
+
+      const btnToggleBcc = root.querySelector('#btn-toggle-bcc');
+      if (btnToggleBcc) {
+        btnToggleBcc.onclick = () => {
+          composeState.showBcc = !composeState.showBcc;
+          const bccRow = root.querySelector('#row-compose-bcc');
+          if (bccRow) bccRow.style.display = composeState.showBcc ? '' : 'none';
+        };
+      }
+
+      // Recipient chip removal
+      root.querySelectorAll('.chip-remove').forEach(btn => {
+        btn.onclick = () => {
+          const type = btn.dataset.type;
+          const idx = parseInt(btn.dataset.idx, 10);
+          if (type === 'to') composeState.toRecipients.splice(idx, 1);
+          else if (type === 'cc') composeState.ccRecipients.splice(idx, 1);
+          else if (type === 'bcc') composeState.bccRecipients.splice(idx, 1);
+          updateView();
+        };
+      });
+
+      // Recipient chip add on Enter or comma
+      const toInput = root.querySelector('#pane-compose-to-input');
+      if (toInput) {
+        toInput.onkeydown = e => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const val = toInput.value.replace(/,/g, '').trim();
+            if (val && !composeState.toRecipients.includes(val)) {
+              composeState.toRecipients.push(val);
+              updateView();
+            }
+          }
+        };
+      }
+
+      const ccInput = root.querySelector('#pane-compose-cc-input');
+      if (ccInput) {
+        ccInput.onkeydown = e => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const val = ccInput.value.replace(/,/g, '').trim();
+            if (val && !composeState.ccRecipients.includes(val)) {
+              composeState.ccRecipients.push(val);
+              updateView();
+            }
+          }
+        };
+      }
+
+      // Subject & Body state retention
+      const subjInput = root.querySelector('#pane-compose-subject');
+      if (subjInput) {
+        subjInput.oninput = e => {
+          composeState.subject = e.target.value;
+        };
+      }
+
+      const bodyInput = root.querySelector('#pane-compose-body');
+      if (bodyInput) {
+        bodyInput.oninput = e => {
+          composeState.body = e.target.value;
+        };
+      }
+
+      // Toolbar buttons
+      root.querySelectorAll('.compose-toolbar-btn').forEach(btn => {
+        btn.onclick = () => {
+          const cmd = btn.dataset.cmd;
+          const textarea = root.querySelector('#pane-compose-body');
+          if (!textarea) return;
+          if (cmd === 'bold') {
+            textarea.value += ' **bold text** ';
+          } else if (cmd === 'italic') {
+            textarea.value += ' *italic text* ';
+          } else if (cmd === 'underline') {
+            textarea.value += ' _underlined text_ ';
+          } else if (cmd === 'insertUnorderedList') {
+            textarea.value += '\n• Item 1\n• Item 2\n';
+          } else if (cmd === 'insertOrderedList') {
+            textarea.value += '\n1. First step\n2. Second step\n';
+          } else if (cmd === 'strikeThrough') {
+            textarea.value += ' ~~strikethrough~~ ';
+          } else if (cmd === 'createLink') {
+            textarea.value += ' [link text](https://mk97.com) ';
+          } else if (cmd === 'insertImage') {
+            notice('Insert Image: drag and drop image into composer.');
+          } else if (cmd === 'schedule') {
+            notice('Schedule: Select dispatch date/time slot.');
+          } else if (cmd === 'emoji') {
+            textarea.value += ' 📦 ';
+          } else if (cmd === 'more') {
+            notice('More options: Additional formatting options available.');
+          }
+          composeState.body = textarea.value;
+        };
+      });
+
+      // Bottom bar actions
+      const attachBtn = root.querySelector('#btn-pane-attach');
+      if (attachBtn) {
+        attachBtn.onclick = () => {
+          notice('Attach files: PDF, XLSX, and CSV file attachments ready for upload.');
+        };
+      }
+
+      const draftBtn = root.querySelector('#btn-pane-save-draft');
+      if (draftBtn) {
+        draftBtn.onclick = () => {
+          const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const statusEl = root.querySelector('.compose-draft-status span');
+          if (statusEl) statusEl.textContent = `Draft saved at ${time}`;
+          notice(`Draft saved at ${time}`);
+        };
+      }
+
+      const schedBtn = root.querySelector('#btn-pane-schedule');
+      if (schedBtn) {
+        schedBtn.onclick = () => {
+          notice('Scheduled email: queued for tomorrow 09:00 AM dispatch.');
+        };
+      }
+
+      // Send Email
+      const sendEmailBtn = root.querySelector('#btn-pane-send-email');
+      if (sendEmailBtn) {
+        sendEmailBtn.onclick = async () => {
+          const toInput = composeState.toRecipients.join(', ');
+          const subjectInput = (root.querySelector('#pane-compose-subject')?.value || composeState.subject).trim();
+          const bodyInput = (root.querySelector('#pane-compose-body')?.value || composeState.body).trim();
+
+          if (!toInput) {
+            notice('Please specify at least one recipient.');
+            return;
+          }
+          if (!bodyInput) {
+            notice('Please enter an email body.');
+            return;
+          }
+
+          sendEmailBtn.disabled = true;
+          sendEmailBtn.innerHTML = 'Sending...';
+
+          try {
+            const sb = getSupabase();
+            if (sb && sb.functions) {
+              try {
+                await sb.functions.invoke('send-sandbox-email', {
+                  body: {
+                    to: toInput || 'manoj.k.manne@gmail.com',
+                    subject: subjectInput || 'PO #87366 - Confirmed for Shipment',
+                    body: bodyInput
+                  }
+                });
+              } catch (fnErr) {
+                console.warn('[MK97 Mail] Function invoke note:', fnErr);
+              }
+            }
+
+            if (sb && sb.from) {
+              try {
+                await sb.from('emails').insert([{
+                  sender_name: 'Manoj Manne',
+                  sender_company: 'MK97 Supply Chain',
+                  sender_email: 'supply.chain@mk97.com',
+                  to_email: toInput || 'james.smith@globalpartsco.com',
+                  subject: subjectInput,
+                  body: bodyInput,
+                  folder: 'sent',
+                  unread: false
+                }]);
+              } catch (dbErr) {
+                console.warn('[MK97 Mail] Database insert note:', dbErr);
+              }
+            }
+
+            const newThread = {
+              id: 'sent-' + Date.now(),
+              senderName: 'Manoj Manne',
+              senderCompany: 'MK97 Supply Chain',
+              senderEmail: 'supply.chain@mk97.com',
+              to: toInput,
+              subject: subjectInput,
+              timestamp: 'Just now',
+              fullDate: new Date().toLocaleString(),
+              unread: false,
+              starred: false,
+              flagged: false,
+              folder: 'sent',
+              category: 'all',
+              avatar: 'MM',
+              avatarBg: '#0f766e',
+              tags: [{ name: 'Outbound', type: 'shipment' }],
+              snippet: bodyInput.slice(0, 70) + '...',
+              body: bodyInput
+            };
+            threads.unshift(newThread);
+
+            notice(`Email dispatched to ${toInput} successfully!`);
+            isComposeActive = false;
+            activeThreadId = newThread.id;
+            updateView();
+          } catch (err) {
+            console.error('[MK97 Mail] Send failed:', err);
+            notice('Failed to dispatch email.');
+          } finally {
+            if (sendEmailBtn) {
+              sendEmailBtn.disabled = false;
+              sendEmailBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+                </svg>
+                <span>Send Email ▾</span>
+              `;
+            }
+          }
+        };
+      }
     }
 
     // Templates button
@@ -2509,7 +2535,7 @@
     }
   }
 
-  function bindThreadClicks() {
+    function bindThreadClicks() {
     const root = document.getElementById('stark-mail-content');
     if (!root) return;
 
@@ -2518,7 +2544,22 @@
         activeThreadId = card.dataset.threadId;
         const thread = getActiveThread();
         if (thread) thread.unread = false;
+        if (isComposeActive) isComposeActive = false;
         updateView();
+      };
+    });
+
+    root.querySelectorAll('.mail-star-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const tid = btn.dataset.threadId;
+        const thread = threads.find(t => t.id === tid);
+        if (thread) {
+          thread.starred = !thread.starred;
+          updateView();
+          updateSidebarCounts();
+          notice(thread.starred ? 'Conversation starred.' : 'Star removed.');
+        }
       };
     });
   }
@@ -2961,11 +3002,10 @@
       </div>
       <div class="stark-mail-container">
         ${renderSubHeader()}
-        <div class="stark-mail-workspace">
+        <div class="stark-mail-workspace ${isComposeActive ? 'compose-active' : ''}">
           ${renderSidebar()}
           ${renderThreadList()}
-          ${renderDetailView()}
-          ${renderIntelPanel()}
+          ${isComposeActive ? renderComposePane() : `${renderDetailView()}${renderIntelPanel()}`}
         </div>
       </div>
     `;
