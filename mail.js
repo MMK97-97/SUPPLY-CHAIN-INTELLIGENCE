@@ -1453,17 +1453,17 @@
             </svg>
             <span>Archive</span>
           </button>
-          <button type="button" class="mail-tool-btn" id="tool-flag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" class="mail-tool-btn ${thread.flagged ? 'active is-flagged' : ''}" id="tool-flag" style="${thread.flagged ? 'color:#d97706;background:#fef3c7;border-color:#fde68a;' : ''}">
+            <svg viewBox="0 0 24 24" fill="${thread.flagged ? '#d97706' : 'none'}" stroke="${thread.flagged ? '#d97706' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
             </svg>
-            <span>Flag</span>
+            <span>${thread.flagged ? 'Flagged' : 'Flag'}</span>
           </button>
-          <button type="button" class="mail-tool-btn" id="tool-assign">
+          <button type="button" class="mail-tool-btn ${thread.assignedTo ? 'active is-assigned' : ''}" id="tool-assign" style="${thread.assignedTo ? 'color:#0284c7;background:#e0f2fe;border-color:#bae6fd;' : ''}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>
             </svg>
-            <span>Assign</span>
+            <span>${thread.assignedTo ? esc(thread.assignedTo.name.split(' ')[0]) : 'Assign'}</span>
           </button>
           <button type="button" class="mail-tool-btn" id="tool-move">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1831,38 +1831,48 @@
     `;
   }
 
-  function renderComposeModal() {
+  function renderComposeModal(opts = {}) {
+    const thread = opts.thread;
+    const isForward = opts.mode === 'forward';
+    const title = opts.title || (isForward ? 'Forward Supply Chain Email' : 'New Supply Chain Email');
+    const toVal = isForward ? '' : (opts.to !== undefined ? opts.to : 'procurement@globalpartsco.com');
+    const ccVal = opts.cc !== undefined ? opts.cc : 'supply.chain@mk97.com';
+    const subjectVal = isForward && thread
+      ? `Fwd: ${thread.subject}`
+      : (opts.subject !== undefined ? opts.subject : 'PO #87366 - Warehouse Staging Confirmation');
+    const defaultForwardBody = thread
+      ? `\n\n---------- Forwarded message ---------\nFrom: ${thread.senderName} <${thread.senderEmail}>\nDate: ${thread.fullDate || thread.timestamp}\nSubject: ${thread.subject}\nTo: ${thread.to || ''}\n\n${thread.body}`
+      : '';
+    const bodyVal = isForward
+      ? defaultForwardBody
+      : (opts.body !== undefined ? opts.body : `Hi team,\n\nWe have verified staging slot allocations for incoming PO #87366 at the Sarasota DC hub. Please ensure the BOL and packing slips are transmitted prior to transit departure.\n\nBest regards,\nMK97 Supply Chain Operations`);
+
     return `
       <div class="sys-modal-backdrop mail-compose-backdrop" id="compose-modal-backdrop">
         <div class="sys-modal mail-compose-dialog" role="dialog" aria-labelledby="compose-modal-title">
           <div class="sys-modal-head">
-            <h3 id="compose-modal-title">New Supply Chain Email</h3>
+            <h3 id="compose-modal-title">${esc(title)}</h3>
             <button type="button" class="sys-modal-close" id="btn-close-compose" aria-label="Close dialog">✕</button>
           </div>
           <div class="sys-modal-body">
             <div class="sys-form">
               <label>To (Recipient)
-                <input id="compose-to" type="email" placeholder="e.g. james.smith@globalpartsco.com" value="procurement@globalpartsco.com">
+                <input id="compose-to" type="email" placeholder="e.g. james.smith@globalpartsco.com" value="${esc(toVal)}">
               </label>
               <label>Cc (Operations &amp; Logistics)
-                <input id="compose-cc" type="text" placeholder="e.g. logistics@mk97.com" value="supply.chain@mk97.com">
+                <input id="compose-cc" type="text" placeholder="e.g. logistics@mk97.com" value="${esc(ccVal)}">
               </label>
               <label>Subject / PO Reference
-                <input id="compose-subject" type="text" placeholder="e.g. PO #87366 - Delivery Schedule Confirmation" value="PO #87366 - Warehouse Staging Confirmation">
+                <input id="compose-subject" type="text" placeholder="e.g. PO #87366 - Delivery Schedule Confirmation" value="${esc(subjectVal)}">
               </label>
               <label>Message Content
-                <textarea id="compose-body" rows="6" placeholder="Type your supply chain correspondence...">Hi team,
-
-We have verified staging slot allocations for incoming PO #87366 at the Sarasota DC hub. Please ensure the BOL and packing slips are transmitted prior to transit departure.
-
-Best regards,
-MK97 Supply Chain Operations</textarea>
+                <textarea id="compose-body" rows="6" placeholder="Type your supply chain correspondence...">${esc(bodyVal)}</textarea>
               </label>
             </div>
           </div>
           <div class="sys-modal-foot">
             <button type="button" class="sys-btn" id="btn-cancel-compose">Cancel</button>
-            <button type="button" class="sys-btn primary" id="btn-submit-compose">Send Email ↗</button>
+            <button type="button" class="sys-btn primary" id="btn-submit-compose">${isForward ? 'Forward Email ↗' : 'Send Email ↗'}</button>
           </div>
         </div>
       </div>
@@ -1898,6 +1908,99 @@ MK97 Supply Chain Operations</textarea>
           </div>
           <div class="sys-modal-foot">
             <button type="button" class="sys-btn" id="btn-cancel-templates">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAssignModal(thread) {
+    const teamMembers = [
+      { name: "Elena Rostova", role: "Logistics Operations Lead", email: "elena.rostova@mk97.com", avatar: "ER", color: "#0f766e" },
+      { name: "Marcus Vance", role: "Senior Procurement Specialist", email: "marcus.vance@mk97.com", avatar: "MV", color: "#1e40af" },
+      { name: "Sarah Jenkins", role: "Quality Control & Compliance", email: "sarah.j@mk97.com", avatar: "SJ", color: "#7c2d12" },
+      { name: "David Kim", role: "Warehouse Bay & Dock Dispatch", email: "david.k@mk97.com", avatar: "DK", color: "#166534" },
+      { name: "Manoj Manne", role: "Supply Chain Administrator", email: "manoj.k.manne@gmail.com", avatar: "MM", color: "#0284c7" }
+    ];
+
+    return `
+      <div class="sys-modal-backdrop" id="assign-modal-backdrop">
+        <div class="sys-modal" style="max-width:520px;" role="dialog" aria-labelledby="assign-modal-title">
+          <div class="sys-modal-head">
+            <h3 id="assign-modal-title">Assign Conversation</h3>
+            <button type="button" class="sys-modal-close" id="btn-close-assign" aria-label="Close dialog">✕</button>
+          </div>
+          <div class="sys-modal-body">
+            <p style="margin:0 0 12px 0;font-size:13px;color:#64748b;">
+              Assign <strong>${esc(thread.subject)}</strong> to an operations team member or workflow specialist:
+            </p>
+            <div class="assign-list" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:4px;">
+              ${teamMembers.map((m, idx) => `
+                <div class="assign-item" data-name="${esc(m.name)}" data-email="${esc(m.email)}" data-role="${esc(m.role)}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="width:34px;height:34px;border-radius:50%;background:${m.color};color:#ffffff;display:inline-grid;place-content:center;font-weight:700;font-size:12px;">${m.avatar}</span>
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;color:#0f172a;">${esc(m.name)}</div>
+                      <div style="font-size:12px;color:#64748b;">${esc(m.role)} · ${esc(m.email)}</div>
+                    </div>
+                  </div>
+                  <button type="button" class="sys-btn small primary btn-select-assignee" data-index="${idx}">Assign</button>
+                </div>
+              `).join('')}
+            </div>
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;">
+              <label style="font-size:12px;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Or Assign to Custom Email:</label>
+              <div style="display:flex;gap:8px;">
+                <input type="email" id="custom-assign-email" placeholder="e.g. specialist@mk97.com" style="flex:1;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+                <button type="button" class="sys-btn primary" id="btn-custom-assign">Assign</button>
+              </div>
+            </div>
+          </div>
+          <div class="sys-modal-foot">
+            <button type="button" class="sys-btn" id="btn-cancel-assign">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMoveModal(thread) {
+    const folders = [
+      { id: "inbox", name: "Inbox", icon: "📥", desc: "Main incoming operations correspondence" },
+      { id: "archive", name: "Archive", icon: "📦", desc: "Completed orders and historical threads" },
+      { id: "sent", name: "Sent", icon: "📤", desc: "Transmitted outbound emails" },
+      { id: "drafts", name: "Drafts", icon: "📝", desc: "Unsent compositions and templates" },
+      { id: "trash", name: "Trash", icon: "🗑️", desc: "Discarded and deleted messages" }
+    ];
+
+    return `
+      <div class="sys-modal-backdrop" id="move-modal-backdrop">
+        <div class="sys-modal" style="max-width:460px;" role="dialog" aria-labelledby="move-modal-title">
+          <div class="sys-modal-head">
+            <h3 id="move-modal-title">Move Conversation</h3>
+            <button type="button" class="sys-modal-close" id="btn-close-move" aria-label="Close dialog">✕</button>
+          </div>
+          <div class="sys-modal-body">
+            <p style="margin:0 0 12px 0;font-size:13px;color:#64748b;">
+              Select destination folder for <strong>${esc(thread.subject)}</strong>:
+            </p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              ${folders.map(f => `
+                <div class="move-folder-option" data-folder="${f.id}" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:${thread.folder === f.id ? '#eff6ff' : '#f8fafc'};border:1px solid ${thread.folder === f.id ? '#3b82f6' : '#e2e8f0'};border-radius:8px;cursor:pointer;transition:all 0.15s ease;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:18px;">${f.icon}</span>
+                    <div>
+                      <strong style="font-size:13.5px;color:#0f172a;">${f.name}</strong>
+                      <div style="font-size:12px;color:#64748b;">${f.desc}</div>
+                    </div>
+                  </div>
+                  ${thread.folder === f.id ? '<span style="font-size:11px;font-weight:700;color:#2563eb;background:#dbeafe;padding:3px 8px;border-radius:12px;">Current</span>' : '<button type="button" class="sys-btn small">Move here</button>'}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="sys-modal-foot">
+            <button type="button" class="sys-btn" id="btn-cancel-move">Cancel</button>
           </div>
         </div>
       </div>
@@ -2192,14 +2295,47 @@ MK97 Supply Chain Operations</textarea>
       };
     }
 
-    // Action toolbar buttons
+    // Action toolbar buttons (Reply, Reply all, Forward, Archive, Flag, Assign, Move, More)
     const replyToolBtn = root.querySelector('#tool-reply');
     if (replyToolBtn) {
       replyToolBtn.onclick = () => {
         const input = root.querySelector('#mail-reply-input');
+        const thread = getActiveThread();
+        root.querySelectorAll('.composer-tab').forEach(t => t.classList.remove('active'));
+        root.querySelector('.composer-tab[data-type="reply"]')?.classList.add('active');
         if (input) {
+          input.placeholder = `Write a reply to ${thread?.senderName || 'sender'}...`;
           input.focus();
           input.scrollIntoView({ behavior: 'smooth' });
+        }
+        notice('Replying to ' + (thread?.senderName || thread?.senderEmail || 'conversation'));
+      };
+    }
+
+    const replyAllToolBtn = root.querySelector('#tool-reply-all');
+    if (replyAllToolBtn) {
+      replyAllToolBtn.onclick = () => {
+        const input = root.querySelector('#mail-reply-input');
+        const thread = getActiveThread();
+        root.querySelectorAll('.composer-tab').forEach(t => t.classList.remove('active'));
+        root.querySelector('.composer-tab[data-type="replyAll"]')?.classList.add('active');
+        if (input) {
+          const allRecipients = [thread?.senderEmail, thread?.cc].filter(Boolean).join(', ');
+          input.placeholder = `Write a reply all to ${allRecipients || 'all recipients'}...`;
+          input.focus();
+          input.scrollIntoView({ behavior: 'smooth' });
+        }
+        notice('Replying to all recipients (' + [thread?.senderEmail, thread?.cc].filter(Boolean).join(', ') + ')');
+      };
+    }
+
+    const forwardToolBtn = root.querySelector('#tool-forward');
+    if (forwardToolBtn) {
+      forwardToolBtn.onclick = () => {
+        const thread = getActiveThread();
+        if (thread) {
+          openComposeModal({ mode: 'forward', thread });
+          notice('Forwarding: ' + thread.subject);
         }
       };
     }
@@ -2210,8 +2346,13 @@ MK97 Supply Chain Operations</textarea>
         const thread = getActiveThread();
         if (thread) {
           thread.folder = 'archive';
-          notice('Conversation archived.');
+          const remaining = getFilteredThreads();
+          if (remaining.length > 0 && !remaining.some(t => t.id === activeThreadId)) {
+            activeThreadId = remaining[0].id;
+          }
+          updateSidebarCounts();
           updateView();
+          notice('Conversation archived.');
         }
       };
     }
@@ -2222,8 +2363,147 @@ MK97 Supply Chain Operations</textarea>
         const thread = getActiveThread();
         if (thread) {
           thread.flagged = !thread.flagged;
-          notice(thread.flagged ? 'Email flagged.' : 'Flag removed.');
+          updateSidebarCounts();
           updateView();
+          notice(thread.flagged ? 'Email flagged for follow-up.' : 'Flag removed.');
+        }
+      };
+    }
+
+    const assignToolBtn = root.querySelector('#tool-assign');
+    if (assignToolBtn) {
+      assignToolBtn.onclick = () => {
+        const thread = getActiveThread();
+        if (thread) {
+          openAssignModal(thread);
+        }
+      };
+    }
+
+    const moveToolBtn = root.querySelector('#tool-move');
+    if (moveToolBtn) {
+      moveToolBtn.onclick = () => {
+        const thread = getActiveThread();
+        if (thread) {
+          openMoveModal(thread);
+        }
+      };
+    }
+
+    const moreToolBtn = root.querySelector('#tool-more');
+    if (moreToolBtn) {
+      moreToolBtn.onclick = (e) => {
+        e.stopPropagation();
+        const thread = getActiveThread();
+        if (thread) {
+          openMoreMenu(moreToolBtn, thread);
+        }
+      };
+    }
+
+    const quickReplyBtn = root.querySelector('#btn-quick-reply');
+    if (quickReplyBtn) {
+      quickReplyBtn.onclick = () => {
+        if (replyToolBtn) replyToolBtn.click();
+      };
+    }
+
+    const metaMoreBtn = root.querySelector('#btn-meta-more');
+    if (metaMoreBtn) {
+      metaMoreBtn.onclick = (e) => {
+        e.stopPropagation();
+        const thread = getActiveThread();
+        if (thread) {
+          openMoreMenu(metaMoreBtn, thread);
+        }
+      };
+    }
+
+    // Quick Composer Tabs (Reply, Reply all, Forward)
+    root.querySelectorAll('.composer-tab').forEach(tab => {
+      tab.onclick = () => {
+        root.querySelectorAll('.composer-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const type = tab.dataset.type;
+        const thread = getActiveThread();
+        const input = root.querySelector('#mail-reply-input');
+        if (type === 'reply') {
+          if (input) {
+            input.placeholder = `Write a reply to ${thread?.senderName || 'sender'}...`;
+            input.focus();
+          }
+          notice('Switched to Reply mode.');
+        } else if (type === 'replyAll') {
+          if (input) {
+            const allRecipients = [thread?.senderEmail, thread?.cc].filter(Boolean).join(', ');
+            input.placeholder = `Write a reply to all (${allRecipients || 'all recipients'})...`;
+            input.focus();
+          }
+          notice('Switched to Reply all mode.');
+        } else if (type === 'forward') {
+          if (thread) {
+            openComposeModal({ mode: 'forward', thread });
+          }
+        }
+      };
+    });
+
+    // Quick Composer Tools (Formatting, Attach, Link, Emoji, Image)
+    const composerTools = root.querySelectorAll('.composer-tool-btn');
+    if (composerTools.length >= 5) {
+      // Aa - Formatting
+      composerTools[0].onclick = () => {
+        const input = root.querySelector('#mail-reply-input');
+        if (!input) return;
+        const start = input.selectionStart || 0;
+        const end = input.selectionEnd || 0;
+        const sel = input.value.substring(start, end);
+        if (sel) {
+          input.setRangeText(`**${sel}**`, start, end, 'select');
+        } else {
+          input.setRangeText('**bold text**', start, end, 'select');
+        }
+        input.focus();
+      };
+      // Attach File
+      composerTools[1].onclick = () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.onchange = (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            notice(`Attachment attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+            const input = root.querySelector('#mail-reply-input');
+            if (input) input.value += `\n[Attachment: ${file.name}]`;
+          }
+        };
+        fileInput.click();
+      };
+      // Insert Link
+      composerTools[2].onclick = () => {
+        const url = prompt('Enter link URL (e.g. https://tracking.carrier.com/123):', 'https://');
+        if (url && url.trim() && url !== 'https://') {
+          const input = root.querySelector('#mail-reply-input');
+          if (input) {
+            input.value += ` [Link](${url.trim()})`;
+            input.focus();
+          }
+        }
+      };
+      // Insert Emoji
+      composerTools[3].onclick = () => {
+        const input = root.querySelector('#mail-reply-input');
+        if (input) {
+          input.value += ' 👍';
+          input.focus();
+        }
+      };
+      // Insert Image
+      composerTools[4].onclick = () => {
+        const input = root.querySelector('#mail-reply-input');
+        if (input) {
+          input.value += '\n[Image: Operational-Logistics-Manifest.png]';
+          input.focus();
         }
       };
     }
@@ -2243,10 +2523,14 @@ MK97 Supply Chain Operations</textarea>
     });
   }
 
-  function openComposeModal() {
+  function openComposeModal(opts = {}) {
     const modalEl = document.createElement('div');
-    modalEl.innerHTML = renderComposeModal();
+    modalEl.innerHTML = renderComposeModal(opts);
     document.body.appendChild(modalEl.firstElementChild);
+
+    if (opts.mode === 'forward') {
+      setTimeout(() => document.getElementById('compose-to')?.focus(), 50);
+    }
 
     const backdrop = document.getElementById('compose-modal-backdrop');
     const closeBtn = document.getElementById('btn-close-compose');
@@ -2413,6 +2697,227 @@ MK97 Supply Chain Operations</textarea>
         openComposeModal();
       };
     });
+  }
+
+  function openAssignModal(thread) {
+    if (!thread) return;
+    const modalEl = document.createElement('div');
+    modalEl.innerHTML = renderAssignModal(thread);
+    document.body.appendChild(modalEl.firstElementChild);
+
+    const backdrop = document.getElementById('assign-modal-backdrop');
+    const closeBtn = document.getElementById('btn-close-assign');
+    const cancelBtn = document.getElementById('btn-cancel-assign');
+
+    function close() {
+      backdrop?.remove();
+    }
+
+    if (closeBtn) closeBtn.onclick = close;
+    if (cancelBtn) cancelBtn.onclick = close;
+
+    function doAssign(name, email) {
+      if (!name && !email) return;
+      const displayName = name || email;
+      thread.assignedTo = { name: displayName, email: email || displayName };
+      thread.tags = (thread.tags || []).filter(t => !t.name.startsWith('Assigned:'));
+      thread.tags.push({ name: 'Assigned: ' + displayName, type: 'vendor' });
+      close();
+      updateView();
+      notice(`Conversation assigned to ${displayName}.`);
+    }
+
+    backdrop.querySelectorAll('.assign-item').forEach(item => {
+      item.onclick = () => {
+        const name = item.dataset.name;
+        const email = item.dataset.email;
+        doAssign(name, email);
+      };
+    });
+
+    const customAssignBtn = backdrop.querySelector('#btn-custom-assign');
+    const customAssignInput = backdrop.querySelector('#custom-assign-email');
+    if (customAssignBtn && customAssignInput) {
+      customAssignBtn.onclick = () => {
+        const val = customAssignInput.value.trim();
+        if (val) {
+          doAssign(val.split('@')[0], val);
+        } else {
+          notice('Please enter an email address or team member name.', true);
+        }
+      };
+      customAssignInput.onkeydown = (e) => {
+        if (e.key === 'Enter') customAssignBtn.click();
+      };
+    }
+  }
+
+  function openMoveModal(thread) {
+    if (!thread) return;
+    const modalEl = document.createElement('div');
+    modalEl.innerHTML = renderMoveModal(thread);
+    document.body.appendChild(modalEl.firstElementChild);
+
+    const backdrop = document.getElementById('move-modal-backdrop');
+    const closeBtn = document.getElementById('btn-close-move');
+    const cancelBtn = document.getElementById('btn-cancel-move');
+
+    function close() {
+      backdrop?.remove();
+    }
+
+    if (closeBtn) closeBtn.onclick = close;
+    if (cancelBtn) cancelBtn.onclick = close;
+
+    backdrop.querySelectorAll('.move-folder-option').forEach(opt => {
+      opt.onclick = () => {
+        const targetFolder = opt.dataset.folder;
+        if (targetFolder) {
+          thread.folder = targetFolder;
+          close();
+          const remaining = getFilteredThreads();
+          if (remaining.length > 0 && !remaining.some(t => t.id === activeThreadId)) {
+            activeThreadId = remaining[0].id;
+          }
+          updateSidebarCounts();
+          updateView();
+          notice(`Conversation moved to ${targetFolder.charAt(0).toUpperCase() + targetFolder.slice(1)}.`);
+        }
+      };
+    });
+  }
+
+  function openMoreMenu(triggerBtn, thread) {
+    if (!thread || !triggerBtn) return;
+    const existing = document.getElementById('mail-more-menu-popover');
+    if (existing) {
+      existing.remove();
+      return;
+    }
+
+    const rect = triggerBtn.getBoundingClientRect();
+    const popover = document.createElement('div');
+    popover.id = 'mail-more-menu-popover';
+    popover.setAttribute('role', 'menu');
+    popover.style.cssText = `
+      position: fixed;
+      top: ${rect.bottom + 6}px;
+      left: ${Math.max(10, Math.min(rect.left, window.innerWidth - 220))}px;
+      width: 200px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.12), 0 8px 10px -6px rgba(0,0,0,0.08);
+      z-index: 2147483640;
+      display: flex;
+      flex-direction: column;
+      padding: 6px;
+      font-size: 13px;
+    `;
+
+    popover.innerHTML = `
+      <button type="button" class="mail-menu-item" id="menu-unread" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:none;border:none;border-radius:6px;cursor:pointer;text-align:left;color:#334155;font-size:13px;transition:background 0.1s;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>${thread.unread ? 'Mark as read' : 'Mark as unread'}</span>
+      </button>
+      <button type="button" class="mail-menu-item" id="menu-star" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:none;border:none;border-radius:6px;cursor:pointer;text-align:left;color:#334155;font-size:13px;transition:background 0.1s;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="${thread.starred ? '#f59e0b' : 'none'}" stroke="${thread.starred ? '#f59e0b' : 'currentColor'}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span>${thread.starred ? 'Remove star' : 'Star message'}</span>
+      </button>
+      <button type="button" class="mail-menu-item" id="menu-print" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:none;border:none;border-radius:6px;cursor:pointer;text-align:left;color:#334155;font-size:13px;transition:background 0.1s;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <span>Print thread</span>
+      </button>
+      <button type="button" class="mail-menu-item" id="menu-download-eml" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:none;border:none;border-radius:6px;cursor:pointer;text-align:left;color:#334155;font-size:13px;transition:background 0.1s;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download (.eml)</span>
+      </button>
+      <div style="height:1px;background:#e2e8f0;margin:4px 0;"></div>
+      <button type="button" class="mail-menu-item" id="menu-trash" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:none;border:none;border-radius:6px;cursor:pointer;text-align:left;color:#ef4444;font-size:13px;transition:background 0.1s;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>Delete conversation</span>
+      </button>
+    `;
+
+    document.body.appendChild(popover);
+
+    popover.querySelectorAll('.mail-menu-item').forEach(btn => {
+      btn.onmouseenter = () => btn.style.background = '#f1f5f9';
+      btn.onmouseleave = () => btn.style.background = 'none';
+    });
+
+    const onDocClick = (e) => {
+      if (!popover.contains(e.target) && e.target !== triggerBtn && !triggerBtn.contains(e.target)) {
+        popover.remove();
+        document.removeEventListener('click', onDocClick);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', onDocClick), 10);
+
+    popover.querySelector('#menu-unread').onclick = () => {
+      thread.unread = !thread.unread;
+      updateView();
+      updateSidebarCounts();
+      notice(thread.unread ? 'Marked conversation as unread.' : 'Marked conversation as read.');
+      popover.remove();
+    };
+
+    popover.querySelector('#menu-star').onclick = () => {
+      thread.starred = !thread.starred;
+      updateView();
+      updateSidebarCounts();
+      notice(thread.starred ? 'Conversation starred.' : 'Star removed.');
+      popover.remove();
+    };
+
+    popover.querySelector('#menu-print').onclick = () => {
+      popover.remove();
+      window.print();
+    };
+
+    popover.querySelector('#menu-download-eml').onclick = () => {
+      popover.remove();
+      downloadThreadEml(thread);
+    };
+
+    popover.querySelector('#menu-trash').onclick = () => {
+      thread.folder = 'trash';
+      const remaining = getFilteredThreads();
+      if (remaining.length > 0 && !remaining.some(t => t.id === activeThreadId)) {
+        activeThreadId = remaining[0].id;
+      }
+      updateView();
+      updateSidebarCounts();
+      notice('Conversation moved to Trash.');
+      popover.remove();
+    };
+  }
+
+  function downloadThreadEml(thread) {
+    if (!thread) return;
+    const emlContent = [
+      `From: "${thread.senderName || 'Sender'}" <${thread.senderEmail || 'unknown@mk97.com'}>`,
+      `To: <${thread.to || ''}>`,
+      thread.cc ? `Cc: <${thread.cc}>` : null,
+      `Subject: ${thread.subject || '(No Subject)'}`,
+      `Date: ${new Date(thread.fullDate || Date.now()).toUTCString()}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: text/plain; charset=utf-8`,
+      ``,
+      thread.body || '',
+      thread.signOff ? `\n-- \n${thread.signOff}` : ''
+    ].filter(line => line !== null).join('\r\n');
+
+    const blob = new Blob([emlContent], { type: 'message/rfc822' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(thread.subject || 'conversation').replace(/[^a-zA-Z0-9_-]/g, '_')}.eml`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    notice(`Downloaded ${a.download}`);
   }
 
   function updateThreadList() {
