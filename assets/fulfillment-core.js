@@ -228,6 +228,7 @@
     return S.transaction('WAREHOUSE_ORDER_DISPATCHED',id,state => {
       const order = state.enterprise.orders.find(o => o.id === id);
       if (!order || final(order) || pending(order) || order.type === 'HOLD_PO' || ['3PL','DROPSHIP'].includes(order.fulfillment?.kind) || warehouseId(order) !== 'SARASOTA') throw new Error('Choose a validated, open Sarasota warehouse order.');
+      if (order.scanVerification?.events?.length && !order.scanVerification.completedAt) throw new Error('Complete barcode verification of every order item before dispatch.');
       if (!input.packed || !text(input.tracking) || !text(input.carrier)) throw new Error('Confirm picking/packing and enter the carrier and tracking number.');
       const issues = assess(state,order); if (issues.length) throw new Error(issues[0].label + ': ' + issues[0].detail);
       const timestamp = now();

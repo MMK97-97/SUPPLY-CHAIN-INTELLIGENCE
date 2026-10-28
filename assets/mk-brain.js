@@ -315,7 +315,7 @@
       if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); panel.querySelector("form").requestSubmit(); }
     });
     panel.querySelectorAll("[data-mk-question]").forEach(button => button.addEventListener("click", () => execute(button.dataset.mkQuestion)));
-    panel.querySelector(".mk-mic").addEventListener("click", toggleListening);
+    panel.querySelector(".mk-mic")?.addEventListener("click", toggleListening);
     document.addEventListener("keydown", event => { if (event.key === "Escape" && panel.classList.contains("open") && !document.querySelector(".modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop")) togglePanel(false); });
   }
 
