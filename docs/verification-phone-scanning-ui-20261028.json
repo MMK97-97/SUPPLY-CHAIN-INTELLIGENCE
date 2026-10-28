@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-28T17:16:15.004Z",
+  "environment": "jsdom; media and print APIs simulated. No actual camera, browser rendering or live services.",
+  "passed": 7,
+  "failed": 0,
+  "results": [
+    {
+      "name": "PO entry loads all items and waits for explicit item selection",
+      "passed": true
+    },
+    {
+      "name": "wrong item produces an alert without changing scanned progress",
+      "passed": true
+    },
+    {
+      "name": "website barcode-entry flow verifies units and prevents excess scans",
+      "passed": true
+    },
+    {
+      "name": "PO barcode preview renders SVG without altering order quantities",
+      "passed": true
+    },
+    {
+      "name": "camera frame is latched until next-unit action",
+      "passed": true
+    },
+    {
+      "name": "receiving entry uses vendor mode and creates putaway after a partial batch",
+      "passed": true
+    },
+    {
+      "name": "mode change stops the camera and clears selected PO/item context",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "checkedAt": "2026-10-28T17:16:14.524Z",
+  "environment": "Isolated Node VM, simulated media APIs and independent ZXing decoder. No physical phone camera or live organization.",
+  "passed": 37,
+  "failed": 0,
+  "results": [
+    {
+      "name": "new customer drafts and vendor POs receive distinct stable barcode values",
+      "passed": true
+    },
+    {
+      "name": "generated labels resolve exact records and reject the other PO type",
+      "passed": true
+    },
+    {
+      "name": "barcode stays stable when a PO reference changes",
+      "passed": true
+    },
+    {
+      "name": "ambiguous human references and scanned URLs never pick an arbitrary order",
+      "passed": true
+    },
+    {
+      "name": "wrong item does not mutate stock, counters, audit or revision",
+      "passed": true
+    },
+    {
+      "name": "blank, missing and PO barcodes cannot pass an item scan",
+      "passed": true
+    },
+    {
+      "name": "correct item updates its pick progress and wave without consuming stock",
+      "passed": true
+    },
+    {
+      "name": "camera request replay counts exactly once",
+      "passed": true
+    },
+    {
+      "name": "request IDs cannot be reused for another quantity",
+      "passed": true
+    },
+    {
+      "name": "over-picking and non-integer quantities are rejected atomically",
+      "passed": true
+    },
+    {
+      "name": "stale workspace revisions cannot post a scan",
+      "passed": true
+    },
+    {
+      "name": "valid UPC/EAN/GTIN leading-zero forms identify the same item",
+      "passed": true
+    },
+    {
+      "name": "SKU punctuation is not fuzzy-matched",
+      "passed": true
+    },
+    {
+      "name": "barcode collisions across products fail instead of passing a wrong item",
+      "passed": true
+    },
+    {
+      "name": "saved item codes preserve zeros and prevent cross-item reassignment",
+      "passed": true
+    },
+    {
+      "name": "unvalidated and hold orders cannot be picked",
+      "passed": true
+    },
+    {
+      "name": "all order lines must pass before picking or shipping can finish",
+      "passed": true
+    },
+    {
+      "name": "finishing picking is idempotent and stock is consumed only at dispatch",
+      "passed": true
+    },
+    {
+      "name": "legacy complete-wave button cannot bypass a barcode-verified order",
+      "passed": true
+    },
+    {
+      "name": "vendor wrong-item and excess receipts do not change balances",
+      "passed": true
+    },
+    {
+      "name": "vendor scans save receiving counts while keeping inventory pending",
+      "passed": true
+    },
+    {
+      "name": "vendor repeated request cannot double-count a delivery",
+      "passed": true
+    },
+    {
+      "name": "partial receipts and later deliveries post inventory exactly once",
+      "passed": true
+    },
+    {
+      "name": "receiving with duplicate SKU lines is aggregated without losing units",
+      "passed": true
+    },
+    {
+      "name": "putaway must have a valid bin and sufficient capacity",
+      "passed": true
+    },
+    {
+      "name": "bulk receiving cannot bypass an active scanned batch",
+      "passed": true
+    },
+    {
+      "name": "finished receiving prevents rescanning until its putaway completes",
+      "passed": true
+    },
+    {
+      "name": "scanning counters survive a workspace reload",
+      "passed": true
+    },
+    {
+      "name": "distributed Code128 encoder is decoded independently by ZXing",
+      "passed": true
+    },
+    {
+      "name": "camera requests video only after explicit start and prefers rear-facing",
+      "passed": true
+    },
+    {
+      "name": "fallback decoder counts only one frame until explicitly rearmed",
+      "passed": true
+    },
+    {
+      "name": "camera cancellation during permission prompt releases late streams",
+      "passed": true
+    },
+    {
+      "name": "camera permission rejection gives a useful fallback message",
+      "passed": true
+    },
+    {
+      "name": "camera without HTTPS fails before requesting device access",
+      "passed": true
+    },
+    {
+      "name": "camera stop removes preview stream and ignores late barcode callbacks",
+      "passed": true
+    },
+    {
+      "name": "failed fallback decoder setup releases the camera",
+      "passed": true
+    },
+    {
+      "name": "torch is applied only on a supporting active camera",
+      "passed": true
+    }
+  ]
+}

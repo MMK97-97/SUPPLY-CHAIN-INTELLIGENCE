@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-28",
+  "javascriptSyntax": [
+    {
+      "file": "system-core.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/system-core.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "system-shell.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/system-shell.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "system-connectors.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/system-connectors.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "fulfillment-core.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/fulfillment-core.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "mk-brain.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/mk-brain.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "scan-core.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/scan-core.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "scan-camera.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/scan-camera.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "scanning.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/scanning.js",
+      "passed": true,
+      "error": null
+    }
+  ],
+  "mirrors": [
+    {
+      "file": "system-core.js",
+      "identical": true
+    },
+    {
+      "file": "system-shell.js",
+      "identical": true
+    },
+    {
+      "file": "system-connectors.js",
+      "identical": true
+    },
+    {
+      "file": "fulfillment-core.js",
+      "identical": true
+    },
+    {
+      "file": "mk-brain.js",
+      "identical": true
+    },
+    {
+      "file": "scan-core.js",
+      "identical": true
+    },
+    {
+      "file": "scan-camera.js",
+      "identical": true
+    },
+    {
+      "file": "scanning.js",
+      "identical": true
+    },
+    {
+      "file": "scanning.css",
+      "identical": true
+    },
+    {
+      "file": "phone-mobile.css",
+      "identical": true
+    }
+  ],
+  "newBrokenScriptOrStylesheetReferences": [],
+  "baselineBrokenReferenceCount": 0,
+  "currentBrokenReferenceCount": 0
+}

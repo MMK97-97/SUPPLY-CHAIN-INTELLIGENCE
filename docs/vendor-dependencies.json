@@ -42,6 +42,30 @@
       "license": "assets/vendor/DOMPurify-LICENSE.txt",
       "source_url": "https://cdn.jsdelivr.net/npm/dompurify@3.4.16/dist/purify.min.js",
       "sha256": "2c90a9b46d6463f26038a29b686e82bc91de01fdac9d5229e7cfe3b360134ea2"
+    },
+    {
+      "name": "@zxing/browser",
+      "version": "0.1.5",
+      "file": "assets/vendor/zxing-browser-0.1.5.min.js",
+      "licenses": [
+        "assets/vendor/ZXing-browser-LICENSE.txt",
+        "assets/vendor/ZXing-library-LICENSE.txt"
+      ],
+      "source_url": "https://registry.npmjs.org/@zxing/browser/-/browser-0.1.5.tgz",
+      "sha256": "b5ad3df920738ca7adcb74508d7e6b6a5b9024993fb9a0c702da1ad8964eca07",
+      "purpose": "Locally bundled barcode camera decoding"
+    },
+    {
+      "name": "JsBarcode",
+      "version": "3.12.1",
+      "file": "assets/vendor/JsBarcode-code128-3.12.1.min.js",
+      "licenses": [
+        "assets/vendor/JsBarcode-LICENSE.txt"
+      ],
+      "source_url": "https://registry.npmjs.org/jsbarcode/-/jsbarcode-3.12.1.tgz",
+      "sha256": "e86acb482448d4b2daaba220b8c6c7bbb0d953cd1ebb258aaaf4538f0bb192b8",
+      "purpose": "Locally bundled Code 128 label generation"
     }
-  ]
+  ],
+  "phone_scanning_update": "2026-10-28"
 }

@@ -1,0 +1,35 @@
+{
+  "baselineFailures": [
+    "cancelling unvalidated orders does not release unrelated customer credit",
+    "validated cancellation releases local reservation and credit",
+    "untransmitted partner cancellation releases reservations and closes its request",
+    "uncertain/acknowledged API delivery blocks unsafe cancellation",
+    "multi-line partner dispatch closes only after all lines ship and deliver",
+    "new navigation separates 3PL, transportation, shipping and procurement",
+    "customer form has address lines, billing fields, three PO types and live totals",
+    "customer form submission saves shared fields and navigates to the correct queue",
+    "shipment upload includes a preview, template and disabled unverified commit",
+    "procurement form captures all line fields and safe CSV export neutralizes formulas"
+  ],
+  "changedFailures": [
+    "cancelling unvalidated orders does not release unrelated customer credit",
+    "validated cancellation releases local reservation and credit",
+    "untransmitted partner cancellation releases reservations and closes its request",
+    "uncertain/acknowledged API delivery blocks unsafe cancellation",
+    "multi-line partner dispatch closes only after all lines ship and deliver",
+    "new navigation separates 3PL, transportation, shipping and procurement",
+    "customer form has address lines, billing fields, three PO types and live totals",
+    "customer form submission saves shared fields and navigates to the correct queue",
+    "procurement form captures all line fields and safe CSV export neutralizes formulas"
+  ],
+  "sameFailureSet": false,
+  "newFailures": [],
+  "resolvedFailures": [
+    "shipment upload includes a preview, template and disabled unverified commit"
+  ],
+  "noNewFailures": true,
+  "baselinePassed": 39,
+  "baselineFailed": 10,
+  "updatedPassed": 40,
+  "updatedFailed": 9
+}

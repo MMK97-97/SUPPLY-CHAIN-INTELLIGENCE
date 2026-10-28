@@ -1,0 +1,1215 @@
+{
+  "date": "2026-10-28",
+  "environment": "Chrome cloud browser, managed local preview, fictional demo data. Responsive widths are same-origin iframe viewports; physical phone camera not exercised.",
+  "functionalChecks": [
+    {
+      "case": "Customer item validation",
+      "wrong": "Wrong item — expected AUDIO-01. No quantity was recorded.",
+      "beforeRight": "AUDIO-01\nWireless studio headphones\nUS::AUDIO-01\n0 / 2 verified\n2 left to scan",
+      "right": "✓ Correct item · 1 unit verified. 1 left to scan.",
+      "afterRight": "AUDIO-01\nWireless studio headphones\nUS::AUDIO-01\n1 / 2 verified\n1 left to scan"
+    },
+    {
+      "case": "Reload persistence",
+      "items": "AUDIO-01\nWireless studio headphones\nUS::AUDIO-01\n1 / 2 verified\n1 left to scan"
+    },
+    {
+      "case": "Finish verified picking",
+      "feedback": "All items verified. Picking is complete; the order is ready for packing.",
+      "status": "Atlas Recognition (Demo) · PACKING"
+    },
+    {
+      "case": "PO barcode rendering",
+      "bars": 77
+    },
+    {
+      "case": "Vendor item validation",
+      "wrong": "Wrong item — expected FRAME-02. No quantity was recorded.",
+      "right": "✓ Correct item · 1 unit verified. 14 left to scan.",
+      "items": "FRAME-02\nConnected photo frame\nUS::FRAME-02\n15 received · 1 awaiting putaway\n14 left to scan",
+      "putawayChoices": "Putaway bin · FRAME-02\nA-01-R1-B1 · 1488 free\nA-01-R1-B2 · 3000 free\nB-04-R2-B1 · 3000 free\nB-07-R1-B1 · 3000 free\nSEC-01-R1-B1 · 3000 free\nRTN-01 · 3000 free"
+    },
+    {
+      "case": "Vendor partial delivery",
+      "feedback": "Delivery saved. 1 receiving batch recorded. Complete putaway to make these units available in inventory.",
+      "items": "FRAME-02\nConnected photo frame\nUS::FRAME-02\n15 received · 1 awaiting putaway\n14 left to scan"
+    }
+  ],
+  "mailPanels": [
+    {
+      "view": "folders",
+      "visible": [
+        "mail-col-sidebar"
+      ]
+    },
+    {
+      "view": "messages",
+      "visible": [
+        "mail-col-list"
+      ]
+    },
+    {
+      "view": "message",
+      "visible": [
+        "mail-col-detail"
+      ]
+    },
+    {
+      "view": "related",
+      "visible": [
+        "mail-col-intel"
+      ]
+    }
+  ],
+  "responsiveChecks": [
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/workspace.html?demo=1",
+      "width": 305,
+      "page": "workspace.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/item-master.html?demo=1",
+      "width": 305,
+      "page": "item-master.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/mail.html?demo=1",
+      "width": 305,
+      "page": "mail.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-order.html?demo=1",
+      "width": 305,
+      "page": "create-order.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-vendor-po.html?demo=1",
+      "width": 305,
+      "page": "create-vendor-po.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/all-open-orders.html?demo=1",
+      "width": 305,
+      "page": "all-open-orders.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?demo=1",
+      "width": 305,
+      "page": "scan.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/warehouse-management/receiving.html?demo=1",
+      "width": 305,
+      "page": "warehouse-management/receiving.html",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/workspace.html?demo=1",
+      "width": 375,
+      "page": "workspace.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/item-master.html?demo=1",
+      "width": 375,
+      "page": "item-master.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/mail.html?demo=1",
+      "width": 375,
+      "page": "mail.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-order.html?demo=1",
+      "width": 375,
+      "page": "create-order.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-vendor-po.html?demo=1",
+      "width": 375,
+      "page": "create-vendor-po.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/all-open-orders.html?demo=1",
+      "width": 375,
+      "page": "all-open-orders.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?demo=1",
+      "width": 375,
+      "page": "scan.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/warehouse-management/receiving.html?demo=1",
+      "width": 375,
+      "page": "warehouse-management/receiving.html",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/workspace.html?demo=1",
+      "width": 753,
+      "page": "workspace.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/item-master.html?demo=1",
+      "width": 753,
+      "page": "item-master.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/mail.html?demo=1",
+      "width": 753,
+      "page": "mail.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-order.html?demo=1",
+      "width": 753,
+      "page": "create-order.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-vendor-po.html?demo=1",
+      "width": 753,
+      "page": "create-vendor-po.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/all-open-orders.html?demo=1",
+      "width": 753,
+      "page": "all-open-orders.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?demo=1",
+      "width": 753,
+      "page": "scan.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/warehouse-management/receiving.html?demo=1",
+      "width": 753,
+      "page": "warehouse-management/receiving.html",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 657,
+          "right": 731
+        },
+        {
+          "label": "Analysis Region",
+          "left": 743,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/workspace.html?demo=1",
+      "width": 1009,
+      "page": "workspace.html",
+      "frameWidth": 1024
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 655,
+          "right": 729
+        },
+        {
+          "label": "Analysis Region",
+          "left": 741,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/item-master.html?demo=1",
+      "width": 1009,
+      "page": "item-master.html",
+      "frameWidth": 1024
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 657,
+          "right": 731
+        },
+        {
+          "label": "Analysis Region",
+          "left": 743,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/mail.html?demo=1",
+      "width": 1009,
+      "page": "mail.html",
+      "frameWidth": 1024
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 655,
+          "right": 729
+        },
+        {
+          "label": "Analysis Region",
+          "left": 741,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-order.html?demo=1",
+      "width": 1009,
+      "page": "create-order.html",
+      "frameWidth": 1024
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 655,
+          "right": 729
+        },
+        {
+          "label": "Analysis Region",
+          "left": 741,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/create-vendor-po.html?demo=1",
+      "width": 1009,
+      "page": "create-vendor-po.html",
+      "frameWidth": 1024
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 655,
+          "right": 729
+        },
+        {
+          "label": "Analysis Region",
+          "left": 741,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/all-open-orders.html?demo=1",
+      "width": 1009,
+      "page": "all-open-orders.html",
+      "frameWidth": 1024
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 653,
+          "right": 727
+        },
+        {
+          "label": "Analysis Region",
+          "left": 739,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?demo=1",
+      "width": 1009,
+      "page": "scan.html",
+      "frameWidth": 1024
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Open barcode scanning",
+          "left": 655,
+          "right": 729
+        },
+        {
+          "label": "Analysis Region",
+          "left": 741,
+          "right": 883
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 895,
+          "right": 933
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 945,
+          "right": 983
+        }
+      ],
+      "mk": 1,
+      "overflow": 0,
+      "scroll": 1009,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/warehouse-management/receiving.html?demo=1",
+      "width": 1009,
+      "page": "warehouse-management/receiving.html",
+      "frameWidth": 1024
+    }
+  ],
+  "notes": [
+    "Mobile search opens; MK panel opens and fits at 390px after restoring Mail dependencies.",
+    "Order Items pane exposes Scan order items and PO barcode on desktop.",
+    "Camera logic tested with simulated media separately; no claim of physical phone / webcam decoding or authenticated cross-device sync."
+  ]
+}
