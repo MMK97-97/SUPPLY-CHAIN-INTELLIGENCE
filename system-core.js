@@ -111,6 +111,9 @@
 
   function reconcile(s) {
     const e = s.enterprise, l = s.logistics;
+    // Record IDs keep printed labels stable when a human PO reference is edited.
+    e.orders.forEach(order => { order.scanBarcode = 'SCI-CO:' + order.id; });
+    e.purchaseOrders.forEach(po => { po.scanBarcode = 'SCI-VPO:' + po.id; });
     const reservations = activeReservations(e);
     e.inventory.forEach(i => {
       i.reserved = number(i.externalReserved) + (reservations[i.sku] || 0);
@@ -377,6 +380,7 @@
       const o = s.enterprise.orders.find(x => x.id === id || x.po === id);
       if (!o) throw new Error('Order not found.');
       if (final(o.status)) throw new Error('Only open orders can be marked as shipped.');
+      if (o.scanVerification?.events?.length && !o.scanVerification.completedAt) throw new Error('Complete barcode verification of every order item before dispatch.');
       o.status = 'SHIPPED';
       o.tracking = trk;
       o.updatedAt = stamp();
@@ -412,6 +416,7 @@
   function receivePO(id) {
     transaction('PO_RECEIVED', id, s => {
       const p = s.enterprise.purchaseOrders.find(x => x.id === id); if (!p || p.status === 'CANCELLED' || p.purpose==='DROPSHIP') throw new Error('Use supplier dispatch for a dropship PO.');
+      if (s.logistics.receipts.some(r => r.po === p.po && r.scanVerified && !['CLOSED','CANCELLED'].includes(r.status))) throw new Error('Finish the barcode receiving batch and its putaway tasks before posting another receipt.');
       for (const x of p.lines) { const remaining = x.qty - number(x.received); if (remaining > 0) inventoryItem(s, x.sku).onHand += remaining; x.received = x.qty; }
       p.status = 'RECEIVED';
       s.logistics.receipts.filter(r => r.po === p.po).forEach(r => { r.status = 'CLOSED'; r.lines.forEach(x => { x.received = x.expected; }); });
@@ -421,9 +426,18 @@
   function scanReceipt(id, quantities) {
     transaction('RECEIPT_SCANNED', id, s => {
       const r = s.logistics.receipts.find(x => x.id === id); if (!r || r.status !== 'ARRIVED' || !r.lines.length) throw new Error('An arrived ASN with PO lines is required.');
+      if (r.scanVerified) throw new Error('Finish this barcode-verified receipt in the scanning workspace.');
       r.lines.forEach((l, idx) => { const q = quantities?.[idx] || { received: l.expected - number(l.damaged), damaged: number(l.damaged) }; if (!Number.isInteger(q.received) || !Number.isInteger(q.damaged) || q.received < 0 || q.damaged < 0 || q.received + q.damaged > l.expected) throw new Error('Scanned quantities must be whole numbers within the expected receipt.'); Object.assign(l, q); });
       r.status = 'RECEIVED';
     });
+  }
+  function postPOLines(po, sku, qty) {
+    let remaining = qty;
+    for (const line of po?.lines.filter(line => line.sku === sku) || []) {
+      const amount = Math.min(remaining, Math.max(0, line.qty - number(line.received)));
+      line.received = number(line.received) + amount; remaining -= amount;
+    }
+    return qty - remaining;
   }
   function completePutaway(id) {
     transaction('PUTAWAY_COMPLETED', id, s => {
@@ -431,14 +445,15 @@
       const r = l.receipts.find(x => x.id === t.receiptId); const p = s.enterprise.purchaseOrders.find(x => x.po === r?.po);
       if (!r) throw new Error('Receiving document was not found.');
       const target = l.bins.find(x => x.id === t.toBin && x.active); if (!target || target.used + t.qty > target.capacity) throw new Error('The destination bin does not have enough capacity. Choose another bin.');
-      const item = inventoryItem(s, t.sku); const line = p?.lines.find(x => x.sku === t.sku);
-      const q = line ? Math.min(t.qty, line.qty - number(line.received)) : t.qty;
+      const item = inventoryItem(s, t.sku); const lines = p?.lines.filter(x => x.sku === t.sku) || [];
+      const q = lines.length ? Math.min(t.qty, lines.reduce((sum,line)=>sum+Math.max(0,line.qty-number(line.received)),0)) : t.qty;
+      if (t.scanVerified && q !== t.qty) throw new Error('The PO quantity changed after scanning. Reconcile this putaway task before posting stock.');
       if (q > 0) {
         item.onHand += q;
         let targetStock=l.inventory.find(x=>x.sku===t.sku&&x.binId===t.toBin);
         if(!targetStock){targetStock={sku:t.sku,brand:item.brand,description:item.title,binId:t.toBin,region:item.region,onHand:0,reserved:0,damaged:0};l.inventory.push(targetStock);}
         targetStock.onHand+=q;
-        if (line) line.received = number(line.received) + q;
+        if (lines.length) postPOLines(p,t.sku,q);
       }
       t.status = 'COMPLETE';
       if (l.putaway.filter(x => x.receiptId === r.id).every(x => x.status === 'COMPLETE')) {
@@ -446,8 +461,8 @@
         for(const receivedLine of r.lines){
           const damage=number(receivedLine.damaged)-number(receivedLine.damagePosted);
           if(damage>0){
-            const damagedItem=inventoryItem(s,receivedLine.sku);const poLine=p?.lines.find(x=>x.sku===receivedLine.sku);const posted=poLine?Math.min(damage,poLine.qty-number(poLine.received)):damage;
-            damagedItem.onHand+=posted;damagedItem.damaged+=posted;receivedLine.damagePosted=number(receivedLine.damagePosted)+posted;if(poLine)poLine.received=number(poLine.received)+posted;
+            const damagedItem=inventoryItem(s,receivedLine.sku);const poLines=p?.lines.filter(x=>x.sku===receivedLine.sku)||[];const posted=poLines.length?postPOLines(p,receivedLine.sku,damage):damage;
+            damagedItem.onHand+=posted;damagedItem.damaged+=posted;receivedLine.damagePosted=number(receivedLine.damagePosted)+posted;
             let damagedRow=l.inventory.find(x=>x.sku===receivedLine.sku&&x.binId==='DMG-01');if(!damagedRow){damagedRow={sku:receivedLine.sku,brand:damagedItem.brand,description:damagedItem.title,region:damagedItem.region,binId:'DMG-01',onHand:0,reserved:0,damaged:0};l.inventory.push(damagedRow);}damagedRow.onHand+=posted;damagedRow.damaged+=posted;
           }
         }
@@ -473,6 +488,7 @@
     transaction('WAVE_PICKED', id, s => {
       const w = s.logistics.waves.find(x => x.id === id); if (!w || w.status !== 'PICKING') throw new Error('Start the wave before completing it.');
       const orders = s.enterprise.orders.filter(o => w.orderIds?.includes(o.id)); orders.forEach(requireValidated); if (!orders.length) throw new Error('Link the wave to a valid allocated customer order.');
+      if (orders.some(order=>order.scanVerification?.events?.length)) throw new Error('Finish this barcode-verified customer order in the scanning workspace so every item is checked.');
       w.status = 'COMPLETE'; w.picked = w.qty;
       for (const o of orders) {
         const line = o.lines.find(x => x.sku === w.sku); if (!line || final(o.status)) continue;
@@ -491,6 +507,7 @@
       if (!o || final(o.status) || o.type === 'HOLD_PO' || o.fulfillment?.kind === '3PL') throw new Error('Link this packing job to an open warehouse order.');
       requireValidated(o);
       if (o.fulfillment?.kind === 'DROPSHIP') throw new Error('Use supplier dispatch for a dropship order.');
+      if (o.scanVerification?.events?.length && !o.scanVerification.completedAt) throw new Error('Complete barcode verification of every order item before dispatch.');
       const line = o.lines.find(x => x.sku === p.sku); if (!line || p.qty > line.qty - number(line.shipped)) throw new Error('Packing quantity exceeds the unshipped order balance.');
       const i = inventoryItem(s, p.sku); if (i.onHand - i.damaged < p.qty) throw new Error('Insufficient undamaged stock for dispatch.');
       if (!tracking?.trim()) throw new Error('Enter the carrier tracking number before dispatch.');

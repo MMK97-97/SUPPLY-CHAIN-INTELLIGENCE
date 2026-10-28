@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Scan customer-order barcodes and verify picked items, or scan vendor POs and record received items using a phone camera, webcam or barcode scanner.">
+  <title>Order &amp; Receiving Scanner · MK97 ERP</title>
+  <script src="assets/workspace-runtime.js?v=20261028-scan1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/system-core.js?v=20261028-scan1" defer></script>
+  <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261028-scan1">
+  <link rel="stylesheet" href="assets/portfolio-mobile.css?v=20261028-scan1">
+  
+  
+  <script src="assets/system-shell.js?v=20261028-scan1" defer></script>
+  <script src="assets/system-cloud.js?v=20261023-copilot1" defer></script>
+  <script src="assets/fulfillment-core.js?v=20261028-scan1" defer></script>
+  <script src="assets/mk-analysis-tools.js?v=20261008-3" defer></script>
+  <script src="assets/mk-space.js?v=20261008-3" defer></script>
+  <script src="assets/mk-ai.js?v=20261012-2" defer></script>
+  <link rel="stylesheet" href="assets/mk-brain.css?v=20261028-scan1">
+  <script src="assets/mk-brain.js?v=20261028-scan1" defer></script>
+  <script src="mk-copilot-core.js?v=20261023-copilot1" defer></script>
+  <script src="mk-copilot.js?v=20261023-copilot1" defer></script>
+  <link rel="stylesheet" href="mk-copilot.css?v=20261023-copilot1">
+  <script src="scan-core.js?v=20261028-scan1" defer></script>
+  <script src="scan-camera.js?v=20261028-scan1" defer></script>
+  <script src="scanning.js?v=20261028-scan1" defer></script>
+<link rel="stylesheet" data-mk97-style="scanning" href="scanning.css?v=20261028-scan1">
+<link rel="stylesheet" data-mk97-style="phone-mobile" href="phone-mobile.css?v=20261028-scan1">
+</head>
+<body data-page="warehouse-scan" data-root=".">
+<main id="scan-workspace" class="system-page scan-workspace" aria-label="Order and receiving scanner">
+  <header class="scan-heading"><div><p class="scan-eyebrow">WAREHOUSE OPERATIONS</p><h1>Scan &amp; verify</h1><p>Open the PO, select an item, and scan its barcode.</p></div><a class="btn" href="warehouse-management/receiving.html">Receiving &amp; putaway</a></header>
+  <div id="scan-feedback" class="scan-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+  <div class="scan-workspace-grid">
+    <section class="scan-orders-column">
+      <section class="scan-card"><h2>1. Open the PO</h2>
+        <label>Workflow<select id="scan-mode"><option value="CUSTOMER">Customer order · picking</option><option value="VENDOR">Vendor PO · receiving</option></select></label>
+        <p id="scan-mode-description" class="scan-help"></p>
+        <form id="scan-document-form" class="scan-inline-form"><label>PO barcode or exact reference<input id="scan-document-code" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Scan or enter the PO reference"></label><button type="submit" class="btn primary">Open PO</button></form>
+        <button id="scan-po-camera" type="button" class="btn scan-camera-button">Scan PO with camera</button>
+        <details class="scan-existing"><summary>Choose an existing PO</summary><label class="scan-sr-only" for="scan-doc-select">Existing orders or purchase orders</label><select id="scan-doc-select"></select><button id="scan-load-selected" type="button" class="btn">Open selected PO</button></details>
+      </section>
+      <section class="scan-card" id="scan-document" hidden>
+        <div class="scan-document-heading"><div><h2 id="scan-doc-title"></h2><p id="scan-doc-party" class="scan-help"></p></div><button type="button" class="btn" id="scan-label-toggle">Show PO barcode</button><button type="button" class="btn" id="scan-print-po">Print PO barcode</button></div>
+        <p id="scan-reason" class="scan-reason" hidden></p>
+        <div id="scan-inline-label" class="scan-label-preview" hidden><svg id="scan-inline-barcode"></svg></div>
+        <h2>2. Select an item</h2><ul id="scan-item-list" class="scan-item-list" aria-label="Items on the selected PO"></ul>
+        <div id="scan-putaway-fields" class="scan-putaway-fields" hidden></div>
+        <div class="scan-finish-row"><button type="button" id="scan-finish" class="btn primary" disabled>Finish picking</button><a href="warehouse-management/packing-dispatch.html">Packing</a><a href="warehouse-management/receiving.html">Receiving &amp; putaway</a></div>
+        <p class="scan-help">Picking verifies the order without dispatching stock. Received units become available after putaway.</p>
+      </section>
+    </section>
+    <section class="scan-card scan-camera-card" id="scan-camera-card" aria-label="Camera and item verification">
+      <h2>3. Scan the selected item</h2><p id="scan-selected-label" class="scan-selected-label" tabindex="-1">Select an item on the PO</p><p id="scan-selected-codes" class="scan-help scan-code-list"></p>
+      <div class="scan-camera-frame" id="scan-camera-frame" hidden><video id="scan-video" playsinline autoplay muted aria-label="Live barcode camera preview"></video><div class="scan-viewfinder" aria-hidden="true"></div></div>
+      <p id="scan-camera-status" class="scan-help" role="status" aria-live="polite">Camera off. A phone camera, webcam, handheld scanner or barcode entry can be used.</p>
+      <div class="scan-camera-controls"><button type="button" id="scan-arm-item" class="btn primary" disabled>Scan selected item / next unit</button><button type="button" id="scan-stop-camera" class="btn" disabled>Stop camera</button><button type="button" id="scan-switch-camera" class="btn" disabled>Switch camera</button><button type="button" id="scan-torch" class="btn" aria-pressed="false" hidden>Torch</button></div>
+      <form id="scan-item-form" hidden>
+        <div class="scan-manual-fields"><label>Units per scan<input id="scan-quantity" type="number" value="1" min="1" step="1" inputmode="numeric"></label><label>Item barcode<input id="scan-item-code" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Use a handheld scanner or enter barcode"></label></div>
+        <button type="submit" id="scan-verify-item" class="btn primary">Verify item barcode</button>
+      </form>
+      <p class="scan-help">Each camera scan counts once. Choose “Scan selected item / next unit” before scanning another unit. Handheld scanners can send the barcode followed by Enter.</p>
+      <div class="scan-item-tools"><button type="button" class="btn" id="scan-manage-codes" disabled>Item barcodes</button><button type="button" class="btn" id="scan-print-item" disabled>Print item label</button></div>
+      <p class="scan-help">Manufacturer UPCs or EANs must belong to the selected item. Use Item barcodes to save a code that is missing from its record.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>

@@ -21,8 +21,9 @@
     let handler;
     if(b.matches('[data-receive]')&&page==='vendor-procurement')handler=()=>modal('Receive vendor PO','<p>This posts the remaining PO quantity once and closes its linked receiving tasks. For scans, damaged stock and putaway, use Receiving & Putaway.</p>',()=>{S.receivePO(b.dataset.receive);refresh();notify('PO received and warehouse stock updated.');},'Post receipt');
     else if(b.matches('[data-receive]')&&page==='wms-receiving')handler=()=>{
-      const r=l.receipts.find(x=>x.id===b.dataset.receive);if(!r)return;
-      modal('Scan receipt · '+r.po,`<p>Record the actual good and damaged quantities. Stock becomes available after putaway.</p><div class="sys-form">${r.lines.map((x,i)=>`<label>Good units · ${esc(x.sku)}<input type="number" min="0" max="${x.expected}" data-good="${i}" value="${x.expected-(x.damaged||0)}"></label><label>Damaged units<input type="number" min="0" max="${x.expected}" data-damaged="${i}" value="${x.damaged||0}"></label>`).join('')}</div>`,w=>{S.scanReceipt(r.id,r.lines.map((x,i)=>({received:Number(w.querySelector(`[data-good="${i}"]`).value),damaged:Number(w.querySelector(`[data-damaged="${i}"]`).value)})));refresh();notify('Receiving scan recorded.');},'Post scan');
+      const receipt=l.receipts.find(record=>record.id===b.dataset.receive),po=e.purchaseOrders.find(record=>record.po===receipt?.po);
+      if(!po){notify('Link this receipt to a vendor PO before scanning.',true);return;}
+      location.href=S.url('scan.html?kind=vendor&id='+encodeURIComponent(po.id));
     };
     else if(b.matches('[data-complete-put]'))handler=()=>action(()=>S.completePutaway(b.dataset.completePut),'Putaway completed; vendor and warehouse balances synchronized.');
     else if(b.matches('[data-start-wave]'))handler=()=>action(()=>S.startWave(b.dataset.startWave),'Wave started.');
