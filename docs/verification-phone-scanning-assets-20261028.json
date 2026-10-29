@@ -32,6 +32,16 @@
       "error": null
     },
     {
+      "file": "logistics-suite.js",
+      "passed": true,
+      "error": null
+    },
+    {
+      "file": "assets/logistics-suite.js",
+      "passed": true,
+      "error": null
+    },
+    {
       "file": "fulfillment-core.js",
       "passed": true,
       "error": null
@@ -93,6 +103,10 @@
     },
     {
       "file": "system-connectors.js",
+      "identical": true
+    },
+    {
+      "file": "logistics-suite.js",
       "identical": true
     },
     {

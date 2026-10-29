@@ -26,6 +26,7 @@
       location.href=S.url('scan.html?kind=vendor&id='+encodeURIComponent(po.id));
     };
     else if(b.matches('[data-complete-put]'))handler=()=>action(()=>S.completePutaway(b.dataset.completePut),'Putaway completed; vendor and warehouse balances synchronized.');
+    else if(b.matches('[data-count]')&&page==='wms-counts'&&l.cycleCounts.find(count=>count.id===b.dataset.count)?.scanVerification)handler=()=>{location.href=S.url('scan.html?kind=cycle&id='+encodeURIComponent(b.dataset.count));};
     else if(b.matches('[data-start-wave]'))handler=()=>action(()=>S.startWave(b.dataset.startWave),'Wave started.');
     else if(b.matches('[data-finish-wave]'))handler=()=>action(()=>S.finishWave(b.dataset.finishWave),'Picking completed and packing work created.');
     else if(b.matches('[data-ship]'))handler=()=>tracking('Warehouse dispatch',t=>S.shipPacking(b.dataset.ship,t));

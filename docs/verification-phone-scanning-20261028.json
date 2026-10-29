@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-10-28T17:16:14.524Z",
+  "checkedAt": "2026-10-28T18:10:02.528Z",
   "environment": "Isolated Node VM, simulated media APIs and independent ZXing decoder. No physical phone camera or live organization.",
-  "passed": 37,
+  "passed": 63,
   "failed": 0,
   "results": [
     {
@@ -10,6 +10,82 @@
     },
     {
       "name": "generated labels resolve exact records and reject the other PO type",
+      "passed": true
+    },
+    {
+      "name": "document lookup finds an open dispatched vendor PO from customer picking",
+      "passed": true
+    },
+    {
+      "name": "document lookup recognizes customer PO and sales-order references from vendor receiving",
+      "passed": true
+    },
+    {
+      "name": "generated PO barcodes determine the workflow in either direction",
+      "passed": true
+    },
+    {
+      "name": "shared human references honor the explicitly selected workflow",
+      "passed": true
+    },
+    {
+      "name": "ambiguous PO references never fall through to an arbitrary workflow",
+      "passed": true
+    },
+    {
+      "name": "automatic lookup does not open URLs or mutate missing PO state",
+      "passed": true
+    },
+    {
+      "name": "cycle count labels resolve their exact count and automatically select the cycle workflow",
+      "passed": true
+    },
+    {
+      "name": "newly scheduled cycle counts receive stable barcode fields",
+      "passed": true
+    },
+    {
+      "name": "cycle counting rejects wrong items and document barcodes without changing count or inventory",
+      "passed": true
+    },
+    {
+      "name": "correct cycle scans record physical tally and bin with no inventory adjustment",
+      "passed": true
+    },
+    {
+      "name": "replayed cycle camera frames count once and conflicting quantities are rejected",
+      "passed": true
+    },
+    {
+      "name": "cycle counts accept physical overages and save variance without posting stock",
+      "passed": true
+    },
+    {
+      "name": "matching cycle count completes once and cannot accept further scans",
+      "passed": true
+    },
+    {
+      "name": "cycle undercounts retain the actual scanned quantity for review",
+      "passed": true
+    },
+    {
+      "name": "zero cycle counts require an explicit empty-bin confirmation",
+      "passed": true
+    },
+    {
+      "name": "cycle count saves and scans reject stale workspace revisions",
+      "passed": true
+    },
+    {
+      "name": "cycle scanning requires a physical item and an active bin",
+      "passed": true
+    },
+    {
+      "name": "legacy manually entered counts are not mistaken for scanned units",
+      "passed": true
+    },
+    {
+      "name": "cycle scan progress survives workspace reload",
       "passed": true
     },
     {
@@ -86,6 +162,34 @@
     },
     {
       "name": "vendor scans save receiving counts while keeping inventory pending",
+      "passed": true
+    },
+    {
+      "name": "prefilled receipt quantities require barcode verification rather than showing item complete",
+      "passed": true
+    },
+    {
+      "name": "verification of an existing receipt does not receive stock again or permit early putaway",
+      "passed": true
+    },
+    {
+      "name": "fully verified existing receipt reuses its putaway task and posts stock once",
+      "passed": true
+    },
+    {
+      "name": "a legacy receipt with partially posted putaway verifies only the unposted units",
+      "passed": true
+    },
+    {
+      "name": "existing receipt quantities and new arrivals can share a partial scanned batch without duplicate putaway",
+      "passed": true
+    },
+    {
+      "name": "previous barcode batches without line counters retain their verified progress",
+      "passed": true
+    },
+    {
+      "name": "duplicate camera requests cannot double-verify an existing receipt",
       "passed": true
     },
     {

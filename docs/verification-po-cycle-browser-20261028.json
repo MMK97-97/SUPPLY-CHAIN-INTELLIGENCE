@@ -1,0 +1,306 @@
+{
+  "date": "2026-10-28",
+  "environment": "Cloud Chrome, managed local preview with isolated original fictional seed fixtures and production scanner/queue scripts; no authenticated production data or physical camera used.",
+  "poChecks": [
+    {
+      "action": "Open screenshot PO from customer picking",
+      "cameraEnabled": false,
+      "feedback": "Vendor PO found. Switched to Vendor PO · receiving. Select the item you want to scan.",
+      "items": "WH1000XM5Wireless Noise Canceling HeadphonesPHYS-SONY-WH1000XM50 received · 50 awaiting putaway · 50 need barcode verification50 left to scan",
+      "selected": 0,
+      "title": "PO-2026-887411",
+      "workflow": "VENDOR"
+    },
+    {
+      "action": "Select item explicitly",
+      "cameraEnabled": true,
+      "selectedLabel": "WH1000XM5 · Wireless Noise Canceling Headphones",
+      "verifyEnabled": true
+    },
+    {
+      "action": "Wrong item",
+      "feedback": "Wrong item — expected WH1000XM5. No quantity was recorded.",
+      "items": "WH1000XM5Wireless Noise Canceling HeadphonesPHYS-SONY-WH1000XM50 received · 50 awaiting putaway · 50 need barcode verification50 left to scan"
+    },
+    {
+      "action": "Correct item: first unit of pre-entered receipt",
+      "cameraEnabled": true,
+      "feedback": "✓ Correct item · 1 unit verified. 49 left to scan.",
+      "finishEnabled": false,
+      "items": "WH1000XM5Wireless Noise Canceling HeadphonesPHYS-SONY-WH1000XM50 received · 50 awaiting putaway · 49 need barcode verification49 left to scan",
+      "warning": "Verify the 49 units already entered on this receipt before finishing delivery."
+    },
+    {
+      "action": "Reopen PO after an item was selected",
+      "cameraButton": "Select an item in Step 2",
+      "cameraEnabled": false,
+      "items": "WH1000XM5Wireless Noise Canceling HeadphonesPHYS-SONY-WH1000XM50 received · 50 awaiting putaway · 49 need barcode verification49 left to scan",
+      "selected": 0
+    }
+  ],
+  "cycleChecks": [
+    {
+      "action": "Open cycle count",
+      "bin": "Bin SEC-01-R1-B1 · OPEN",
+      "canSave": false,
+      "document": "cc_1",
+      "items": "4217709208Designer Jewelry ItemPHYS-KS-42177092080 scanned · system quantity 74Not started",
+      "selected": 0,
+      "workflow": "CYCLE"
+    },
+    {
+      "action": "Wrong cycle-count item",
+      "feedback": "Wrong item — expected 4217709208. No quantity was recorded.",
+      "items": "4217709208Designer Jewelry ItemPHYS-KS-42177092080 scanned · system quantity 74Not started"
+    },
+    {
+      "action": "Correct cycle-count item",
+      "cameraEnabled": true,
+      "feedback": "✓ Correct item · 1 unit counted. Physical total: 1 · system quantity: 74.",
+      "items": "4217709208Designer Jewelry ItemPHYS-KS-42177092081 scanned · system quantity 74Variance -73"
+    },
+    {
+      "action": "Count over system quantity",
+      "cameraEnabled": true,
+      "canSave": true,
+      "items": "4217709208Designer Jewelry ItemPHYS-KS-421770920875 scanned · system quantity 74Variance +1"
+    },
+    {
+      "action": "Save cycle count for review",
+      "cameraEnabled": false,
+      "feedback": "Cycle count saved. Physical total: 75 · variance: +1. Inventory stock has not changed.",
+      "reason": "This cycle count is already recorded. Schedule a new count for a recount.",
+      "status": "Bin SEC-01-R1-B1 · VARIANCE"
+    },
+    {
+      "action": "Queue and barcode dialog",
+      "row": "cc_1\tSEC-01-R1-B1\tPHYS-KS-4217709208\t74\t75\t+1\tVARIANCE\tHigh value secure-zone cadence\tView count Count barcode",
+      "scanLink": "./scan.html?kind=cycle&id=cc_1",
+      "barcodeBars": 44
+    }
+  ],
+  "responsiveChecks": [
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 0,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?kind=vendor&id=vpo_887411",
+      "width": 305,
+      "page": "vendor receiving fixture",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 95,
+          "right": 131
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 139,
+          "right": 175
+        },
+        {
+          "label": "Analysis Region",
+          "left": 179,
+          "right": 215
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 219,
+          "right": 255
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 259,
+          "right": 295
+        }
+      ],
+      "mk": 0,
+      "overflow": 0,
+      "scroll": 305,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?kind=cycle&id=cc_2",
+      "width": 305,
+      "page": "cycle count fixture",
+      "frameWidth": 320
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 0,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?kind=vendor&id=vpo_887411",
+      "width": 375,
+      "page": "vendor receiving fixture",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 165,
+          "right": 201
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 209,
+          "right": 245
+        },
+        {
+          "label": "Analysis Region",
+          "left": 249,
+          "right": 285
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 289,
+          "right": 325
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 329,
+          "right": 365
+        }
+      ],
+      "mk": 0,
+      "overflow": 0,
+      "scroll": 375,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?kind=cycle&id=cc_2",
+      "width": 375,
+      "page": "cycle count fixture",
+      "frameWidth": 390
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 0,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?kind=vendor&id=vpo_887411",
+      "width": 753,
+      "page": "vendor receiving fixture",
+      "frameWidth": 768
+    },
+    {
+      "headerButtons": [
+        {
+          "label": "Search workspace",
+          "left": 543,
+          "right": 579
+        },
+        {
+          "label": "Open barcode scanning",
+          "left": 587,
+          "right": 623
+        },
+        {
+          "label": "Analysis Region",
+          "left": 627,
+          "right": 663
+        },
+        {
+          "label": "View activity alerts and exceptions",
+          "left": 667,
+          "right": 703
+        },
+        {
+          "label": "User Profile & Workspace",
+          "left": 707,
+          "right": 743
+        }
+      ],
+      "mk": 0,
+      "overflow": 0,
+      "scroll": 753,
+      "uncontained": [],
+      "url": "http://terminal.local:4173/scan.html?kind=cycle&id=cc_2",
+      "width": 753,
+      "page": "cycle count fixture",
+      "frameWidth": 768
+    }
+  ]
+}

@@ -1,11 +1,39 @@
 {
-  "checkedAt": "2026-10-28T17:16:15.004Z",
+  "checkedAt": "2026-10-28T18:10:03.172Z",
   "environment": "jsdom; media and print APIs simulated. No actual camera, browser rendering or live services.",
-  "passed": 7,
+  "passed": 14,
   "failed": 0,
   "results": [
     {
       "name": "PO entry loads all items and waits for explicit item selection",
+      "passed": true
+    },
+    {
+      "name": "vendor PO from the screenshot opens from default customer mode and records receiving",
+      "passed": true
+    },
+    {
+      "name": "camera document result detects a generated vendor barcode without a manual mode switch",
+      "passed": true
+    },
+    {
+      "name": "customer reference switches back from receiving and clears previous item context",
+      "passed": true
+    },
+    {
+      "name": "ambiguous vendor references show an error without changing the current order",
+      "passed": true
+    },
+    {
+      "name": "cycle count barcode opens its item and bin from any workflow",
+      "passed": true
+    },
+    {
+      "name": "cycle count UI rejects wrong items and accepts overages without auto-finishing",
+      "passed": true
+    },
+    {
+      "name": "cycle zero-count save requires selecting the item and confirming the bin is empty",
       "passed": true
     },
     {
