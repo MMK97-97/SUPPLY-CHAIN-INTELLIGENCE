@@ -114,7 +114,7 @@
         ['warehouse-management/wave-picking.html','Wave picking'],
         ['warehouse-management/packing-dispatch.html','Packing & dispatch'],
         ['warehouse-management/cycle-counts.html','Cycle counts'],
-        ['scan.html','Order & receiving scanner']
+        ['scan.html','Order, receiving & cycle scanner']
       ],'warehouse-management/index.html',{label:'+ Inbound receiving',path:'warehouse-management/receiving.html'}],
 
       ['tpl','3PL Management','Partners · API Transmission · Routing','#10b981',[
@@ -745,7 +745,7 @@
   window.MK97SystemUI = window.StarkSystemUI = { notice, escape, glyph, dialog };
   // Shared camera / handheld scanning and touch-layout fixes are available on every page.
   for (const name of ['scanning','phone-mobile']) if (!document.querySelector('link[data-mk97-style="'+name+'"]')) {
-    const style=document.createElement('link');style.rel='stylesheet';style.href=S.url(name+'.css?v=20261028-scan1');style.dataset.mk97Style=name;document.head.append(style);
+    const style=document.createElement('link');style.rel='stylesheet';style.href=S.url(name+'.css?v='+(name==='scanning'?'20261028-scan2':'20261028-scan1'));style.dataset.mk97Style=name;document.head.append(style);
   }
   window.MK97ScanReady ||= (async()=>{
     // scan.html loads these explicitly; other pages request them in dependency order.
@@ -753,7 +753,7 @@
       if(test())continue;
       const existing=document.querySelector('script[src*="/'+file+'"],script[src^="'+file+'"]');
       if(existing){await new Promise((resolve,reject)=>{if(test())return resolve();existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',()=>reject(new Error('Barcode scanning could not load. Reload to try again.')),{once:true});});}
-      else await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=S.url(file+'?v=20261028-scan1');script.onload=resolve;script.onerror=()=>reject(new Error('Barcode scanning could not load. Reload to try again.'));document.head.append(script);});
+      else await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=S.url(file+'?v=20261028-scan2');script.onload=resolve;script.onerror=()=>reject(new Error('Barcode scanning could not load. Reload to try again.'));document.head.append(script);});
     }
   })().catch(error=>notice(error.message,true));
   if (!document.querySelector('link[href*="tasks.css"]')) {const style=document.createElement('link');style.rel='stylesheet';style.href=S.url('tasks.css?v=20261021-ops1');document.head.append(style);}

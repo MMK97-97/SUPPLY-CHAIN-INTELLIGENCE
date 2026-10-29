@@ -114,6 +114,7 @@
     // Record IDs keep printed labels stable when a human PO reference is edited.
     e.orders.forEach(order => { order.scanBarcode = 'SCI-CO:' + order.id; });
     e.purchaseOrders.forEach(po => { po.scanBarcode = 'SCI-VPO:' + po.id; });
+    l.cycleCounts.forEach(count => { count.scanBarcode = 'SCI-CC:' + count.id; });
     const reservations = activeReservations(e);
     e.inventory.forEach(i => {
       i.reserved = number(i.externalReserved) + (reservations[i.sku] || 0);
@@ -444,6 +445,7 @@
       const l = s.logistics, t = l.putaway.find(x => x.id === id); if (!t || t.status === 'COMPLETE') return;
       const r = l.receipts.find(x => x.id === t.receiptId); const p = s.enterprise.purchaseOrders.find(x => x.po === r?.po);
       if (!r) throw new Error('Receiving document was not found.');
+      if (r.scanVerificationRequired && !r.scanCompletedAt) throw new Error('Finish barcode verification of the receiving batch before completing putaway.');
       const target = l.bins.find(x => x.id === t.toBin && x.active); if (!target || target.used + t.qty > target.capacity) throw new Error('The destination bin does not have enough capacity. Choose another bin.');
       const item = inventoryItem(s, t.sku); const lines = p?.lines.filter(x => x.sku === t.sku) || [];
       const q = lines.length ? Math.min(t.qty, lines.reduce((sum,line)=>sum+Math.max(0,line.qty-number(line.received)),0)) : t.qty;

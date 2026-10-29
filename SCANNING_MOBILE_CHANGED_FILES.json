@@ -1,7 +1,10 @@
 {
   "sourceAttachment": "SUPPLY-CHAIN-INTELLIGENCE-main (2).zip",
   "date": "2026-10-28",
+  "versionTag": "20261028-scan2",
   "added": [
+    "PO_CYCLE_COUNT_FIX.md",
+    "SCANNING_MOBILE_CHANGED_FILES.json",
     "SCANNING_MOBILE_UPDATE.md",
     "assets/phone-mobile.css",
     "assets/scan-camera.js",
@@ -19,6 +22,7 @@
     "docs/verification-phone-scanning-baseline-comparison-20261028.json",
     "docs/verification-phone-scanning-existing-regression-20261028.json",
     "docs/verification-phone-scanning-ui-20261028.json",
+    "docs/verification-po-cycle-browser-20261028.json",
     "phone-mobile.css",
     "scan-camera.js",
     "scan-core.js",
@@ -48,6 +52,7 @@
     "add-item.html",
     "all-open-orders.html",
     "assets/fulfillment-core.js",
+    "assets/logistics-suite.js",
     "assets/mk-brain.js",
     "assets/system-connectors.js",
     "assets/system-core.js",
@@ -91,6 +96,7 @@
     "inventory.html",
     "item-details.html",
     "item-master.html",
+    "logistics-suite.js",
     "mail.html",
     "manual.html",
     "mk-brain.html",
@@ -138,5 +144,5 @@
     "workspace.html"
   ],
   "removed": [],
-  "notes": "Overlay these paths on the attached project root. Full source is supplied separately. Includes cache-tag updates and early mobile stylesheet links."
+  "notes": "Cumulative update: phone/mobile scanning, automatic PO/count lookup, verification of pre-entered receipts, and cycle-count scanning. Overlay these paths on the uploaded project root."
 }

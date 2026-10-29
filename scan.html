@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="description" content="Scan customer-order barcodes and verify picked items, or scan vendor POs and record received items using a phone camera, webcam or barcode scanner.">
-  <title>Order &amp; Receiving Scanner · MK97 ERP</title>
+  <meta name="description" content="Scan customer orders, vendor receipts and warehouse cycle counts using a phone camera, webcam or handheld barcode scanner.">
+  <title>Order, Receiving &amp; Cycle Count Scanner · MK97 ERP</title>
   <script src="assets/workspace-runtime.js?v=20261028-scan1"></script>
   <script src="assets/page-navigation.js?v=20261008-3" defer></script>
   <script src="assets/system-seed.js?v=20261008-3" defer></script>
-  <script src="assets/system-core.js?v=20261028-scan1" defer></script>
+  <script src="assets/system-core.js?v=20261028-scan2" defer></script>
   <link rel="stylesheet" href="assets/enterprise-suite.css?v=20261002-2">
   <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
   <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261028-scan1">
   <link rel="stylesheet" href="assets/portfolio-mobile.css?v=20261028-scan1">
   
   
-  <script src="assets/system-shell.js?v=20261028-scan1" defer></script>
+  <script src="assets/system-shell.js?v=20261028-scan2" defer></script>
   <script src="assets/system-cloud.js?v=20261023-copilot1" defer></script>
   <script src="assets/fulfillment-core.js?v=20261028-scan1" defer></script>
   <script src="assets/mk-analysis-tools.js?v=20261008-3" defer></script>
@@ -26,24 +26,25 @@
   <script src="mk-copilot-core.js?v=20261023-copilot1" defer></script>
   <script src="mk-copilot.js?v=20261023-copilot1" defer></script>
   <link rel="stylesheet" href="mk-copilot.css?v=20261023-copilot1">
-  <script src="scan-core.js?v=20261028-scan1" defer></script>
+  <script src="scan-core.js?v=20261028-scan2" defer></script>
   <script src="scan-camera.js?v=20261028-scan1" defer></script>
-  <script src="scanning.js?v=20261028-scan1" defer></script>
-<link rel="stylesheet" data-mk97-style="scanning" href="scanning.css?v=20261028-scan1">
+  <script src="scanning.js?v=20261028-scan2" defer></script>
+<link rel="stylesheet" data-mk97-style="scanning" href="scanning.css?v=20261028-scan2">
 <link rel="stylesheet" data-mk97-style="phone-mobile" href="phone-mobile.css?v=20261028-scan1">
 </head>
 <body data-page="warehouse-scan" data-root=".">
 <main id="scan-workspace" class="system-page scan-workspace" aria-label="Order and receiving scanner">
-  <header class="scan-heading"><div><p class="scan-eyebrow">WAREHOUSE OPERATIONS</p><h1>Scan &amp; verify</h1><p>Open the PO, select an item, and scan its barcode.</p></div><a class="btn" href="warehouse-management/receiving.html">Receiving &amp; putaway</a></header>
+  <header class="scan-heading"><div><p class="scan-eyebrow">WAREHOUSE OPERATIONS</p><h1>Scan &amp; verify</h1><p>Open a PO or cycle count, select an item, and scan its barcode.</p></div><a class="btn" href="warehouse-management/receiving.html">Receiving &amp; putaway</a></header>
   <div id="scan-feedback" class="scan-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
   <div class="scan-workspace-grid">
     <section class="scan-orders-column">
-      <section class="scan-card"><h2>1. Open the PO</h2>
-        <label>Workflow<select id="scan-mode"><option value="CUSTOMER">Customer order · picking</option><option value="VENDOR">Vendor PO · receiving</option></select></label>
+      <section class="scan-card"><h2 id="scan-open-heading">1. Open the PO</h2>
+        <label>Workflow<select id="scan-mode"><option value="CUSTOMER">Customer order · picking</option><option value="VENDOR">Vendor PO · receiving</option><option value="CYCLE">Cycle count · inventory</option></select></label>
         <p id="scan-mode-description" class="scan-help"></p>
-        <form id="scan-document-form" class="scan-inline-form"><label>PO barcode or exact reference<input id="scan-document-code" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Scan or enter the PO reference"></label><button type="submit" class="btn primary">Open PO</button></form>
+        <p class="scan-help">Customer POs, vendor POs and cycle counts are recognized automatically from their barcode or exact reference.</p>
+        <form id="scan-document-form" class="scan-inline-form"><label><span id="scan-reference-label">PO barcode or exact reference</span><input id="scan-document-code" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Scan or enter the PO reference"></label><button type="submit" class="btn primary">Open PO</button></form>
         <button id="scan-po-camera" type="button" class="btn scan-camera-button">Scan PO with camera</button>
-        <details class="scan-existing"><summary>Choose an existing PO</summary><label class="scan-sr-only" for="scan-doc-select">Existing orders or purchase orders</label><select id="scan-doc-select"></select><button id="scan-load-selected" type="button" class="btn">Open selected PO</button></details>
+        <details class="scan-existing"><summary id="scan-existing-summary">Choose an existing PO</summary><label class="scan-sr-only" for="scan-doc-select">Existing orders, purchase orders or cycle counts</label><select id="scan-doc-select"></select><button id="scan-load-selected" type="button" class="btn">Open selected PO</button></details>
       </section>
       <section class="scan-card" id="scan-document" hidden>
         <div class="scan-document-heading"><div><h2 id="scan-doc-title"></h2><p id="scan-doc-party" class="scan-help"></p></div><button type="button" class="btn" id="scan-label-toggle">Show PO barcode</button><button type="button" class="btn" id="scan-print-po">Print PO barcode</button></div>
@@ -51,8 +52,10 @@
         <div id="scan-inline-label" class="scan-label-preview" hidden><svg id="scan-inline-barcode"></svg></div>
         <h2>2. Select an item</h2><ul id="scan-item-list" class="scan-item-list" aria-label="Items on the selected PO"></ul>
         <div id="scan-putaway-fields" class="scan-putaway-fields" hidden></div>
-        <div class="scan-finish-row"><button type="button" id="scan-finish" class="btn primary" disabled>Finish picking</button><a href="warehouse-management/packing-dispatch.html">Packing</a><a href="warehouse-management/receiving.html">Receiving &amp; putaway</a></div>
-        <p class="scan-help">Picking verifies the order without dispatching stock. Received units become available after putaway.</p>
+        <p id="scan-receipt-warning" class="scan-help" role="status" hidden></p>
+        <label id="scan-empty-count" class="scan-zero-label" hidden><input id="scan-confirm-empty" type="checkbox"><span>I checked this bin and confirm it contains zero units of the selected item.</span></label>
+        <div class="scan-finish-row"><button type="button" id="scan-finish" class="btn primary" disabled>Finish picking</button><a id="scan-packing-link" href="warehouse-management/packing-dispatch.html">Packing</a><a id="scan-receiving-link" href="warehouse-management/receiving.html">Receiving &amp; putaway</a><a id="scan-counts-link" href="warehouse-management/cycle-counts.html" hidden>Cycle count queue</a></div>
+        <p id="scan-finish-note" class="scan-help">Picking verifies the order without dispatching stock. Received units become available after putaway.</p>
       </section>
     </section>
     <section class="scan-card scan-camera-card" id="scan-camera-card" aria-label="Camera and item verification">

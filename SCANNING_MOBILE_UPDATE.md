@@ -2,6 +2,14 @@
 
 Built from your uploaded `SUPPLY-CHAIN-INTELLIGENCE-main (2).zip`. This update preserves that version's MK97, Mail, order, inventory and navigation code.
 
+## PO lookup, existing-receipt and cycle-count follow-up
+
+The scanner now recognizes customer POs, vendor POs and cycle-count references automatically. Opening vendor PO `PO-2026-887411` from customer picking switches to vendor receiving instead of reporting a missing PO. A shared human reference honors the selected workflow; ambiguous matches require an exact generated barcode or explicit selection.
+
+Entered receiving quantities are separate from barcode-verified quantities. A legacy receipt with 50 entered units and an existing putaway task starts with **50 units requiring verification**. Opening the PO clears the previous item selection. Select its item in Step 2 to enable scanning; the button explains this while disabled. The first matching scan verifies one unit and leaves 49 to scan, without increasing the entered receipt quantity or on-hand stock. Every already-entered unit must be verified before finishing that batch. Existing putaway tasks are reused rather than duplicated, and putaway cannot post a barcode batch before verification is finished.
+
+Cycle-count scanning is available through **Warehouse Management → Cycle Counts → Scan count / Count barcode**, or the scanner's **Cycle count · inventory** workflow. Each count has a stable `SCI-CC:<count ID>` barcode. Select the count's item and check the displayed bin, then use the phone camera, webcam, handheld scanner or manual barcode entry to tally physical units. Wrong items are rejected. Counts can exceed the system quantity; there is no fulfillment-style cap. Saving records the actual total and variance in the existing queue without changing inventory stock. A zero count requires selecting the item and explicitly confirming that the bin has zero units of that item. Saved scanner counts are retained; schedule a new count to recount.
+
 ## Install the files
 
 For the updated-files ZIP, copy the contents of its `SUPPLY-CHAIN-INTELLIGENCE-main` folder into your existing project root, preserving the folders and replacing the matching files. Include the root files, `assets` files, HTML pages and bundled vendor files together. The full-source ZIP is an alternative complete project. Do not install one inside the other.
@@ -45,12 +53,13 @@ Cameras require HTTPS (or localhost) and browser camera permission. GitHub Pages
 
 ## Verification and limits
 
-- **37/37** isolated scanning, quantity, idempotency, stock, camera-lifecycle and independent Code 128 decoding checks passed.
-- **7/7** scanner DOM integration checks passed.
+- **63/63** isolated lookup, receiving-verification, cycle-count, quantity, idempotency, stock, camera-lifecycle and independent Code 128 decoding checks passed.
+- **14/14** scanner DOM integration checks passed.
 - Cloud Chrome browser confirmed wrong-item rejection, correct picking, reload persistence, completion to Packing, printable SVG barcode and partial vendor receiving with pending putaway, using fictional demo records.
 - **32/32 responsive layout checks** found zero page-level horizontal overflow: eight pages at 320, 390, 768 and 1024px iframe widths. Pages: Home, Item Master, Mail, Create Customer Order, Create Vendor PO, All Open Orders, Scan, and Receiving. Mail panel switching, mobile search, MK opening and the desktop order Items scanner entry were also checked. These are controlled responsive Chrome views, not physical mobile-device tests.
+- Follow-up cloud browser checks reproduced the 50-unit receipt, automatic vendor detection, explicit item selection, wrong-item rejection and 1 verified / 49 remaining. Cycle-count checks covered wrong items, a total of 75 against system quantity 74, saved variance +1, the updated queue and its printable barcode. Six additional responsive checks (receiving and cycle scanning at 320, 390 and 768px) had zero page-level overflow. These used isolated fictional seed fixtures and current production scripts.
 - JavaScript syntax and root/assets mirrors passed; no new broken script or stylesheet references were introduced.
-- The existing fulfillment suite reports **40 passed / 9 failed**, versus **39 passed / 10 failed** on the untouched attachment. There are **no new failing test names**. Remaining failures concern five cancellation/partner tests that hit the existing manager-permission fixture, navigation expectations, two customer-form tests and a vendor-form test. Details and baseline comparison are in `docs/verification-phone-scanning-*.json`.
+- The rerun existing fulfillment suite reports **40 passed / 9 failed**, versus **39 passed / 10 failed** on the untouched attachment. There are **no new failing test names**. Remaining failures concern five cancellation/partner tests that hit the existing manager-permission fixture, navigation expectations, two customer-form tests and a vendor-form test. Details and baseline comparison are in `docs/verification-phone-scanning-*.json`.
 - Physical iPhone/Android camera decoding, actual printed-label scans, printer output, authenticated organization workflows, production deployment and cross-device cloud synchronization were not tested. Camera permission/errors and decode lifecycle were tested with simulated media. Check the deployed HTTPS page on your intended devices before warehouse use.
 
 ## Run the focused checks locally
