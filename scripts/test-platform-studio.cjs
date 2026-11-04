@@ -230,6 +230,12 @@ async function runTests() {
       const auditEntries = document.querySelectorAll('.audit-event-row');
       const testAllBtn = document.querySelector('#btn-test-all-connections');
 
+      const pipelineSteps = document.querySelectorAll('.pipeline-step-card');
+      const modePlainBtn = document.querySelector('#btn-mode-plain');
+      const modeTechBtn = document.querySelector('#btn-mode-tech');
+      const simBtn = document.querySelector('#btn-run-sim');
+      const searchInput = document.querySelector('#input-map-search');
+
       return {
         cardsCount: cards.length,
         hasSapBtn: !!sapBtn,
@@ -246,7 +252,12 @@ async function runTests() {
         tabsCount: tabs.length,
         mappingRowsCount: mappingRows.length,
         auditEntriesCount: auditEntries.length,
-        hasTestAllBtn: !!testAllBtn
+        hasTestAllBtn: !!testAllBtn,
+        pipelineStepsCount: pipelineSteps.length,
+        hasModePlainBtn: !!modePlainBtn,
+        hasModeTechBtn: !!modeTechBtn,
+        hasSimBtn: !!simBtn,
+        hasSearchInput: !!searchInput
       };
     })()`);
 
@@ -257,9 +268,56 @@ async function runTests() {
     }
     if (!hubCheck.hasRadarMap || !hubCheck.hasRadarSvg) throw new Error('Live Maritime AIS Radar must be present');
     if (!hubCheck.hasEdiStudio || !hubCheck.hasEdiTranslateBtn || !hubCheck.hasEdiValidateBtn) throw new Error('Native EDI Protocol Studio must be present');
+    if (hubCheck.pipelineStepsCount !== 5) throw new Error('Expected 5 Lifecycle Pipeline steps, got ' + hubCheck.pipelineStepsCount);
+    if (!hubCheck.hasModePlainBtn || !hubCheck.hasModeTechBtn) throw new Error('Mode switcher buttons missing');
+    if (!hubCheck.hasSimBtn) throw new Error('Live simulator button missing');
+    if (!hubCheck.hasSearchInput) throw new Error('Search input missing');
     if (hubCheck.tabsCount < 4) throw new Error('Expected 4 canonical mapping tabs');
     if (hubCheck.mappingRowsCount < 4) throw new Error('Expected canonical mapping table rows');
     if (hubCheck.auditEntriesCount < 4) throw new Error('Expected audit log stream entries');
+
+    // Test Plain English Mode Toggle and Search Filter
+    const mapperInteractionResult = await evaluate(`(() => {
+      // Toggle to technical mode
+      const techBtn = document.querySelector('#btn-mode-tech');
+      if (techBtn) techBtn.click();
+      const techThead = document.querySelector('#mapping-thead')?.innerText;
+
+      // Toggle back to plain English
+      const plainBtn = document.querySelector('#btn-mode-plain');
+      if (plainBtn) plainBtn.click();
+      const plainThead = document.querySelector('#mapping-thead')?.innerText;
+
+      // Test Search
+      const searchInp = document.querySelector('#input-map-search');
+      if (searchInp) {
+        searchInp.value = 'stock';
+        searchInp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      const filteredRows = document.querySelectorAll('#mapping-tbody tr').length;
+
+      // Reset search
+      if (searchInp) {
+        searchInp.value = '';
+        searchInp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      // Test Simulator
+      const simBtn = document.querySelector('#btn-run-sim');
+      if (simBtn) simBtn.click();
+
+      return {
+        techHasSchema: techThead.includes('Canonical Field') && techThead.includes('SAP Standard'),
+        plainHasMeaning: plainThead.includes('Why It Matters') || plainThead.includes('Plain English'),
+        filteredRows,
+        simClicked: !!simBtn
+      };
+    })()`);
+
+    console.log('Mapper Interaction Result:', mapperInteractionResult);
+    if (!mapperInteractionResult.techHasSchema) throw new Error('Technical mode failed to render canonical/SAP schema headers');
+    if (!mapperInteractionResult.plainHasMeaning) throw new Error('Plain English mode failed to render business meaning headers');
+    if (mapperInteractionResult.filteredRows < 1) throw new Error('Search filter failed to find matching rows');
 
     // Test EDI translation action
     const ediResult = await evaluate(`(() => {

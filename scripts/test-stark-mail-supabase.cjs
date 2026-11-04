@@ -202,8 +202,11 @@ server.listen(PORT, '127.0.0.1', async () => {
       // Click Send button
       sendBtn.click();
 
-      // Wait for async processing
-      await new Promise(r => setTimeout(r, 600));
+      // Wait for async processing to finish completely
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 200));
+        if (!sendBtn.disabled) break;
+      }
 
       const inputCleared = replyInput.value === '';
       const toastEl = document.querySelector('.system-toast');
