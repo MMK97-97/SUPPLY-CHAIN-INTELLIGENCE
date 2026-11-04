@@ -11,9 +11,14 @@ Deno.serve(async (req: Request) => {
 
   try {
     const payload = await req.json();
-    const { to, subject, body } = payload || {};
+    const { to, subject, body, attachments } = payload || {};
 
-    console.log("send-sandbox-email invoked:", { to, subject, bodyLength: body?.length });
+    console.log("send-sandbox-email invoked:", {
+      to,
+      subject,
+      bodyLength: body?.length,
+      attachmentsCount: Array.isArray(attachments) ? attachments.length : 0
+    });
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     let providerStatus = "sandbox_simulated";
@@ -21,18 +26,27 @@ Deno.serve(async (req: Request) => {
     if (resendApiKey) {
       try {
         const fromEmail = "onboarding@resend.dev";
+        const resendPayload: any = {
+          from: fromEmail,
+          to: ["manoj.k.manne@gmail.com"], // Hardcoded to verified GitHub personal email under Resend sandbox constraints
+          subject: subject || "MK97 ERP Communication",
+          html: `<div>${body || ""}</div>`
+        };
+
+        if (Array.isArray(attachments) && attachments.length > 0) {
+          resendPayload.attachments = attachments.map((att: any) => ({
+            filename: att.name || att.filename || "attachment.dat",
+            content: (att.content && att.content.includes(',')) ? att.content.split(',')[1] : (att.content || att.data || "")
+          }));
+        }
+
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${resendApiKey}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            from: fromEmail,
-            to: ["manoj.k.manne@gmail.com"],
-            subject: subject || "MK97 ERP Communication",
-            html: `<div>${body || ""}</div>`
-          })
+          body: JSON.stringify(resendPayload)
         });
 
         const responseData = await res.json();
@@ -57,6 +71,7 @@ Deno.serve(async (req: Request) => {
         to: "manoj.k.manne@gmail.com",
         originalRecipient: to,
         subject: subject || "MK97 ERP Communication",
+        attachmentsCount: Array.isArray(attachments) ? attachments.length : 0,
         timestamp: new Date().toISOString()
       }),
       {
