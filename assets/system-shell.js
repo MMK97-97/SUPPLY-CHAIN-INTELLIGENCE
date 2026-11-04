@@ -7,6 +7,27 @@
   if (!S) return;
   const escape = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+  function getPlatformConfig() {
+    if (window.MK97Platform?.getConfig) {
+      return window.MK97Platform.getConfig();
+    }
+    try {
+      const raw = localStorage.getItem('sci.platform.config.v2');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  }
+
+  // Auto-inject platform engine script if not already present
+  if (!window.MK97Platform && typeof document !== 'undefined') {
+    if (!document.querySelector('script[src*="platform-studio.js"]')) {
+      const s = document.createElement('script');
+      s.src = (S?.rootURL ? S.url('assets/platform-studio.js') : 'assets/platform-studio.js') + '?v=20261103-ps1';
+      s.async = false;
+      document.head.appendChild(s);
+    }
+  }
+
   const glyph = name => {
     const paths = {
       copilot: '<path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>',
@@ -51,110 +72,125 @@
 
   function groups() {
     const region = S.getRegion(), suffix = region.toLowerCase();
-    return [
-      ['itemMaster','Item Master','Master Catalog · ATS Feeds · Price Updates','#0284c7',[
-        ['item-master.html','Item master catalog'],
-        ['item-details.html','Item details'],
-        ['add-item.html','Add new item'],
-        ['item-master.html?action=ats-upload','ATS upload (Brand)'],
-        ['item-master.html?action=price-update','Price update (Brand)']
-      ],'item-master.html',{label:'+ Add item',path:'add-item.html'}],
+    const config = getPlatformConfig();
+    const terms = config?.terms || {};
+    const itemTerm = terms.item || 'Item';
+    const custTerm = terms.customer || 'Customer';
+    const orderTerm = terms.order || 'Order';
+    const locTerm = terms.location || 'Warehouse';
+    const itemTermPlural = terms.items || (itemTerm + 's');
+    const custTermPlural = terms.customers || (custTerm + 's');
+    const orderTermPlural = terms.orders || (orderTerm + 's');
 
-      ['planning','Inventory & Planning','Replenishment · Reorder · Demand','#10b981',[
-        [`inventory-dashboard-${suffix}.html`,'Inventory dashboard'],
-        [`decision-intelligence-${suffix}.html`,'Decision intelligence'],
-        [`raw-report-${suffix}.html`,'Raw report & upload'],
-        [`reorder-report-${suffix}.html`,'Reorder report',true],
-        [`active-brands-${suffix}.html`,'Active brands'],
-        ...(region==='EU'?[['ats-eu.html','Available to sell']]:[]),
-        ['sales-analysis.html?region='+region,'Sales analysis'],
-        ['procurement-planning.html','Reorder to purchase order']
-      ],`inventory-dashboard-${suffix}.html`,{label:'+ Reorder report',path:`reorder-report-${suffix}.html`}],
+    const all = [
+      ['itemMaster', `${itemTerm} Master`, `Master Catalog · ATS Feeds · Price Updates`, '#0284c7', [
+        ['item-master.html', `${itemTerm} master catalog`],
+        ['item-details.html', `${itemTerm} details`],
+        ['add-item.html', `Add new ${itemTerm.toLowerCase()}`],
+        ['item-master.html?action=ats-upload', 'ATS upload (Brand)'],
+        ['item-master.html?action=price-update', 'Price update (Brand)']
+      ], 'item-master.html', { label: `+ Add ${itemTerm.toLowerCase()}`, path: 'add-item.html' }],
 
-      ['crm','Customers & CRM','Accounts · Programs · Catalogs','#3b82f6',[
-        ['crm/index.html','CRM dashboard'],
-        ['crm/accounts.html','Accounts & programs'],
-        ['crm/catalog.html','Catalog & pricing'],
-        ['crm/partner-portal.html','Partner portal']
-      ],'crm/index.html',{label:'+ Add account',path:'crm/accounts.html'}],
+      ['planning', 'Inventory & Planning', 'Replenishment · Reorder · Demand', '#10b981', [
+        [`inventory-dashboard-${suffix}.html`, 'Inventory dashboard'],
+        [`decision-intelligence-${suffix}.html`, 'Decision intelligence'],
+        [`raw-report-${suffix}.html`, 'Raw report & upload'],
+        [`reorder-report-${suffix}.html`, 'Reorder report', true],
+        [`active-brands-${suffix}.html`, 'Active brands'],
+        ...(region === 'EU' ? [['ats-eu.html', 'Available to sell']] : []),
+        ['sales-analysis.html?region=' + region, 'Sales analysis'],
+        ['procurement-planning.html', 'Reorder to purchase order']
+      ], `inventory-dashboard-${suffix}.html`, { label: '+ Reorder report', path: `reorder-report-${suffix}.html` }],
 
-      ['orders','Order Management','Orders · Allocation · Exceptions','#f97316',[
-        ['all-open-orders.html','All open orders'],
-        ['create-order.html','Create customer order'],
-        ['order-management/issues.html','Order issues'],
-        ['order-management/unvalidated.html','Unvalidated orders'],
-        ['order-management/cancelled.html','Cancelled orders'],
-        ['events.html?region='+region,'Event planning'],
-        ['events-tv.html?region='+region,'Events display']
-      ],'all-open-orders.html',{label:'+ Create customer order',path:'create-order.html'}],
+      ['crm', `${custTermPlural} & CRM`, 'Accounts · Programs · Catalogs', '#3b82f6', [
+        ['crm/index.html', 'CRM dashboard'],
+        ['crm/accounts.html', 'Accounts & programs'],
+        ['crm/catalog.html', 'Catalog & pricing'],
+        ['crm/partner-portal.html', 'Partner portal']
+      ], 'crm/index.html', { label: `+ Add ${custTerm.toLowerCase()}`, path: 'crm/accounts.html' }],
 
-      ['vendor','Vendor Management','Suppliers · Contracts · Performance','#8b5cf6',[
-        ['vendor-management/index.html','Vendor dashboard'],
-        ['vendor-management/vendors.html','Vendor master'],
-        ['vendor-management/sla.html','Supplier performance'],
-        ['vendor-management/digital-vault.html','Digital rewards']
-      ],'vendor-management/index.html',{label:'+ Vendor master',path:'vendor-management/vendors.html'}],
+      ['orders', `${orderTerm} Management`, `${orderTermPlural} · Allocation · Exceptions`, '#f97316', [
+        ['all-open-orders.html', `All open ${orderTermPlural.toLowerCase()}`],
+        ['create-order.html', `Create ${custTerm.toLowerCase()} ${orderTerm.toLowerCase()}`],
+        ['order-management/issues.html', `${orderTerm} issues`],
+        ['order-management/unvalidated.html', `Unvalidated ${orderTermPlural.toLowerCase()}`],
+        ['order-management/cancelled.html', `Cancelled ${orderTermPlural.toLowerCase()}`],
+        ['events.html?region=' + region, 'Event planning'],
+        ['events-tv.html?region=' + region, 'Events display']
+      ], 'all-open-orders.html', { label: `+ Create ${custTerm.toLowerCase()} ${orderTerm.toLowerCase()}`, path: 'create-order.html' }],
 
-      ['procurement','Procurement','Purchase Orders · Receiving · PO Lifecycle','#f59e0b',[
-        ['procurement/index.html','Open vendor PO management'],
-        ['create-vendor-po.html','Create vendor PO'],
-        ['dropship-po.html','Event / dropship POs'],
-        ['vendor-management/procurement.html','Procurement & receiving']
-      ],'procurement/index.html',{label:'+ Create vendor PO',path:'create-vendor-po.html'}],
+      ['vendor', 'Vendor Management', 'Suppliers · Contracts · Performance', '#8b5cf6', [
+        ['vendor-management/index.html', 'Vendor dashboard'],
+        ['vendor-management/vendors.html', 'Vendor master'],
+        ['vendor-management/sla.html', 'Supplier performance'],
+        ['vendor-management/digital-vault.html', 'Digital rewards']
+      ], 'vendor-management/index.html', { label: '+ Vendor master', path: 'vendor-management/vendors.html' }],
 
-      ['shipping','Shipping','Dispatch · Sarasota Operations','#ef4444',[
-        ['shipping/index.html','Ship orders · Sarasota'],
-        ['shipping/daily-report.html','Daily shipment report']
-      ],'shipping/index.html',{label:'+ Sarasota dispatch',path:'shipping/index.html'}],
+      ['procurement', 'Procurement', 'Purchase Orders · Receiving · PO Lifecycle', '#f59e0b', [
+        ['procurement/index.html', 'Open vendor PO management'],
+        ['create-vendor-po.html', 'Create vendor PO'],
+        ['dropship-po.html', 'Event / dropship POs'],
+        ['vendor-management/procurement.html', 'Procurement & receiving']
+      ], 'procurement/index.html', { label: '+ Create vendor PO', path: 'create-vendor-po.html' }],
 
-      ['warehouse','Warehouse Management','Control Tower · Putaway · Waves · Picking','#0284c7',[
-        ['warehouse-management/index.html','Warehouse control tower'],
-        ['warehouse-management/inventory-bins.html','Stock & locations'],
-        ['warehouse-management/receiving.html','Receiving & putaway'],
-        ['warehouse-management/wave-picking.html','Wave picking'],
-        ['warehouse-management/packing-dispatch.html','Packing & dispatch'],
-        ['warehouse-management/cycle-counts.html','Cycle counts'],
-        ['scan.html','Order, receiving & cycle scanner']
-      ],'warehouse-management/index.html',{label:'+ Inbound receiving',path:'warehouse-management/receiving.html'}],
+      ['shipping', 'Shipping', 'Dispatch · Sarasota Operations', '#ef4444', [
+        ['shipping/index.html', `Ship ${orderTermPlural.toLowerCase()} · Sarasota`],
+        ['shipping/daily-report.html', 'Daily shipment report']
+      ], 'shipping/index.html', { label: '+ Sarasota dispatch', path: 'shipping/index.html' }],
 
-      ['tpl','3PL Management','Partners · API Transmission · Routing','#10b981',[
-        ['3pl-management/index.html','3PL overview'],
-        ['3pl-management/order-history.html','Order history & processing API'],
-        ['3pl-management/shipment-requests.html','Shipment requests'],
-        ['3pl-management/orders.html','Manage 3PL orders'],
-        ['3pl-management/ship-orders.html','Ship 3PL orders'],
-        ['3pl-management/upload-shipments.html','Upload 3PL shipments'],
-        ['3pl-management/network.html','Partner network & stock'],
-        ['3pl-management/routing.html','Routing workbench'],
-        ['3pl-management/shipments.html','Partner shipment register'],
-        ['3pl-management/reconciliation.html','Reconciliation & SLA'],
-        ['3pl-management/integrations.html','API connection']
-      ],'3pl-management/index.html',{label:'+ 3PL dispatch',path:'3pl-management/ship-orders.html'}],
+      ['warehouse', `${locTerm} Management`, 'Control Tower · Putaway · Waves · Picking', '#0284c7', [
+        ['warehouse-management/index.html', `${locTerm} control tower`],
+        ['warehouse-management/inventory-bins.html', 'Stock & locations'],
+        ['warehouse-management/receiving.html', 'Receiving & putaway'],
+        ['warehouse-management/wave-picking.html', 'Wave picking'],
+        ['warehouse-management/packing-dispatch.html', 'Packing & dispatch'],
+        ['warehouse-management/cycle-counts.html', 'Cycle counts'],
+        ['scan.html', 'Order, receiving & cycle scanner']
+      ], 'warehouse-management/index.html', { label: '+ Inbound receiving', path: 'warehouse-management/receiving.html' }],
 
-      ['transportation','Transportation','Freight · Consolidation · Tracking','#2563eb',[
-        ['transportation/index.html','Transportation overview'],
-        ['freight-estimator.html','Freight estimator'],
-        ['freight-consolidate.html','Freight consolidation'],
-        ['shipment-tracking.html','Shipment tracking']
-      ],'transportation/index.html',{label:'+ Estimate freight',path:'freight-estimator.html'}],
+      ['tpl', '3PL Management', 'Partners · API Transmission · Routing', '#10b981', [
+        ['3pl-management/index.html', '3PL overview'],
+        ['3pl-management/order-history.html', `${orderTerm} history & processing API`],
+        ['3pl-management/shipment-requests.html', 'Shipment requests'],
+        ['3pl-management/orders.html', `Manage 3PL ${orderTermPlural.toLowerCase()}`],
+        ['3pl-management/ship-orders.html', `Ship 3PL ${orderTermPlural.toLowerCase()}`],
+        ['3pl-management/upload-shipments.html', 'Upload 3PL shipments'],
+        ['3pl-management/network.html', 'Partner network & stock'],
+        ['3pl-management/routing.html', 'Routing workbench'],
+        ['3pl-management/shipments.html', 'Partner shipment register'],
+        ['3pl-management/reconciliation.html', 'Reconciliation & SLA'],
+        ['3pl-management/integrations.html', 'API connection']
+      ], '3pl-management/index.html', { label: '+ 3PL dispatch', path: '3pl-management/ship-orders.html' }],
 
-      ['analytics','Analytics & Reports','Intelligence · Reports · Forecasts','#eab308',[
-        ['business-operations.html','Executive dashboard'],
-        ['sales-analysis.html','Sales & demand analysis'],
-        [`decision-intelligence-${suffix}.html`,'Inventory analytics'],
-        ['vendor-management/sla.html','Supplier performance'],
-        ['freight-estimator.html','Freight spend analysis'],
-        [`raw-report-${suffix}.html`,'Custom reports'],
-        ['data-center.html','Data export & automation']
-      ],'business-operations.html',{label:'+ Executive report',path:'business-operations.html'}],
+      ['transportation', 'Transportation', 'Freight · Consolidation · Tracking', '#2563eb', [
+        ['transportation/index.html', 'Transportation overview'],
+        ['freight-estimator.html', 'Freight estimator'],
+        ['freight-consolidate.html', 'Freight consolidation'],
+        ['shipment-tracking.html', 'Shipment tracking']
+      ], 'transportation/index.html', { label: '+ Estimate freight', path: 'freight-estimator.html' }],
 
-      ['data','System & Data','Data Center · Backups · Audit Activity','#475569',[
-        ['data-center.html','Data center & backups'],
-        ['activity.html','Audit activity'],
-        ['manual.html','System user manual & SOPs'],
-        [`instructions-${suffix}.html`,'Regional instructions']
-      ],'data-center.html',{label:'+ User manual',path:'manual.html'}]
+      ['analytics', 'Analytics & Reports', 'Intelligence · Reports · Forecasts', '#eab308', [
+        ['business-operations.html', 'Executive dashboard'],
+        ['sales-analysis.html', 'Sales & demand analysis'],
+        [`decision-intelligence-${suffix}.html`, 'Inventory analytics'],
+        ['vendor-management/sla.html', 'Supplier performance'],
+        ['freight-estimator.html', 'Freight spend analysis'],
+        [`raw-report-${suffix}.html`, 'Custom reports'],
+        ['data-center.html', 'Data export & automation']
+      ], 'business-operations.html', { label: '+ Executive report', path: 'business-operations.html' }],
+
+      ['data', 'System & Data', 'Data Center · Backups · Audit Activity', '#475569', [
+        ['data-center.html', 'Data center & backups'],
+        ['activity.html', 'Audit activity'],
+        ['manual.html', 'System user manual & SOPs'],
+        [`instructions-${suffix}.html`, 'Regional instructions']
+      ], 'data-center.html', { label: '+ User manual', path: 'manual.html' }]
     ];
+
+    if (config && Array.isArray(config.enabledModules) && config.enabledModules.length > 0) {
+      return all.filter(([id]) => config.enabledModules.includes(id));
+    }
+    return all;
   }
   window.StarkModuleNavigation = window.StarkModuleNavigation || {};
   window.StarkModuleNavigation.groups = groups;
@@ -314,17 +350,34 @@
     const currentRegion = S.getRegion();
     const allGroups = groups();
 
+    const config = getPlatformConfig();
+    const brandName = config?.brandName || 'MK97 ERP';
+    const brandSubtitle = config?.brandSubtitle || 'Supply Chain Intelligence';
+    const brandWordmark = config?.brandWordmark || 'SK';
+    const industryName = config && window.MK97Platform?.getIndustryPreset ? (window.MK97Platform.getIndustryPreset(config.industry)?.name || 'Custom') : (config?.industry ? config.industry.replace('_', ' ').toUpperCase() : 'Omnichannel');
     const header = document.createElement('header');
     header.className = 'system-header';
     header.innerHTML = `
       <!-- Brand Block -->
-      <a class="system-brand" href="${S.url('workspace.html')}" aria-label="MK97 ERP Home">
-        <span class="system-wordmark">SK<span>◆</span></span>
+      <a class="system-brand" href="${S.url('workspace.html')}" aria-label="${escape(brandName)} Home">
+        <span class="system-wordmark">${escape(brandWordmark)}<span>◆</span></span>
         <div class="system-brand-text">
-          <b>MK97 ERP</b>
-          <small>Supply Chain Intelligence</small>
+          <b>${escape(brandName)}</b>
+          <small>${escape(brandSubtitle)}</small>
         </div>
       </a>
+
+      <!-- Center Action Pills: Platform Studio & Integrations -->
+      <div class="system-header-center-actions">
+        <a class="system-header-pill pill-studio" href="${S.url('platform-studio.html')}" title="Customize Branding, Industry Presets & Terminology">
+          <span>⚙️ Platform Studio</span>
+          <span class="pill-industry-badge">${escape(industryName)}</span>
+        </a>
+        <a class="system-header-pill pill-integrations" href="${S.url('integrations.html')}" title="Manage ERP, Carrier & EDI Integrations">
+          <span>🔌 Integrations</span>
+          <span class="pill-sync-status">6 Active</span>
+        </a>
+      </div>
 
       <!-- Center Global Search Pill -->
       <div class="system-search" role="search">
@@ -436,7 +489,27 @@
 
     const footer = document.createElement('footer');
     footer.className = 'system-workspace-footer';
-    footer.innerHTML = '<span id="system-data-status"></span><span>MK97 ERP · Enterprise Supply Chain Platform</span>';
+    footer.innerHTML = `<span id="system-data-status"></span><span>${escape(brandName)} · Enterprise Supply Chain Platform</span>`;
+
+    window.addEventListener('sci:config-changed', () => {
+      const curCfg = getPlatformConfig();
+      if (curCfg) {
+        const brandTitle = document.querySelector('.system-brand-text b');
+        const brandSub = document.querySelector('.system-brand-text small');
+        const wordmark = document.querySelector('.system-wordmark');
+        const badge = document.querySelector('.pill-industry-badge');
+        const footerSpan = document.querySelector('.system-workspace-footer span:last-child');
+
+        if (brandTitle) brandTitle.textContent = curCfg.brandName;
+        if (brandSub) brandSub.textContent = curCfg.brandSubtitle;
+        if (wordmark) wordmark.innerHTML = `${escape(curCfg.brandWordmark)}<span>◆</span>`;
+        if (badge && window.MK97Platform?.getIndustryPreset) {
+          badge.textContent = window.MK97Platform.getIndustryPreset(curCfg.industry)?.name || curCfg.industry;
+        }
+        if (footerSpan) footerSpan.textContent = `${curCfg.brandName} · Enterprise Supply Chain Platform`;
+      }
+      renderNavigation();
+    });
     document.body.append(footer);
 
     renderNavigation();

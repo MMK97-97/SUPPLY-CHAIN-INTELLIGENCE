@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}::view-transition-group(root){animation-duration:160ms}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"MK97 ERP\A Opening Platform Studio…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+  </style>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/system-core.js?v=20261028-scan2" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Platform Studio · Universal Supply Chain OS</title>
+  <meta name="description" content="Customizable Supply Chain Intelligence Platform Studio - Configure industries, ERP connectors, terminology, and modules.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261103-sc1">
+
+  <script src="assets/platform-studio.js?v=20261103-ps1"></script>
+  <script src="assets/system-shell.js?v=20261028-scan2" defer></script>
+  <script src="assets/system-connectors.js?v=20261028-scan2" defer></script>
+  <script src="assets/system-cloud.js?v=20261012-2" defer></script>
+  <script src="assets/enterprise-ui.js?v=20261013-1" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+</head>
+<body data-system-page="studio">
+  <main class="system-page studio-main-page" id="system-page-content">
+    <div class="studio-container">
+      <!-- Studio Header -->
+      <header class="studio-head">
+        <div class="studio-head-left">
+          <div class="studio-badge">
+            <span class="studio-pulse"></span>
+            <span>Platform Studio &amp; Architecture Engine</span>
+          </div>
+          <h1 class="studio-title">Universal Supply Chain OS Customizer</h1>
+          <p class="studio-subtitle">
+            Configure this enterprise platform to any business vertical, industry requirement, branding palette, and terminology dictionary. Changes propagate across all 100+ modules instantly.
+          </p>
+        </div>
+        <div class="studio-head-actions">
+          <button type="button" class="studio-btn studio-btn-secondary" id="btn-studio-reset">
+            ↺ Reset Defaults
+          </button>
+          <button type="button" class="studio-btn studio-btn-primary" id="btn-studio-apply">
+            ✓ Apply to Platform
+          </button>
+        </div>
+      </header>
+
+      <!-- Live Brand Preview Banner -->
+      <section class="studio-card studio-preview-banner">
+        <div class="studio-banner-content">
+          <div class="preview-brand-block">
+            <div class="preview-wordmark" id="preview-wordmark">SK<span>◆</span></div>
+            <div>
+              <div class="preview-brand-name" id="preview-brand-name">MK97 ERP</div>
+              <div class="preview-brand-sub" id="preview-brand-sub">Supply Chain Intelligence</div>
+            </div>
+          </div>
+          <div class="preview-meta-chips">
+            <span class="preview-chip" id="preview-chip-industry">🛍️ Retail &amp; Omnichannel E-Commerce</span>
+            <span class="preview-chip" id="preview-chip-role">👔 Executive Cockpit</span>
+            <span class="preview-chip" id="preview-chip-modules">12 Modules Active</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Studio 2-Column Grid -->
+      <div class="studio-grid">
+        <!-- Left Column: Industry Presets & Role Selection -->
+        <div class="studio-col-main">
+          <!-- Step 1: Industry Preset Selection -->
+          <section class="studio-card">
+            <div class="studio-card-head">
+              <span class="studio-step-num">1</span>
+              <div>
+                <h2>Select Industry &amp; Market Preset</h2>
+                <p>Loads specialized workflows, default KPI telemetry, and industry-standard terminology.</p>
+              </div>
+            </div>
+
+            <div class="studio-industry-grid" id="studio-industry-list">
+              <!-- Dynamically populated from platform-studio.js -->
+            </div>
+          </section>
+
+          <!-- Step 2: Role-Based Dashboard Configuration -->
+          <section class="studio-card" style="margin-top:20px;">
+            <div class="studio-card-head">
+              <span class="studio-step-num">2</span>
+              <div>
+                <h2>Select Operational Role View</h2>
+                <p>Tailors the primary Control Tower metrics to specific stakeholder priorities.</p>
+              </div>
+            </div>
+
+            <div class="studio-role-selector" id="studio-role-list">
+              <label class="studio-role-option">
+                <input type="radio" name="studio_role" value="executive" checked>
+                <div class="role-box">
+                  <div class="role-icon">👔</div>
+                  <div class="role-info">
+                    <strong>Executive &amp; Director</strong>
+                    <small>High-level capital in transit, gross margin, OTIF, and macro risk radar.</small>
+                  </div>
+                </div>
+              </label>
+
+              <label class="studio-role-option">
+                <input type="radio" name="studio_role" value="planner">
+                <div class="role-box">
+                  <div class="role-icon">📈</div>
+                  <div class="role-info">
+                    <strong>Supply Chain Planner</strong>
+                    <small>Days of supply, safety stock thresholds, reorder alerts, and lead-time drift.</small>
+                  </div>
+                </div>
+              </label>
+
+              <label class="studio-role-option">
+                <input type="radio" name="studio_role" value="logistics">
+                <div class="role-box">
+                  <div class="role-icon">🏭</div>
+                  <div class="role-info">
+                    <strong>Warehouse &amp; Logistics Lead</strong>
+                    <small>Dock door schedules, staging bay utilization, pick waves, and 3PL SLAs.</small>
+                  </div>
+                </div>
+              </label>
+
+              <label class="studio-role-option">
+                <input type="radio" name="studio_role" value="procurement">
+                <div class="role-box">
+                  <div class="role-icon">🤝</div>
+                  <div class="role-info">
+                    <strong>Procurement &amp; Sourcing</strong>
+                    <small>Vendor PO status, contract SLAs, price variance, and supplier dispute queues.</small>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <!-- Step 3: Modular Feature Switchboard -->
+          <section class="studio-card" style="margin-top:20px;">
+            <div class="studio-card-head">
+              <span class="studio-step-num">3</span>
+              <div>
+                <h2>Operational Module Switchboard</h2>
+                <p>Toggle operational modules on or off according to business operational boundaries.</p>
+              </div>
+            </div>
+
+            <div class="studio-module-switchboard" id="studio-module-switches">
+              <!-- Dynamically populated from groups -->
+            </div>
+          </section>
+        </div>
+
+        <!-- Right Column: Branding, Colors, and Terminology Dictionary -->
+        <div class="studio-col-side">
+          <!-- Step 4: Organization Branding & Colors -->
+          <section class="studio-card">
+            <div class="studio-card-head">
+              <span class="studio-step-num">4</span>
+              <div>
+                <h2>Brand &amp; Visual Theme</h2>
+                <p>Customize identity tokens for your enterprise.</p>
+              </div>
+            </div>
+
+            <div class="studio-form-group">
+              <label for="inp-brand-name">Organization Name</label>
+              <input type="text" id="inp-brand-name" class="studio-input" value="MK97 ERP" placeholder="e.g. Apex Global Supply">
+            </div>
+
+            <div class="studio-form-group">
+              <label for="inp-brand-sub">Platform Subtitle</label>
+              <input type="text" id="inp-brand-sub" class="studio-input" value="Supply Chain Intelligence" placeholder="e.g. Enterprise Operations Engine">
+            </div>
+
+            <div class="studio-form-group">
+              <label for="inp-brand-wordmark">Wordmark Initials (2 Letters)</label>
+              <input type="text" id="inp-brand-wordmark" class="studio-input" maxlength="3" value="SK" style="width:80px;text-transform:uppercase;">
+            </div>
+
+            <div class="studio-form-group">
+              <label>Theme Surface Mode</label>
+              <div class="studio-theme-toggle">
+                <button type="button" class="theme-btn active" data-theme="light">Light Slate</button>
+                <button type="button" class="theme-btn" data-theme="dark">Dark Obsidian</button>
+              </div>
+            </div>
+
+            <div class="studio-form-group">
+              <label>Primary Brand Palette</label>
+              <div class="studio-color-swatches" id="studio-color-swatches">
+                <button type="button" class="color-swatch active" data-color="#087f78" style="background:#087f78;" title="Teal Sovereign"></button>
+                <button type="button" class="color-swatch" data-color="#1e3a8a" style="background:#1e3a8a;" title="Navy Industrial"></button>
+                <button type="button" class="color-swatch" data-color="#047857" style="background:#047857;" title="Emerald Bio"></button>
+                <button type="button" class="color-swatch" data-color="#4338ca" style="background:#4338ca;" title="Indigo Clinical"></button>
+                <button type="button" class="color-swatch" data-color="#0284c7" style="background:#0284c7;" title="Cobalt Aerospace"></button>
+                <button type="button" class="color-swatch" data-color="#b45309" style="background:#b45309;" title="Amber Foundry"></button>
+                <button type="button" class="color-swatch" data-color="#b91c1c" style="background:#b91c1c;" title="Crimson Defense"></button>
+                <button type="button" class="color-swatch" data-color="#0f172a" style="background:#0f172a;" title="Obsidian Core"></button>
+              </div>
+            </div>
+
+            <div class="studio-form-group">
+              <label>Interface Density</label>
+              <div class="studio-density-toggle">
+                <button type="button" class="density-btn active" data-density="comfortable">Comfortable</button>
+                <button type="button" class="density-btn" data-density="compact">High-Density Compact</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 5: Terminology Dictionary -->
+          <section class="studio-card" style="margin-top:20px;">
+            <div class="studio-card-head">
+              <span class="studio-step-num">5</span>
+              <div>
+                <h2>Terminology Dictionary</h2>
+                <p>Customize terms to match your company's native taxonomy.</p>
+              </div>
+            </div>
+
+            <div class="studio-form-group">
+              <label for="term-item">Item Entity (SKU)</label>
+              <input type="text" id="term-item" class="studio-input" value="SKU / Product" placeholder="e.g. Part Number, Material, NDC">
+            </div>
+
+            <div class="studio-form-group">
+              <label for="term-customer">Customer Entity</label>
+              <input type="text" id="term-customer" class="studio-input" value="Customer / Buyer" placeholder="e.g. Account, OEM, Dealer">
+            </div>
+
+            <div class="studio-form-group">
+              <label for="term-order">Order Entity</label>
+              <input type="text" id="term-order" class="studio-input" value="Sales Order" placeholder="e.g. Call-Off, Purchase Order, Dispatch">
+            </div>
+
+            <div class="studio-form-group">
+              <label for="term-location">Location Entity</label>
+              <input type="text" id="term-location" class="studio-input" value="Fulfillment Center" placeholder="e.g. Plant, Depot, Staging Bay">
+            </div>
+          </section>
+
+          <!-- Integration Quick Link -->
+          <section class="studio-card studio-card-highlight" style="margin-top:20px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">🔌</span>
+              <div>
+                <strong style="display:block;font-size:13.5px;color:#0f172a;">Connect to SAP, Oracle &amp; NetSuite</strong>
+                <small style="color:#64748b;">Configure bidirectional ERP synchronization in the Integration Hub.</small>
+              </div>
+            </div>
+            <a href="integrations.html" class="studio-btn studio-btn-secondary" style="width:100%;margin-top:14px;justify-content:center;">
+              Open Integration Hub ↗
+            </a>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const P = window.MK97Platform;
+      if (!P) return;
+
+      const config = P.getConfig();
+      const presets = P.getIndustryPresets();
+
+      // Render Industry Presets Grid
+      const industryList = document.getElementById('studio-industry-list');
+      if (industryList) {
+        industryList.innerHTML = Object.values(presets).map(p => {
+          const isSelected = p.id === config.industry;
+          return `
+            <div class="industry-card ${isSelected ? 'active' : ''}" data-industry-id="${p.id}">
+              <div class="industry-card-icon">${p.icon}</div>
+              <div class="industry-card-info">
+                <div class="industry-card-title-row">
+                  <strong class="industry-card-title">${p.name}</strong>
+                  <span class="industry-card-badge">${p.badge}</span>
+                </div>
+                <p class="industry-card-desc">${p.description}</p>
+                <div class="industry-card-kpis">
+                  ${p.kpis.map(k => `<span>• ${k.label}: <b>${k.value}</b></span>`).join(' ')}
+                </div>
+              </div>
+              <div class="industry-card-radio">
+                <span class="custom-radio ${isSelected ? 'checked' : ''}"></span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        industryList.querySelectorAll('.industry-card').forEach(card => {
+          card.onclick = () => {
+            const id = card.getAttribute('data-industry-id');
+            industryList.querySelectorAll('.industry-card').forEach(c => {
+              c.classList.remove('active');
+              c.querySelector('.custom-radio')?.classList.remove('checked');
+            });
+            card.classList.add('active');
+            card.querySelector('.custom-radio')?.classList.add('checked');
+
+            // Populate terminology inputs with preset defaults
+            const preset = presets[id];
+            if (preset) {
+              document.getElementById('term-item').value = preset.terms.item || '';
+              document.getElementById('term-customer').value = preset.terms.customer || '';
+              document.getElementById('term-order').value = preset.terms.order || '';
+              document.getElementById('term-location').value = preset.terms.location || '';
+              updatePreview();
+            }
+          };
+        });
+      }
+
+      // Render Module Switchboard
+      const allModuleDefs = [
+        ['itemMaster', 'Item / Catalog Master', 'Master product catalog, pricing matrices, and ATS inventory allocations.'],
+        ['planning', 'Inventory & Demand Planning', 'Reorder algorithms, safety stock calculation, and replenishment forecasting.'],
+        ['crm', 'Customers & CRM Programs', 'B2B/B2C accounts, loyalty tiers, catalogs, and partner portals.'],
+        ['orders', 'Order Management & Exceptions', 'Unified sales order routing, backorders, firming, and unvalidated issues.'],
+        ['vendor', 'Vendor & Supplier Management', 'Supplier profiles, SLA compliance, digital contracts, and performance scorecards.'],
+        ['procurement', 'Procurement & PO Lifecycle', 'Purchase orders, dropship orders, and receiving dock schedules.'],
+        ['shipping', 'Outbound Shipping Operations', 'Carrier dispatch, manifest generation, and daily distribution reports.'],
+        ['warehouse', 'Warehouse Management (WMS)', 'Putaway, bin locations, wave picking, packing, cycle counting, and barcode scanning.'],
+        ['tpl', '3PL & Multi-Client Operations', 'Partner network stock, reconciliation, SLA tracking, and routing workbench.'],
+        ['transportation', 'Transportation Management (TMS)', 'Freight estimation, line-haul consolidation, and real-time tracking.'],
+        ['analytics', 'Executive Intelligence & KPIs', 'Macro financial telemetry, OTIF reporting, and predictive simulations.'],
+        ['data', 'System, Audit & Data Center', 'Database backups, audit logs, SOPs, and user administration.']
+      ];
+
+      const moduleSwitches = document.getElementById('studio-module-switches');
+      if (moduleSwitches) {
+        moduleSwitches.innerHTML = allModuleDefs.map(([id, title, desc]) => {
+          const isEnabled = config.enabledModules.includes(id);
+          return `
+            <label class="studio-switch-item">
+              <input type="checkbox" name="module_switch" value="${id}" ${isEnabled ? 'checked' : ''}>
+              <div class="switch-content">
+                <strong>${title}</strong>
+                <small>${desc}</small>
+              </div>
+            </label>
+          `;
+        }).join('');
+
+        moduleSwitches.querySelectorAll('input').forEach(chk => {
+          chk.onchange = updatePreview;
+        });
+      }
+
+      // Wire Inputs to Live Preview
+      const inpName = document.getElementById('inp-brand-name');
+      const inpSub = document.getElementById('inp-brand-sub');
+      const inpWordmark = document.getElementById('inp-brand-wordmark');
+
+      inpName.value = config.brandName;
+      inpSub.value = config.brandSubtitle;
+      inpWordmark.value = config.brandWordmark;
+
+      [inpName, inpSub, inpWordmark].forEach(el => el.addEventListener('input', updatePreview));
+
+      // Color Swatches
+      const swatches = document.querySelectorAll('.color-swatch');
+      swatches.forEach(sw => {
+        if (sw.getAttribute('data-color') === config.primaryColor) {
+          swatches.forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+        }
+        sw.onclick = () => {
+          swatches.forEach(s => s.classList.remove('active'));
+          sw.classList.add('active');
+          updatePreview();
+        };
+      });
+
+      // Role Radios
+      const roleInputs = document.querySelectorAll('input[name="studio_role"]');
+      roleInputs.forEach(r => {
+        if (r.value === config.activeRole) r.checked = true;
+        r.onchange = updatePreview;
+      });
+
+      // Theme Buttons
+      const themeBtns = document.querySelectorAll('.theme-btn');
+      themeBtns.forEach(btn => {
+        if (btn.getAttribute('data-theme') === config.themeMode) {
+          themeBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+        btn.onclick = () => {
+          themeBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          updatePreview();
+        };
+      });
+
+      // Density Buttons
+      const densityBtns = document.querySelectorAll('.density-btn');
+      densityBtns.forEach(btn => {
+        if (btn.getAttribute('data-density') === config.uiDensity) {
+          densityBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+        btn.onclick = () => {
+          densityBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          updatePreview();
+        };
+      });
+
+      function updatePreview() {
+        const nameVal = inpName.value.trim() || 'MK97 ERP';
+        const subVal = inpSub.value.trim() || 'Supply Chain Intelligence';
+        const markVal = (inpWordmark.value.trim() || 'SK').toUpperCase();
+        const activeSwatch = document.querySelector('.color-swatch.active');
+        const colorVal = activeSwatch ? activeSwatch.getAttribute('data-color') : '#087f78';
+        const activeCard = document.querySelector('.industry-card.active');
+        const industryName = activeCard ? activeCard.querySelector('.industry-card-title').textContent : 'Retail';
+        const activeRole = document.querySelector('input[name="studio_role"]:checked')?.value || 'executive';
+        const checkedModules = document.querySelectorAll('input[name="module_switch"]:checked').length;
+
+        document.getElementById('preview-brand-name').textContent = nameVal;
+        document.getElementById('preview-brand-sub').textContent = subVal;
+        document.getElementById('preview-wordmark').innerHTML = `${markVal}<span>◆</span>`;
+        document.getElementById('preview-wordmark').style.background = colorVal;
+        document.getElementById('preview-chip-industry').textContent = industryName;
+        document.getElementById('preview-chip-role').textContent =
+          activeRole === 'executive' ? '👔 Executive Cockpit' :
+          activeRole === 'planner' ? '📈 Supply Chain Planner' :
+          activeRole === 'logistics' ? '🏭 Warehouse & Logistics' : '🤝 Procurement & Sourcing';
+        document.getElementById('preview-chip-modules').textContent = `${checkedModules} Modules Active`;
+      }
+
+      updatePreview();
+
+      // Apply Button Click Handler
+      document.getElementById('btn-studio-apply').onclick = () => {
+        const activeCard = document.querySelector('.industry-card.active');
+        const indId = activeCard ? activeCard.getAttribute('data-industry-id') : 'retail_ecommerce';
+        const activeSwatch = document.querySelector('.color-swatch.active');
+        const primaryColor = activeSwatch ? activeSwatch.getAttribute('data-color') : '#087f78';
+        const activeRole = document.querySelector('input[name="studio_role"]:checked')?.value || 'executive';
+        const activeTheme = document.querySelector('.theme-btn.active')?.getAttribute('data-theme') || 'light';
+        const activeDensity = document.querySelector('.density-btn.active')?.getAttribute('data-density') || 'comfortable';
+
+        const enabledMods = Array.from(document.querySelectorAll('input[name="module_switch"]:checked')).map(el => el.value);
+
+        const terms = {
+          item: document.getElementById('term-item').value.trim() || 'SKU / Product',
+          customer: document.getElementById('term-customer').value.trim() || 'Customer / Buyer',
+          order: document.getElementById('term-order').value.trim() || 'Sales Order',
+          location: document.getElementById('term-location').value.trim() || 'Fulfillment Center'
+        };
+
+        P.saveConfig({
+          brandName: inpName.value.trim() || 'MK97 ERP',
+          brandSubtitle: inpSub.value.trim() || 'Supply Chain Intelligence',
+          brandWordmark: (inpWordmark.value.trim() || 'SK').toUpperCase(),
+          industry: indId,
+          activeRole: activeRole,
+          themeMode: activeTheme,
+          uiDensity: activeDensity,
+          primaryColor: primaryColor,
+          terms: terms,
+          enabledModules: enabledMods
+        });
+
+        if (window.MK97SystemUI?.notice) {
+          window.MK97SystemUI.notice('Platform Studio settings successfully saved and applied!');
+        }
+
+        setTimeout(() => {
+          window.location.href = 'workspace.html';
+        }, 600);
+      };
+
+      // Reset Defaults Click Handler
+      document.getElementById('btn-studio-reset').onclick = () => {
+        if (confirm('Reset all Platform Studio settings to default MK97 ERP configuration?')) {
+          P.resetToDefaults();
+          window.location.reload();
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

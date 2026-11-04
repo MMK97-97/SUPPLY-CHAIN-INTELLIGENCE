@@ -71,9 +71,75 @@
     return `<svg class="tower-kpi-sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${pts[pts.length - 1].split(',')[0]}" cy="${pts[pts.length - 1].split(',')[1]}" r="2" fill="${color}"/></svg>`;
   }
 
-  function kpi(id, label, value, foot, path, glyph, color, trendText = '', trendClass = 'up', sparkPoints = null, submetric = '') {
+  function kpi(id, label, value, foot, path, glyph, color, trendText = '', trendClass = 'up', sparkPoints = null, submetric = '', honestyBadge = 'Live') {
     const spark = sparkPoints ? sparklineSvg(sparkPoints, color, 58, 22) : '';
-    return `<a class="tower-kpi" data-kpi="${id}" href="${S.url(path)}" style="--tower-accent:${color}"><div class="tower-kpi-header-row"><span class="tower-kpi-icon">${icon(glyph)}</span><span class="tower-kpi-label">${esc(label)}</span>${trendText ? `<span class="tower-kpi-trend-pill ${trendClass}">${esc(trendText)}</span>` : ''}</div><div class="tower-kpi-value-row"><strong data-kpi-value>${esc(value)}</strong>${spark ? `<span class="tower-kpi-sparkline">${spark}</span>` : ''}</div>${submetric ? `<div class="tower-kpi-submetric">${esc(submetric)}</div>` : ''}<small>${esc(foot)}</small></a>`;
+    const badgeHtml = honestyBadge === 'Live' 
+      ? '<span class="tower-kpi-honesty-pill live" title="Real-time synchronized ERP telemetry">● Live Telemetry</span>'
+      : '<span class="tower-kpi-honesty-pill demo" title="Simulated sandbox dataset">◈ Demo Data</span>';
+    return `<a class="tower-kpi" data-kpi="${id}" href="${S.url(path)}" style="--tower-accent:${color}"><div class="tower-kpi-header-row"><span class="tower-kpi-icon">${icon(glyph)}</span><span class="tower-kpi-label">${esc(label)}</span>${badgeHtml}${trendText ? `<span class="tower-kpi-trend-pill ${trendClass}">${esc(trendText)}</span>` : ''}</div><div class="tower-kpi-value-row"><strong data-kpi-value>${esc(value)}</strong>${spark ? `<span class="tower-kpi-sparkline">${spark}</span>` : ''}</div>${submetric ? `<div class="tower-kpi-submetric">${esc(submetric)}</div>` : ''}<small>${esc(foot)}</small></a>`;
+  }
+
+  function renderRoleAndErpBar() {
+    const config = window.MK97Platform ? window.MK97Platform.getConfig() : null;
+    const activeRole = config?.activeRole || 'executive';
+    const roles = [
+      { id: 'executive', label: 'Executive Director', icon: '👑', desc: 'Holistic revenue, cash-flow & supply chain risk' },
+      { id: 'planner', label: 'Demand & Supply Planner', icon: '📈', desc: 'Safety stock, reorder formulas & forecast accuracy' },
+      { id: 'logistics', label: 'Logistics & 3PL Lead', icon: '🚚', desc: 'Carrier dwell, route exceptions & warehouse waves' },
+      { id: 'procurement', label: 'Procurement Specialist', icon: '📑', desc: 'Supplier SLAs, vendor POs & inbound receiving' }
+    ];
+
+    return `
+      <div class="workspace-role-erp-strip">
+        <div class="workspace-role-selector" role="tablist" aria-label="Perspective Switcher">
+          <span class="role-selector-label">Perspective:</span>
+          ${roles.map(r => `
+            <button type="button" class="role-selector-chip ${activeRole === r.id ? 'active' : ''}" data-role-id="${r.id}" title="${esc(r.desc)}">
+              <span>${r.icon}</span>
+              <strong>${esc(r.label)}</strong>
+            </button>
+          `).join('')}
+        </div>
+        <div class="workspace-erp-status-ticker">
+          <span class="erp-status-pill active" title="SAP S/4HANA Dual-Directional Connector Active"><span class="erp-dot green"></span>SAP S/4HANA · Dual-Sync</span>
+          <span class="erp-status-pill active" title="Oracle NetSuite ERP Synchronized"><span class="erp-dot green"></span>NetSuite · Synced 2m</span>
+          <span class="erp-status-pill telemetry" title="FourKites & MarineTraffic AIS Real-time Feeds"><span class="erp-dot blue"></span>FourKites Radar · 48 Carriers</span>
+          <span class="erp-status-pill active" title="EDI X12 Standards 850/856/810/940/945 Active"><span class="erp-dot purple"></span>EDI Hub · 100% Acked</span>
+          <a class="erp-status-hub-btn" href="${S.url('integrations.html')}">Connectors Hub 🔌</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderIndustryKpis() {
+    const config = window.MK97Platform ? window.MK97Platform.getConfig() : null;
+    const preset = config && window.MK97Platform?.getIndustryPreset ? window.MK97Platform.getIndustryPreset(config.industry) : null;
+    if (!preset || !preset.kpis) return '';
+
+    return `
+      <div class="industry-kpi-deck">
+        <div class="industry-kpi-deck-header">
+          <span class="industry-deck-badge">${esc(preset.icon)} ${esc(preset.name)} Intelligence Matrix</span>
+          <span class="industry-deck-sub">Industry-specific operational controls &amp; compliance KPIs</span>
+          <a class="industry-tune-btn" href="${S.url('platform-studio.html')}">Customize Preset ⚙️</a>
+        </div>
+        <div class="industry-kpi-grid">
+          ${preset.kpis.map(k => `
+            <div class="industry-kpi-card">
+              <div class="industry-kpi-top">
+                <span class="industry-kpi-title">${esc(k.name)}</span>
+                <span class="tower-kpi-honesty-pill demo">◈ Sandbox Feed</span>
+              </div>
+              <div class="industry-kpi-metric-row">
+                <strong class="industry-kpi-val">${esc(k.target)}</strong>
+                <span class="industry-kpi-benchmark">${esc(k.benchmark)}</span>
+              </div>
+              <div class="industry-kpi-track"><div class="industry-kpi-fill" style="width: 88%;"></div></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
   }
 
   function bannerSvg(id, color) {
@@ -296,6 +362,8 @@
         </div>
         <p id="module-arrangement-help" class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0">Drag a module header to place it anywhere. Moved modules expand with the arrow. Alt + arrow keys move a focused header.</p>
       </div>
+      ${renderRoleAndErpBar()}
+      ${renderIndustryKpis()}
 
       <div class="module-overview-grid">
         ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction]) => `
@@ -928,6 +996,8 @@
           </div>
         </div>
 
+        ${renderRoleAndErpBar()}
+        ${renderIndustryKpis()}
         <div class="tower-analytics-bar">
           <div class="tower-analytics-bar-left">
             <div class="tower-stream-pulse">
@@ -1021,6 +1091,16 @@
         </div>
       `;
 
+      host.querySelectorAll('[data-role-id]').forEach(btn => {
+        btn.onclick = () => {
+          const roleId = btn.dataset.roleId;
+          if (window.MK97Platform?.saveConfig) {
+            window.MK97Platform.saveConfig({ activeRole: roleId });
+          }
+          render();
+        };
+      });
+
       const periodSelect = host.querySelector('#tower-period');
       if (periodSelect) periodSelect.onchange = event => { period = event.target.value==='all'?'all':Number(event.target.value); render(); };
 
@@ -1085,6 +1165,18 @@
       });
       host.querySelectorAll('[data-tower-queue]').forEach(b => b.onclick = () => { queue = b.dataset.towerQueue; render(); });
     }
+
+    
+    // Role switcher handler (universal)
+    host.querySelectorAll('[data-role-id]').forEach(btn => {
+      btn.onclick = () => {
+        const roleId = btn.dataset.roleId;
+        if (window.MK97Platform?.saveConfig) {
+          window.MK97Platform.saveConfig({ activeRole: roleId });
+        }
+        render();
+      };
+    });
 
     // View switcher handler
     host.querySelectorAll('[data-view]').forEach(button => {
@@ -1344,3 +1436,5 @@
   window.addEventListener('stark:region-change', render);
   window.addEventListener('stark:system-change', render);
 })();
+
+  window.addEventListener('sci:config-changed', () => { render(); });
