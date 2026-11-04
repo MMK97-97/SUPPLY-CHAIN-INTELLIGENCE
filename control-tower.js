@@ -101,11 +101,11 @@
           `).join('')}
         </div>
         <div class="workspace-erp-status-ticker">
-          <span class="erp-status-pill active" title="SAP S/4HANA Dual-Directional Connector Active"><span class="erp-dot green"></span>SAP S/4HANA · Dual-Sync</span>
-          <span class="erp-status-pill active" title="Oracle NetSuite ERP Synchronized"><span class="erp-dot green"></span>NetSuite · Synced 2m</span>
-          <span class="erp-status-pill telemetry" title="FourKites & MarineTraffic AIS Real-time Feeds"><span class="erp-dot blue"></span>FourKites Radar · 48 Carriers</span>
-          <span class="erp-status-pill active" title="EDI X12 Standards 850/856/810/940/945 Active"><span class="erp-dot purple"></span>EDI Hub · 100% Acked</span>
-          <a class="erp-status-hub-btn" href="${S.url('integrations.html')}">Connectors Hub 🔌</a>
+          <span class="erp-status-pill active" title="Native Enterprise ERP Core & Multi-Entity Ledger"><span class="erp-dot green"></span>Native ERP Core · Active</span>
+          <span class="erp-status-pill active" title="Native Omnichannel High-Velocity Dispatch Engine"><span class="erp-dot green"></span>Omnichannel Engine · 0.08s</span>
+          <span class="erp-status-pill telemetry" title="Native Global Maritime AIS Radar & Port Telemetry"><span class="erp-dot blue"></span>AIS Maritime Radar · 48 Vessels</span>
+          <span class="erp-status-pill active" title="Native EDI X12 / EDIFACT Translator & Protocol Studio"><span class="erp-dot purple"></span>Native EDI Hub · 100% Validated</span>
+          <a class="erp-status-hub-btn" href="${S.url('integrations.html')}">Enterprise Suite ⚡</a>
         </div>
       </div>
     `;

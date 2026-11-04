@@ -204,20 +204,26 @@ async function runTests() {
     if (saveResult.industry !== 'food_beverage') throw new Error('Config failed to save industry');
 
     // ==========================================
-    // 2. Integration Hub: Connectors & Canonical Mappings
+    // 2. Native Enterprise Power Suite: AIS Radar, EDI Studio & 6 Engines
     // ==========================================
-    console.log('\n--- 2. Testing ERP & Carrier Integration Hub ---');
+    console.log('\n--- 2. Testing Native Enterprise Power Suite ---');
     await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/integrations.html` });
     await new Promise(r => setTimeout(r, 1800));
 
     const hubCheck = await evaluate(`(() => {
-      const cards = document.querySelectorAll('.connector-card');
+      const cards = document.querySelectorAll('.native-engine-card');
       const sapBtn = document.querySelector('.conn-ping-btn[data-conn="sap"]');
       const netsuiteBtn = document.querySelector('.conn-ping-btn[data-conn="netsuite"]');
       const d365Btn = document.querySelector('.conn-ping-btn[data-conn="d365"]');
       const shopifyBtn = document.querySelector('.conn-ping-btn[data-conn="shopify"]');
       const radarBtn = document.querySelector('.conn-ping-btn[data-conn="telemetry"]');
-      const ediCard = Array.from(cards).find(c => c.textContent.includes('EDI'));
+      const ediBtn = document.querySelector('.conn-ping-btn[data-conn="edi"]');
+
+      const radarMap = document.querySelector('.live-radar-container');
+      const radarSvg = document.querySelector('.radar-svg-canvas');
+      const ediStudio = document.querySelector('#edi-studio-section');
+      const ediTranslateBtn = document.querySelector('#btn-translate-edi');
+      const ediValidateBtn = document.querySelector('#btn-validate-edi');
 
       const tabs = document.querySelectorAll('.map-tab');
       const mappingRows = document.querySelectorAll('.mapping-table tbody tr');
@@ -231,7 +237,12 @@ async function runTests() {
         hasD365Btn: !!d365Btn,
         hasShopifyBtn: !!shopifyBtn,
         hasRadarBtn: !!radarBtn,
-        hasEdiCard: !!ediCard,
+        hasEdiBtn: !!ediBtn,
+        hasRadarMap: !!radarMap,
+        hasRadarSvg: !!radarSvg,
+        hasEdiStudio: !!ediStudio,
+        hasEdiTranslateBtn: !!ediTranslateBtn,
+        hasEdiValidateBtn: !!ediValidateBtn,
         tabsCount: tabs.length,
         mappingRowsCount: mappingRows.length,
         auditEntriesCount: auditEntries.length,
@@ -239,26 +250,28 @@ async function runTests() {
       };
     })()`);
 
-    console.log('Hub Check Result:', hubCheck);
-    if (hubCheck.cardsCount !== 6) throw new Error('Expected 6 connector cards, got ' + hubCheck.cardsCount);
-    if (!hubCheck.hasSapBtn || !hubCheck.hasNetsuiteBtn || !hubCheck.hasD365Btn || !hubCheck.hasShopifyBtn || !hubCheck.hasRadarBtn || !hubCheck.hasEdiCard) {
-      throw new Error('All 6 ERP connectors must be present');
+    console.log('Native Power Suite Check Result:', hubCheck);
+    if (hubCheck.cardsCount !== 6) throw new Error('Expected 6 native engine cards, got ' + hubCheck.cardsCount);
+    if (!hubCheck.hasSapBtn || !hubCheck.hasNetsuiteBtn || !hubCheck.hasD365Btn || !hubCheck.hasShopifyBtn || !hubCheck.hasRadarBtn || !hubCheck.hasEdiBtn) {
+      throw new Error('All 6 Native Engine Action Buttons must be present');
     }
+    if (!hubCheck.hasRadarMap || !hubCheck.hasRadarSvg) throw new Error('Live Maritime AIS Radar must be present');
+    if (!hubCheck.hasEdiStudio || !hubCheck.hasEdiTranslateBtn || !hubCheck.hasEdiValidateBtn) throw new Error('Native EDI Protocol Studio must be present');
     if (hubCheck.tabsCount < 4) throw new Error('Expected 4 canonical mapping tabs');
     if (hubCheck.mappingRowsCount < 4) throw new Error('Expected canonical mapping table rows');
     if (hubCheck.auditEntriesCount < 4) throw new Error('Expected audit log stream entries');
 
-    // Test pinging SAP connector
-    const pingResult = await evaluate(`(() => {
-      const sapBtn = document.querySelector('.conn-ping-btn[data-conn="sap"]');
-      if (sapBtn) sapBtn.click();
+    // Test EDI translation action
+    const ediResult = await evaluate(`(() => {
+      const btn = document.querySelector('#btn-translate-edi');
+      if (btn) btn.click();
       return {
-        sapBtnFound: !!sapBtn
+        translateClicked: !!btn
       };
     })()`);
 
-    console.log('Connector Ping Result:', pingResult);
-    if (!pingResult.sapBtnFound) throw new Error('SAP Ping button not found');
+    console.log('EDI Translation Result:', ediResult);
+    if (!ediResult.translateClicked) throw new Error('EDI Translate button not clicked');
 
     // ==========================================
     // 3. Workspace: Universal Shell & Control Tower

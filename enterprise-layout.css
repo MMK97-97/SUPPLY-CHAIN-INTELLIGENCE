@@ -16043,3 +16043,216 @@ body[data-system-page="mail"] main#stark-mail-content {
 [data-density="compact"] .workspace-role-erp-strip {
   padding: 6px 12px !important;
 }
+
+
+
+/* ==========================================================================
+   NATIVE ENTERPRISE POWER SUITE STYLES
+   Live AIS Freight Radar, Native EDI Studio & High-Velocity Engines
+   ========================================================================== */
+
+/* Native Engine Cards */
+.native-engine-card {
+  border-top: 3px solid #0d9488 !important;
+}
+
+#engine-erp { border-top-color: #0284c7 !important; }
+#engine-ledger { border-top-color: #0d9488 !important; }
+#engine-mrp { border-top-color: #6366f1 !important; }
+#engine-omni { border-top-color: #10b981 !important; }
+#engine-radar { border-top-color: #0ea5e9 !important; }
+#engine-edi { border-top-color: #8b5cf6 !important; }
+
+/* Live Maritime AIS Radar Container */
+.live-radar-container {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 16px;
+  background: #060e19;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: 0 8px 32px rgba(2, 6, 23, 0.4);
+}
+
+.live-radar-map-box {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  background: #07111e;
+}
+
+.radar-svg-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  display: block;
+}
+
+.radar-sweep-effect {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg at 50% 50%, rgba(14, 165, 233, 0.12) 0deg, transparent 60deg, transparent 360deg);
+  border-radius: 50%;
+  animation: radar-sweep 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-telemetry-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.telemetry-ship-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  color: #e2e8f0;
+}
+
+.telemetry-ship-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.telemetry-ship-top strong {
+  font-size: 13px;
+  color: #38bdf8;
+}
+
+.telemetry-ship-card small {
+  display: block;
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.telemetry-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.telemetry-metrics span b {
+  color: #f8fafc;
+}
+
+/* Native EDI Protocol Studio */
+.edi-studio-workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.edi-doc-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.edi-doc-tab {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.edi-doc-tab:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.edi-doc-tab.active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.28);
+}
+
+.edi-dual-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.edi-panel {
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  overflow: hidden;
+}
+
+.edi-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  color: #f8fafc;
+  font-size: 12px;
+}
+
+.edi-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #cbd5e1;
+}
+
+.edi-raw-code,
+.edi-json-code {
+  margin: 0;
+  padding: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  height: 240px;
+  overflow: auto;
+  color: #38bdf8;
+  background: #090f1d;
+}
+
+.edi-json-code {
+  color: #34d399;
+}
+
+.edi-actions-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #1e293b;
+  border-top: 1px solid #334155;
+}
+
+@media (max-width: 1024px) {
+  .live-radar-container {
+    grid-template-columns: 1fr;
+  }
+  .edi-dual-view {
+    grid-template-columns: 1fr;
+  }
+}

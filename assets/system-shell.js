@@ -373,9 +373,9 @@
           <span>⚙️ Platform Studio</span>
           <span class="pill-industry-badge">${escape(industryName)}</span>
         </a>
-        <a class="system-header-pill pill-integrations" href="${S.url('integrations.html')}" title="Manage ERP, Carrier & EDI Integrations">
-          <span>🔌 Integrations</span>
-          <span class="pill-sync-status">6 Active</span>
+        <a class="system-header-pill pill-integrations" href="${S.url('integrations.html')}" title="Native Enterprise Power Suite: ERP Core, AIS Radar & EDI Studio">
+          <span>⚡ Enterprise Suite</span>
+          <span class="pill-sync-status">6 Native Engines</span>
         </a>
       </div>
 
