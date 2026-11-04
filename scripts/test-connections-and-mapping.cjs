@@ -3,20 +3,28 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 
+const PORT = 8095;
+const repoDir = path.join(__dirname, '..');
+
+const mimeTypes = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png'
+};
+
 const server = http.createServer((req, res) => {
   let reqPath = req.url.split('?')[0];
   if (reqPath === '/') reqPath = '/mail.html';
-  const filePath = path.join(__dirname, '..', reqPath.replace(/^\//, ''));
+  const filePath = path.join(repoDir, reqPath);
+
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    const ext = path.extname(filePath);
-    const contentType = {
-      '.html': 'text/html',
-      '.js': 'application/javascript',
-      '.css': 'text/css',
-      '.png': 'image/png',
-      '.json': 'application/json'
-    }[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
+    const ext = path.extname(filePath).toLowerCase();
+    res.writeHead(200, {
+      'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+      'Access-Control-Allow-Origin': '*'
+    });
     fs.createReadStream(filePath).pipe(res);
   } else {
     res.writeHead(404);
@@ -24,7 +32,6 @@ const server = http.createServer((req, res) => {
   }
 });
 
-const PORT = 8095;
 server.listen(PORT, '127.0.0.1', async () => {
   console.log(`Connections test static server listening on http://127.0.0.1:${PORT}`);
 
@@ -53,13 +60,9 @@ server.listen(PORT, '127.0.0.1', async () => {
     if (!killed) {
       killed = true;
       try { edge.kill(); } catch (e) {}
-      try { server.close(); } catch (e) {}
+      server.close();
     }
   }
-
-  process.on('exit', cleanup);
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
 
   async function getWsUrl() {
     for (let i = 0; i < 30; i++) {
@@ -82,6 +85,10 @@ server.listen(PORT, '127.0.0.1', async () => {
 
     ws.onmessage = ev => {
       const data = JSON.parse(ev.data);
+      if (data.method === 'Runtime.consoleAPICalled') {
+        const text = data.params?.args?.map(a => a.value || JSON.stringify(a)).join(' ');
+        console.log('[BROWSER CONSOLE]', text);
+      }
       if (data.id && callbacks.has(data.id)) {
         callbacks.get(data.id)(data);
         callbacks.delete(data.id);
@@ -97,66 +104,54 @@ server.listen(PORT, '127.0.0.1', async () => {
     });
 
     await send('Runtime.enable');
-
     const evaluate = async exp => {
-      const res = await send('Runtime.evaluate', {
-        expression: exp,
-        returnByValue: true,
-        awaitPromise: true
-      });
-      return res.result?.result?.value;
+      const r = await send('Runtime.evaluate', { expression: exp, returnByValue: true, awaitPromise: true });
+      return r?.result?.result?.value;
     };
 
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 1200));
 
-    // TEST 1: Attachment Download Verification
+    // TEST 1: Real Attachment Downloads & System Handlers
     console.log('\n--- 1. Testing Attachment Downloads & Handlers ---');
-    const attachTest = await evaluate(`(() => {
+    const attachTest = await evaluate(`(async () => {
       const attachCard = document.querySelector('.mail-attachments-card');
       const attachItems = document.querySelectorAll('.mail-attach-item');
-      const downloadAll = document.querySelector('#btn-download-all');
+      const downloadAllBtn = document.querySelector('#btn-download-all');
 
       let downloadTriggered = false;
-      const origCreateElement = document.createElement.bind(document);
-      document.createElement = function(tag) {
-        const el = origCreateElement(tag);
-        if (tag === 'a') {
-          const origClick = el.click.bind(el);
-          el.click = function() {
-            downloadTriggered = true;
-            return origClick();
-          };
-        }
-        return el;
+      const origCreateObjUrl = URL.createObjectURL;
+      URL.createObjectURL = (blob) => {
+        downloadTriggered = true;
+        return origCreateObjUrl ? origCreateObjUrl(blob) : 'blob:test';
       };
 
-      if (attachItems[0]) {
+      if (attachItems.length > 0) {
         attachItems[0].click();
       }
 
-      document.createElement = origCreateElement;
+      await new Promise(r => setTimeout(r, 200));
 
       return {
         hasAttachmentCard: !!attachCard,
         attachmentCount: attachItems.length,
-        hasDownloadAllBtn: !!downloadAll,
+        hasDownloadAllBtn: !!downloadAllBtn,
         downloadTriggered
       };
     })()`);
     console.log('Attachment Test Result:', attachTest);
 
-    // TEST 2: Shared Mailboxes Mapping Verification
+    // TEST 2: Shared Mailboxes & Dynamic Categorization
     console.log('\n--- 2. Testing Shared Mailboxes Dynamic Filtering ---');
     const mailboxTest = await evaluate(`(() => {
+      const folders = ['customers', 'vendors', 'orders', 'shipping', 'procurement', '3pl', 'internal'];
       const results = {};
-      const mailboxes = ['customers', 'vendors', 'orders', 'shipping', 'procurement', '3pl', 'internal'];
-      
-      for (const mb of mailboxes) {
-        const btn = document.querySelector(\`.mail-nav-item[data-folder="\${mb}"]\`);
-        if (btn) {
-          btn.click();
+
+      for (const f of folders) {
+        const item = document.querySelector(\`.mail-nav-item[data-folder="\${f}"]\`);
+        if (item) {
+          item.click();
           const items = document.querySelectorAll('.mail-thread-item');
-          results[mb] = {
+          results[f] = {
             found: true,
             threadCount: items.length
           };
@@ -201,12 +196,18 @@ server.listen(PORT, '127.0.0.1', async () => {
       if (!sb) return { error: 'No supabase client' };
 
       let capturedInsert = null;
-      sb.functions.invoke = async () => ({ data: { status: 'mock_sent' }, error: null });
+      if (!sb.functions) sb.functions = {};
+      sb.functions.invoke = async (fnName, opts) => {
+        console.log('[MOCK sb.functions.invoke called]', fnName);
+        return { data: { status: 'mock_sent' }, error: null };
+      };
+
       const origFrom = sb.from.bind(sb);
       sb.from = (table) => {
         const q = origFrom(table);
         if (table === 'emails') {
           q.insert = (records) => {
+            console.log('[MOCK sb.from(emails).insert called]', records);
             capturedInsert = records;
             return Promise.resolve({ error: null });
           };
@@ -215,9 +216,10 @@ server.listen(PORT, '127.0.0.1', async () => {
       };
 
       const sendBtn = document.querySelector('#btn-pane-send-email');
+      console.log('[TEST 4] sendBtn found:', !!sendBtn, 'disabled:', sendBtn?.disabled);
       sendBtn?.click();
 
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 800));
 
       const record = capturedInsert?.[0] || {};
       const hasInvalidFolder = 'folder' in record;
@@ -257,12 +259,12 @@ server.listen(PORT, '127.0.0.1', async () => {
       cleanup();
       process.exit(0);
     } else {
-      console.error('\n>>> SOME TESTS FAILED <<<');
+      console.error('\n>>> SOME TESTS FAILED <<<\n');
       cleanup();
       process.exit(1);
     }
   } catch (err) {
-    console.error('Test error:', err);
+    console.error('Test runner failure:', err);
     cleanup();
     process.exit(1);
   }

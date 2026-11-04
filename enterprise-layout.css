@@ -13804,3 +13804,737 @@ body[data-system-page="mail"] main#stark-mail-content {
   color: #ffffff;
   border-color: #0d9488;
 }
+
+/* ==========================================================================
+   MK97 SUPPLY CHAIN INTELLIGENCE & AUTONOMOUS OPERATIONS COMMAND CENTER
+   Web Designer & Supply Chain Director / Senior Analyst Architecture
+   ========================================================================== */
+
+/* Keyframe Animations */
+@keyframes sc-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes sc-pulse-amber {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(245, 158, 11, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+@keyframes sc-radar-sweep {
+  0% { stroke-dashoffset: 280; }
+  50% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -280; }
+}
+
+@keyframes sc-glow-fade {
+  0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.5)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 16px rgba(13, 148, 136, 0.85)); }
+}
+
+/* 1. Global Supply Chain Telemetry & KPI Ribbon */
+.sc-telemetry-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #0b1329 0%, #111d38 50%, #0d2238 100%);
+  color: #f8fafc;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  position: relative;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sc-telemetry-ribbon::-webkit-scrollbar {
+  height: 4px;
+}
+.sc-telemetry-ribbon::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
+}
+
+.sc-ribbon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(15, 118, 110, 0.35);
+  border: 1px solid rgba(45, 212, 191, 0.4);
+  color: #5eead4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sc-kpi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.16s ease;
+  backdrop-filter: blur(8px);
+}
+
+.sc-kpi-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(94, 234, 212, 0.3);
+  transform: translateY(-1px);
+}
+
+.sc-kpi-chip-title {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.sc-kpi-chip-val {
+  color: #ffffff;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.sc-kpi-chip-val.text-emerald { color: #34d399; }
+.sc-kpi-chip-val.text-cyan { color: #38bdf8; }
+.sc-kpi-chip-val.text-amber { color: #fbbf24; }
+
+.sc-kpi-chip-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.sc-kpi-chip-trend.trend-up { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.sc-kpi-chip-trend.trend-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+.sc-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: sc-pulse 2s infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.sc-pulse-dot.pulse-amber {
+  background: #f59e0b;
+  animation: sc-pulse-amber 2s infinite;
+}
+
+/* 2. Interactive Live Multi-Waypoint Route & Telemetry Card */
+.sc-route-stepper-card {
+  margin: 18px 0;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.sc-route-stepper-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0f766e 0%, #06b6d4 50%, #3b82f6 100%);
+}
+
+.sc-route-stepper-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sc-route-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sc-route-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sc-route-carrier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  color: #0f766e;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sc-btn-satellite-radar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #0f172a;
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.sc-btn-satellite-radar:hover {
+  background: #1e293b;
+  border-color: #38bdf8;
+  color: #7dd3fc;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.sc-route-stepper-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  position: relative;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.sc-route-stepper-track::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: 36px;
+  right: 36px;
+  height: 3px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.sc-route-progress-line {
+  position: absolute;
+  top: 18px;
+  left: 36px;
+  width: 50%;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981 0%, #06b6d4 100%);
+  z-index: 2;
+  transition: width 0.3s ease;
+}
+
+.sc-route-node {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sc-node-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sc-route-node.node-done .sc-node-dot {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.sc-route-node.node-active .sc-node-dot {
+  background: #0f172a;
+  border-color: #06b6d4;
+  color: #38bdf8;
+  animation: sc-glow-fade 2s infinite ease-in-out;
+}
+
+.sc-node-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.sc-node-meta {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.sc-node-status-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.sc-node-status-tag.tag-done { background: #dcfce7; color: #166534; }
+.sc-node-status-tag.tag-transit { background: #e0f2fe; color: #075985; }
+.sc-node-status-tag.tag-pending { background: #f1f5f9; color: #475569; }
+
+.sc-route-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.sc-route-telemetry-item {
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.sc-telemetry-item-lbl {
+  font-size: 10.5px;
+  color: #64748b;
+  display: block;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.sc-telemetry-item-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* 3. PO Line-Item Allocation & Inventory Health Matrix */
+.sc-erp-matrix-card {
+  margin: 18px 0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+}
+
+.sc-matrix-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sc-matrix-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sc-matrix-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sc-matrix-total-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  font-family: ui-monospace, monospace;
+}
+
+.sc-matrix-table-wrap {
+  overflow-x: auto;
+}
+
+.sc-matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.sc-matrix-table th {
+  background: #f8fafc;
+  padding: 9px 14px;
+  color: #475569;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sc-matrix-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #1e293b;
+}
+
+.sc-matrix-table tr:hover td {
+  background: #f8fafc;
+}
+
+.sc-sku-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 5px;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+  font-size: 11.5px;
+}
+
+.sc-inv-health-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #e2e8f0;
+  width: 120px;
+  margin-bottom: 3px;
+}
+
+.sc-inv-seg-onhand { background: #10b981; }
+.sc-inv-seg-transit { background: #06b6d4; }
+.sc-inv-seg-reserve { background: #f59e0b; }
+
+.sc-dos-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.sc-dos-healthy { background: #dcfce7; color: #166534; }
+.sc-dos-warn { background: #fef3c7; color: #92400e; }
+
+/* 4. Autonomous AI Supply Chain Director Command Deck */
+.sc-prescriptive-deck {
+  margin: 18px 0;
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  padding: 16px 18px;
+  color: #f8fafc;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.sc-prescriptive-deck::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(14, 165, 233, 0) 70%);
+  pointer-events: none;
+}
+
+.sc-deck-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sc-deck-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sc-deck-roi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #34d399;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sc-deck-summary-text {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  margin-bottom: 14px;
+}
+
+.sc-prescriptive-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.sc-prescriptive-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.16s ease;
+}
+
+.sc-prescriptive-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-2px);
+}
+
+.sc-pcard-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sc-pcard-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.sc-pcard-benefit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #34d399;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.sc-btn-execute-decision {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 6px 10px;
+  background: #0d9488;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.sc-btn-execute-decision:hover {
+  background: #0f766e;
+  box-shadow: 0 0 10px rgba(13, 148, 136, 0.4);
+}
+
+/* 5. Warehouse Staging Bay Digital Twin in Intelligence Panel */
+.sc-staging-bay-twin {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.sc-twin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sc-twin-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sc-twin-bay-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.sc-bay-cell {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px;
+  text-align: center;
+  background: #f8fafc;
+  position: relative;
+  transition: all 0.14s ease;
+}
+
+.sc-bay-cell.bay-occupied {
+  border-color: #fca5a5;
+  background: #fff1f2;
+}
+
+.sc-bay-cell.bay-available {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.sc-bay-cell.bay-reserved {
+  border-color: #2dd4bf;
+  background: #f0fdfa;
+  box-shadow: 0 0 0 1.5px #0d9488;
+}
+
+.sc-bay-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  display: block;
+}
+
+.sc-bay-status-lbl {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.sc-bay-cell.bay-reserved .sc-bay-status-lbl { color: #0f766e; }
+.sc-bay-cell.bay-occupied .sc-bay-status-lbl { color: #b91c1c; }
+.sc-bay-cell.bay-available .sc-bay-status-lbl { color: #15803d; }
+
+.sc-bay-po-tag {
+  font-size: 9px;
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+}
+
+/* 6. Satellite & Maritime Radar Modal */
+.sc-radar-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.sc-radar-modal {
+  width: 100%;
+  max-width: 860px;
+  background: #0b1329;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  color: #f8fafc;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sc-radar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sc-radar-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sc-radar-map-canvas {
+  width: 100%;
+  height: 260px;
+  background: #070d1e;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sc-radar-telemetry-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.sc-radar-telemetry-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+}
+

@@ -1484,6 +1484,10 @@ function renderDetailView() {
           <div class="mail-body-content">
             <p class="mail-body-text">${esc(thread.body).replace(/\n\n/g, '</p><p class="mail-body-text">').replace(/\n/g, '<br>')}</p>
 
+            ${renderPrescriptiveDeck(thread)}
+            ${renderRouteStepper(thread)}
+            ${renderErpLineItemsMatrix(thread)}
+
             ${thread.shipmentDetails ? `
               <div class="mail-shipment-card">
                 <div class="mail-shipment-head">
@@ -1759,6 +1763,9 @@ function renderDetailView() {
           </div>
         </div>
 
+        ${renderStagingBayTwin(thread)}
+        ${renderCarrierPerformanceHud(thread)}
+
         <!-- Section: Email Tags -->
         <div class="mail-intel-card">
           <div class="mail-intel-head">
@@ -1966,6 +1973,40 @@ function renderDetailView() {
   function bindEvents() {
     const root = document.getElementById('stark-mail-content');
     if (!root) return;
+
+    // SC Command Center: Execute Prescriptive Decision Buttons
+    root.querySelectorAll('.sc-btn-execute-decision').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const replyText = btn.getAttribute('data-reply-template');
+        const actionTitle = btn.getAttribute('data-action-title');
+        const replyInput = root.querySelector('#mail-reply-input');
+        if (replyInput && replyText) {
+          replyInput.value = replyText;
+          replyInput.focus();
+          replyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        notice(`⚡ Prescriptive Decision Staged: ${actionTitle || 'Execution plan loaded into composer'}`);
+      };
+    });
+
+    // SC Command Center: Satellite Radar Modal
+    root.querySelectorAll('.sc-btn-satellite-radar, .shipment-track-link').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        openSatelliteRadarModal(getActiveThread());
+      };
+    });
+
+    // SC Command Center: Staging Bay Interactive Clicks
+    root.querySelectorAll('.sc-bay-cell').forEach(cell => {
+      cell.onclick = () => {
+        const bayNum = cell.getAttribute('data-bay');
+        const status = cell.getAttribute('data-status') || '';
+        const po = cell.getAttribute('data-po') || '';
+        notice(`Warehouse Sarasota DC — Bay #${bayNum}: ${status.toUpperCase()} ${po ? '(' + po + ')' : '(Ready for Assignment)'}`);
+      };
+    });
 
     // Search input
     const searchInput = root.querySelector('#stark-mail-search');
@@ -3277,6 +3318,489 @@ function renderDetailView() {
     renderApp();
   }
 
+  
+  // ==========================================================================
+  // MK97 ADVANCED SUPPLY CHAIN INTELLIGENCE & AUTONOMOUS OPERATIONS COCKPIT
+  // Architectural Director & Senior Analyst Graphics and Decision Deck
+  // ==========================================================================
+
+  function renderTelemetryRibbon() {
+    return `
+      <div class="sc-telemetry-ribbon" role="region" aria-label="Global Supply Chain Live Telemetry">
+        <div class="sc-ribbon-badge">
+          <span class="sc-pulse-dot"></span>
+          <span>SC Radar Live</span>
+        </div>
+
+        <div class="sc-kpi-chip" title="Live active shipments currently in-transit across maritime, air, and domestic ground freight">
+          <span class="sc-kpi-chip-title">Active Freight:</span>
+          <span class="sc-kpi-chip-val text-emerald">48 Live</span>
+          <span class="sc-kpi-chip-trend trend-up">41 On-Track</span>
+          <span class="sc-kpi-chip-trend trend-warn">5 At-Risk</span>
+        </div>
+
+        <div class="sc-kpi-chip" title="On-Time In-Full supplier fulfillment compliance over the last 30 rolling days">
+          <span class="sc-kpi-chip-title">Global OTIF:</span>
+          <span class="sc-kpi-chip-val text-cyan">97.8%</span>
+          <span class="sc-kpi-chip-trend trend-up">↑ +1.4% wk</span>
+          <svg class="sc-sparkline-svg" width="46" height="16" viewBox="0 0 46 16" fill="none" aria-hidden="true">
+            <path d="M2 13 L10 11 L18 13 L26 8 L34 5 L44 2" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="sc-kpi-chip" title="Total invoice value of goods actively in transit under insured carrier custody">
+          <span class="sc-kpi-chip-title">In-Transit Capital:</span>
+          <span class="sc-kpi-chip-val text-emerald">\$4,820,500</span>
+          <span class="sc-kpi-chip-trend trend-up">100% Insured</span>
+        </div>
+
+        <div class="sc-kpi-chip" title="Global maritime chokepoints and terminal berth congestion monitoring">
+          <span class="sc-kpi-chip-title">Port Chokepoints:</span>
+          <span class="sc-kpi-chip-val text-amber">Rotterdam (+4h)</span>
+          <span class="sc-kpi-chip-trend trend-up">Yantian: Clear</span>
+        </div>
+
+        <div class="sc-kpi-chip" title="Demurrage and container detention free-time risk management">
+          <span class="sc-kpi-chip-title">Demurrage Safety:</span>
+          <span class="sc-kpi-chip-val text-emerald">\$0 Accrued</span>
+          <span class="sc-kpi-chip-trend trend-up">Safe &gt; 48h</span>
+        </div>
+
+        <div class="sc-kpi-chip" title="Logistics carbon intensity vs baseline quarter">
+          <span class="sc-kpi-chip-title">CO2 Intensity:</span>
+          <span class="sc-kpi-chip-val text-cyan">-14.2%</span>
+          <span class="sc-kpi-chip-trend trend-up">Tier-1 Eco</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function getThreadScIntelligence(thread) {
+    if (!thread) return null;
+    const po = thread.shipmentDetails?.poNumber || thread.related?.poNumber || '#87366';
+    const carrier = thread.shipmentDetails?.carrier || 'DHL Express Global';
+    const tracking = thread.shipmentDetails?.trackingNumber || thread.related?.tracking || 'DHL4567823';
+
+    return {
+      poNumber: po,
+      carrier: carrier,
+      tracking: tracking,
+      etaConfidence: '98.4%',
+      demurrageFreeHours: '48h 12m',
+      vesselName: 'MSC LORETTO (Voyage #8492)',
+      vesselSpeed: '18.2 kts',
+      coordinates: '24.8421°N, 118.4219°E',
+      seaState: 'Optimal (Beaufort 3)',
+      customsStatus: 'HS Code 8473.30 — Green Lane Cleared',
+      nodes: [
+        { title: 'Origin Port', loc: 'Shenzhen Yantian Hub', meta: 'Departed Apr 12 · 08:30 UTC', status: 'done', tag: 'Departed' },
+        { title: 'Corridor Transit', loc: 'Pacific Deep Sea Passage', meta: 'MSC LORETTO · 18.2 kts', status: 'active', tag: 'In-Transit Radar' },
+        { title: 'Port of Entry', loc: 'Savannah Delta Terminal', meta: 'Berth ETA: Apr 22 · Customs Cleared', status: 'pending', tag: 'Clearance Ready' },
+        { title: 'Destination DC', loc: 'Sarasota DC Hub (SRQ)', meta: 'Dock Door #12 · Bay #4', status: 'pending', tag: 'Reserved Bay #4' }
+      ],
+      lineItems: [
+        { sku: 'MK-4892-GPU', desc: 'Compute Engine Accelerator Blade', qtyOrdered: 400, qtyShipped: 400, unitPrice: 142.50, onHand: 210, inTransit: 400, safetyTarget: 150, dos: '24.5 Days', status: 'Healthy' },
+        { sku: 'MK-1022-FAN', desc: 'Industrial High-Static Blower Assembly', qtyOrdered: 800, qtyShipped: 800, unitPrice: 18.20, onHand: 450, inTransit: 800, safetyTarget: 300, dos: '31.0 Days', status: 'Healthy' }
+      ],
+      totalVal: '\$71,560.00',
+      prescriptiveCards: [
+        {
+          id: 'act-asn',
+          title: 'Approve Bay #4 & Issue Priority ASN',
+          desc: 'Registers dock door #12 reservation, confirms SARASOTA DC staging slot, and transmits priority receiving ticket.',
+          benefit: '⚡ 4h Dock Check-In Saved',
+          replyTemplate: `Hi James,\n\nConfirmed and approved. Staging Bay #4 is officially registered for PO ${po} consignment. Driver instructions for Dock Door #12 have been logged into the dock schedule.\n\nPriority Inbound ASN #ASN-87366-P1 has been generated.\n\nBest regards,\nManoj Manne\nSupply Chain Director`
+        },
+        {
+          id: 'act-crossdock',
+          title: 'Pre-Allocate 200 Units Direct to Backorder #BO-4410',
+          desc: 'Eliminates secondary put-away transit, fulfilling high-margin customer backlog immediately upon pallet receipt.',
+          benefit: '📈 36h Fulfillment Lead Time Saved',
+          replyTemplate: `Hi James,\n\nWe have scheduled 200 units of SKU #MK-4892-GPU from this consignment for direct cross-dock to Backorder #BO-4410. Please ensure pallet tags indicate 'CROSS-DOCK PRIORITY'.\n\nThanks,\nManoj Manne`
+        },
+        {
+          id: 'act-qa',
+          title: 'Trigger Inbound QA Inspection Protocol Tier-1',
+          desc: 'Automates sampling protocol, batch certificate validation, and ISO 9001 quality ledger synchronization.',
+          benefit: '🛡️ Zero Receiving Discrepancy Risk',
+          replyTemplate: `Hi James,\n\nPlease ensure that the Certificate of Analysis (CoA) and batch test records are physically attached to Pallet #1 for incoming QA clearance.\n\nRegards,\nMK97 Quality Control & Logistics`
+        }
+      ]
+    };
+  }
+
+  function renderRouteStepper(thread) {
+    const sc = getThreadScIntelligence(thread);
+    if (!sc) return '';
+
+    return `
+      <div class="sc-route-stepper-card" role="region" aria-label="Interactive Route & Telemetry">
+        <div class="sc-route-stepper-head">
+          <div class="sc-route-title-wrap">
+            <span class="sc-pulse-dot"></span>
+            <h4 class="sc-route-title">Live Multi-Modal Route Telemetry</h4>
+            <span class="sc-route-carrier-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              ${esc(sc.carrier)}
+            </span>
+          </div>
+          <button type="button" class="sc-btn-satellite-radar" id="btn-satellite-radar" aria-label="Open Satellite Radar View">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span>Satellite Radar View ↗</span>
+          </button>
+        </div>
+
+        <div class="sc-route-stepper-track">
+          <div class="sc-route-progress-line" style="width: 45%;"></div>
+          ${sc.nodes.map((node, i) => `
+            <div class="sc-route-node node-${node.status}">
+              <div class="sc-node-dot">
+                ${node.status === 'done' ? '✓' : (node.status === 'active' ? '⚡' : (i + 1))}
+              </div>
+              <span class="sc-node-title">${esc(node.title)}</span>
+              <span class="sc-node-meta">${esc(node.loc)}</span>
+              <span class="sc-node-meta" style="font-size:10px;color:#94a3b8;">${esc(node.meta)}</span>
+              <span class="sc-node-status-tag tag-${node.status}">${esc(node.tag)}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="sc-route-telemetry-grid">
+          <div class="sc-route-telemetry-item">
+            <span class="sc-telemetry-item-lbl">ETA Confidence</span>
+            <span class="sc-telemetry-item-val" style="color:#10b981;">${esc(sc.etaConfidence)} (Optimal)</span>
+          </div>
+          <div class="sc-route-telemetry-item">
+            <span class="sc-telemetry-item-lbl">Active Maritime Vessel</span>
+            <span class="sc-telemetry-item-val">${esc(sc.vesselName)}</span>
+          </div>
+          <div class="sc-route-telemetry-item">
+            <span class="sc-telemetry-item-lbl">Free Time Demurrage</span>
+            <span class="sc-telemetry-item-val" style="color:#0ea5e9;">${esc(sc.demurrageFreeHours)} (Safe)</span>
+          </div>
+          <div class="sc-route-telemetry-item">
+            <span class="sc-telemetry-item-lbl">Customs Classification</span>
+            <span class="sc-telemetry-item-val" style="color:#0d9488;">Green Lane Approved</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPrescriptiveDeck(thread) {
+    const sc = getThreadScIntelligence(thread);
+    if (!sc) return '';
+
+    return `
+      <div class="sc-prescriptive-deck" role="region" aria-label="Autonomous AI Supply Chain Director Command Deck">
+        <div class="sc-deck-head">
+          <div class="sc-deck-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>MK97 Autonomous Director Co-Pilot</span>
+          </div>
+          <span class="sc-deck-roi-badge">
+            <span>🛡️ Stockout Risk Mitigated (+\$18,400 Protected)</span>
+          </span>
+        </div>
+
+        <p class="sc-deck-summary-text">
+          <b>Real-Time Lane Analysis:</b> Supplier confirmed staging slot readiness for PO <b>${esc(sc.poNumber)}</b>. Inbound consignment covers 100% of upcoming Sarasota DC production requirements. Zero stockout risk detected; 3 autonomous prescriptive options generated:
+        </p>
+
+        <div class="sc-prescriptive-grid">
+          ${sc.prescriptiveCards.map(c => `
+            <div class="sc-prescriptive-card">
+              <div>
+                <div class="sc-pcard-title">
+                  <span>⚡</span> ${esc(c.title)}
+                </div>
+                <p class="sc-pcard-desc">${esc(c.desc)}</p>
+              </div>
+              <div>
+                <span class="sc-pcard-benefit">${esc(c.benefit)}</span>
+                <button type="button" class="sc-btn-execute-decision" data-action-id="${c.id}" data-action-title="${esc(c.title)}" data-reply-template="${esc(c.replyTemplate)}" style="margin-top:8px;">
+                  <span>Execute Decision ⚡</span>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderErpLineItemsMatrix(thread) {
+    const sc = getThreadScIntelligence(thread);
+    if (!sc || !sc.lineItems) return '';
+
+    return `
+      <div class="sc-erp-matrix-card" role="region" aria-label="PO Line-Item Allocation & Inventory Health">
+        <div class="sc-matrix-head">
+          <div class="sc-matrix-title-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="10" y2="8"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="6" y1="16" x2="14" y2="16"/></svg>
+            <h4 class="sc-matrix-title">PO Line-Item Allocation &amp; Inventory Health Matrix</h4>
+          </div>
+          <span class="sc-matrix-total-badge">Consignment Total: ${esc(sc.totalVal)}</span>
+        </div>
+
+        <div class="sc-matrix-table-wrap">
+          <table class="sc-matrix-table">
+            <thead>
+              <tr>
+                <th>SKU ID</th>
+                <th>Part Description</th>
+                <th>Qty Shipped</th>
+                <th>Unit / Total</th>
+                <th>Inventory Health (On-Hand | Transit)</th>
+                <th>Days of Supply</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sc.lineItems.map(item => `
+                <tr>
+                  <td>
+                    <span class="sc-sku-chip">${esc(item.sku)}</span>
+                  </td>
+                  <td>
+                    <strong>${esc(item.desc)}</strong>
+                  </td>
+                  <td>
+                    <span style="font-weight:700;font-family:ui-monospace;">${item.qtyShipped} pcs</span>
+                  </td>
+                  <td>
+                    <span style="font-family:ui-monospace;">\${item.unitPrice.toFixed(2)}</span>
+                    <small style="display:block;color:#64748b;font-family:ui-monospace;">\${(item.qtyShipped * item.unitPrice).toLocaleString()}</small>
+                  </td>
+                  <td>
+                    <div class="sc-inv-health-bar" title="On-Hand: ${item.onHand} | In-Transit: ${item.inTransit} | Safety: ${item.safetyTarget}">
+                      <div class="sc-inv-seg-onhand" style="width:35%;"></div>
+                      <div class="sc-inv-seg-transit" style="width:65%;"></div>
+                    </div>
+                    <small style="color:#64748b;font-size:10px;">${item.onHand} on-hand + ${item.inTransit} incoming</small>
+                  </td>
+                  <td>
+                    <span class="sc-dos-pill sc-dos-healthy">
+                      <span>✓</span> ${esc(item.dos)}
+                    </span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStagingBayTwin(thread) {
+    const sc = getThreadScIntelligence(thread);
+    const assignedPo = sc?.poNumber || '#87366';
+
+    return `
+      <!-- Section: Warehouse Staging Bay Digital Twin -->
+      <div class="mail-intel-card sc-staging-bay-twin">
+        <div class="mail-intel-head">
+          <div class="intel-head-left">
+            <span class="intel-icon-badge" style="background:#f0fdfa;color:#0f766e;border:1px solid #99f6e4;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/>
+              </svg>
+            </span>
+            <h3>Sarasota DC Staging Bay Twin</h3>
+          </div>
+          <span style="font-size:10px;font-weight:700;color:#0f766e;background:#ccfbf1;padding:2px 6px;border-radius:4px;">Door #12</span>
+        </div>
+
+        <div class="sc-twin-bay-grid" style="margin-top:10px;">
+          <div class="sc-bay-cell bay-occupied" data-bay="1" data-status="occupied" data-po="#87210" title="Bay 1: Occupied (PO #87210)">
+            <span class="sc-bay-num">Bay 1</span>
+            <span class="sc-bay-status-lbl">Occupied</span>
+            <span class="sc-bay-po-tag">#87210</span>
+          </div>
+
+          <div class="sc-bay-cell bay-available" data-bay="2" data-status="available" title="Bay 2: Available">
+            <span class="sc-bay-num">Bay 2</span>
+            <span class="sc-bay-status-lbl">Available</span>
+            <span class="sc-bay-po-tag">Free</span>
+          </div>
+
+          <div class="sc-bay-cell" style="opacity:0.6;" data-bay="3" data-status="maintenance" title="Bay 3: Scheduled Cleaning">
+            <span class="sc-bay-num">Bay 3</span>
+            <span class="sc-bay-status-lbl">Maint.</span>
+            <span class="sc-bay-po-tag">Offline</span>
+          </div>
+
+          <div class="sc-bay-cell bay-reserved" data-bay="4" data-status="reserved" data-po="${esc(assignedPo)}" title="Bay 4: Reserved for ${esc(assignedPo)} (14 Euro-Pallets)">
+            <span class="sc-bay-num">Bay 4 ⚡</span>
+            <span class="sc-bay-status-lbl">Reserved</span>
+            <span class="sc-bay-po-tag">${esc(assignedPo)}</span>
+          </div>
+
+          <div class="sc-bay-cell bay-occupied" data-bay="5" data-status="occupied" data-po="#3PL-918" title="Bay 5: 3PL Outbound Transfer">
+            <span class="sc-bay-num">Bay 5</span>
+            <span class="sc-bay-status-lbl">Occupied</span>
+            <span class="sc-bay-po-tag">3PL Trans</span>
+          </div>
+
+          <div class="sc-bay-cell bay-available" data-bay="6" data-status="available" title="Bay 6: Available">
+            <span class="sc-bay-num">Bay 6</span>
+            <span class="sc-bay-status-lbl">Available</span>
+            <span class="sc-bay-po-tag">Free</span>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e2e8f0;display:flex;justify-content:space-between;font-size:10.5px;color:#64748b;">
+          <span>Inbound Slot Capacity: <b>84%</b></span>
+          <span>Ambient Temp: <b>18.4°C</b></span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderCarrierPerformanceHud(thread) {
+    return `
+      <!-- Section: Carrier SLA & OTIF Scorecard -->
+      <div class="mail-intel-card">
+        <div class="mail-intel-head">
+          <div class="intel-head-left">
+            <span class="intel-icon-badge" style="background:#e0f2fe;color:#0284c7;border:1px solid #bae6fd;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </span>
+            <h3>Carrier SLA &amp; OTIF Score</h3>
+          </div>
+          <span style="font-size:10.5px;font-weight:700;color:#0369a1;">Tier-1 Carrier</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+          <div style="background:#f8fafc;padding:8px;border-radius:6px;border:1px solid #e2e8f0;">
+            <small style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:600;">Lane OTIF</small>
+            <div style="font-size:14px;font-weight:800;color:#0f766e;font-family:ui-monospace;">98.2%</div>
+            <small style="color:#10b981;font-size:9.5px;">+0.8% vs benchmark</small>
+          </div>
+          <div style="background:#f8fafc;padding:8px;border-radius:6px;border:1px solid #e2e8f0;">
+            <small style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:600;">Avg Transit Var</small>
+            <div style="font-size:14px;font-weight:800;color:#0284c7;font-family:ui-monospace;">-0.6 Days</div>
+            <small style="color:#0284c7;font-size:9.5px;">Ahead of schedule</small>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function openSatelliteRadarModal(thread) {
+    const sc = getThreadScIntelligence(thread) || {
+      poNumber: '#87366',
+      carrier: 'DHL Express Global',
+      tracking: 'DHL4567823',
+      vesselName: 'MSC LORETTO (Voyage #8492)',
+      vesselSpeed: '18.2 kts',
+      coordinates: '24.8421°N, 118.4219°E'
+    };
+
+    let modal = document.getElementById('sc-radar-modal-backdrop');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'sc-radar-modal-backdrop';
+      modal.className = 'sc-radar-modal-backdrop';
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div class="sc-radar-modal" role="dialog" aria-labelledby="radar-modal-title">
+        <div class="sc-radar-head">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="sc-pulse-dot"></span>
+            <h3 id="radar-modal-title" style="margin:0;font-size:14px;font-weight:700;color:#f8fafc;">
+              Global Satellite &amp; Maritime Transponder Radar — PO ${esc(sc.poNumber)}
+            </h3>
+          </div>
+          <button type="button" id="btn-close-radar-modal" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;padding:4px;" aria-label="Close modal">✕</button>
+        </div>
+
+        <div class="sc-radar-body">
+          <div class="sc-radar-map-canvas">
+            <!-- SVG Map Canvas with maritime route and animated radar sweep -->
+            <svg width="100%" height="100%" viewBox="0 0 820 260" preserveAspectRatio="none" style="background:#070d1e;">
+              <defs>
+                <linearGradient id="sc-route-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#10b981"/>
+                  <stop offset="50%" stop-color="#06b6d4"/>
+                  <stop offset="100%" stop-color="#3b82f6"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Grid background -->
+              <pattern id="radar-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1"/>
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#radar-grid)"/>
+
+              <!-- Continent silhouettes simplified -->
+              <path d="M 60 70 Q 120 50 160 80 T 200 140 T 150 210 T 80 180 Z" fill="rgba(30, 41, 59, 0.4)" stroke="rgba(56, 189, 248, 0.2)" stroke-width="1"/>
+              <path d="M 520 80 Q 640 40 740 90 T 780 190 T 680 230 T 560 170 Z" fill="rgba(30, 41, 59, 0.4)" stroke="rgba(56, 189, 248, 0.2)" stroke-width="1"/>
+
+              <!-- Geodesic Great Circle Shipping Route -->
+              <path d="M 160 110 C 280 40, 480 30, 680 130" fill="none" stroke="rgba(56, 189, 248, 0.2)" stroke-width="3" stroke-dasharray="6,4"/>
+              <path d="M 160 110 C 240 65, 340 50, 420 58" fill="none" stroke="url(#sc-route-grad)" stroke-width="4" stroke-linecap="round"/>
+
+              <!-- Waypoint Origin -->
+              <circle cx="160" cy="110" r="6" fill="#10b981"/>
+              <text x="140" y="135" fill="#34d399" font-size="11" font-weight="600" font-family="sans-serif">Shenzhen Yantian (Departed)</text>
+
+              <!-- Active Vessel Position -->
+              <circle cx="420" cy="58" r="8" fill="#06b6d4" opacity="0.9"/>
+              <circle cx="420" cy="58" r="18" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.7">
+                <animate attributeName="r" values="8;24;8" dur="2.4s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="1;0;1" dur="2.4s" repeatCount="indefinite"/>
+              </circle>
+              <text x="350" y="40" fill="#38bdf8" font-size="11" font-weight="700" font-family="sans-serif">⚡ ${esc(sc.vesselName)} [18.2 kts]</text>
+
+              <!-- Destination Port -->
+              <circle cx="680" cy="130" r="6" fill="#3b82f6"/>
+              <text x="640" y="155" fill="#60a5fa" font-size="11" font-weight="600" font-family="sans-serif">Savannah Delta / Sarasota DC</text>
+            </svg>
+          </div>
+
+          <div class="sc-radar-telemetry-row">
+            <div class="sc-radar-telemetry-box">
+              <span class="sc-telemetry-item-lbl">Live GPS Transponder</span>
+              <span class="sc-telemetry-item-val" style="color:#38bdf8;">${esc(sc.coordinates)}</span>
+              <small style="display:block;color:#94a3b8;font-size:10px;margin-top:2px;">MMSI: 232001920 (Lock Active)</small>
+            </div>
+            <div class="sc-radar-telemetry-box">
+              <span class="sc-telemetry-item-lbl">Speed / Heading (SOG/COG)</span>
+              <span class="sc-telemetry-item-val" style="color:#34d399;">${esc(sc.vesselSpeed)} · 068° ENE</span>
+              <small style="display:block;color:#94a3b8;font-size:10px;margin-top:2px;">Draft: 14.8m (Full Cargo)</small>
+            </div>
+            <div class="sc-radar-telemetry-box">
+              <span class="sc-telemetry-item-lbl">Sea State &amp; Weather</span>
+              <span class="sc-telemetry-item-val" style="color:#fbbf24;">Beaufort 3 · Light Breeze</span>
+              <small style="display:block;color:#94a3b8;font-size:10px;margin-top:2px;">Wave Height: 0.8m · Clear</small>
+            </div>
+            <div class="sc-radar-telemetry-box">
+              <span class="sc-telemetry-item-lbl">Projected Berth Window</span>
+              <span class="sc-telemetry-item-val" style="color:#a78bfa;">Apr 22 · 06:00 UTC</span>
+              <small style="display:block;color:#94a3b8;font-size:10px;margin-top:2px;">Confidence Index: 98.4%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+
+    modal.querySelector('#btn-close-radar-modal').onclick = () => {
+      modal.style.display = 'none';
+    };
+
+    modal.onclick = (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    };
+  }
+
+
   function renderApp() {
     const root = document.getElementById('stark-mail-content');
     if (!root) return;
@@ -3302,6 +3826,7 @@ function renderDetailView() {
       </div>
       <div class="stark-mail-container">
         ${renderSubHeader()}
+        ${renderTelemetryRibbon()}
         <div class="stark-mail-workspace ${isComposeActive ? 'compose-active' : ''} ${isComposeExpanded ? 'compose-expanded' : ''}">
           ${renderSidebar()}
           ${renderThreadList()}
