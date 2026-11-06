@@ -13,12 +13,14 @@
   const when=value=>date(value)?.toLocaleDateString(undefined,{month:'short',day:'numeric'})||'—';
   
   let period=30,tab='orders',healthFilter='',queue='warehouse',orderStage='recent';
-  let viewMode=localStorage.getItem('stark-overview-view')||'telemetry';
+  const workViews=['operations','modules','telemetry'];
+  const requestedView=new URLSearchParams(location.search).get('view');
+  const pref=window.StarkWorkspace?.localStorage||window.localStorage;
+  const storedView=pref.getItem('mk97-workspace-view-v3');
+  let viewMode=workViews.includes(requestedView)?requestedView:workViews.includes(storedView)?storedView:'operations';
   let moduleArrangement = null;
   const seriesVisible={orders:true,shipments:true,delivered:true};
   let chartMetric='orders';
-  let simDemand=0;
-  let simDelay=0;
 
   function snapshot(state,region,days=30,now=new Date()){
     days=days==='all'?'all':[7,14,30,90].includes(Number(days))?Number(days):30;
@@ -71,75 +73,20 @@
     return `<svg class="tower-kpi-sparkline-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true"><polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${pts[pts.length - 1].split(',')[0]}" cy="${pts[pts.length - 1].split(',')[1]}" r="2" fill="${color}"/></svg>`;
   }
 
-  function kpi(id, label, value, foot, path, glyph, color, trendText = '', trendClass = 'up', sparkPoints = null, submetric = '', honestyBadge = 'Live') {
+  function kpi(id, label, value, foot, path, glyph, color, trendText = '', trendClass = 'up', sparkPoints = null, submetric = '') {
     const spark = sparkPoints ? sparklineSvg(sparkPoints, color, 58, 22) : '';
-    const badgeHtml = honestyBadge === 'Live' 
-      ? '<span class="tower-kpi-honesty-pill live" title="Real-time synchronized ERP telemetry">● Live Telemetry</span>'
-      : '<span class="tower-kpi-honesty-pill demo" title="Simulated sandbox dataset">◈ Demo Data</span>';
+    const badgeHtml = '<span class="tower-kpi-honesty-pill">Workspace data</span>';
     return `<a class="tower-kpi" data-kpi="${id}" href="${S.url(path)}" style="--tower-accent:${color}"><div class="tower-kpi-header-row"><span class="tower-kpi-icon">${icon(glyph)}</span><span class="tower-kpi-label">${esc(label)}</span>${badgeHtml}${trendText ? `<span class="tower-kpi-trend-pill ${trendClass}">${esc(trendText)}</span>` : ''}</div><div class="tower-kpi-value-row"><strong data-kpi-value>${esc(value)}</strong>${spark ? `<span class="tower-kpi-sparkline">${spark}</span>` : ''}</div>${submetric ? `<div class="tower-kpi-submetric">${esc(submetric)}</div>` : ''}<small>${esc(foot)}</small></a>`;
   }
 
-  function renderRoleAndErpBar() {
-    const config = window.MK97Platform ? window.MK97Platform.getConfig() : null;
-    const activeRole = config?.activeRole || 'executive';
-    const roles = [
-      { id: 'executive', label: 'Executive Director', icon: '👑', desc: 'Holistic revenue, cash-flow & supply chain risk' },
-      { id: 'planner', label: 'Demand & Supply Planner', icon: '📈', desc: 'Safety stock, reorder formulas & forecast accuracy' },
-      { id: 'logistics', label: 'Logistics & 3PL Lead', icon: '🚚', desc: 'Carrier dwell, route exceptions & warehouse waves' },
-      { id: 'procurement', label: 'Procurement Specialist', icon: '📑', desc: 'Supplier SLAs, vendor POs & inbound receiving' }
-    ];
-
-    return `
-      <div class="workspace-role-erp-strip">
-        <div class="workspace-role-selector" role="tablist" aria-label="Perspective Switcher">
-          <span class="role-selector-label">Perspective:</span>
-          ${roles.map(r => `
-            <button type="button" class="role-selector-chip ${activeRole === r.id ? 'active' : ''}" data-role-id="${r.id}" title="${esc(r.desc)}">
-              <span>${r.icon}</span>
-              <strong>${esc(r.label)}</strong>
-            </button>
-          `).join('')}
-        </div>
-        <div class="workspace-erp-status-ticker">
-          <span class="erp-status-pill active" title="Native Enterprise ERP Core & Multi-Entity Ledger"><span class="erp-dot green"></span>Native ERP Core · Active</span>
-          <span class="erp-status-pill active" title="Native Omnichannel High-Velocity Dispatch Engine"><span class="erp-dot green"></span>Omnichannel Engine · 0.08s</span>
-          <span class="erp-status-pill telemetry" title="Native Global Maritime AIS Radar & Port Telemetry"><span class="erp-dot blue"></span>AIS Maritime Radar · 48 Vessels</span>
-          <span class="erp-status-pill active" title="Native EDI X12 / EDIFACT Translator & Protocol Studio"><span class="erp-dot purple"></span>Native EDI Hub · 100% Validated</span>
-          <a class="erp-status-hub-btn" href="${S.url('integrations.html')}">Enterprise Suite ⚡</a>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderIndustryKpis() {
-    const config = window.MK97Platform ? window.MK97Platform.getConfig() : null;
-    const preset = config && window.MK97Platform?.getIndustryPreset ? window.MK97Platform.getIndustryPreset(config.industry) : null;
-    if (!preset || !preset.kpis) return '';
-
-    return `
-      <div class="industry-kpi-deck">
-        <div class="industry-kpi-deck-header">
-          <span class="industry-deck-badge">${esc(preset.icon)} ${esc(preset.name)} Intelligence Matrix</span>
-          <span class="industry-deck-sub">Industry-specific operational controls &amp; compliance KPIs</span>
-          <a class="industry-tune-btn" href="${S.url('platform-studio.html')}">Customize Preset ⚙️</a>
-        </div>
-        <div class="industry-kpi-grid">
-          ${preset.kpis.map(k => `
-            <div class="industry-kpi-card">
-              <div class="industry-kpi-top">
-                <span class="industry-kpi-title">${esc(k.name)}</span>
-                <span class="tower-kpi-honesty-pill demo">◈ Sandbox Feed</span>
-              </div>
-              <div class="industry-kpi-metric-row">
-                <strong class="industry-kpi-val">${esc(k.target)}</strong>
-                <span class="industry-kpi-benchmark">${esc(k.benchmark)}</span>
-              </div>
-              <div class="industry-kpi-track"><div class="industry-kpi-fill" style="width: 88%;"></div></div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
+  function renderWorkspaceNav() {
+    const modules=window.StarkModuleNavigation?.groups?.()||[];
+    const showAnalytics=modules.some(([id])=>id==='analytics');
+    return `<div class="workspace-view-switch" role="group" aria-label="Workspace view">
+      ${[['operations','Operations'],['modules','Modules'],...(showAnalytics?[['telemetry','Analytics']]:[])].map(([id,label])=>`<button type="button" id="workspace-view-${id}" class="workspace-view-tab ${viewMode===id?'active':''}" data-view="${id}" aria-pressed="${viewMode===id}">${label}</button>`).join('')}
+      <a class="workspace-view-tab" href="${S.url('mail.html')}">MK97 Mail</a>
+      <a class="workspace-view-tab" href="${S.url('tasks.html')}">Tasks</a>
+    </div>`;
   }
 
   function bannerSvg(id, color) {
@@ -343,29 +290,15 @@
   function renderModuleGrid(allGroups) {
     return `
       <div class="workspace-overview-header workspace-clean-header">
-        <div class="workspace-view-switch" role="tablist" aria-label="Workspace View">
-          <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
-            ▦ Operational Modules
-          </button>
-          <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="MK97 Mail" title="MK97 Mail · Enterprise email for operations">
-            <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            <span>MK97 Mail</span>
-            <span class="workspace-mail-pill">12</span>
-          </a>
-          <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
-          <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
-            📊 Telemetry &amp; KPIs
-          </button>
-        </div>
+        ${renderWorkspaceNav()}
         <div class="workspace-actions-wrap">
           <button type="button" class="sys-btn reset-layout-btn" data-reset-module-layout title="Restore default grid arrangement">Restore layout</button>
         </div>
         <p id="module-arrangement-help" class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0">Drag a module header to place it anywhere. Moved modules expand with the arrow. Alt + arrow keys move a focused header.</p>
       </div>
-      ${renderRoleAndErpBar()}
-      ${renderIndustryKpis()}
 
       <div class="module-overview-grid">
+        ${!allGroups.length?empty('No modules are shown. Choose visible modules in Workspace settings.'):''}
         ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction]) => `
           <article class="module-overview-card" data-draggable-module="${id}" style="--card-accent:${color}">
             <header class="module-card-head" id="module-drag-${id}" data-move-module="${id}" tabindex="0" aria-label="Move ${esc(label)}" aria-describedby="module-arrangement-help">
@@ -750,154 +683,10 @@
 
     const peakVolume=Math.max(0,...model.points.map(p=>p.orders));
     const dailyVelocity=(model.recentOrders.length/Math.max(1,model.span)).toFixed(1);
-    const otifPct=model.onTime!==null?model.onTime+'%':'98.5%';
-    const turnaroundTime='14.2h';
+    const deliveryRate=model.onTime===null?'—':model.onTime+'%';
+    const shipmentCount=model.shipments.filter(s=>model.inPeriod(s.dispatchedAt)).length;
 
-    return `<div class="tower-chart-key">${[['orders','Orders'],['shipments','Shipments'],['delivered','Delivered']].map(([key,label])=>`<button type="button" id="tower-series-${key}" data-series="${key}" aria-pressed="${seriesVisible[key]}" style="--series-color:${colors[key]}"><i></i>${label}</button>`).join('')}</div><figure class="tower-chart" aria-label="Dated orders, shipment dispatches and deliveries for the selected period"><svg viewBox="0 0 ${width} ${height}" role="img"><title>Activity in ${esc(model.regionName)}. ${model.recentOrders.length} dated orders in this period.</title>${defs}${gridLines}${areaPaths}${avgLine}${polylines}${dateLabels}</svg><figcaption>Recorded dates · ${model.span>30?'Grouped into 30 time buckets':'Daily counts'}</figcaption></figure><div class="tower-trend-stats"><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Peak Volume</span><span class="tower-trend-stat-val">${peakVolume} orders</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Daily Velocity</span><span class="tower-trend-stat-val">${dailyVelocity} / day</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Mean Turnaround</span><span class="tower-trend-stat-val">${turnaroundTime}</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">OTIF Index</span><span class="tower-trend-stat-val">${otifPct}</span></div></div>`;
-  }
-
-  function decisionLabWidget(model){
-    let labData=null;
-    try{
-      if(window.StarkDecisionLab?.analyze){
-        labData=window.StarkDecisionLab.analyze(model.state,model.region,{
-          demandChange:simDemand,
-          delayDays:simDelay,
-          leadDays:30
-        });
-      }
-    }catch(err){console.warn('Decision Lab analysis error',err);}
-
-    const group=labData?.groups?.find(g=>g.region===model.region)||labData?.groups?.[0];
-    const atRisk=group?group.atRisk:0;
-    const stressUnits=group?group.stressUnits:0;
-    const stressCost=group?group.estimatedStressCost:0;
-    const currency=group?group.currency:'USD';
-    const findings=labData?.findings?.slice(0,3)||[];
-
-    const presets=[
-      {label:'Baseline (0% / 0d)',demand:0,delay:0},
-      {label:'Surge (+20% Demand)',demand:20,delay:0},
-      {label:'Port Delay (+14d)',demand:0,delay:14},
-      {label:'Stress (+35% / +21d)',demand:35,delay:21}
-    ];
-
-    return `
-      <section class="tower-decision-panel">
-        <div class="tower-panel-head">
-          <div>
-            <h2>Predictive Stress &amp; Demand Sensitivity Lab</h2>
-            <span>Dynamic simulation engine for supply disruption and demand shocks</span>
-          </div>
-          <div class="tower-decision-actions">
-            <a href="${S.url('reorder-simulator.html?region='+model.region)}" class="tower-lab-btn">Launch Full Lab ↗</a>
-          </div>
-        </div>
-        <div class="tower-sim-toolbar">
-          <span class="tower-sim-label">Shock Presets:</span>
-          <div class="tower-sim-presets">
-            ${presets.map(p=>`<button type="button" class="tower-sim-btn ${simDemand===p.demand&&simDelay===p.delay?'active':''}" data-sim-demand="${p.demand}" data-sim-delay="${p.delay}">${p.label}</button>`).join('')}
-          </div>
-        </div>
-        <div class="tower-sim-kpis">
-          <div class="tower-sim-kpi-card ${atRisk>0?'warning':'good'}">
-            <span class="sim-kpi-label">Stockout Risk SKUs</span>
-            <span class="sim-kpi-val">${fmt(atRisk)}</span>
-            <small>${group?group.models+' total catalog models':'Catalog evaluation'}</small>
-          </div>
-          <div class="tower-sim-kpi-card">
-            <span class="sim-kpi-label">Stress Buffer Units</span>
-            <span class="sim-kpi-val">${fmt(stressUnits)}</span>
-            <small>Required replenishment buffer</small>
-          </div>
-          <div class="tower-sim-kpi-card">
-            <span class="sim-kpi-label">Capital Requirement</span>
-            <span class="sim-kpi-val">${money(stressCost,currency)}</span>
-            <small>Estimated reorder procurement cost</small>
-          </div>
-          <div class="tower-sim-kpi-card ${atRisk===0?'good':''}">
-            <span class="sim-kpi-label">Projected SLA</span>
-            <span class="sim-kpi-val">${atRisk===0?'99.5%':(Math.max(78,100-atRisk*3.5)).toFixed(1)+'%'}</span>
-            <small>${simDemand!==0||simDelay!==0?'Simulated disruption shock':'Nominal steady-state buffer'}</small>
-          </div>
-        </div>
-        <div class="tower-sim-findings">
-          <div class="sim-findings-title">AI Disruption Findings &amp; Mitigations (${esc(model.regionName)})</div>
-          <div class="sim-findings-list">
-            ${findings.length?findings.map(f=>`
-              <div class="sim-finding-item ${f.severity==='critical'?'critical':''}">
-                <span class="sim-finding-badge">${f.severity.toUpperCase()}</span>
-                <div class="sim-finding-content">
-                  <strong>${esc(f.title)}</strong>
-                  <p>${esc(f.explanation)}</p>
-                </div>
-              </div>
-            `).join(''):`
-              <div class="sim-finding-item">
-                <span class="sim-finding-badge" style="background:#dcfce7;color:#15803d">STABLE</span>
-                <div class="sim-finding-content">
-                  <strong>Inventory Health Resilient</strong>
-                  <p>All active models maintain coverage exceeding nominal lead-time requirements.</p>
-                </div>
-              </div>
-            `}
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
-  function carrierAnalytics(model){
-    const carriers=[
-      {name:'UPS Ground',pct:98.6,share:58,color:'#0284c7'},
-      {name:'FedEx Express',pct:99.2,share:26,color:'#6366f1'},
-      {name:'Regional Freight / 3PL',pct:96.4,share:16,color:'#00a49c'}
-    ];
-
-    return `
-      <section class="tower-panel tower-carrier-panel">
-        <div class="tower-panel-head">
-          <h2>Carrier SLAs &amp; Dispatch Velocity</h2>
-          <a href="${S.url('shipping/index.html')}">Dispatch Hub ↗</a>
-        </div>
-        <div class="tower-carrier-body">
-          <div class="tower-carrier-list">
-            ${carriers.map(c=>`
-              <div class="tower-carrier-item">
-                <div class="carrier-item-header">
-                  <span>${esc(c.name)}</span>
-                  <span class="carrier-sla-val">${c.pct}% On-Time</span>
-                </div>
-                <div class="carrier-bar-track">
-                  <div class="carrier-bar-fill" style="width:${c.pct}%;background:${c.color}"></div>
-                </div>
-                <div class="carrier-meta">
-                  <span>Volume Share: ${c.share}%</span>
-                  <span>Target: &gt;95.0% SLA</span>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          <div class="tower-dispatch-stats">
-            <div class="dispatch-stat-box highlight">
-              <span class="stat-lbl">Dispatch Speed</span>
-              <span class="stat-num">14.2h</span>
-              <small>Avg order-to-dock</small>
-            </div>
-            <div class="dispatch-stat-box">
-              <span class="stat-lbl">Same-Day Rate</span>
-              <span class="stat-num">96.8%</span>
-              <small>Cut-off compliance</small>
-            </div>
-            <div class="dispatch-stat-box">
-              <span class="stat-lbl">Transit Exceptions</span>
-              <span class="stat-num">0.6%</span>
-              <small>Active in-transit alerts</small>
-            </div>
-          </div>
-        </div>
-      </section>
-    `;
+    return `<div class="tower-chart-key">${[['orders','Orders'],['shipments','Shipments'],['delivered','Delivered']].map(([key,label])=>`<button type="button" id="tower-series-${key}" data-series="${key}" aria-pressed="${seriesVisible[key]}" style="--series-color:${colors[key]}"><i></i>${label}</button>`).join('')}</div><figure class="tower-chart" aria-label="Dated orders, shipment dispatches and deliveries for the selected period"><svg viewBox="0 0 ${width} ${height}" role="img"><title>Activity in ${esc(model.regionName)}. ${model.recentOrders.length} dated orders in this period.</title>${defs}${gridLines}${areaPaths}${avgLine}${polylines}${dateLabels}</svg><figcaption>Recorded dates · ${model.span>30?'Grouped into 30 time buckets':'Daily counts'}</figcaption></figure><div class="tower-trend-stats"><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Peak Volume</span><span class="tower-trend-stat-val">${peakVolume} orders</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Daily Velocity</span><span class="tower-trend-stat-val">${dailyVelocity} / day</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">Recorded dispatches</span><span class="tower-trend-stat-val">${shipmentCount}</span></div><div class="tower-trend-stat-cell"><span class="tower-trend-stat-label">On-time delivery</span><span class="tower-trend-stat-val">${deliveryRate}</span></div></div>`;
   }
 
   function network(model){
@@ -958,9 +747,13 @@
     host.classList.add('tower-page');
 
     const allGroups = window.StarkModuleNavigation?.groups ? window.StarkModuleNavigation.groups() : [];
+    if(viewMode==='telemetry'&&requestedView!=='telemetry'&&allGroups.length&&!allGroups.some(([id])=>id==='analytics'))viewMode='operations';
 
-    if (viewMode === 'modules') {
-      if (allGroups.length) {
+    if (viewMode === 'operations' && window.MK97WorkCenter) {
+      host.innerHTML = `<div class="workspace-overview-header workspace-clean-header">${renderWorkspaceNav()}</div>`+window.MK97WorkCenter.html();
+      window.MK97WorkCenter.bind(host,render);
+    } else if (viewMode === 'modules') {
+      if (window.StarkModuleNavigation?.groups) {
         host.innerHTML = renderModuleGrid(allGroups);
       } else {
         requestAnimationFrame(() => {
@@ -970,39 +763,14 @@
         return;
       }
     } else {
-      const orderPts=model.points.map(p=>p.orders);
-      const ordersSpark=orderPts.length>=2?orderPts:[3,4,6,5,8,7,9,12];
-      const deliverySpark=[92,94,95,93,96,97,model.onTime||95];
-      const inventorySpark=[142,138,135,130,145,140,model.available||135];
-      const digitalSpark=[8,9,9,10,11,11,model.digital||12];
-      const purchaseSpark=[4,5,5,6,7,6,model.purchase.length||6];
-      const creditSpark=[22,24,25,27,26,28,29];
-
+      const ordersSpark=model.points.map(p=>p.orders);
       host.innerHTML = `
-        <div class="workspace-overview-header workspace-clean-header">
-          <div class="workspace-view-switch" role="tablist" aria-label="Workspace View">
-            <button type="button" class="workspace-view-tab ${viewMode==='modules'?'active':''}" data-view="modules" role="tab" aria-selected="${viewMode==='modules'}">
-              ▦ Operational Modules
-            </button>
-            <a class="workspace-view-tab workspace-mail-tab" href="${S.url('mail.html')}" role="tab" aria-label="MK97 Mail" title="MK97 Mail · Enterprise email for operations">
-              <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <span>MK97 Mail</span>
-              <span class="workspace-mail-pill">12</span>
-            </a>
-            <a class="workspace-view-tab" href="${S.url('tasks.html')}">☑ Tasks</a>
-            <button type="button" class="workspace-view-tab ${viewMode==='telemetry'?'active':''}" data-view="telemetry" role="tab" aria-selected="${viewMode==='telemetry'}">
-              📊 Telemetry &amp; KPIs
-            </button>
-          </div>
-        </div>
-
-        ${renderRoleAndErpBar()}
-        ${renderIndustryKpis()}
+        <div class="workspace-overview-header workspace-clean-header">${renderWorkspaceNav()}</div>
         <div class="tower-analytics-bar">
           <div class="tower-analytics-bar-left">
             <div class="tower-stream-pulse">
               <span class="tower-pulse-dot"></span>
-              <span class="tower-stream-title">Live Telemetry Stream</span>
+              <span class="tower-stream-title">Recorded activity</span>
               <span class="tower-stream-sep">·</span>
               <span class="tower-stream-region">${esc(model.regionName)} Hub (${esc(model.region)})</span>
             </div>
@@ -1027,14 +795,14 @@
               <span class="tower-period-label">Metric:</span>
               <button type="button" class="tower-metric-btn ${chartMetric==='orders'?'active':''}" data-metric="orders">Orders</button>
               <button type="button" class="tower-metric-btn ${chartMetric==='shipments'?'active':''}" data-metric="shipments">Shipments</button>
-              <button type="button" class="tower-metric-btn ${chartMetric==='delivered'?'active':''}" data-metric="delivered">OTIF</button>
+              <button type="button" class="tower-metric-btn ${chartMetric==='delivered'?'active':''}" data-metric="delivered">Deliveries</button>
             </div>
           </div>
         </div>
 
         <section class="tower-hero">
           <div class="tower-hero-top">
-            <span class="tower-live"><i></i>${model.state.mode==='sample'?'Sample workspace':'Live workspace'}</span>
+            <span class="tower-live"><i></i>${model.state.mode==='sample'||window.StarkWorkspace?.isDemo?'Sample records':'Workspace records'}</span>
             <span>${esc(model.regionName)} · Enterprise control tower</span>
           </div>
           <div class="tower-hero-title">Global supply chain.<br>Total visibility. Smarter decisions.</div>
@@ -1053,14 +821,13 @@
         </section>
 
         <div class="tower-kpis">
-          ${kpi('orders','Total orders',fmt(model.recentOrders.length),model.open.length+' open commitments','order-management/index.html','orders','#0875ed','+14.2% vs 30d','up',ordersSpark,`Velocity: ${(model.recentOrders.length/Math.max(1,model.span)).toFixed(1)}/day · Run-rate stable`)}
-          ${kpi('delivery','On-time delivery',model.onTime===null?'—':model.onTime+'%',model.deliveries.length?'Dated deliveries in this period':'No dated delivery records','shipping/daily-report.html','shipping','#ee9700',model.onTime!==null?(model.onTime>=95?'Target Exceeded':'Within SLA'):'No History',model.onTime!==null&&model.onTime>=95?'up':'neutral',deliverySpark,'Turnaround: 14.2h · Same-Day: 96.8%')}
-          ${kpi('inventory','Available inventory',fmt(model.available),model.report?.items.length?(model.physical.some(i=>i.linkedStock)?'Connected stock · ':'Regional report · ')+model.region:'Operations stock · '+model.region,'inventory-dashboard-'+model.region.toLowerCase()+'.html','warehouse','#00a49c',model.available>0?'Optimal DOI':'Low Buffer',model.available>0?'up':'warning',inventorySpark,'Days of Inventory: ~42d · Safety Stock: 98%')}
-          ${kpi('digital','Digital keys allocated',fmt(model.digital),'Dispatched token references','vendor-management/digital-vault.html','data','#e34770','100% Vault Sync','neutral',digitalSpark,'Zero Token Latency · Dual-Region HSM')}
-          ${kpi('purchase','Open purchase orders',fmt(model.purchase.length),'All open supplier commitments','procurement/index.html','procurement','#8752e8',model.purchase.length?'Active Inbound':'Replenished','neutral',purchaseSpark,'Supplier On-Time: 96.5% · Lead Time: 18d')}
-          ${kpi('credit','Credit exposure',credit,'All CRM accounts · own currencies','crm/accounts.html','crm','#ec8326','Low Risk Profile','up',creditSpark,creditSubmetric)}
+          ${kpi('orders','Total orders',fmt(model.recentOrders.length),model.open.length+' open commitments','all-open-orders.html','orders','#0875ed','', 'neutral',ordersSpark,`${(model.recentOrders.length/Math.max(1,model.span)).toFixed(1)} recorded orders / day`)}
+          ${kpi('delivery','On-time delivery',model.onTime===null?'—':model.onTime+'%',model.deliveries.length+' delivered orders with an in-hands date','shipping/daily-report.html','shipping','#a15e06')}
+          ${kpi('inventory','Available inventory',fmt(model.available),model.report?.items.length?'Regional report and linked stock · '+model.region:'Operations stock · '+model.region,'inventory-dashboard-'+model.region.toLowerCase()+'.html','warehouse','#00746d')}
+          ${kpi('digital','Digital keys allocated',fmt(model.digital),'Recorded dispatched tokens','vendor-management/digital-vault.html','data','#ac2250')}
+          ${kpi('purchase','Open purchase orders',fmt(model.purchase.length),'Unposted supplier commitments','procurement/index.html','procurement','#6a43bf')}
+          ${kpi('credit','Credit exposure',credit,'CRM accounts · no currency conversion','crm/accounts.html','crm','#a24d17','','neutral',null,creditSubmetric)}
         </div>
-
         <div class="tower-analysis-grid">
           ${network(model)}
           <section class="tower-panel">
@@ -1069,12 +836,11 @@
           </section>
         </div>
 
-        ${decisionLabWidget(model)}
+        <section class="tower-panel"><div class="tower-panel-head"><h2>Demand and supply scenarios</h2><a href="${S.url('reorder-simulator.html?region='+model.region)}">Open planning simulator ↗</a></div></section>
 
         <div class="tower-detail-grid">
           ${inventory(model)}
           ${vendorBars(model)}
-          ${carrierAnalytics(model)}
           ${alerts(model)}
         </div>
 
@@ -1090,16 +856,6 @@
           ${queues(model.state,queue)}
         </div>
       `;
-
-      host.querySelectorAll('[data-role-id]').forEach(btn => {
-        btn.onclick = () => {
-          const roleId = btn.dataset.roleId;
-          if (window.MK97Platform?.saveConfig) {
-            window.MK97Platform.saveConfig({ activeRole: roleId });
-          }
-          render();
-        };
-      });
 
       const periodSelect = host.querySelector('#tower-period');
       if (periodSelect) periodSelect.onchange = event => { period = event.target.value==='all'?'all':Number(event.target.value); render(); };
@@ -1133,14 +889,6 @@
         };
       });
 
-      host.querySelectorAll('[data-sim-demand]').forEach(btn => {
-        btn.onclick = () => {
-          simDemand = Number(btn.dataset.simDemand || 0);
-          simDelay = Number(btn.dataset.simDelay || 0);
-          render();
-        };
-      });
-
       const stageSelect = host.querySelector('#tower-order-stage');
       if (stageSelect) stageSelect.onchange = event => { orderStage = event.target.value; render(); };
 
@@ -1167,22 +915,14 @@
     }
 
     
-    // Role switcher handler (universal)
-    host.querySelectorAll('[data-role-id]').forEach(btn => {
-      btn.onclick = () => {
-        const roleId = btn.dataset.roleId;
-        if (window.MK97Platform?.saveConfig) {
-          window.MK97Platform.saveConfig({ activeRole: roleId });
-        }
-        render();
-      };
-    });
-
     // View switcher handler
     host.querySelectorAll('[data-view]').forEach(button => {
       button.onclick = () => {
         viewMode = button.dataset.view;
-        localStorage.setItem('stark-overview-view', viewMode);
+        try{pref.setItem('mk97-workspace-view-v3',viewMode);}catch(_){}
+        const url=new URL(location.href);
+        url.searchParams.set('view',viewMode);
+        history.replaceState(null,'',url);
         render();
       };
     });
@@ -1435,6 +1175,5 @@
   window.MK97ControlTower = window.StarkControlTower = {render,snapshot,queues,initFloatingActionModule};
   window.addEventListener('stark:region-change', render);
   window.addEventListener('stark:system-change', render);
+  window.addEventListener('sci:config-changed',render);
 })();
-
-  window.addEventListener('sci:config-changed', () => { render(); });

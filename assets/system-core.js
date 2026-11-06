@@ -6,6 +6,7 @@
   const BroadcastChannel = window.StarkWorkspace?.BroadcastChannel || window.BroadcastChannel;
 
   if (window.StarkSystem) return;
+  const business=window.MK97Business;
   const script = document.currentScript;
   const rootURL = window.StarkWorkspace?.rootURL || new URL(/\/assets\/[^/]+$/.test(new URL(script.src).pathname) ? '../' : './', script.src);
   const KEY = 'stark.unifiedSystem.v1';
@@ -139,7 +140,7 @@
     });
     l.bins.forEach(b => { b.used = l.inventory.filter(i => i.binId === b.id).reduce((a, i) => a + number(i.onHand), 0); });
     for (const p of e.purchaseOrders) {
-      if (p.purpose === 'DROPSHIP' || p.status === 'CANCELLED' || p.lines.every(x => number(x.received) >= x.qty)) continue;
+      if (p.purpose === 'DROPSHIP' || ['CANCELLED','DRAFT'].includes(p.status) || p.lines.every(x => number(x.received) >= x.qty)) continue;
       if (!l.receipts.some(r => r.po === p.po && !['CLOSED','CANCELLED'].includes(r.status))) l.receipts.push({ id: uid('rcv'), po: p.po, vendor: e.vendors.find(v => v.id === p.vendorId)?.name || '', asn: `ASN-${p.po}`, appointment: p.eta, dock: 'D1', carrier: p.carrier || 'TBD', status: 'SCHEDULED', invoice: 'Pending', invoiceTotal: 0, poTotal: p.lines.reduce((a, x) => a + x.qty * x.cost, 0), lines: p.lines.map(x => ({ sku: x.sku, expected: x.qty - number(x.received), received: 0, damaged: 0, unitCost: x.cost })) });
     }
     for (const o of e.orders) {
@@ -156,6 +157,8 @@
     if (!s || s.schemaVersion !== 1 || !s.enterprise || !s.logistics) throw new Error('Unsupported workspace format.');
     if (!Number.isSafeInteger(s.revision) || s.revision < 0 || !Array.isArray(s.audit) || !s.regional || typeof s.regional !== 'object' || Array.isArray(s.regional) || !s.events || typeof s.events !== 'object' || Array.isArray(s.events)) throw new Error('Invalid workspace revision or record groups.');
     const e = s.enterprise, l = s.logistics;
+    if(s.businessProfile!==undefined)business?.validate(s.businessProfile);
+    if(s.customerReturns!==undefined)business?.validateReturns(s.customerReturns);
     if (s.tasks !== undefined) {
       if(!Array.isArray(s.tasks) || s.tasks.length>10000)throw new Error('Invalid task records.');
       const taskIds=new Set();
@@ -166,6 +169,22 @@
         for(const value of [task.dueAt,task.reminderAt,task.createdAt,task.updatedAt])if(value && !Number.isFinite(Date.parse(value)))throw new Error('Invalid task date.');
         if(task.reminderAt && task.dueAt && task.reminderAt>task.dueAt)throw new Error('Reminder must be at or before the due time.');
         if(task.comments.some(note=>typeof note.text!=='string' || !note.text.trim() || note.text.length>5000 || !Number.isFinite(Date.parse(note.time))))throw new Error('Invalid task note.');
+      }
+    }
+    if(s.invoiceReviews!==undefined){
+      if(!Array.isArray(s.invoiceReviews)||s.invoiceReviews.length>5000)throw new Error('Invalid invoice review register.');
+      const ids=new Set(),keys=new Set();
+      for(const row of s.invoiceReviews){
+        if(!row||typeof row.id!=='string'||!row.id||ids.has(row.id)||typeof row.poId!=='string'||!row.poId||typeof row.poReference!=='string'||typeof row.vendorId!=='string'||typeof row.number!=='string'||!row.number.trim()||row.number.length>80||!['MATCHED','EXCEPTION'].includes(row.status)||!/^[A-Z]{3}$/.test(row.currency)||!/^\d{4}-\d{2}-\d{2}$/.test(row.date)||!Number.isFinite(Date.parse(row.date))||!Number.isFinite(row.total)||row.total<0||!Array.isArray(row.lines)||!row.lines.length||row.lines.length>250||!Array.isArray(row.evidence?.lines)||row.evidence.lines.length!==row.lines.length||!Array.isArray(row.evidence?.flags)||row.evidence.flags.length>1005||row.evidence.flags.some(flag=>typeof flag!=='string'||flag.length>500)||((row.status==='MATCHED')!==(!row.evidence.flags.length)))throw new Error('Invalid invoice review record.');
+        const key=JSON.stringify([row.vendorId,row.number.trim().normalize('NFKC').toUpperCase()]);
+        const skus=new Set();
+        for(const line of row.lines){
+          if(!line||typeof line.sku!=='string'||!line.sku||line.sku.length>150||skus.has(line.sku)||!Number.isSafeInteger(line.qty)||line.qty<1||line.qty>1000000||!Number.isFinite(line.price)||line.price<0)throw new Error('Invalid invoice review line.');
+          skus.add(line.sku);
+        }
+        if(row.evidence.lines.some(line=>!line||typeof line.sku!=='string'))throw new Error('Invalid invoice review evidence.');
+        if(keys.has(key))throw new Error('Duplicate supplier invoice in review register.');
+        ids.add(row.id);keys.add(key);
       }
     }
     const arrays = ['accounts','programs','inventory','orders','vendors','purchaseOrders','priceOverrides','vendorPriceBooks','vaultTokens','apiKeys','webhookLogs','slaLogs','activity'];
@@ -232,6 +251,7 @@
     const next = clone(latest);
     const result = fn(next);
     guardOrderCancellations(latest, next);
+    if(business&&JSON.stringify(latest.businessProfile)!==JSON.stringify(next.businessProfile)&&!business.canEdit(window.StarkWorkspace,window.StarkSystemCloud))throw new Error('Only organization owners and admins can change business settings.');
     reconcile(next); validateState(next);
     next.revision = latest.revision + 1; next.updatedAt = stamp();
     next.audit.unshift({ id: uid('audit'), time: next.updatedAt, action, detail }); next.audit = next.audit.slice(0, 400);
@@ -634,8 +654,9 @@
       s.enterprise.purchaseOrders.push(po); return po.id;
     });
   }
-  function createPurchaseOrder(input) {
+  function createPurchaseOrder(input,expectedRevision) {
     return transaction('VENDOR_PO_CREATED', input.po, s=>{
+      if(expectedRevision!==undefined&&s.revision!==expectedRevision)throw new Error('Workspace records changed. Review the latest coverage before creating the PO.');
       const e=s.enterprise,v=e.vendors.find(x=>x.id===input.vendorId&&x.status==='ACTIVE');
       if(!v||!input.po?.trim()||e.purchaseOrders.some(x=>x.po.toLowerCase()===input.po.trim().toLowerCase()))throw new Error('Choose an active vendor and a unique vendor PO reference.');
       if(!['INVENTORY','EVENT','DROPSHIP'].includes(input.purpose))throw new Error('Choose Inventory, Event, or Dropship procurement.');
@@ -754,7 +775,7 @@
   function importBackup(backup) {
     if (backup.format !== 'stark-unified-backup' && backup.format !== 'mk97-unified-backup') throw new Error('Choose an MK97 ERP backup.');
     validateState(backup.state);
-    transaction('BACKUP_RESTORED', `Backup from ${backup.exportedAt}`, s => { const revision = s.revision; Object.assign(s, clone(backup.state)); s.revision = revision; });
+    transaction('BACKUP_RESTORED', `Backup from ${backup.exportedAt}`, s => { const revision = s.revision; delete s.businessProfile; delete s.customerReturns; Object.assign(s, clone(backup.state)); s.revision = revision; });
     for (const [key, value] of Object.entries(backup.extras || {})) if (/^(stark-active-brands-|stark-inventory-settings-|stark.*events)/.test(key) && typeof value === 'string') localStorage.setItem(key,value);
     return restoreRegional(backup.regionalDatasets || []);
   }
@@ -766,7 +787,7 @@
     }
   }
   function clearWorkspace() {
-    transaction('WORKSPACE_EMPTIED','A new empty operations workspace was created.',s => { Object.values(s.enterprise).forEach(v => { if (Array.isArray(v)) v.length = 0; }); for (const k of ['inventory','receipts','putaway','waves','packing','cycleCounts','movements','tplNodes','tplInventory','tplShipments','tplRequests','reconciliations','activity']) s.logistics[k] = []; s.mode = 'working'; });
+    transaction('WORKSPACE_EMPTIED','A new empty operations workspace was created.',s => { Object.values(s.enterprise).forEach(v => { if (Array.isArray(v)) v.length = 0; }); for (const k of ['inventory','receipts','putaway','waves','packing','cycleCounts','movements','tplNodes','tplInventory','tplShipments','tplRequests','reconciliations','activity']) s.logistics[k] = []; s.invoiceReviews = []; s.customerReturns = []; s.mode = 'working'; });
   }
   function issues() {
     const e = state.enterprise, l = state.logistics, rows = [];
@@ -777,6 +798,6 @@
     for (const o of e.orders) if (o.type === 'HOLD_PO' && !final(o.status) && new Date(o.holdUntil).getTime() < Date.now()) rows.push({level:'warning',title:`${o.po}: hold expired`,detail:'Release the remaining allocation.',path:'order-management/hold-redemption.html'});
     return rows;
   }
-  window.MK97System = window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getState:()=>{refresh(); return clone(state);}, canCancelOrders, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, shipOrder, deleteOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
+  window.MK97System = window.StarkSystem = { KEY, rootURL, url:path=>new URL(path,rootURL).href, getBusinessProfile:()=>{refresh();return state.businessProfile?clone(state.businessProfile):null;}, getState:()=>{refresh(); return clone(state);}, canCancelOrders, getModule:moduleData, saveModule, transaction, available, validateOrder:o=>checkOrder(state,o), createOrder, expireHolds, cancelOrder, shipOrder, deleteOrder, receivePO, scanReceipt, completePutaway, transferStock, startWave, finishWave, shipPacking, routeOrder, advanceShipment, fulfillDigitalOrder, recordRegional, clearRegional, collectRegional, importRegional, draftRegionalPO, createPurchaseOrder, updatePurchaseOrder, updateItem, createItem, shipDropshipPO, exportBackup, importBackup, clearWorkspace, issues, uid, regionCode, setEvents, adoptSharedState, getRegion:()=>regionCode(localStorage.getItem('stark-selected-region')||'US') };
   expireHolds();
 })();

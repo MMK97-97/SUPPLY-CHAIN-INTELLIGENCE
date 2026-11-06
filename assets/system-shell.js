@@ -22,7 +22,7 @@
   if (!window.MK97Platform && typeof document !== 'undefined') {
     if (!document.querySelector('script[src*="platform-studio.js"]')) {
       const s = document.createElement('script');
-      s.src = (S?.rootURL ? S.url('assets/platform-studio.js') : 'assets/platform-studio.js') + '?v=20261103-ps1';
+      s.src = (S?.rootURL ? S.url('assets/platform-studio.js') : 'assets/platform-studio.js') + '?v=20261104-unified1';
       s.async = false;
       document.head.appendChild(s);
     }
@@ -99,7 +99,8 @@
         [`active-brands-${suffix}.html`, 'Active brands'],
         ...(region === 'EU' ? [['ats-eu.html', 'Available to sell']] : []),
         ['sales-analysis.html?region=' + region, 'Sales analysis'],
-        ['procurement-planning.html', 'Reorder to purchase order']
+        ['procurement-planning.html', 'Reorder to purchase order'],
+        ['workspace.html?view=operations&section=supply', 'Stock coverage']
       ], `inventory-dashboard-${suffix}.html`, { label: '+ Reorder report', path: `reorder-report-${suffix}.html` }],
 
       ['crm', `${custTermPlural} & CRM`, 'Accounts · Programs · Catalogs', '#3b82f6', [
@@ -111,6 +112,7 @@
 
       ['orders', `${orderTerm} Management`, `${orderTermPlural} · Allocation · Exceptions`, '#f97316', [
         ['all-open-orders.html', `All open ${orderTermPlural.toLowerCase()}`],
+        ['returns.html', 'Customer returns'],
         ['create-order.html', `Create ${custTerm.toLowerCase()} ${orderTerm.toLowerCase()}`],
         ['order-management/issues.html', `${orderTerm} issues`],
         ['order-management/unvalidated.html', `Unvalidated ${orderTermPlural.toLowerCase()}`],
@@ -128,6 +130,7 @@
 
       ['procurement', 'Procurement', 'Purchase Orders · Receiving · PO Lifecycle', '#f59e0b', [
         ['procurement/index.html', 'Open vendor PO management'],
+        ['workspace.html?view=operations&section=invoices', 'Invoice matching'],
         ['create-vendor-po.html', 'Create vendor PO'],
         ['dropship-po.html', 'Event / dropship POs'],
         ['vendor-management/procurement.html', 'Procurement & receiving']
@@ -181,16 +184,17 @@
 
       ['data', 'System & Data', 'Data Center · Backups · Audit Activity', '#475569', [
         ['data-center.html', 'Data center & backups'],
+        ['business-setup.html', 'Business setup'],
+        ['platform-studio.html', 'Personal workspace settings'],
         ['activity.html', 'Audit activity'],
         ['manual.html', 'System user manual & SOPs'],
         [`instructions-${suffix}.html`, 'Regional instructions']
       ], 'data-center.html', { label: '+ User manual', path: 'manual.html' }]
     ];
 
-    if (config && Array.isArray(config.enabledModules) && config.enabledModules.length > 0) {
-      return all.filter(([id]) => config.enabledModules.includes(id));
-    }
-    return all;
+    const business = S.getBusinessProfile?.();
+    return all.filter(([id]) => id==='data' ||
+      ((!business||business.modules.includes(id))&&(!Array.isArray(config?.enabledModules)||config.enabledModules.includes(id))));
   }
   window.StarkModuleNavigation = window.StarkModuleNavigation || {};
   window.StarkModuleNavigation.groups = groups;
@@ -201,7 +205,12 @@
   if (initialRegion) localStorage.setItem('stark-selected-region', S.regionCode(initialRegion));
   const relativePath = currentPath.slice(S.rootURL.pathname.length);
   const navigationPath = currentPath.replace(/\/warehouse-management\/cycle-count\.html$/, '/warehouse-management/cycle-counts.html');
-  const active = path => new URL(path, S.rootURL).pathname === navigationPath;
+  const active = path => {
+    const candidate = new URL(path, S.rootURL);
+    if(candidate.pathname !== navigationPath)return false;
+    if(candidate.pathname.endsWith('/workspace.html') && candidate.searchParams.has('section'))return candidate.searchParams.get('section')===initialQuery.get('section');
+    return true;
+  };
 
   function regionFlag(code) {
     const flags = { US: '🇺🇸', EU: '🇪🇺', CA: '🇨🇦' };
@@ -304,7 +313,7 @@
       const activeGroup = allGroups.find(([id, label, subtitle, color, items, primaryUrl]) =>
         items.some(([path]) => active(path)) || active(primaryUrl)
       );
-      currentActiveModuleId = active('mk-copilot.html') ? 'copilot' : active('tasks.html') ? 'tasks' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
+      currentActiveModuleId = active('replenishment.html') && allGroups.some(g=>g[0]==='procurement') ? 'procurement' : active('mk-copilot.html') ? 'copilot' : active('tasks.html') ? 'tasks' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
       renderSubnav(currentActiveModuleId);
 
       if (homeActive || document.body.dataset.systemPage === 'dashboard' || active('mail.html') || active('email.html') || document.body.dataset.systemPage === 'mail') {
@@ -354,30 +363,17 @@
     const brandName = config?.brandName || 'MK97 ERP';
     const brandSubtitle = config?.brandSubtitle || 'Supply Chain Intelligence';
     const brandWordmark = config?.brandWordmark || 'SK';
-    const industryName = config && window.MK97Platform?.getIndustryPreset ? (window.MK97Platform.getIndustryPreset(config.industry)?.name || 'Custom') : (config?.industry ? config.industry.replace('_', ' ').toUpperCase() : 'Omnichannel');
     const header = document.createElement('header');
     header.className = 'system-header';
     header.innerHTML = `
       <!-- Brand Block -->
       <a class="system-brand" href="${S.url('workspace.html')}" aria-label="${escape(brandName)} Home">
-        <span class="system-wordmark">${escape(brandWordmark)}<span>◆</span></span>
+        <span class="system-wordmark" style="background-color:${escape(config?.primaryColor || '#087f78')}">${escape(brandWordmark)}<span>◆</span></span>
         <div class="system-brand-text">
           <b>${escape(brandName)}</b>
           <small>${escape(brandSubtitle)}</small>
         </div>
       </a>
-
-      <!-- Center Action Pills: Platform Studio & Integrations -->
-      <div class="system-header-center-actions">
-        <a class="system-header-pill pill-studio" href="${S.url('platform-studio.html')}" title="Customize Branding, Industry Presets & Terminology">
-          <span>⚙️ Platform Studio</span>
-          <span class="pill-industry-badge">${escape(industryName)}</span>
-        </a>
-        <a class="system-header-pill pill-integrations" href="${S.url('integrations.html')}" title="Native Enterprise Power Suite: ERP Core, AIS Radar & EDI Studio">
-          <span>⚡ Enterprise Suite</span>
-          <span class="pill-sync-status">6 Native Engines</span>
-        </a>
-      </div>
 
       <!-- Center Global Search Pill -->
       <div class="system-search" role="search">
@@ -415,9 +411,9 @@
         </div>
 
         <!-- Notification Bell -->
-        <a class="system-icon-action system-alert-btn" href="${S.url('activity.html')}" aria-label="View activity alerts and exceptions" title="12 open alerts and exceptions">
+        <a class="system-icon-action system-alert-btn" href="${S.url('activity.html')}" aria-label="View activity alerts and exceptions" title="Activity alerts and exceptions">
           ${glyph('bell')}
-          <span class="system-alert-count" id="system-alert-count">12</span>
+          <span class="system-alert-count" id="system-alert-count" hidden></span>
         </a>
 
         <!-- User Avatar Circle -->
@@ -428,12 +424,14 @@
           <div class="system-account-menu" id="system-account-menu" hidden role="menu">
             <div class="system-account-header">
               <strong>Supply Chain Director</strong>
-              <small>${W?.isDemo ? 'Demo Workspace · Fictional Data' : 'Working Workspace · Connected'}</small>
+              <small>${W?.isDemo ? 'Demo workspace · fictional data' : 'Working workspace'}</small>
             </div>
             <button type="button" class="system-account-item" id="system-workspace-button">
               🔄 Switch Workspace (${W?.isDemo ? 'Working Mode' : 'Demo Mode'})
             </button>
-            <a href="${S.url('data-center.html')}" class="system-account-item">⚙️ Data Center &amp; Backups</a>
+            <a href="${S.url('business-setup.html')}" class="system-account-item">Business setup</a>
+            <a href="${S.url('platform-studio.html')}" class="system-account-item">Personal workspace settings</a>
+            <a href="${S.url('data-center.html')}" class="system-account-item">Data Center &amp; Backups</a>
             <a href="${S.url('activity.html')}" class="system-account-item">📋 Audit Log &amp; Exceptions</a>
             <button type="button" class="system-account-item danger" id="system-signout-btn">🚪 Sign Out</button>
           </div>
@@ -497,18 +495,19 @@
         const brandTitle = document.querySelector('.system-brand-text b');
         const brandSub = document.querySelector('.system-brand-text small');
         const wordmark = document.querySelector('.system-wordmark');
-        const badge = document.querySelector('.pill-industry-badge');
         const footerSpan = document.querySelector('.system-workspace-footer span:last-child');
 
         if (brandTitle) brandTitle.textContent = curCfg.brandName;
         if (brandSub) brandSub.textContent = curCfg.brandSubtitle;
         if (wordmark) wordmark.innerHTML = `${escape(curCfg.brandWordmark)}<span>◆</span>`;
-        if (badge && window.MK97Platform?.getIndustryPreset) {
-          badge.textContent = window.MK97Platform.getIndustryPreset(curCfg.industry)?.name || curCfg.industry;
-        }
         if (footerSpan) footerSpan.textContent = `${curCfg.brandName} · Enterprise Supply Chain Platform`;
       }
       renderNavigation();
+    });
+    let businessNavigation = JSON.stringify(S.getBusinessProfile?.()?.modules||null);
+    window.addEventListener('stark:system-change',()=>{
+      const next=JSON.stringify(S.getBusinessProfile?.()?.modules||null);
+      if(next!==businessNavigation){businessNavigation=next;renderNavigation();}
     });
     document.body.append(footer);
 
@@ -665,7 +664,7 @@
 
     // Live status updates
     const status = () => {
-      const state = S.getState(), cloud = window.StarkSystemCloud?.getStatus(), count = S.issues().length;
+      const cloud = window.StarkSystemCloud?.getStatus(), count = S.issues().length;
       const statusEl = document.querySelector('#system-data-status');
       if (statusEl) {
         statusEl.textContent = W?.isDemo ? 'DEMO · Fictional records · Saved in this browser' : cloud?.active ? cloud.status : 'Browser records · Connect organization data in Data Center';
@@ -673,7 +672,9 @@
       const badge = document.querySelector('#system-alert-count');
       if (badge) {
         badge.hidden = !count;
-        badge.textContent = String(count || 12);
+        badge.textContent = count?String(count):'';
+        const action=badge.closest('a');
+        if(action)action.title=count?count+' open alerts and exceptions':'No open alerts and exceptions';
       }
     };
     status();
@@ -831,7 +832,7 @@
   })().catch(error=>notice(error.message,true));
   if (!document.querySelector('link[href*="tasks.css"]')) {const style=document.createElement('link');style.rel='stylesheet';style.href=S.url('tasks.css?v=20261021-ops1');document.head.append(style);}
   if (!document.querySelector('script[src*="tasks.js"]')) {
-    const tasks = document.createElement('script');tasks.src=S.url('tasks.js?v=20261021-ops1');
+    const tasks = document.createElement('script');tasks.src=S.url('tasks.js?v=20261104-unified1');
     tasks.onerror=()=>notice('Task reminders could not load. Reload the workspace to try again.',true);
     document.head.append(tasks);
   }

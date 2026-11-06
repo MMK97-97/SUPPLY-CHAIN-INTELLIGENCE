@@ -1,379 +1,51 @@
-/**
- * Automated Test Suite for Platform Studio & ERP Integration Hub
- * Verifies Universal Industry Presets, Terminology Engine, ERP Hub Connectors & Workspace Parity.
- */
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const { spawn } = require('child_process');
-
-const PORT = 8097;
-const ROOT = path.resolve(__dirname, '..');
-
-// 1. Static HTTP Server for test fixtures
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml'
-};
-
-const server = http.createServer((req, res) => {
-  const urlPath = req.url.split('?')[0];
-  let filePath = path.join(ROOT, urlPath === '/' ? 'workspace.html' : urlPath);
-  if (!fs.existsSync(filePath)) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not found: ' + urlPath);
-    return;
-  }
-  const ext = path.extname(filePath);
-  res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
-  fs.createReadStream(filePath).pipe(res);
-});
-
-server.listen(PORT, async () => {
-  console.log(`Platform Studio test static server listening on http://127.0.0.1:${PORT}`);
-  try {
-    await runTests();
-    console.log('\n========================================');
-    console.log('>>> ALL PLATFORM STUDIO & INTEGRATION HUB TESTS PASSED (100%) <<<');
-    console.log('========================================\n');
-    process.exit(0);
-  } catch (err) {
-    console.error('Test Suite Failed:', err);
-    process.exit(1);
-  } finally {
-    server.close();
-  }
-});
-
-async function runTests() {
-  const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-  const debugPort = 9257;
-  const userDataDir = path.join(ROOT, '.tmp-edge-ps-profile');
-
-  const browserProc = spawn(edgePath, [
-    `--remote-debugging-port=${debugPort}`,
-    `--user-data-dir=${userDataDir}`,
-    '--no-first-run',
-    '--no-default-browser-check',
-    '--headless=new',
-    'about:blank'
-  ], { detached: false });
-
-  await new Promise(r => setTimeout(r, 2000));
-
-  let targets;
-  for (let i = 0; i < 10; i++) {
-    try {
-      const resp = await fetch(`http://127.0.0.1:${debugPort}/json`);
-      targets = await resp.json();
-      if (targets && targets.length) break;
-    } catch (e) {
-      await new Promise(r => setTimeout(r, 500));
-    }
-  }
-
-  if (!targets || !targets.length) {
-    throw new Error('Could not connect to Edge remote debugging port');
-  }
-
-  const pageTarget = targets.find(t => t.type === 'page') || targets[0];
-  const wsUrl = pageTarget.webSocketDebuggerUrl;
-
-  const ws = new WebSocket(wsUrl);
-  let id = 1;
-  const pending = new Map();
-
-  ws.onmessage = (event) => {
-    const msg = JSON.parse(event.data);
-    if (msg.id && pending.has(msg.id)) {
-      const { resolve, reject } = pending.get(msg.id);
-      pending.delete(msg.id);
-      if (msg.error) reject(msg.error);
-      else resolve(msg.result);
-    }
-  };
-
-  await new Promise(res => ws.onopen = res);
-
-  function send(method, params = {}) {
-    return new Promise((resolve, reject) => {
-      const msgId = id++;
-      pending.set(msgId, { resolve, reject });
-      ws.send(JSON.stringify({ id: msgId, method, params }));
-    });
-  }
-
-  await send('Page.enable');
-  await send('Runtime.enable');
-
-  async function evaluate(expression) {
-    const res = await send('Runtime.evaluate', {
-      expression,
-      returnByValue: true,
-      awaitPromise: true
-    });
-    if (res.exceptionDetails) {
-      throw new Error(JSON.stringify(res.exceptionDetails));
-    }
-    return res.result?.value;
-  }
-
-  try {
-    // ==========================================
-    // 1. Platform Studio: Industry Presets & Config
-    // ==========================================
-    console.log('\n--- 1. Testing Platform Studio Workbench ---');
-    await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/platform-studio.html` });
-    await new Promise(r => setTimeout(r, 1800));
-
-    const studioCheck = await evaluate(`(() => {
-      const cards = document.querySelectorAll('.industry-card');
-      const roleInputs = document.querySelectorAll('input[name="studio_role"]');
-      const moduleBoxes = document.querySelectorAll('input[name="module_switch"]');
-      const applyBtn = document.querySelector('#btn-studio-apply');
-      const inpName = document.querySelector('#inp-brand-name');
-      const previewBanner = document.querySelector('.studio-preview-banner');
-
-      return {
-        hasStudioTitle: document.title.includes('Platform Studio'),
-        industryCardsCount: cards.length,
-        roleInputsCount: roleInputs.length,
-        moduleBoxesCount: moduleBoxes.length,
-        hasApplyBtn: !!applyBtn,
-        hasInpName: !!inpName,
-        hasPreviewBanner: !!previewBanner
-      };
-    })()`);
-
-    console.log('Studio Initial Check:', studioCheck);
-    if (studioCheck.industryCardsCount !== 7) throw new Error('Expected 7 industry cards, got ' + studioCheck.industryCardsCount);
-    if (studioCheck.roleInputsCount !== 4) throw new Error('Expected 4 role options, got ' + studioCheck.roleInputsCount);
-    if (studioCheck.moduleBoxesCount !== 12) throw new Error('Expected 12 operational module switches, got ' + studioCheck.moduleBoxesCount);
-
-    // Test clicking an industry preset card (e.g. food_beverage)
-    const selectIndustryResult = await evaluate(`(() => {
-      const fbCard = document.querySelector('.industry-card[data-industry-id="food_beverage"]');
-      if (fbCard) fbCard.click();
-      
-      const termItem = document.querySelector('#term-item')?.value;
-      const termLoc = document.querySelector('#term-location')?.value;
-      const activeCard = document.querySelector('.industry-card.active')?.getAttribute('data-industry-id');
-
-      return {
-        clicked: !!fbCard,
-        activeCard,
-        termItem,
-        termLoc
-      };
-    })()`);
-
-    console.log('Industry Selection Result:', selectIndustryResult);
-    if (selectIndustryResult.activeCard !== 'food_beverage') throw new Error('Expected food_beverage to be active');
-    if (!selectIndustryResult.termItem.includes('Batch') && !selectIndustryResult.termItem.includes('Lot')) throw new Error('Expected Batch or Lot in food_beverage termItem');
-
-    // Test saving custom config and checking localStorage
-    const saveResult = await evaluate(`(() => {
-      const brandInput = document.querySelector('#inp-brand-name');
-      if (brandInput) {
-        brandInput.value = 'Apex Supply OS';
-        brandInput.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      
-      const applyBtn = document.querySelector('#btn-studio-apply');
-      // Trigger save without redirecting page immediately
-      const P = window.MK97Platform;
-      P.saveConfig({
-        brandName: 'Apex Supply OS',
-        industry: 'food_beverage'
-      });
-
-      const stored = localStorage.getItem('sci.platform.config.v2');
-      const parsed = stored ? JSON.parse(stored) : null;
-      return {
-        stored: !!stored,
-        industry: parsed?.industry,
-        brandName: parsed?.brandName
-      };
-    })()`);
-
-    console.log('Save Config Result:', saveResult);
-    if (saveResult.brandName !== 'Apex Supply OS') throw new Error('Config failed to save brandName');
-    if (saveResult.industry !== 'food_beverage') throw new Error('Config failed to save industry');
-
-    // ==========================================
-    // 2. Native Enterprise Power Suite: AIS Radar, EDI Studio & 6 Engines
-    // ==========================================
-    console.log('\n--- 2. Testing Native Enterprise Power Suite ---');
-    await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/integrations.html` });
-    await new Promise(r => setTimeout(r, 1800));
-
-    const hubCheck = await evaluate(`(() => {
-      const cards = document.querySelectorAll('.native-engine-card');
-      const sapBtn = document.querySelector('.conn-ping-btn[data-conn="sap"]');
-      const netsuiteBtn = document.querySelector('.conn-ping-btn[data-conn="netsuite"]');
-      const d365Btn = document.querySelector('.conn-ping-btn[data-conn="d365"]');
-      const shopifyBtn = document.querySelector('.conn-ping-btn[data-conn="shopify"]');
-      const radarBtn = document.querySelector('.conn-ping-btn[data-conn="telemetry"]');
-      const ediBtn = document.querySelector('.conn-ping-btn[data-conn="edi"]');
-
-      const radarMap = document.querySelector('.live-radar-container');
-      const radarSvg = document.querySelector('.radar-svg-canvas');
-      const ediStudio = document.querySelector('#edi-studio-section');
-      const ediTranslateBtn = document.querySelector('#btn-translate-edi');
-      const ediValidateBtn = document.querySelector('#btn-validate-edi');
-
-      const tabs = document.querySelectorAll('.map-tab');
-      const mappingRows = document.querySelectorAll('.mapping-table tbody tr');
-      const auditEntries = document.querySelectorAll('.audit-event-row');
-      const testAllBtn = document.querySelector('#btn-test-all-connections');
-
-      const pipelineSteps = document.querySelectorAll('.pipeline-step-card');
-      const modePlainBtn = document.querySelector('#btn-mode-plain');
-      const modeTechBtn = document.querySelector('#btn-mode-tech');
-      const simBtn = document.querySelector('#btn-run-sim');
-      const searchInput = document.querySelector('#input-map-search');
-
-      return {
-        cardsCount: cards.length,
-        hasSapBtn: !!sapBtn,
-        hasNetsuiteBtn: !!netsuiteBtn,
-        hasD365Btn: !!d365Btn,
-        hasShopifyBtn: !!shopifyBtn,
-        hasRadarBtn: !!radarBtn,
-        hasEdiBtn: !!ediBtn,
-        hasRadarMap: !!radarMap,
-        hasRadarSvg: !!radarSvg,
-        hasEdiStudio: !!ediStudio,
-        hasEdiTranslateBtn: !!ediTranslateBtn,
-        hasEdiValidateBtn: !!ediValidateBtn,
-        tabsCount: tabs.length,
-        mappingRowsCount: mappingRows.length,
-        auditEntriesCount: auditEntries.length,
-        hasTestAllBtn: !!testAllBtn,
-        pipelineStepsCount: pipelineSteps.length,
-        hasModePlainBtn: !!modePlainBtn,
-        hasModeTechBtn: !!modeTechBtn,
-        hasSimBtn: !!simBtn,
-        hasSearchInput: !!searchInput
-      };
-    })()`);
-
-    console.log('Native Power Suite Check Result:', hubCheck);
-    if (hubCheck.cardsCount !== 6) throw new Error('Expected 6 native engine cards, got ' + hubCheck.cardsCount);
-    if (!hubCheck.hasSapBtn || !hubCheck.hasNetsuiteBtn || !hubCheck.hasD365Btn || !hubCheck.hasShopifyBtn || !hubCheck.hasRadarBtn || !hubCheck.hasEdiBtn) {
-      throw new Error('All 6 Native Engine Action Buttons must be present');
-    }
-    if (!hubCheck.hasRadarMap || !hubCheck.hasRadarSvg) throw new Error('Live Maritime AIS Radar must be present');
-    if (!hubCheck.hasEdiStudio || !hubCheck.hasEdiTranslateBtn || !hubCheck.hasEdiValidateBtn) throw new Error('Native EDI Protocol Studio must be present');
-    if (hubCheck.pipelineStepsCount !== 5) throw new Error('Expected 5 Lifecycle Pipeline steps, got ' + hubCheck.pipelineStepsCount);
-    if (!hubCheck.hasModePlainBtn || !hubCheck.hasModeTechBtn) throw new Error('Mode switcher buttons missing');
-    if (!hubCheck.hasSimBtn) throw new Error('Live simulator button missing');
-    if (!hubCheck.hasSearchInput) throw new Error('Search input missing');
-    if (hubCheck.tabsCount < 4) throw new Error('Expected 4 canonical mapping tabs');
-    if (hubCheck.mappingRowsCount < 4) throw new Error('Expected canonical mapping table rows');
-    if (hubCheck.auditEntriesCount < 4) throw new Error('Expected audit log stream entries');
-
-    // Test Plain English Mode Toggle and Search Filter
-    const mapperInteractionResult = await evaluate(`(() => {
-      // Toggle to technical mode
-      const techBtn = document.querySelector('#btn-mode-tech');
-      if (techBtn) techBtn.click();
-      const techThead = document.querySelector('#mapping-thead')?.innerText;
-
-      // Toggle back to plain English
-      const plainBtn = document.querySelector('#btn-mode-plain');
-      if (plainBtn) plainBtn.click();
-      const plainThead = document.querySelector('#mapping-thead')?.innerText;
-
-      // Test Search
-      const searchInp = document.querySelector('#input-map-search');
-      if (searchInp) {
-        searchInp.value = 'stock';
-        searchInp.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-      const filteredRows = document.querySelectorAll('#mapping-tbody tr').length;
-
-      // Reset search
-      if (searchInp) {
-        searchInp.value = '';
-        searchInp.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-
-      // Test Simulator
-      const simBtn = document.querySelector('#btn-run-sim');
-      if (simBtn) simBtn.click();
-
-      return {
-        techHasSchema: techThead.includes('Canonical Field') && techThead.includes('SAP Standard'),
-        plainHasMeaning: plainThead.includes('Why It Matters') || plainThead.includes('Plain English'),
-        filteredRows,
-        simClicked: !!simBtn
-      };
-    })()`);
-
-    console.log('Mapper Interaction Result:', mapperInteractionResult);
-    if (!mapperInteractionResult.techHasSchema) throw new Error('Technical mode failed to render canonical/SAP schema headers');
-    if (!mapperInteractionResult.plainHasMeaning) throw new Error('Plain English mode failed to render business meaning headers');
-    if (mapperInteractionResult.filteredRows < 1) throw new Error('Search filter failed to find matching rows');
-
-    // Test EDI translation action
-    const ediResult = await evaluate(`(() => {
-      const btn = document.querySelector('#btn-translate-edi');
-      if (btn) btn.click();
-      return {
-        translateClicked: !!btn
-      };
-    })()`);
-
-    console.log('EDI Translation Result:', ediResult);
-    if (!ediResult.translateClicked) throw new Error('EDI Translate button not clicked');
-
-    // ==========================================
-    // 3. Workspace: Universal Shell & Control Tower
-    // ==========================================
-    console.log('\n--- 3. Testing Workspace Control Tower with Studio Engine ---');
-    await send('Page.navigate', { url: `http://127.0.0.1:${PORT}/workspace.html` });
-    await new Promise(r => setTimeout(r, 2200));
-
-    const workspaceCheck = await evaluate(`(() => {
-      const brandWordmark = document.querySelector('.system-wordmark')?.textContent;
-      const brandTitle = document.querySelector('.system-brand-text b')?.textContent;
-      const pillStudio = document.querySelector('.pill-studio');
-      const pillIntegrations = document.querySelector('.pill-integrations');
-      const roleStrip = document.querySelector('.workspace-role-erp-strip');
-      const roleChips = document.querySelectorAll('.role-selector-chip');
-      const erpStatusTicker = document.querySelector('.workspace-erp-status-ticker');
-      const industryDeck = document.querySelector('.industry-kpi-deck');
-      const honestyBadges = document.querySelectorAll('.tower-kpi-honesty-pill');
-
-      return {
-        brandWordmark,
-        brandTitle,
-        hasPillStudio: !!pillStudio,
-        hasPillIntegrations: !!pillIntegrations,
-        hasRoleStrip: !!roleStrip,
-        roleChipsCount: roleChips.length,
-        hasErpTicker: !!erpStatusTicker,
-        hasIndustryDeck: !!industryDeck,
-        honestyBadgesCount: honestyBadges.length
-      };
-    })()`);
-
-    console.log('Workspace Check Result:', workspaceCheck);
-    if (!workspaceCheck.hasPillStudio) throw new Error('Platform Studio pill missing from header');
-    if (!workspaceCheck.hasPillIntegrations) throw new Error('Integrations pill missing from header');
-    if (!workspaceCheck.hasRoleStrip) throw new Error('Perspective & ERP strip missing from control tower');
-    if (workspaceCheck.roleChipsCount !== 4) throw new Error('Expected 4 role chips in perspective switcher');
-    if (workspaceCheck.honestyBadgesCount < 6) throw new Error('Expected at least 6 honest data badges on KPI cards');
-
-  } finally {
-    ws.close();
-    browserProc.kill();
-    try {
-      fs.rmSync(userDataDir, { recursive: true, force: true });
-    } catch (_) {}
-  }
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const {JSDOM}=require('jsdom');
+const root=path.resolve(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'platform-studio.html'),'utf8');
+const engine=fs.readFileSync(path.join(root,'platform-studio.js'),'utf8');
+function fixture() {
+  const dom=new JSDOM(html,{url:'https://example.test/erp/platform-studio.html',runScripts:'outside-only'});
+  dom.window.MK97SystemUI={notice(){}};
+  dom.window.eval(engine);
+  dom.window.eval([...dom.window.document.scripts].find(x=>x.textContent.includes('Render Industry Presets Grid')).textContent);
+  return dom;
 }
+test('selecting a terminology preset and saving persists labels and visibility without changing data',()=>{
+  const dom=fixture();
+  try{
+    const w=dom.window,d=w.document;
+    d.querySelector('[data-industry-id="tpl_logistics"]').click();
+    d.querySelector('[name="module_switch"][value="orders"]').checked=false;
+    d.querySelector('[data-theme="dark"]').click();
+    d.querySelector('#btn-studio-apply').click();
+    const cfg=w.MK97Platform.getConfig();
+    assert.equal(cfg.industry,'tpl_logistics');assert.equal(cfg.terms.location,'Cross-Dock / Staging Bay');
+    assert.equal(cfg.themeMode,'dark');assert.equal(cfg.enabledModules.includes('orders'),false);
+    assert.equal(JSON.parse(w.localStorage.getItem('sci.platform.config.v2')).themeMode,'dark');
+    assert.equal(d.documentElement.getAttribute('data-sci-theme'),'dark');
+    assert.equal(d.querySelectorAll('.industry-card-kpis').length,0);
+  }finally{dom.window.close();}
+});
+test('settings preview and stored wordmark render as text and returned config is a copy',()=>{
+  const dom=fixture();
+  try{
+    const w=dom.window,d=w.document,mark=d.querySelector('#inp-brand-wordmark');
+    mark.value='<img src=x onerror=alert(1)>';mark.dispatchEvent(new w.Event('input',{bubbles:true}));
+    assert.equal(d.querySelector('#preview-wordmark img'),null);
+    d.querySelector('#btn-studio-apply').click();
+    const cfg=w.MK97Platform.getConfig();
+    assert.match(cfg.brandWordmark,/^[\p{L}\p{N}]{1,3}$/u);
+    cfg.terms.item='Mutated';cfg.enabledModules.length=0;
+    assert.notEqual(w.MK97Platform.getConfig().terms.item,'Mutated');
+    assert.ok(w.MK97Platform.getConfig().enabledModules.length);
+  }finally{dom.window.close();}
+});
+test('old Enterprise Suite bookmark resolves to Operations, preserving region and demo mode',()=>{
+  const script=fs.readFileSync(path.join(root,'integrations.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+  const href='https://example.test/erp/integrations.html?demo=1&region=CA&unrelated=1';let destination;
+  vm.runInNewContext(script,{URL,URLSearchParams,location:{href,search:new URL(href).search,replace:v=>destination=v}});
+  assert.equal(destination,'https://example.test/erp/workspace.html?demo=1&region=CA&view=operations');
+});
