@@ -146,12 +146,9 @@
   function editDeliveryModal(id){const order=S.getState().enterprise.orders.find(o=>o.id===id);modal('Delivery & warehouse · '+order.po,`<p>Update shipping details while preserving order quantities and existing allocations.</p><div class="op-fields">${['line1','line2','line3','city','state','zip'].map((k,i)=>field(['Address line 1','Address line 2','Address line 3','City','State / province','ZIP / postal code'][i],'address-'+k,order.address?.[k] || '')).join('')}${field('In-hands date','inHandsDate',order.inHandsDate,'date')}${select('Assigned warehouse','warehouseId',F.WAREHOUSES.map(w=>[w.id,w.name]),F.warehouseId(order) || 'SARASOTA')}${field('Shipping method','shippingMethod',order.shipping?.method || '')}${field('Third-party shipping account#','thirdPartyAccount',order.shipping?.thirdPartyAccount)}${field('Third-party billing ZIP','thirdPartyZip',order.shipping?.thirdPartyZip)}${textarea('Instructions','instructions',order.instructions)}</div>`,w=>{F.updateDelivery(id,{address:Object.fromEntries(['line1','line2','line3','city','state','zip'].map(k=>[k,read(w,'address-'+k)])),...Object.fromEntries(['inHandsDate','warehouseId','shippingMethod','thirdPartyAccount','thirdPartyZip','instructions'].map(k=>[k,read(w,k)]))},order.recordRevision || 0);render();notice('Delivery details and warehouse assignment saved.');});}
   let shipSelectedIds = new Set();
 
-  function getSuggestedShipDate(inhands) {
-    if (!inhands || inhands === '-' || inhands === '—') return 'TBD';
-    const d = new Date(inhands);
-    if (isNaN(d.getTime())) return 'TBD';
-    d.setDate(d.getDate() - 8);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  function getSuggestedShipDate(inhands,region,state) {
+    const d=window.MK97Business?.shipDate(state,region,inhands);
+    return d ? new Date(d+'T00:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}) : 'TBD';
   }
 
   function generateTracking(carrier = 'UPS') {
@@ -597,7 +594,7 @@
       const cust = account(state, o);
       const addr = o.address || cust?.customerAddress || {};
       const isChecked = shipSelectedIds.has(o.id);
-      const suggestedDate = getSuggestedShipDate(o.inHandsDate);
+      const suggestedDate = getSuggestedShipDate(o.inHandsDate,o.region||S.getRegion(),state);
       const carrier = o.shipping?.carrier || 'UPS';
       const method = o.shipping?.method || 'Ground';
       const is3rd = o.shipping?.billingType === 'THIRD_PARTY' || !!o.shipping?.thirdPartyAccount;
@@ -626,7 +623,7 @@
           '<strong>' + date(o.inHandsDate) + '</strong>' +
         '</td>' +
         '<td>' +
-          '<span class="ship-suggested-pill" title="8 days before in-hands target date">' + esc(suggestedDate) + '</span>' +
+          '<span class="ship-suggested-pill" title="Based on regional rules in Business setup">' + esc(suggestedDate) + '</span>' +
         '</td>' +
         '<td>' +
           '<strong>' + esc(carrier) + ' ' + esc(method) + '</strong><br>' +

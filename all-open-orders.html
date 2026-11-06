@@ -17,7 +17,7 @@
   <script src="assets/page-navigation.js?v=20261008-3" defer></script>
   <script src="assets/system-seed.js?v=20261008-3" defer></script>
   <script src="assets/demo-seed.js?v=20261012-2" defer></script>
-  <script src="assets/system-core.js?v=20261028-scan2" defer></script><script src="assets/system-cloud.js?v=20261023-copilot1" defer></script>
+  <script src="assets/business-core.js?v=20261104-business1" defer></script><script src="assets/system-core.js?v=20261104-business1" defer></script><script src="assets/system-cloud.js?v=20261023-copilot1" defer></script>
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>All Open Orders · MK97 ERP</title>
@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261021-dragcards1">
   <link rel="stylesheet" href="assets/mk-brain.css?v=20261008-3">
 
-  <script src="assets/system-shell.js?v=20261028-scan2" defer></script>
+  <script src="assets/system-shell.js?v=20261104-business1" defer></script>
   <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
   <script src="assets/fulfillment-core.js?v=20261028-scan1" defer></script>
   <script src="mk-copilot-core.js?v=20261023-copilot1" defer></script><script src="mk-copilot.js?v=20261023-copilot1" defer></script><link rel="stylesheet" href="mk-copilot.css?v=20261023-copilot1"><script src="assets/mk-analysis-tools.js?v=20261023-copilot1" defer></script><script src="assets/mk-space.js?v=20261023-copilot1" defer></script><script src="assets/mk-ai.js?v=20261023-copilot1" defer></script><script src="assets/mk-brain.js?v=20261028-scan1" defer></script>
@@ -602,7 +602,7 @@
           </div>
         </div>
 
-        <!-- 3. SHIPPING TAB PANE (Ship-to, ship method, 3rd party if any, suggested ship date 8 days prior) -->
+        <!-- 3. SHIPPING TAB PANE (Ship-to, ship method, 3rd party if any, suggested ship date) -->
         <div class="oo-panel-tab-pane" id="oo-pane-shipping" role="tabpanel">
           <div class="oo-panel-kv-list">
             <div class="oo-panel-kv-row" style="align-items:flex-start;">
@@ -623,7 +623,7 @@
             </div>
             <div class="oo-panel-kv-row">
               <span class="oo-panel-k">Suggested shipping date</span>
-              <span class="oo-panel-v" id="oo-p-suggested-ship" style="color:#087f78; font-weight:700;">10/20/2026 (8 days before in-hands date)</span>
+              <span class="oo-panel-v" id="oo-p-suggested-ship" style="color:#087f78; font-weight:700;">—</span>
             </div>
           </div>
         </div>
@@ -738,15 +738,12 @@
       const navigate=url=>window.StarkNavigation?.navigate?window.StarkNavigation.navigate(url):location.assign(url);
       const dateLabel=value=>value?String(value).slice(0,10):'—';
 
-      function getSuggestedShippingDate(inhandsStr) {
-        if (!inhandsStr || inhandsStr === '—' || inhandsStr === '-') return 'TBD';
-        const d = new Date(inhandsStr);
-        if (isNaN(d.getTime())) return 'TBD';
-        d.setDate(d.getDate() - 8);
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const yyyy = d.getFullYear();
-        return `${mm}/${dd}/${yyyy}`;
+      function getSuggestedShippingDate(order) {
+        const region=order.record?.region||order.region||S.getRegion(),state=S.getState();
+        const B=window.MK97Business, day=B?.shipDate(state,region,order.inhands);
+        if(!day)return 'TBD';
+        const policy=B.policy(state,region);
+        return day+' · '+policy.shipLeadDays+' '+(policy.shipCalendar==='weekdays'?'working':'calendar')+' days lead time';
       }
 
       function calculateItemInventoryHealth(sku, orderQty) {
@@ -1122,7 +1119,7 @@
           }).join('');
         }
 
-        // 4. Shipping Pane: Ship-to, ship method, 3rd party (only if any), suggested shipping date (8 days before in-hands)
+        // 4. Shipping Pane: Ship-to, ship method, 3rd party (only if any), suggested shipping date
         document.querySelector('#oo-p-ship-company').textContent = order.shipTo?.company || order.customer;
         document.querySelector('#oo-p-ship-addr1').textContent = order.shipTo?.line1 || '—';
         document.querySelector('#oo-p-ship-citystate').textContent = order.shipTo?.cityState || '—';
@@ -1135,8 +1132,8 @@
           document.querySelector('#oo-p-3rd-details').textContent = is3rd ? `Active (Acct: ${esc(order.shipping.account)} · ZIP: ${esc(order.shipping.zip)})` : 'None';
         }
 
-        const suggestedDate = getSuggestedShippingDate(order.inhands);
-        document.querySelector('#oo-p-suggested-ship').textContent = `${suggestedDate} (8 days before in-hands date)`;
+        const suggestedDate = getSuggestedShippingDate(order);
+        document.querySelector('#oo-p-suggested-ship').textContent = suggestedDate;
 
         // 5. Notes Pane: Conversation between customer & customer service, any notes for that order
         document.querySelector('#oo-p-notes-instructions').textContent = order.instructions || order.record?.instructions || 'No special order notes recorded.';
@@ -1400,7 +1397,9 @@
       document.addEventListener('DOMContentLoaded', () => {
         S=window.StarkSystem;
         if(!S){notice('Workspace data could not be loaded. Reload before making changes.',true);return;}
-        document.querySelector('#oo-filter-search').value=new URLSearchParams(location.search).get('search')||'';
+        const urlParams=new URLSearchParams(location.search),specificOrder=S.getState().enterprise.orders.find(o=>o.id===urlParams.get('order'));
+        document.querySelector('#oo-filter-search').value=specificOrder?.po||urlParams.get('search')||'';
+        if(specificOrder){document.querySelector('#oo-filter-status').value='all';selectedOrderNum=specificOrder.orderNumber||specificOrder.po||specificOrder.id;}
         const applyFilters=()=>{currentPage=1;renderTable();};
         document.querySelector('#oo-page-size').onchange=event=>{pageSize=Number(event.target.value);currentPage=1;renderTable();};
         window.addEventListener('stark:system-change',()=>{populateCustomerFilter();renderTable();});

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style id="stark-navigation-critical">
+    html{background:#f4f7fc;min-height:100%}
+    @view-transition{navigation:auto}::view-transition-group(root){animation-duration:160ms}
+    html.stark-page-loading::before,html.stark-auth-pending::before{content:"";position:fixed;inset:0;z-index:2147483645;background:#f4f7fc}
+    html.stark-page-loading::after,html.stark-auth-pending::after{content:"MK97 ERP\A Opening workspace settings…";white-space:pre-line;position:fixed;inset:0;z-index:2147483646;display:grid;place-content:center;text-align:center;line-height:2.2;color:#102c53;font:600 18px/2.2 system-ui,sans-serif;pointer-events:none}
+  </style>
+  <script src="assets/workspace-runtime.js?v=20261013-1"></script>
+  <script src="assets/page-navigation.js?v=20261008-3" defer></script>
+  <script src="assets/system-seed.js?v=20261008-3" defer></script>
+  <script src="assets/demo-seed.js?v=20261012-2" defer></script>
+  <script src="assets/business-core.js?v=20261104-business1" defer></script><script src="assets/system-core.js?v=20261104-business1" defer></script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Prepare replenishment PO · MK97 ERP</title>
+  <meta name="description" content="Review and create a purchase order from a regional replenishment recommendation.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261008-3">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261103-sc1">
+
+  <script src="assets/platform-studio.js?v=20261104-unified1"></script>
+  <script src="assets/system-shell.js?v=20261104-business1" defer></script>
+  <script src="assets/system-connectors.js?v=20261028-scan2" defer></script>
+  <script src="assets/system-cloud.js?v=20261012-2" defer></script>
+  <script src="assets/enterprise-ui.js?v=20261013-1" defer></script>
+  <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
+  <link rel="stylesheet" href="business-setup.css?v=20261104-business1">
+  <script src="operations-core.js?v=20261104-business1" defer></script>
+  <script src="replenishment.js?v=20261104-business1" defer></script>
+</head>
+<body data-system-page="studio">
+  <main class="system-page" id="system-page-content"><div id="purchase-planning"></div></main>
+</body>
+</html>

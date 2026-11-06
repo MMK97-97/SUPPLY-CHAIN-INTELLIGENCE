@@ -1,0 +1,39 @@
+#business-setup{--ink:#122f47;--muted:#476175;--line:#cfdee6;--teal:#006e67;max-width:1040px;margin:0 auto;padding:clamp(14px,3vw,38px);color:var(--ink)}
+#business-setup *{box-sizing:border-box}
+.bs-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;background:linear-gradient(128deg,#102e47,#0a5659);color:#fff;padding:clamp(20px,4vw,42px);border-radius:18px}
+.bs-head h1{font-size:clamp(28px,5vw,44px);margin:4px 0 8px}
+.bs-head p{margin:0;max-width:55ch;color:#ddf3f4}.bs-head .bs-kicker{font-size:12px;letter-spacing:.14em;font-weight:800}
+.bs-head a{color:white;font-weight:700;border:1px solid #8cbabb;border-radius:8px;padding:8px 12px;text-decoration:none}
+.bs-status{padding:10px 14px;background:#e9f5f4;border:1px solid #c4e2df;border-radius:8px;color:#164b4b}.bs-status.bs-error{background:#fcebea;color:#8d2222;border-color:#e9bbba}
+.bs-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:clamp(12px,2.5vw,24px);margin:0 0 16px;min-width:0}
+.bs-card legend,.bs-card h2{font-weight:800;font-size:18px}.bs-card h2{margin:0}.bs-card p,.bs-card small{color:var(--muted);line-height:1.45}.bs-card p{margin:0 0 10px}
+.bs-grid,.bs-modules{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.bs-grid label,.bs-policy-head label{font-weight:700;display:grid;align-content:start;gap:5px;min-width:0}.bs-grid small{font-weight:400}
+.bs-card input:not([type=checkbox]),.bs-card select{width:100%;min-width:0;padding:8px 10px;min-height:42px;border:1px solid #b7cbd7;border-radius:7px;color:var(--ink);background:#fff;font:inherit}
+.bs-modules label,.bs-services label{display:flex;align-items:center;gap:8px;padding:6px 9px;min-height:40px;border-radius:7px;background:#f3f8fa;font-weight:600}.bs-modules input,.bs-services input{width:17px;height:17px;accent-color:var(--teal)}
+.bs-inline,.bs-actions,.bs-policy-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.bs-inline{margin:12px 0}.bs-inline p{margin:0}
+.bs-policy-head,.bs-actions{justify-content:space-between}.bs-policy-head{margin-bottom:10px}.bs-policy fieldset{border:0;padding:0;margin:0;min-width:0}
+#business-setup button{cursor:pointer;padding:9px 14px;min-height:42px;font:inherit;font-weight:750;color:white;background:var(--teal);border:1px solid var(--teal);border-radius:8px}
+#business-setup .bs-secondary{color:#164b4b;background:white;border-color:#b7cbd7}
+#business-setup button:disabled{opacity:.5;cursor:default}
+#business-setup :focus-visible{outline:3px solid #0b8c81;outline-offset:3px}
+#customer-returns{--ink:#122f47;--muted:#476175;--line:#cfdee6;--teal:#006e67;max-width:1040px;margin:0 auto;padding:clamp(14px,3vw,38px);color:var(--ink)}
+#customer-returns *{box-sizing:border-box}
+#customer-returns button{padding:8px 12px;min-height:42px;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--teal);background:var(--teal);color:#fff;border-radius:8px}
+#customer-returns .bs-secondary{background:#fff;color:#164b4b;border-color:#b7cbd7;overflow-wrap:anywhere}
+#customer-returns .bs-card{margin-top:14px}
+#customer-returns .bs-card a{color:var(--teal)}
+#customer-returns :focus-visible{outline:3px solid #0b8c81;outline-offset:3px}
+#rma-find{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
+#rma-find label{display:grid;gap:5px;flex:1 1 360px;font-weight:700}
+.rma-start form button{margin-top:10px}.rma-start h3{margin-bottom:4px}
+.rma-records{list-style:none;padding:0;margin:10px 0 0}.rma-records li{padding:8px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e5edf0}
+.rma-ref,.rma-note{overflow-wrap:anywhere;color:var(--muted)}
+.rma-results{display:flex;gap:10px;flex-wrap:wrap;padding:0}.rma-results div{background:#edf6f6;border-radius:8px;padding:8px 14px}.rma-results dd{margin:0;font-weight:800}
+#purchase-planning{--ink:#122f47;--muted:#476175;--line:#cfdee6;--teal:#006e67;max-width:1040px;margin:0 auto;padding:clamp(14px,3vw,38px);color:var(--ink)}
+#purchase-planning *{box-sizing:border-box}
+#purchase-planning .bs-card{margin-top:14px}
+#purchase-planning .bs-grid{margin:16px 0}
+#purchase-planning button{padding:8px 12px;min-height:42px;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--teal);background:var(--teal);color:#fff;border-radius:8px}
+#purchase-planning .bs-secondary{background:#fff;color:#164b4b;border-color:#b7cbd7}
+#purchase-planning :focus-visible{outline:3px solid #0b8c81;outline-offset:3px}

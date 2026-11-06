@@ -76,10 +76,18 @@
   }
   function detail(id) {
     selected=id;const task=tasks().find(t=>t.id===id);if(!task)return;
+    let source='';
+    try{
+      if(task.sourcePath){
+        const url=new URL(task.sourcePath,S.rootURL);
+        if(url.origin===S.rootURL.origin&&url.pathname.startsWith(S.rootURL.pathname))source=url.href;
+      }
+    }catch(_){}
     const dialog=window.StarkSystemUI.dialog(task.title,`
       <p><strong>${esc(task.status.replace('_',' '))}</strong> · ${esc(task.priority)} priority</p>
       <p>Due: ${esc(when(task.dueAt))}<br>Reminder: ${esc(when(task.reminderAt))}</p>
       <p class="task-note-text">${esc(task.notes || 'No notes yet.')}</p>
+      ${source?`<p><a href="${esc(source)}">Open source record</a></p>` : ''}
       <div class="task-comments">${(task.comments||[]).map(n=>`<article><time>${esc(when(n.time))}</time><p class="task-note-text">${esc(n.text)}</p></article>`).join('')}</div>
       <label>Add a note<textarea id="task-new-note" rows="3" maxlength="5000" required></textarea></label>`,wrap=>{
         addNote(id,wrap.querySelector('#task-new-note').value,task.updatedAt,task.version || 0);window.StarkSystemUI.notice('Note added.');
