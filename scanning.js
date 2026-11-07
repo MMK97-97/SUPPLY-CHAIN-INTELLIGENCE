@@ -50,12 +50,12 @@
   document.addEventListener('keydown',event=>{if(innerWidth<=820&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();event.stopImmediatePropagation();document.body.classList.add('phone-search-open');$('.phone-search-toggle')?.setAttribute('aria-expanded','true');$('#system-search-input')?.focus();}else if(event.key==='Escape'&&document.body.classList.contains('phone-search-open')){document.body.classList.remove('phone-search-open');$('.phone-search-toggle')?.setAttribute('aria-expanded','false');$('.phone-search-toggle')?.focus();}},true);
   document.addEventListener('click',event=>{if(innerWidth>1100)return;if(innerWidth<=820&&!event.target.closest('.system-header')){document.body.classList.remove('phone-search-open');$('.phone-search-toggle')?.setAttribute('aria-expanded','false');}if(event.target.closest('.mail-thread-item')&&!event.target.closest('input,button,a')){document.body.dataset.phoneMailView='message';schedule();}else if(event.target.closest('.mail-col-sidebar .mail-nav-item')){document.body.dataset.phoneMailView='messages';schedule();}});
   document.addEventListener('click',event=>{const button=event.target.closest('[data-scan-label]');if(!button)return;event.preventDefault();event.stopPropagation();try{labelDialog(button.dataset.scanLabel,button.dataset.scanId);}catch(error){notify(error.message,true);}});
-  let queued=false,frame=0,observer=null;const schedule=()=>{if(queued)return;queued=true;frame=requestAnimationFrame(()=>{queued=false;augment();});};
+  let queued=false,frame=0,observer=null;const schedule=()=>{if(queued)return;queued=true;const raf=typeof requestAnimationFrame==='function'?requestAnimationFrame:(fn=>setTimeout(fn,16));frame=raf(()=>{queued=false;if(typeof document!=='undefined'&&document&&document.body)augment();});};
   function init(){
     augment();observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-scan-order-id']});
     if($('#scan-workspace'))initPage();
     window.addEventListener('resize',schedule);
-    window.addEventListener('pagehide',()=>{observer.disconnect();cancelAnimationFrame(frame);queued=false;});
+    window.addEventListener('pagehide',()=>{observer.disconnect();(typeof cancelAnimationFrame==='function'?cancelAnimationFrame:clearTimeout)(frame);queued=false;});
     window.addEventListener('pageshow',event=>{if(event.persisted){observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-scan-order-id']});schedule();}});
   }
   function initPage(){

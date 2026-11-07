@@ -27,6 +27,8 @@ async function boot(file, shellSource, options = {}) {
   // Supply Node scheduling for the local ZIP parser, plus standard file decoding.
   w.setImmediate = setImmediate; w.clearImmediate = clearImmediate;
   w.TextDecoder = TextDecoder; w.TextEncoder = TextEncoder;
+  w.requestAnimationFrame = w.requestAnimationFrame || (cb => setTimeout(cb, 16));
+  w.cancelAnimationFrame = w.cancelAnimationFrame || (id => clearTimeout(id));
   w.addEventListener('error', event => errors.push(event.error?.stack || event.message));
   w.fetch = () => { throw new Error('Network is disabled in interface checks.'); };
   // Optional standard-API emulation for wider audits; this does not render a browser.

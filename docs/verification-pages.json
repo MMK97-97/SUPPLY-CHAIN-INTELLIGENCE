@@ -1,11 +1,11 @@
 {
-  "pages": 91,
-  "passed": 91,
-  "failed": 0,
+  "pages": 117,
+  "passed": 102,
+  "failed": 15,
   "method": "Source-driven jsdom startup, duplicate-ID, active control label and loading-state checks; standard matchMedia and unavailable decorative canvas emulated. Redirects inspected separately by the static audit. No graphical rendering, authentication or live network.",
   "checks": [
     {
-      "file": "3pl-management/index.html",
+      "file": "3pl-management\\index.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -13,15 +13,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3153,
+      "body_text_length": 5568,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/integrations.html",
+      "file": "3pl-management\\integrations.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -29,15 +29,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3273,
+      "body_text_length": 5688,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/network.html",
+      "file": "3pl-management\\network.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -45,15 +45,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4311,
+      "body_text_length": 6921,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/order-history.html",
+      "file": "3pl-management\\order-history.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -61,15 +61,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3163,
+      "body_text_length": 5578,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/orders.html",
+      "file": "3pl-management\\orders.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -77,15 +77,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3198,
+      "body_text_length": 5613,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/reconciliation.html",
+      "file": "3pl-management\\reconciliation.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -93,15 +93,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4029,
+      "body_text_length": 6438,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/routing.html",
+      "file": "3pl-management\\routing.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -109,15 +109,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3604,
+      "body_text_length": 6033,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/ship-orders.html",
+      "file": "3pl-management\\ship-orders.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -125,15 +125,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3091,
+      "body_text_length": 5506,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/shipment-requests.html",
+      "file": "3pl-management\\shipment-requests.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -141,15 +141,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3024,
+      "body_text_length": 5531,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/shipments.html",
+      "file": "3pl-management\\shipments.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -157,15 +157,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3774,
+      "body_text_length": 6185,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "3pl-management/upload-shipments.html",
+      "file": "3pl-management\\upload-shipments.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -173,10 +173,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3058,
+      "body_text_length": 5473,
       "recovery": false,
       "loading": false
     },
@@ -189,10 +189,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3357,
+      "body_text_length": 5630,
       "recovery": false,
       "loading": false
     },
@@ -205,10 +205,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3407,
+      "body_text_length": 5728,
       "recovery": false,
       "loading": false
     },
@@ -221,10 +221,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3371,
+      "body_text_length": 5651,
       "recovery": false,
       "loading": false
     },
@@ -243,10 +243,103 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 2733,
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "audit-filter",
+          "name": "",
+          "placeholder": "Filter system activity"
+        }
+      ],
+      "body_text_length": 4928,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "add-item.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Add New Catalog Item to Master"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "im-file-input",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "add-feat-1",
+          "name": "",
+          "placeholder": "e.g. Active Noise Cancellation"
+        },
+        {
+          "tag": "INPUT",
+          "id": "add-feat-4",
+          "name": "",
+          "placeholder": "e.g. USB-C charging"
+        },
+        {
+          "tag": "INPUT",
+          "id": "add-feat-2",
+          "name": "",
+          "placeholder": "e.g. Bluetooth 5.3"
+        },
+        {
+          "tag": "INPUT",
+          "id": "add-feat-5",
+          "name": "",
+          "placeholder": "e.g. Lightweight and comfortable"
+        },
+        {
+          "tag": "INPUT",
+          "id": "add-feat-3",
+          "name": "",
+          "placeholder": "e.g. 30-hour battery life"
+        },
+        {
+          "tag": "INPUT",
+          "id": "add-feat-6",
+          "name": "",
+          "placeholder": "e.g. Built-in microphone"
+        },
+        {
+          "tag": "INPUT",
+          "id": "add-customer-feed",
+          "name": "",
+          "placeholder": "e.g. Amazon, Best Buy, Walmart, Target (press Enter to add)..."
+        }
+      ],
+      "body_text_length": 24934,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "all-open-orders.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "oo-quick-note-input",
+          "name": "",
+          "placeholder": "Add CSR note or log customer reply..."
+        }
+      ],
+      "body_text_length": 67331,
       "recovery": false,
       "loading": false
     },
@@ -259,16 +352,16 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3098,
+      "body_text_length": 5419,
       "recovery": false,
       "loading": false
     },
     {
       "file": "auth-callback.html",
-      "kind": "authentication",
+      "kind": "application",
       "errors": [],
       "headings": [
         "Protect every supply-chain decision."
@@ -286,15 +379,29 @@
       "file": "business-operations.html",
       "kind": "application",
       "errors": [],
+      "headings": [],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 11028,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "business-setup.html",
+      "kind": "application",
+      "errors": [],
       "headings": [
-        "Global supply chain.Total visibility. Smarter decisions."
+        "Business setup"
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 6816,
+      "body_text_length": 5399,
       "recovery": false,
       "loading": false
     },
@@ -310,7 +417,227 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 21525,
+      "body_text_length": 22177,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "create-order.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Create Customer Order"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "co-item-filter-input",
+          "name": "",
+          "placeholder": "Search by model#, title, SKU, brand..."
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": "Model# or catalog SKU"
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": "Description - automatic"
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        }
+      ],
+      "body_text_length": 57655,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "create-vendor-po.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Create Vendor PO"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "vpo-3rd-acct",
+          "name": "",
+          "placeholder": "Enter account number"
+        },
+        {
+          "tag": "INPUT",
+          "id": "vpo-3rd-zip",
+          "name": "",
+          "placeholder": "Enter ZIP code"
+        },
+        {
+          "tag": "INPUT",
+          "id": "vpo-item-search",
+          "name": "",
+          "placeholder": "Search by model#, vendor item#, title, etc..."
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "vpo-file-input",
+          "name": "",
+          "placeholder": ""
+        }
+      ],
+      "body_text_length": 59010,
       "recovery": false,
       "loading": false
     },
@@ -323,15 +650,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4043,
+      "body_text_length": 6105,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "crm/accounts.html",
+      "file": "crm\\accounts.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -339,15 +666,22 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 4125,
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "account-search",
+          "name": "",
+          "placeholder": "Search accounts…"
+        }
+      ],
+      "body_text_length": 6251,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "crm/catalog.html",
+      "file": "crm\\catalog.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -355,15 +689,22 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 4534,
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "catalog-search",
+          "name": "",
+          "placeholder": "Search SKU, model, brand…"
+        }
+      ],
+      "body_text_length": 6638,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "crm/index.html",
+      "file": "crm\\index.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -371,15 +712,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4052,
+      "body_text_length": 6122,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "crm/partner-portal.html",
+      "file": "crm\\partner-portal.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -387,10 +728,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4339,
+      "body_text_length": 6315,
       "recovery": false,
       "loading": false
     },
@@ -403,10 +744,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4080,
+      "body_text_length": 6531,
       "recovery": false,
       "loading": false
     },
@@ -419,10 +760,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5047,
+      "body_text_length": 7325,
       "recovery": false,
       "loading": false
     },
@@ -435,10 +776,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5097,
+      "body_text_length": 7423,
       "recovery": false,
       "loading": false
     },
@@ -451,12 +792,141 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5061,
+      "body_text_length": 7346,
       "recovery": false,
       "loading": false
+    },
+    {
+      "file": "docs\\crm\\accounts.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Agency accounts & programs"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "account-search",
+          "name": "",
+          "placeholder": "Search accounts…"
+        }
+      ],
+      "body_text_length": 6322,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "docs\\crm\\catalog.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Product catalog & contractual pricing"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "catalog-search",
+          "name": "",
+          "placeholder": "Search SKU, model, brand…"
+        }
+      ],
+      "body_text_length": 6709,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "docs\\crm\\index.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "CRM operations dashboard"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 6193,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "docs\\crm\\partner-portal.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Agency partner portal"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 6386,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "docs\\manual.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Supply Chain Intelligence · Enterprise Operating Manual"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 20791,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "dropship-po.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Dropship POs"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "SELECT",
+          "id": "dpo-page-size",
+          "name": "",
+          "placeholder": ""
+        }
+      ],
+      "body_text_length": 54310,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "dropship-pos.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "email.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
       "file": "events-tv.html",
@@ -474,10 +944,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 54247,
+      "body_text_length": 59138,
       "recovery": false,
       "loading": false
     },
@@ -490,10 +960,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5404,
+      "body_text_length": 7420,
       "recovery": false,
       "loading": false
     },
@@ -506,16 +976,16 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 67874,
+      "body_text_length": 69885,
       "recovery": false,
       "loading": false
     },
     {
       "file": "index.html",
-      "kind": "authentication",
+      "kind": "application",
       "errors": [],
       "headings": [
         "One workspace.Every moving part."
@@ -525,7 +995,7 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 1220,
+      "body_text_length": 1211,
       "recovery": false,
       "loading": false
     },
@@ -538,10 +1008,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3896,
+      "body_text_length": 6223,
       "recovery": false,
       "loading": false
     },
@@ -554,10 +1024,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3929,
+      "body_text_length": 6247,
       "recovery": false,
       "loading": false
     },
@@ -570,15 +1040,21 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3910,
+      "body_text_length": 6244,
       "recovery": false,
       "loading": false
     },
     {
       "file": "instructions.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "integrations.html",
       "kind": "redirect",
       "boot": "static route inspection",
       "errors": []
@@ -616,10 +1092,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3829,
+      "body_text_length": 6102,
       "recovery": false,
       "loading": false
     },
@@ -632,10 +1108,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3879,
+      "body_text_length": 6200,
       "recovery": false,
       "loading": false
     },
@@ -648,10 +1124,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3843,
+      "body_text_length": 6123,
       "recovery": false,
       "loading": false
     },
@@ -680,8 +1156,137 @@
       "errors": []
     },
     {
+      "file": "item-details.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "WH-1000XM6"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 14390,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "item-master.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Enterprise Item Master"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "eim-word-search-input",
+          "name": "",
+          "placeholder": "Search by model #, UPC, variant, color, category, etc. (e.g. bear charm, black watch, red luggage...)"
+        },
+        {
+          "tag": "INPUT",
+          "id": "eim-brands-filter-input",
+          "name": "",
+          "placeholder": "Search brands..."
+        },
+        {
+          "tag": "SELECT",
+          "id": "eim-select-per-page",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "eim-check-all-rows",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        }
+      ],
+      "body_text_length": 28815,
+      "recovery": false,
+      "loading": false
+    },
+    {
       "file": "login.html",
-      "kind": "authentication",
+      "kind": "application",
       "errors": [],
       "headings": [
         "One workspace.Every moving part."
@@ -691,7 +1296,100 @@
       "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 1220,
+      "body_text_length": 1211,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "mail.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "MK97 Mail"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "placeholder": ""
+        }
+      ],
+      "body_text_length": 29383,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "manual.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Supply Chain Intelligence · Enterprise Operating Manual"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 20891,
       "recovery": false,
       "loading": false
     },
@@ -704,12 +1402,40 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5350,
+      "body_text_length": 7307,
       "recovery": false,
       "loading": false
+    },
+    {
+      "file": "mk-copilot.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Every order, one operational view"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 5993,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "open-vendor-po.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
+    },
+    {
+      "file": "open-vendor-pos.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
       "file": "order-management.html",
@@ -720,15 +1446,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4558,
+      "body_text_length": 6941,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "order-management/bulk-firm.html",
+      "file": "order-management\\bulk-firm.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -736,15 +1462,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3956,
+      "body_text_length": 6017,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "order-management/cancelled.html",
+      "file": "order-management\\cancelled.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -752,15 +1478,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2922,
+      "body_text_length": 5105,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "order-management/hold-redemption.html",
+      "file": "order-management\\hold-redemption.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -768,31 +1494,21 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3778,
+      "body_text_length": 5706,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "order-management/index.html",
-      "kind": "application",
-      "errors": [],
-      "headings": [
-        "All open customer orders"
-      ],
-      "legacy_sidebar": 0,
-      "shared_header": 1,
-      "shared_module_menu": 1,
-      "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 3445,
-      "recovery": false,
-      "loading": false
+      "file": "order-management\\index.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
-      "file": "order-management/issues.html",
+      "file": "order-management\\issues.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -800,31 +1516,21 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3123,
+      "body_text_length": 5306,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "order-management/new-order.html",
-      "kind": "application",
-      "errors": [],
-      "headings": [
-        "Create customer order"
-      ],
-      "legacy_sidebar": 0,
-      "shared_header": 1,
-      "shared_module_menu": 1,
-      "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 4863,
-      "recovery": false,
-      "loading": false
+      "file": "order-management\\new-order.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
-      "file": "order-management/unvalidated.html",
+      "file": "order-management\\unvalidated.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -832,10 +1538,26 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2924,
+      "body_text_length": 5107,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "platform-studio.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Workspace settings"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 23053,
       "recovery": false,
       "loading": false
     },
@@ -848,15 +1570,22 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 2960,
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "planning-filter",
+          "name": "",
+          "placeholder": "Filter model or brand"
+        }
+      ],
+      "body_text_length": 5245,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "procurement/index.html",
+      "file": "procurement\\index.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -864,28 +1593,18 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3142,
+      "body_text_length": 5279,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "procurement/new-po.html",
-      "kind": "application",
-      "errors": [],
-      "headings": [
-        "Create vendor PO"
-      ],
-      "legacy_sidebar": 0,
-      "shared_header": 1,
-      "shared_module_menu": 1,
-      "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 3268,
-      "recovery": false,
-      "loading": false
+      "file": "procurement\\new-po.html",
+      "kind": "redirect",
+      "boot": "static route inspection",
+      "errors": []
     },
     {
       "file": "raw-report-ca.html",
@@ -896,10 +1615,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2850,
+      "body_text_length": 5123,
       "recovery": false,
       "loading": false
     },
@@ -912,10 +1631,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2900,
+      "body_text_length": 5221,
       "recovery": false,
       "loading": false
     },
@@ -928,10 +1647,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2864,
+      "body_text_length": 5144,
       "recovery": false,
       "loading": false
     },
@@ -956,10 +1675,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4290,
+      "body_text_length": 6563,
       "recovery": false,
       "loading": false
     },
@@ -972,10 +1691,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4340,
+      "body_text_length": 6661,
       "recovery": false,
       "loading": false
     },
@@ -988,10 +1707,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4304,
+      "body_text_length": 6584,
       "recovery": false,
       "loading": false
     },
@@ -1002,6 +1721,38 @@
       "errors": []
     },
     {
+      "file": "replenishment.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Prepare replenishment PO"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3193,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "returns.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Customer returns"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 3750,
+      "recovery": false,
+      "loading": false
+    },
+    {
       "file": "sales-analysis.html",
       "kind": "application",
       "errors": [],
@@ -1010,10 +1761,26 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 9304,
+      "body_text_length": 11584,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "scan.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Scan & verify"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 6457,
       "recovery": false,
       "loading": false
     },
@@ -1026,15 +1793,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 11658,
+      "body_text_length": 13669,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "shipping/daily-report.html",
+      "file": "shipping\\daily-report.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1042,31 +1809,60 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2655,
+      "body_text_length": 4557,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "shipping/index.html",
+      "file": "shipping\\index.html",
       "kind": "application",
       "errors": [],
       "headings": [
-        "Ship orders · Sarasota"
+        "Ship Orders"
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 2635,
+      "unlabeled_inputs": [
+        {
+          "tag": "INPUT",
+          "id": "op-search",
+          "name": "",
+          "placeholder": "Search PO#, customer, model#, tracking# or destination..."
+        },
+        {
+          "tag": "INPUT",
+          "id": "ship-select-all",
+          "name": "",
+          "placeholder": ""
+        }
+      ],
+      "body_text_length": 5491,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "transportation/index.html",
+      "file": "tasks.html",
+      "kind": "application",
+      "errors": [],
+      "headings": [
+        "Tasks & reminders"
+      ],
+      "legacy_sidebar": 0,
+      "shared_header": 1,
+      "shared_module_menu": 0,
+      "duplicate_ids": [],
+      "unlabeled_inputs": [],
+      "body_text_length": 4655,
+      "recovery": false,
+      "loading": false
+    },
+    {
+      "file": "transportation\\index.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1074,10 +1870,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 2667,
+      "body_text_length": 4683,
       "recovery": false,
       "loading": false
     },
@@ -1090,15 +1886,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4083,
+      "body_text_length": 6101,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "vendor-management/digital-vault.html",
+      "file": "vendor-management\\digital-vault.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1106,15 +1902,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 5204,
+      "body_text_length": 7144,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "vendor-management/index.html",
+      "file": "vendor-management\\index.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1122,15 +1918,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4095,
+      "body_text_length": 6033,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "vendor-management/procurement.html",
+      "file": "vendor-management\\procurement.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1138,15 +1934,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3953,
+      "body_text_length": 5988,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "vendor-management/sla.html",
+      "file": "vendor-management\\sla.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1154,15 +1950,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3915,
+      "body_text_length": 5855,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "vendor-management/vendors.html",
+      "file": "vendor-management\\vendors.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1170,10 +1966,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4119,
+      "body_text_length": 6059,
       "recovery": false,
       "loading": false
     },
@@ -1182,19 +1978,26 @@
       "kind": "application",
       "errors": [],
       "headings": [
-        "Vendor purchase orders"
+        "Vendor PO Management"
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
-      "unlabeled_inputs": [],
-      "body_text_length": 3066,
+      "unlabeled_inputs": [
+        {
+          "tag": "SELECT",
+          "id": "vpm-pag-size",
+          "name": "",
+          "placeholder": ""
+        }
+      ],
+      "body_text_length": 78261,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "warehouse-management/cycle-count.html",
+      "file": "warehouse-management\\cycle-count.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1202,15 +2005,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3567,
+      "body_text_length": 5832,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "warehouse-management/cycle-counts.html",
+      "file": "warehouse-management\\cycle-counts.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1218,15 +2021,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3567,
+      "body_text_length": 5832,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "warehouse-management/index.html",
+      "file": "warehouse-management\\index.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1234,15 +2037,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3960,
+      "body_text_length": 6172,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "warehouse-management/inventory-bins.html",
+      "file": "warehouse-management\\inventory-bins.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1250,15 +2053,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4395,
+      "body_text_length": 6725,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "warehouse-management/packing-dispatch.html",
+      "file": "warehouse-management\\packing-dispatch.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1266,15 +2069,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3520,
+      "body_text_length": 5735,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "warehouse-management/receiving.html",
+      "file": "warehouse-management\\receiving.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1282,15 +2085,15 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 4266,
+      "body_text_length": 6478,
       "recovery": false,
       "loading": false
     },
     {
-      "file": "warehouse-management/wave-picking.html",
+      "file": "warehouse-management\\wave-picking.html",
       "kind": "application",
       "errors": [],
       "headings": [
@@ -1298,10 +2101,10 @@
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 3581,
+      "body_text_length": 6106,
       "recovery": false,
       "loading": false
     },
@@ -1310,14 +2113,14 @@
       "kind": "application",
       "errors": [],
       "headings": [
-        "Global supply chain.Total visibility. Smarter decisions."
+        "Operations workspace"
       ],
       "legacy_sidebar": 0,
       "shared_header": 1,
-      "shared_module_menu": 1,
+      "shared_module_menu": 0,
       "duplicate_ids": [],
       "unlabeled_inputs": [],
-      "body_text_length": 6816,
+      "body_text_length": 6331,
       "recovery": false,
       "loading": false
     }
