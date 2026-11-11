@@ -130,6 +130,7 @@
 
       ['procurement', 'Procurement', 'Purchase Orders · Receiving · PO Lifecycle', '#f59e0b', [
         ['procurement/index.html', 'Open vendor PO management'],
+        ['procurement/receiving-inspection.html', 'Receiving inspection'],
         ['workspace.html?view=operations&section=invoices', 'Invoice matching'],
         ['create-vendor-po.html', 'Create vendor PO'],
         ['dropship-po.html', 'Event / dropship POs'],
