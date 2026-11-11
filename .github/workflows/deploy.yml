@@ -5,33 +5,97 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: read
+    env:
+      PAGES_ARTIFACT_NAME: github-pages-${{ github.run_attempt }}
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact_id }}
+      artifact_name: ${{ env.PAGES_ARTIFACT_NAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v6.0.0
+
+      - name: Verify site and receiving files
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for file in index.html workspace.html procurement/index.html procurement/receiving-inspection.html \
+            assets/jszip.min.js assets/vendor/sheetjs-0.20.3.min.js \
+            procurement/receiving/{app.mjs,core.mjs,io.mjs,export.mjs,receiving.css,stark-enterprises.png} \
+            procurement/receiving/templates/Stark-Receiving-Inspection-Template.{docx,pdf} \
+            procurement/receiving/vendor/{pdf.min.mjs,pdf.worker.min.mjs,pdf-lib.min.js,fontkit.min.js,docx.iife.js} \
+            procurement/receiving/vendor/{tesseract.min.js,tesseract-worker.min.js,tesseract-core-lstm.wasm.js,eng.traineddata.gz} \
+            procurement/receiving/vendor/{DejaVuSans.ttf,DejaVuSans-Bold.ttf}; do
+            if [[ ! -s "$file" ]]; then
+              echo "::error file=$file::Missing or empty site file. Apply the complete Procurement update before deploying."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Upload Pages artifact
+        id: upload
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          name: ${{ env.PAGES_ARTIFACT_NAME }}
+          path: '.'
+          retention-days: 3
+
   deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Wait for the uploaded Pages artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ needs.build.outputs.artifact_id }}
+          ARTIFACT_NAME: ${{ needs.build.outputs.artifact_name }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$ARTIFACT_ID" =~ ^[1-9][0-9]*$ || -z "$ARTIFACT_NAME" ]]; then
+            echo "::error::The upload job did not return a Pages artifact ID and name."
+            exit 1
+          fi
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
+          endpoint="repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID"
+          for attempt in {1..12}; do
+            if visible_name="$(gh api "$endpoint" --jq 'select(.expired == false) | .name' 2>/dev/null)" &&
+              [[ "$visible_name" == "$ARTIFACT_NAME" ]]; then
+              echo "Pages artifact $ARTIFACT_NAME ($ARTIFACT_ID) is ready."
+              exit 0
+            fi
+            if (( attempt < 12 )); then
+              sleep 5
+            fi
+          done
+          echo "::error::GitHub did not expose Pages artifact $ARTIFACT_NAME ($ARTIFACT_ID). Check the upload and rerun all jobs if the artifact expired."
+          exit 1
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5.0.1
+        with:
+          artifact_name: ${{ needs.build.outputs.artifact_name }}
