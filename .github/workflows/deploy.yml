@@ -41,7 +41,7 @@ jobs:
             procurement/receiving/vendor/{pdf.min.mjs,pdf.worker.min.mjs,pdf-lib.min.js,fontkit.min.js,docx.iife.js} \
             procurement/receiving/vendor/{tesseract.min.js,tesseract-worker.min.js,tesseract-core-lstm.wasm.js,eng.traineddata.gz} \
             procurement/receiving/vendor/{DejaVuSans.ttf,DejaVuSans-Bold.ttf} \
-            procurement/receiving/vendor/cmaps/Identity-H.bcmap \
+            procurement/receiving/vendor/cmaps/UniJIS-UTF16-H.bcmap \
             procurement/receiving/vendor/standard_fonts/LiberationSans-Regular.ttf; do
             if [[ ! -s "$file" ]]; then
               echo "::error file=$file::Missing or empty site file. Apply the complete Procurement update before deploying."
