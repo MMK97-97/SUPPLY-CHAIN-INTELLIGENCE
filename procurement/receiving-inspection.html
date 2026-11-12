@@ -12,42 +12,75 @@
   <link rel="stylesheet" href="../assets/fulfillment.css?v=20261008-3">
 <link rel="stylesheet" href="../assets/unified-system.css?v=20261008-3"><script src="../assets/system-shell.js?v=20261112-hdr1" defer></script><script src="../assets/system-connectors.js?v=20261028-scan2" defer></script><script src="../assets/system-cloud.js?v=20261023-copilot1" defer></script><link rel="stylesheet" href="../assets/mk-brain.css?v=20261008-3"><script src="../assets/mk-analysis-tools.js?v=20261008-3" defer></script><script src="../assets/mk-space.js?v=20261008-3" defer></script><script src="../assets/mk-ai.js?v=20261012-2" defer></script><script src="../mk-copilot-core.js?v=20261023-copilot1" defer></script><script src="../mk-copilot.js?v=20261023-copilot1" defer></script><link rel="stylesheet" href="../mk-copilot.css?v=20261023-copilot1"><script src="../assets/mk-brain.js?v=20261028-scan1" defer></script><script src="../assets/control-tower.js?v=20261104-business1" defer></script><script src="../assets/enterprise-ui.js?v=20261013-1" defer></script><link rel="stylesheet" href="../assets/enterprise-layout.css?v=20261112-hdr1"><script src="../assets/decision-lab.js?v=20261012-2" defer></script><script src="../assets/portfolio-ui.js?v=20261013-1" defer></script><link rel="stylesheet" href="../assets/portfolio-mobile.css?v=20261112-hdr1"><script src="../assets/portfolio-mobile.js?v=20261012-3" defer></script><link rel="stylesheet" href="../assets/workspace-fixes.css?v=20261112-hdr1"><script src="../assets/workspace-navigation.js?v=20261013-1" defer></script><link rel="stylesheet" data-mk97-style="scanning" href="../scanning.css?v=20261028-scan2">
 <link rel="stylesheet" data-mk97-style="phone-mobile" href="../phone-mobile.css?v=20261112-hdr1">
-  <link rel="stylesheet" href="receiving/receiving.css?v=1">
-  <script type="module" src="receiving/app.mjs?v=1"></script>
+  <link rel="stylesheet" href="receiving/receiving.css?v=2">
+  <script type="module" src="receiving/app.mjs?v=2"></script>
 </head>
 <body data-root="..">
-<main class="system-page rx-page" id="receiving-inspection" aria-labelledby="rx-title">
-  <nav class="rx-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Procurement</a><span aria-hidden="true">/</span><span>Receiving inspection</span></nav>
+<main class="system-page rx-page" id="receiving-inspection" data-phase-filter="all" aria-labelledby="rx-title">
+  <nav class="rx-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Procurement</a><span aria-hidden="true">/</span><span>Receiving inspection</span><span aria-hidden="true">·</span><a href="../warehouse-management/receiving.html">WMS Receiving</a></nav>
   <header class="rx-hero">
-    <div><p class="rx-kicker">PROCUREMENT / INBOUND</p><h1 id="rx-title">Receiving inspection</h1><p>Create a prefilled inspection form for your 3PL to complete and return after delivery.</p></div>
+    <div><p class="rx-kicker">PROCUREMENT / INBOUND RECEIVING WORKBENCH</p><h1 id="rx-title">Receiving inspection</h1><p>Extract vendor POs &amp; packing slips locally, issue a prefilled 3PL form, or reconcile returned counts and delivery evidence in one fast workbench.</p></div>
     <img src="receiving/stark-enterprises.png" width="175" height="156" alt="Stark Enterprises">
   </header>
-  <p class="rx-privacy">Files are processed in this browser. Download a receiving packet before closing the tab to keep the record and originals.</p>
+  <p class="rx-privacy">100% browser-local processing · Nothing leaves your device until you download or share a receiving packet.</p>
   <div id="rx-message" class="rx-message" role="status" aria-live="polite" hidden></div>
   <form id="rx-form" autocomplete="off" novalidate>
     <fieldset class="rx-edit" id="rx-edit">
-      <div class="rx-command">
-        <a class="rx-btn" href="receiving/templates/Stark-Receiving-Inspection-Template.pdf" download>Blank PDF</a>
-        <a class="rx-btn" href="receiving/templates/Stark-Receiving-Inspection-Template.docx" download>Blank Word</a>
-        <label class="rx-btn rx-file-action">Open receiving packet<input id="rx-open-packet" class="rx-file" type="file" accept=".zip" aria-label="Open receiving packet"></label>
+      <div class="rx-toolbar-top">
+        <div class="rx-phase-tabs" id="rx-phase-tabs" role="tablist" aria-label="Workflow phase">
+          <button type="button" class="rx-tab is-active" data-phase-tab="all" role="tab" aria-selected="true">All Steps</button>
+          <button type="button" class="rx-tab" data-phase-tab="prep" role="tab" aria-selected="false">1 · Prepare 3PL Form</button>
+          <button type="button" class="rx-tab" data-phase-tab="log" role="tab" aria-selected="false">2 · Log Returned Inspection</button>
+        </div>
+        <div class="rx-command">
+          <a class="rx-btn" href="receiving/templates/Stark-Receiving-Inspection-Template.pdf" download>Blank PDF</a>
+          <a class="rx-btn" href="receiving/templates/Stark-Receiving-Inspection-Template.docx" download>Blank Word</a>
+          <label class="rx-btn rx-file-action">Open packet (.zip)<input id="rx-open-packet" class="rx-file" type="file" accept=".zip" aria-label="Open receiving packet"></label>
+          <a class="rx-btn" href="../warehouse-management/receiving.html">WMS Receiving</a>
+        </div>
       </div>
-      <section class="rx-card" aria-labelledby="rx-documents">
-        <div class="rx-heading"><span class="rx-step">1</span><div><h2 id="rx-documents">Source documents</h2><p>Upload the vendor PO and packing slip, then extract and review the model quantities.</p></div></div>
+
+      <section class="rx-sticky-bar" id="rx-sticky-bar" aria-label="Live inspection status">
+        <div class="rx-bar-left">
+          <span class="rx-bar-po" id="rx-bar-po">No PO selected</span>
+          <span class="rx-bar-status" id="rx-bar-status">Start by loading an ERP PO or uploading source documents</span>
+        </div>
+        <div class="rx-bar-metrics" id="rx-bar-metrics"></div>
+        <div class="rx-bar-actions">
+          <button type="button" class="rx-btn rx-btn-sm" id="rx-jump-exceptions" hidden>Exceptions</button>
+          <button type="button" class="rx-btn rx-btn-sm rx-primary" data-export="zip">Download packet</button>
+        </div>
+      </section>
+
+      <section class="rx-card" data-phase="prep" aria-labelledby="rx-documents">
+        <div class="rx-heading rx-heading-action">
+          <span class="rx-step">1</span>
+          <div><h2 id="rx-documents">Source documents &amp; ERP PO</h2><p>Prefill from an open MK97 ERP vendor PO or drop the vendor PO and packing slip files to extract models and quantities.</p></div>
+          <div class="rx-erp-picker" id="rx-erp-picker">
+            <select id="rx-erp-po" aria-label="Open ERP vendor PO">
+              <option value="">Load open ERP vendor PO…</option>
+            </select>
+            <button type="button" class="rx-btn" id="rx-load-erp-po" disabled>Load ERP PO</button>
+          </div>
+        </div>
         <div class="rx-source-grid">
-          <div class="rx-upload">
-            <label for="rx-po-file">Vendor PO</label><input id="rx-po-file" type="file" data-upload="po" accept=".pdf,.docx,.xlsx,.xls,.csv,.tsv,.txt,.png,.jpg,.jpeg,.webp">
+          <div class="rx-upload rx-dropzone" data-drop="po">
+            <label for="rx-po-file">Vendor PO <span class="rx-drop-cue">Drop file or browse</span></label>
+            <input id="rx-po-file" type="file" data-upload="po" accept=".pdf,.docx,.xlsx,.xls,.csv,.tsv,.txt,.png,.jpg,.jpeg,.webp">
             <div id="rx-po-files" class="rx-file-list"></div><div id="rx-po-result" class="rx-source-result"></div>
           </div>
-          <div class="rx-upload">
-            <label for="rx-slip-file">Packing slip</label><input id="rx-slip-file" type="file" data-upload="slip" accept=".pdf,.docx,.xlsx,.xls,.csv,.tsv,.txt,.png,.jpg,.jpeg,.webp">
+          <div class="rx-upload rx-dropzone" data-drop="slip">
+            <label for="rx-slip-file">Packing slip <span class="rx-drop-cue">Drop file or browse</span></label>
+            <input id="rx-slip-file" type="file" data-upload="slip" accept=".pdf,.docx,.xlsx,.xls,.csv,.tsv,.txt,.png,.jpg,.jpeg,.webp">
             <div id="rx-slip-files" class="rx-file-list"></div><div id="rx-slip-result" class="rx-source-result"></div>
           </div>
         </div>
-        <p class="rx-hint">PDF, Word, Excel, CSV, text and JPG, PNG or WebP. Up to 20 MB per file. Scanned pages use English OCR.</p>
-        <div class="rx-inline"><button class="rx-btn rx-primary" type="button" id="rx-extract">Extract PO and packing slip</button><label class="rx-check"><input type="checkbox" id="rx-force-ocr"> Use OCR for all PDF pages</label></div>
+        <p class="rx-hint">Supports PDF, Word (.docx), Excel, CSV/TSV, TXT, and JPG/PNG/WebP up to 20 MB per file. Scanned pages use warm local English OCR.</p>
+        <div class="rx-inline"><button class="rx-btn rx-primary" type="button" id="rx-extract">Extract PO and packing slip</button><label class="rx-check"><input type="checkbox" id="rx-force-ocr"> Force OCR on all PDF pages</label></div>
       </section>
-      <section class="rx-card" aria-labelledby="rx-shipment">
-        <div class="rx-heading"><span class="rx-step">2</span><div><h2 id="rx-shipment">Shipment details</h2><p>Confirm the PO, shipping method, and shipment reference before sending the form.</p></div></div>
+
+      <section class="rx-card" data-phase="prep" aria-labelledby="rx-shipment">
+        <div class="rx-heading"><span class="rx-step">2</span><div><h2 id="rx-shipment">Shipment details</h2><p>Confirm the PO, shipping method, and shipment reference before sending the 3PL template.</p></div></div>
         <div class="rx-fields">
           <label>Vendor PO#<input name="po" maxlength="100" required placeholder="Enter vendor PO number"></label>
           <label>Shipping method<select name="method" required><option value="">Choose a method</option><option value="LTL">LTL</option><option value="FEDEX">FedEx</option><option value="UPS">UPS</option><option value="USPS">USPS</option></select></label>
@@ -55,14 +88,35 @@
           <label>Expected delivery<input name="expected" type="date"></label>
         </div>
       </section>
-      <section class="rx-card" aria-labelledby="rx-items">
-        <div class="rx-heading rx-heading-action"><span class="rx-step">3</span><div><h2 id="rx-items">Review line items</h2><p>Check model, ordered quantity, and packing slip quantity. Receiving fields in the 3PL template will be blank.</p></div><button type="button" class="rx-btn" id="rx-add-line">Add line</button></div>
+
+      <section class="rx-card" data-phase="both" aria-labelledby="rx-items">
+        <div class="rx-heading rx-heading-action">
+          <span class="rx-step">3</span>
+          <div><h2 id="rx-items">Review &amp; reconcile line items</h2><p>Verify model numbers, ordered qty, packing slip qty, and received counts. Press <kbd>Enter</kbd> in Received qty to advance down lines rapidly.</p></div>
+          <button type="button" class="rx-btn" id="rx-add-line">Add line</button>
+        </div>
         <div class="rx-metrics" id="rx-metrics" aria-label="Inspection totals"></div>
+        <div class="rx-line-toolbar" id="rx-line-toolbar">
+          <input type="search" id="rx-line-search" placeholder="Search model # or notes…" aria-label="Search line items">
+          <div class="rx-filter-pills" role="group" aria-label="Filter line items">
+            <button type="button" class="rx-filter-pill is-active" data-line-filter="all">All</button>
+            <button type="button" class="rx-filter-pill" data-line-filter="short">Shortages</button>
+            <button type="button" class="rx-filter-pill" data-line-filter="over">Overages</button>
+            <button type="button" class="rx-filter-pill" data-line-filter="uncounted">Uncounted</button>
+            <button type="button" class="rx-filter-pill" data-line-filter="damaged">Damaged</button>
+          </div>
+          <div class="rx-bulk-actions">
+            <button type="button" class="rx-btn rx-btn-sm" id="rx-fill-packed">Fill Received = Packed</button>
+            <button type="button" class="rx-btn rx-btn-sm" id="rx-mark-no-damage">Set blank Damages = No</button>
+            <button type="button" class="rx-btn rx-btn-sm" id="rx-sort-exceptions">Exceptions first</button>
+          </div>
+        </div>
         <div id="rx-lines"></div>
         <label class="rx-check rx-review"><input type="checkbox" name="reviewed"> I verified the PO references and quantities against the source documents.</label>
       </section>
-      <section class="rx-card rx-handoff" aria-labelledby="rx-handoff">
-        <div class="rx-heading"><span class="rx-step">4</span><div><h2 id="rx-handoff">Send to your 3PL</h2><p>Download the prefilled form and email it to your warehouse. Ask them to return it with the signed BOL or POD and the arrival and model photos. Word lets them insert pictures directly; with PDF they can return pictures as labeled attachments.</p></div></div>
+
+      <section class="rx-card rx-handoff" data-phase="prep" aria-labelledby="rx-handoff">
+        <div class="rx-heading"><span class="rx-step">4</span><div><h2 id="rx-handoff">Send to your 3PL</h2><p>Download the prefilled form and email it to your warehouse. Receiving count, condition, and proof fields stay blank for 3PL completion.</p></div></div>
         <div class="rx-readiness" id="rx-handoff-status" aria-live="polite"></div>
         <div class="rx-inline">
           <button type="button" class="rx-btn rx-primary" data-handoff="docx">Download 3PL Word template</button>
@@ -70,8 +124,9 @@
         </div>
         <p class="rx-hint" id="rx-handoff-download" role="status" hidden></p>
       </section>
-      <section class="rx-card" aria-labelledby="rx-arrival">
-        <div class="rx-heading"><span class="rx-step">5</span><div><h2 id="rx-arrival">Record returned inspection</h2><p>Optional: record the received counts above and attach the evidence here to keep a complete receiving packet.</p></div></div>
+
+      <section class="rx-card" data-phase="log" aria-labelledby="rx-arrival">
+        <div class="rx-heading"><span class="rx-step">5</span><div><h2 id="rx-arrival">Record returned inspection &amp; delivery proof</h2><p>Log receiver sign-off, drop signed BOL / POD files, and document pallet and trailer condition.</p></div></div>
         <div class="rx-fields">
           <label>Received by<input name="receiver" maxlength="100" required placeholder="Receiver name"></label>
           <label>Date received<input name="date" type="date" required></label>
@@ -79,21 +134,21 @@
           <label>Time zone<input name="zone" maxlength="80" placeholder="e.g. America/New_York"></label>
         </div>
         <div class="rx-evidence-grid">
-          <div class="rx-upload">
-            <label for="rx-delivery-file">Signed BOL or proof of delivery</label>
+          <div class="rx-upload rx-dropzone" data-drop="delivery">
+            <label for="rx-delivery-file">Signed BOL or proof of delivery <span class="rx-drop-cue">Drop files or browse</span></label>
             <input id="rx-delivery-file" type="file" data-upload="delivery" multiple accept=".pdf,.png,.jpg,.jpeg,.webp">
-            <p class="rx-hint">You can attach multiple PDFs and images.</p>
+            <p class="rx-hint">Attach one or more PDFs or photos.</p>
             <div id="rx-delivery-files" class="rx-file-list"></div>
           </div>
-          <div class="rx-upload">
+          <div class="rx-upload rx-dropzone" data-drop="pallet">
             <label>Pallet damaged or tampered on arrival?<select name="pallet" required><option value="">Select yes or no</option><option value="no">No</option><option value="yes">Yes</option></select></label>
-            <label id="rx-pallet-label" for="rx-pallet-file">Pallet condition photos</label><input id="rx-pallet-file" type="file" data-upload="pallet" multiple accept=".png,.jpg,.jpeg,.webp">
+            <label id="rx-pallet-label" for="rx-pallet-file">Pallet condition photos <span class="rx-drop-cue">Drop or browse</span></label><input id="rx-pallet-file" type="file" data-upload="pallet" multiple accept=".png,.jpg,.jpeg,.webp">
             <p class="rx-hint">Required if the pallet was damaged or tampered with.</p>
             <div id="rx-pallet-files" class="rx-file-list"></div>
           </div>
-          <div class="rx-upload">
+          <div class="rx-upload rx-dropzone" data-drop="truck">
             <label>Truck or trailer damaged or tampered on arrival?<select name="truck" required><option value="">Select a condition</option><option value="no">No</option><option value="yes">Yes</option><option value="na">Not applicable</option></select></label>
-            <label for="rx-truck-file">Truck or trailer condition photos</label><input id="rx-truck-file" type="file" data-upload="truck" multiple accept=".png,.jpg,.jpeg,.webp">
+            <label for="rx-truck-file">Truck or trailer condition photos <span class="rx-drop-cue">Drop or browse</span></label><input id="rx-truck-file" type="file" data-upload="truck" multiple accept=".png,.jpg,.jpeg,.webp">
             <p class="rx-hint">Required if damage or tampering is reported.</p>
             <div id="rx-truck-files" class="rx-file-list"></div>
           </div>
@@ -102,8 +157,9 @@
           </div>
         </div>
       </section>
-      <section class="rx-card rx-export" aria-labelledby="rx-export">
-        <div class="rx-heading"><span class="rx-step">6</span><div><h2 id="rx-export">Download receiving record</h2><p>Shortage is calculated as packing slip quantity minus received quantity, with a minimum of zero. The packet keeps both reports and the original files.</p></div></div>
+
+      <section class="rx-card rx-export" data-phase="log" aria-labelledby="rx-export">
+        <div class="rx-heading"><span class="rx-step">6</span><div><h2 id="rx-export">Download receiving record</h2><p>Shortage equals packing slip qty minus received qty (minimum zero). Packet preserves PDF, Word, JSON manifest, and all original attachments.</p></div></div>
         <div class="rx-readiness" id="rx-readiness"></div>
         <div class="rx-inline">
           <button type="button" class="rx-btn" data-export="pdf">Download PDF</button>
@@ -114,6 +170,13 @@
       </section>
     </fieldset>
   </form>
+  <dialog id="rx-lightbox" class="rx-lightbox" aria-labelledby="rx-lightbox-caption">
+    <div class="rx-lightbox-head">
+      <strong id="rx-lightbox-caption">Evidence photo</strong>
+      <button type="button" class="rx-btn rx-btn-sm" id="rx-lightbox-close" aria-label="Close preview">Close</button>
+    </div>
+    <img id="rx-lightbox-img" alt="">
+  </dialog>
   <noscript>Enable JavaScript to extract documents and create a receiving report.</noscript>
 </main>
 </body>

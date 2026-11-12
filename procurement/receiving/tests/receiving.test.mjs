@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import test from 'node:test';
-import {handoffIssues, inspectionIssues, mergeSources, over, parseRecords, quantity, short, trackingLabel} from '../core.mjs';
+import {handoffIssues, inspectionIssues, mergeSources, over, parseRecords, quantity, reconcileSummary, short, trackingLabel, validDate} from '../core.mjs';
 import {boxRecords, checkArchive} from '../io.mjs';
 import {listFiles, prepareHandoff} from '../export.mjs';
 
@@ -91,4 +91,77 @@ test('checks ZIP entry sizes and rejects traversal before extraction', async () 
   assert.throws(()=>checkArchive(Buffer.from([1,2,3])),/Invalid ZIP/);
   const zip=await invalid.generateAsync({type:'uint8array'});
   assert.throws(()=>checkArchive(zip),/Invalid archive path/);
+});
+
+test('prioritized header aliases and trailing unit suffixes resolve deterministically', () => {
+  const po = parseRecords([
+    ['Vendor Item', 'Model #', 'Unit Qty', 'Ordered Qty (ea)', 'Shipped Qty (pcs)'],
+    ['V-900', 'MK-100', '999', '12', '4'],
+    ['V-901', 'MK-200', '888', '6', '6'],
+  ], 'po');
+  assert.deepEqual(
+    po.rows.map(r => [r.model, r.qty]),
+    [['MK-100', 12], ['MK-200', 6]]
+  );
+  const slip = parseRecords([
+    ['SKU', 'Ordered Qty (ea)', 'Shipped Qty (pcs)'],
+    ['MK-100', '12', '10'],
+    ['MK-200', '6', '6'],
+  ], 'slip');
+  assert.deepEqual(
+    slip.rows.map(r => [r.model, r.qty]),
+    [['MK-100', 10], ['MK-200', 6]]
+  );
+});
+
+test('extracts inline multi-field metadata and validates calendar dates', () => {
+  const rec = parseRecords([
+    ['PO: PO-9988 Tracking: 1Z999AA101 Carrier: UPS'],
+    ['Waybill: 778899 Carrier: FedEx Expected Delivery: Nov 20, 2026'],
+    ['Model #', 'Ordered Qty'],
+    ['M-1', '5'],
+  ], 'po');
+  assert.equal(rec.meta.po.includes('PO-9988'), true);
+  assert.equal(rec.meta.tracking.includes('1Z999AA101'), true);
+  assert.equal(rec.meta.tracking.includes('778899'), true);
+  assert.equal(rec.meta.method.includes('UPS'), true);
+  assert.equal(rec.meta.method.includes('FEDEX'), true);
+  assert.equal(rec.meta.expected.includes('2026-11-20'), true);
+  assert.equal(validDate('02/30/2026'), '');
+  assert.equal(validDate('2026-02-28'), '2026-02-28');
+});
+
+test('boxRecords does not mutate the caller boxes array', () => {
+  const input = [
+    { text: '10', x: 180, y: 20, w: 15, h: 10 },
+    { text: 'MK-10', x: 20, y: 20, w: 40, h: 10 },
+    { text: 'Model #', x: 20, y: 5, w: 45, h: 10 },
+  ];
+  const snapshotCopy = input.map(item => ({ ...item }));
+  const rows = boxRecords(input, 1);
+  assert.deepEqual(input, snapshotCopy);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].cells[0].text, 'Model #');
+  assert.deepEqual(rows[1].cells.map(c => c.text), ['MK-10', '10']);
+});
+
+test('reconcileSummary computes ordered, packed, received, shortage, overage, and damaged counts', () => {
+  const s = reconcileSummary([
+    { ordered: 10, packed: 10, received: 8, damages: 'yes' },
+    { ordered: 5, packed: 5, received: 7, damages: 'no' },
+    { ordered: 4, packed: 4, received: null, damages: '' },
+    { ordered: 3, packed: 3, received: 3, damages: 'no' },
+  ]);
+  assert.deepEqual(s, {
+    linesCount: 4,
+    totalOrdered: 22,
+    totalPacked: 22,
+    totalReceived: 18,
+    shortageUnits: 2,
+    overageUnits: 2,
+    checkedCount: 3,
+    uncountedCount: 1,
+    damagedCount: 1,
+    matchedCount: 1,
+  });
 });

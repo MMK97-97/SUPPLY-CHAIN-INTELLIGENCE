@@ -1,5 +1,5 @@
 import {clean, displayQty, inspectionIssues, METHODS, safeName, short, trackingLabel, yesNo} from './core.mjs';
-import {asset, imageFile, loadScript, makePreview, zipTool} from './io.mjs';
+import {asset, imageFile, loadScript, makePreview, mapPool, zipTool} from './io.mjs';
 
 const fields = method => [
   ['Vendor PO#','po'],['Shipping method','method'],['Expected delivery','expected'],
@@ -32,20 +32,38 @@ export function listFiles(snapshot) {
   lines.forEach((row,index)=>row.photos.forEach((file,photo)=>out.push({path:'lines/'+String(index+1).padStart(3,'0')+'-'+safeName(row.model||'model')+'/'+numbered(file,photo),file,label:'Line '+(index+1)+' · '+(row.model||'Model not entered'),group:'line',index,photo})));
   return out;
 }
-async function localBytes(path){
-  const response=await fetch(asset(path));
-  if(!response.ok)throw new Error('A report asset could not load.');
-  return new Uint8Array(await response.arrayBuffer());
-}
-export async function prepare(snapshot){
-  const attachments=listFiles(snapshot),logo=await localBytes('stark-enterprises.png');
-  const images=[];
-  for(const item of attachments){
-    if(!['delivery','pallet','truck','line'].includes(item.group)||!imageFile(item.file))continue;
-    try{images.push({...item,...await makePreview(item.file)});}
-    catch{throw new Error('Could not read evidence photo '+safeName(item.file.name)+'. Replace it with a JPG, PNG, or WebP image.');}
+const assetCache = new Map();
+function localBytes(path) {
+  if (!assetCache.has(path)) {
+    const pending = fetch(asset(path))
+      .then(async response => {
+        if (!response.ok) throw new Error('A report asset could not load.');
+        return new Uint8Array(await response.arrayBuffer());
+      })
+      .catch(err => {
+        assetCache.delete(path);
+        throw err;
+      });
+    assetCache.set(path, pending);
   }
-  return {snapshot,attachments,images,logo,issues:inspectionIssues(snapshot)};
+  return assetCache.get(path);
+}
+export async function prepare(snapshot) {
+  const attachments = listFiles(snapshot);
+  const imageItems = attachments.filter(
+    item => ['delivery', 'pallet', 'truck', 'line'].includes(item.group) && imageFile(item.file)
+  );
+  const [logo, images] = await Promise.all([
+    localBytes('stark-enterprises.png'),
+    mapPool(imageItems, 4, async item => {
+      try {
+        return { ...item, ...(await makePreview(item.file)) };
+      } catch {
+        throw new Error('Could not read evidence photo ' + safeName(item.file.name) + '. Replace it with a JPG, PNG, or WebP image.');
+      }
+    })
+  ]);
+  return { snapshot, attachments, images, logo, issues: inspectionIssues(snapshot) };
 }
 export async function prepareHandoff(snapshot, logo){
   const info=Object.fromEntries(['po','method','tracking','expected'].map(k=>[k,snapshot.info[k]]));
@@ -206,9 +224,15 @@ export async function makePdf(data, dependencies){
       y-=h+16;rule(y+4);
     }
   }
-  for(const a of data.attachOriginals===false?[]:attachments){
-    const bytes=new Uint8Array(await a.file.arrayBuffer());
-    await doc.attach(bytes,a.path.replaceAll('/',' - '),{mimeType:a.file.type||'application/octet-stream',description:a.label,creationDate:new Date(0)});
+  const attachmentList = data.attachOriginals === false ? [] : attachments;
+  const attachmentBytes = await mapPool(attachmentList, 6, async a => new Uint8Array(await a.file.arrayBuffer()));
+  for (let i = 0; i < attachmentList.length; i++) {
+    const a = attachmentList[i];
+    await doc.attach(attachmentBytes[i], a.path.replaceAll('/', ' - '), {
+      mimeType: a.file.type || 'application/octet-stream',
+      description: a.label,
+      creationDate: new Date(0)
+    });
   }
   const pages=doc.getPages();
   pages.forEach((p,i)=>{
@@ -297,17 +321,33 @@ export function fileBase(info){
   return 'Stark-Receiving-'+safeName(info.po||'Draft').replaceAll(' ','-')+(info.date?'-'+info.date:'');
 }
 
-export async function packet(data,pdf,word){
-  const JSZip=await zipTool(),zip=new JSZip();
-  const base=fileBase(data.snapshot.info);
-  zip.file(base+'.pdf',new Uint8Array(await pdf.arrayBuffer()));
-  zip.file(base+'.docx',new Uint8Array(await word.arrayBuffer()));
-  for(const a of data.attachments)zip.file('originals/'+a.path,new Uint8Array(await a.file.arrayBuffer()));
-  const manifest={
-    format:'stark-receiving-inspection',version:1,info:data.snapshot.info,
-    files:data.attachments.map(({path,file,group,index,photo})=>({path:'originals/'+path,name:safeName(file.name),group,index,photo})),
-    lines:data.snapshot.lines.map(({photos,...row})=>row)
+export async function packet(data, pdf, word) {
+  const [JSZip, pdfBytes, wordBytes, attachmentBuffers] = await Promise.all([
+    zipTool(),
+    pdf.arrayBuffer(),
+    word.arrayBuffer(),
+    mapPool(data.attachments, 6, a => a.file.arrayBuffer())
+  ]);
+  const zip = new JSZip();
+  const base = fileBase(data.snapshot.info);
+  zip.file(base + '.pdf', new Uint8Array(pdfBytes));
+  zip.file(base + '.docx', new Uint8Array(wordBytes));
+  for (let i = 0; i < data.attachments.length; i++) {
+    zip.file('originals/' + data.attachments[i].path, new Uint8Array(attachmentBuffers[i]));
+  }
+  const manifest = {
+    format: 'stark-receiving-inspection',
+    version: 1,
+    info: data.snapshot.info,
+    files: data.attachments.map(({ path, file, group, index, photo }) => ({
+      path: 'originals/' + path,
+      name: safeName(file.name),
+      group,
+      index,
+      photo
+    })),
+    lines: data.snapshot.lines.map(({ photos, ...row }) => row)
   };
-  zip.file('receiving-inspection.json',JSON.stringify(manifest,null,2));
-  return zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:4}});
+  zip.file('receiving-inspection.json', JSON.stringify(manifest, null, 2));
+  return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 4 } });
 }

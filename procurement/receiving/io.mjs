@@ -95,27 +95,32 @@ async function readSpreadsheet(file, ext) {
   return records;
 }
 export function boxRecords(boxes, page = 0) {
-  // Keep text positions so a missing description cannot shift the quantity column.
-  const groups=[];
-  for(const b of boxes.sort((a,b)=>a.y-b.y||a.x-b.x)){
-    const tolerance=Math.max(2,Math.min(12,(b.h||10)*0.46));
-    let group=groups.at(-1);
-    if(!group||Math.abs(group.y-b.y)>tolerance){group={y:b.y,items:[]};groups.push(group);}
+  // Keep text positions so a missing description cannot shift the quantity column,
+  // and copy before sorting so caller arrays stay intact.
+  const groups = [];
+  const sorted = [...boxes].sort((a, b) => a.y - b.y || a.x - b.x);
+  for (const b of sorted) {
+    const tolerance = Math.max(2, Math.min(12, (b.h || 10) * 0.46));
+    let group = groups.at(-1);
+    if (!group || Math.abs(group.y - b.y) > tolerance) {
+      group = { y: b.y, items: [] };
+      groups.push(group);
+    }
     group.items.push(b);
   }
-  return groups.map(g=>{
-    const cells=[];
-    let right=-Infinity;
-    for(const b of g.items.sort((a,b)=>a.x-b.x)){
-      const text=clean(b.text,400);
-      if(!text)continue;
-      const previous=cells.at(-1);
-      if(previous && b.x-right < Math.max(5,Math.min(16,(b.h||10)*0.92)))previous.text+=' '+text;
-      else cells.push({text,x:b.x});
-      right=Math.max(right,b.x+b.w);
+  return groups.map(g => {
+    const cells = [];
+    let right = -Infinity;
+    for (const b of g.items.sort((a, b) => a.x - b.x)) {
+      const text = clean(b.text, 400);
+      if (!text) continue;
+      const previous = cells.at(-1);
+      if (previous && b.x - right < Math.max(5, Math.min(16, (b.h || 10) * 0.92))) previous.text += ' ' + text;
+      else cells.push({ text, x: b.x });
+      right = Math.max(right, b.x + b.w);
     }
-    return {page,cells};
-  }).filter(r=>r.cells.length);
+    return { page, cells };
+  }).filter(r => r.cells.length);
 }
 let pdfModule;
 async function getPdf(bytes) {
@@ -124,19 +129,54 @@ async function getPdf(bytes) {
   pdf.GlobalWorkerOptions.workerSrc=asset('vendor/pdf.worker.min.mjs');
   return pdf.getDocument({data:bytes,isEvalSupported:false,disableFontFace:true,useSystemFonts:true,cMapUrl:asset('vendor/cmaps/'),cMapPacked:true,standardFontDataUrl:asset('vendor/standard_fonts/'),maxImageSize:24e6,verbosity:0}).promise;
 }
-export async function makePreview(file, max=1450) {
-  const canvas=document.createElement('canvas');
-  const image=await createImageBitmap(file);
-  try{
-    if(image.width*image.height>45e6)throw new Error('This photo is too large. Resize it and try again.');
-    const scale=Math.min(1,max/Math.max(image.width,image.height));
-    canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));
-    const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(image,0,0,canvas.width,canvas.height);
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.86));
-    if(!blob)throw new Error('The photo could not be prepared.');
-    return {bytes:new Uint8Array(await blob.arrayBuffer()),width:canvas.width,height:canvas.height,blob};
-  }finally{image.close();canvas.width=canvas.height=0;}
+const previewCache = new WeakMap();
+async function buildPreview(file, max) {
+  const canvas = document.createElement('canvas');
+  const image = await createImageBitmap(file);
+  try {
+    if (image.width * image.height > 45e6) throw new Error('This photo is too large. Resize it and try again.');
+    const scale = Math.min(1, max / Math.max(image.width, image.height));
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const ctx = canvas.getContext('2d', { alpha: false });
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.86));
+    if (!blob) throw new Error('The photo could not be prepared.');
+    return { bytes: new Uint8Array(await blob.arrayBuffer()), width: canvas.width, height: canvas.height, blob };
+  } finally {
+    image.close();
+    canvas.width = canvas.height = 0;
+  }
+}
+export function makePreview(file, max = 1450) {
+  if (!file || typeof file !== 'object') return buildPreview(file, max);
+  let bySize = previewCache.get(file);
+  if (!bySize) {
+    bySize = new Map();
+    previewCache.set(file, bySize);
+  }
+  if (!bySize.has(max)) {
+    const pending = buildPreview(file, max).catch(err => {
+      bySize.delete(max);
+      throw err;
+    });
+    bySize.set(max, pending);
+  }
+  return bySize.get(max);
+}
+export async function mapPool(items, concurrency, fn) {
+  const results = new Array(items.length);
+  let cursor = 0;
+  async function worker() {
+    while (cursor < items.length) {
+      const idx = cursor++;
+      results[idx] = await fn(items[idx], idx);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
 }
 function tsvBoxes(tsv) {
   const out=[];
@@ -148,50 +188,106 @@ function tsvBoxes(tsv) {
   }
   return out;
 }
-let ocrWorker, ocrStarting, progressListener;
-async function runOCR(image,page,progress) {
-  progressListener=progress;
-  if(!ocrWorker && !ocrStarting){
-    ocrStarting=(async()=>{
-      const t=await loadScript(asset('vendor/tesseract.min.js'),'Tesseract');
-      return t.createWorker('eng',1,{workerPath:asset('vendor/tesseract-worker.min.js'),corePath:asset('vendor/tesseract-core-lstm.wasm.js'),langPath:asset('vendor/').slice(0,-1),workerBlobURL:false,cacheMethod:'none',logger:m=>{if(m.status==='recognizing text')progressListener?.('Reading scanned text… '+Math.round((m.progress||0)*100)+'%');}});
+let ocrWorker, ocrStarting, progressListener, ocrIdleTimer;
+function scheduleOcrIdleCleanup() {
+  clearTimeout(ocrIdleTimer);
+  ocrIdleTimer = setTimeout(() => { finishOCR().catch(() => {}); }, 20000);
+}
+async function runOCR(image, page, progress) {
+  clearTimeout(ocrIdleTimer);
+  progressListener = progress;
+  if (!ocrWorker && !ocrStarting) {
+    ocrStarting = (async () => {
+      const t = await loadScript(asset('vendor/tesseract.min.js'), 'Tesseract');
+      return t.createWorker('eng', 1, {
+        workerPath: asset('vendor/tesseract-worker.min.js'),
+        corePath: asset('vendor/tesseract-core-lstm.wasm.js'),
+        langPath: asset('vendor/').slice(0, -1),
+        workerBlobURL: false,
+        cacheMethod: 'none',
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            progressListener?.('Reading scanned text… ' + Math.round((m.progress || 0) * 100) + '%');
+          }
+        }
+      });
     })();
-    try{ocrWorker=await ocrStarting;}finally{ocrStarting=null;}
-  } else if(!ocrWorker) ocrWorker=await ocrStarting;
-  await ocrWorker.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
-  const result=await ocrWorker.recognize(image,{}, {text:true,tsv:true});
-  const boxes=tsvBoxes(result.data.tsv);
-  return boxes.length?boxRecords(boxes,page):String(result.data.text||'').split('\n').map(line=>({page,cells:line.split(/\t| {2,}/).map(text=>({text}))}));
+    try { ocrWorker = await ocrStarting; } finally { ocrStarting = null; }
+  } else if (!ocrWorker) {
+    ocrWorker = await ocrStarting;
+  }
+  await ocrWorker.setParameters({ tessedit_pageseg_mode: '6', preserve_interword_spaces: '1' });
+  const result = await ocrWorker.recognize(image, {}, { text: true, tsv: true });
+  scheduleOcrIdleCleanup();
+  const boxes = tsvBoxes(result.data.tsv);
+  return boxes.length
+    ? boxRecords(boxes, page)
+    : String(result.data.text || '').split('\n').map(line => ({ page, cells: line.split(/\t| {2,}/).map(text => ({ text })) }));
 }
 export async function finishOCR() {
-  if(ocrWorker){const worker=ocrWorker;ocrWorker=null;await worker.terminate();}
-  progressListener=null;
+  clearTimeout(ocrIdleTimer);
+  ocrIdleTimer = null;
+  if (ocrWorker) {
+    const worker = ocrWorker;
+    ocrWorker = null;
+    await worker.terminate();
+  }
+  progressListener = null;
 }
-async function extractPDF(file,kind,progress,forceOcr=false) {
-  const bytes=new Uint8Array(await file.arrayBuffer());
-  const doc=await getPdf(bytes);
-  try{
-    if(doc.numPages>LIMITS.pages)throw new Error('The PDF has more than 80 pages. Upload only the shipment pages.');
-    const records=[],warnings=[];
-    let ocrPages=0;
-    for(let n=1;n<=doc.numPages;n++){
-      progress?.('Reading PDF page '+n+' of '+doc.numPages+'…');
-      const page=await doc.getPage(n);
-      try{
-        const content=await page.getTextContent();
-        const boxes=content.items.filter(i=>i.str?.trim()).map(i=>({text:i.str,x:i.transform[4],y:-i.transform[5],w:i.width||0,h:i.height||8}));
-        if(!forceOcr&&boxes.map(b=>b.text).join('').trim().length>=24){records.push(...boxRecords(boxes,n));continue;}
-        if(ocrPages>=LIMITS.ocrPages)throw new Error('This scan has more than 18 pages that need OCR. Split the file and try again.');
-        const canvas=document.createElement('canvas');
-        const original=page.getViewport({scale:1});
-        const viewport=page.getViewport({scale:Math.min(3,2350/Math.max(original.width,original.height))});
-        canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
-        try{
-          await page.render({canvasContext:canvas.getContext('2d',{alpha:false}),viewport}).promise;
-          ocrPages++;
-          records.push(...await runOCR(canvas,n,progress));
-        }finally{canvas.width=canvas.height=0;}
-      }finally{page.cleanup();}
+async function extractPDF(file, kind, progress, forceOcr = false) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const doc = await getPdf(bytes);
+  try {
+    if (doc.numPages > LIMITS.pages) throw new Error('The PDF has more than 80 pages. Upload only the shipment pages.');
+    const records = [], warnings = [];
+    let ocrPages = 0;
+    const pageNumbers = Array.from({ length: doc.numPages }, (_, i) => i + 1);
+    const pageRecords = new Array(doc.numPages);
+    const sparsePages = [];
+    if (!forceOcr) {
+      let readDone = 0;
+      await mapPool(pageNumbers, 4, async n => {
+        const page = await doc.getPage(n);
+        try {
+          const content = await page.getTextContent();
+          const boxes = content.items
+            .filter(i => i.str?.trim())
+            .map(i => ({ text: i.str, x: i.transform[4], y: -i.transform[5], w: i.width || 0, h: i.height || 8 }));
+          if (boxes.map(b => b.text).join('').trim().length >= 24) {
+            pageRecords[n - 1] = boxRecords(boxes, n);
+          } else {
+            sparsePages.push(n);
+          }
+          readDone++;
+          progress?.('Reading PDF text… ' + readDone + ' of ' + doc.numPages);
+        } finally {
+          page.cleanup();
+        }
+      });
+      sparsePages.sort((a, b) => a - b);
+    } else {
+      sparsePages.push(...pageNumbers);
+    }
+    for (const n of sparsePages) {
+      if (ocrPages >= LIMITS.ocrPages) throw new Error('This scan has more than 18 pages that need OCR. Split the file and try again.');
+      progress?.('OCR scanning PDF page ' + n + ' of ' + doc.numPages + '…');
+      const page = await doc.getPage(n);
+      const canvas = document.createElement('canvas');
+      try {
+        const original = page.getViewport({ scale: 1 });
+        const viewport = page.getViewport({ scale: Math.min(3, 2350 / Math.max(original.width, original.height)) });
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvasContext: canvas.getContext('2d', { alpha: false }), viewport }).promise;
+        ocrPages++;
+        pageRecords[n - 1] = await runOCR(canvas, n, progress);
+      } finally {
+        canvas.width = canvas.height = 0;
+        page.cleanup();
+      }
+    }
+    for (const pr of pageRecords) {
+      if (pr?.length) records.push(...pr);
     }
     if(ocrPages)warnings.push('OCR was used on '+ocrPages+' page'+(ocrPages===1?'':'s')+'. Check all model numbers and quantities.');
     const result=parseRecords(records,kind,{mode:ocrPages?'PDF + OCR':'PDF text'});
