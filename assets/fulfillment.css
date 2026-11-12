@@ -6,8 +6,7 @@
 /* ==========================================================================
    Ship Orders Workstation & Dispatch Queue Styles
    ========================================================================== */
-body.is-shipping-page #system-submodule-bar,
-body[data-fulfillment-page="shipping"] #system-submodule-bar,
+/* Preserve standard header submodule bar on Shipping Workstation */
 body[data-fulfillment-page="shipping"] .op-tabs,
 body[data-fulfillment-page="shipping"] .system-heading {
   display: none !important;

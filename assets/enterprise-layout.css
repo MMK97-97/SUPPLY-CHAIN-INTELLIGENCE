@@ -71,7 +71,7 @@ body.stark-system:has(.portfolio-demo-ribbon) {
 }
 
 body.stark-system.is-home,
-body.stark-system[data-system-page="dashboard"],
+body.stark-system.is-home,
 body.stark-system.is-mail,
 body.stark-system[data-system-page="mail"],
 body.stark-system.stark-mail-page {
@@ -12731,8 +12731,8 @@ body.stark-system.is-mail .system-submodule-bar {
 /* Remove module rail and submodule bar completely on Home page and STARK Mail page */
 body.is-home #system-module-tabs,
 body.is-home #system-submodule-bar,
-body[data-system-page="dashboard"] #system-module-tabs,
-body[data-system-page="dashboard"] #system-submodule-bar,
+body.stark-system.is-home #system-module-tabs,
+body.stark-system.is-home #system-submodule-bar,
 body.is-mail #system-module-tabs,
 body.is-mail #system-submodule-bar,
 body[data-system-page="mail"] #system-module-tabs,
@@ -12812,12 +12812,12 @@ body[data-system-page="mail"] #system-submodule-bar,
 
 /* ---------------- HOME & STARK MAIL PAGE SPACING REFINEMENT ---------------- */
 body.is-home,
-body[data-system-page="dashboard"] {
+body.stark-system.is-home {
   padding-top: var(--sys-header-h, 68px) !important;
 }
 
 body.is-home .system-page,
-body[data-system-page="dashboard"] .system-page {
+body.stark-system.is-home .system-page {
   padding-top: 14px !important;
   padding-bottom: 32px !important;
 }
@@ -12897,7 +12897,7 @@ body[data-system-page="mail"] main#stark-mail-content {
 
 @media (max-width: 820px) {
   body.stark-system.is-home,
-  body.stark-system[data-system-page="dashboard"],
+  body.stark-system.is-home,
   body.stark-system.is-mail,
   body.stark-system[data-system-page="mail"] {
     padding-top: 70px !important;

@@ -205,7 +205,29 @@
   const initialRegion = currentPath.match(/-(us|eu|ca)\.html$/)?.[1] || initialQuery.get('region') || initialQuery.get('workspace');
   if (initialRegion) localStorage.setItem('stark-selected-region', S.regionCode(initialRegion));
   const relativePath = currentPath.slice(S.rootURL.pathname.length);
-  const navigationPath = currentPath.replace(/\/warehouse-management\/cycle-count\.html$/, '/warehouse-management/cycle-counts.html');
+  const routeAliases = {
+    'warehouse-management/cycle-count.html': 'warehouse-management/cycle-counts.html',
+    'vendor-po-management.html': 'procurement/index.html',
+    'replenishment.html': 'procurement-planning.html',
+    'crm.html': 'crm/index.html',
+    'order-management.html': 'all-open-orders.html',
+    'order-management/bulk-firm.html': 'all-open-orders.html',
+    'order-management/hold-redemption.html': 'order-management/issues.html',
+    'vendor-management.html': 'vendor-management/index.html',
+    'docs/manual.html': 'manual.html',
+    'docs/crm/index.html': 'crm/index.html',
+    'docs/crm/accounts.html': 'crm/accounts.html',
+    'docs/crm/catalog.html': 'crm/catalog.html',
+    'docs/crm/partner-portal.html': 'crm/partner-portal.html',
+    'raw-report.html': 'raw-report-us.html',
+    'reorder-report.html': 'reorder-report-us.html',
+    'active-brands.html': 'active-brands-us.html',
+    'instructions.html': 'instructions-us.html',
+    'inventory.html': 'inventory-dashboard-us.html',
+    'inventory-dashboard.html': 'inventory-dashboard-us.html'
+  };
+  const matchedAlias = Object.entries(routeAliases).find(([from]) => new URL(from, S.rootURL).pathname === currentPath);
+  const navigationPath = matchedAlias ? new URL(matchedAlias[1], S.rootURL).pathname : currentPath;
   const active = path => {
     const candidate = new URL(path, S.rootURL);
     if(candidate.pathname !== navigationPath)return false;
@@ -229,7 +251,7 @@
     const subBar = document.querySelector('#system-submodule-bar');
     if (!subBar) return;
 
-    const isHome = active('workspace.html') || active('index.html') || targetId === 'home' || document.body.dataset.systemPage === 'dashboard';
+    const isHome = active('workspace.html') || active('index.html') || targetId === 'home';
     const isMail = active('mail.html') || active('email.html') || targetId === 'mail' || document.body.dataset.systemPage === 'mail';
     if (isHome || isMail) {
       subBar.hidden = true;
@@ -241,7 +263,13 @@
     }
 
     const all = groups();
-    let group = targetId==='copilot'?['copilot','MK Co-Pilot','Orders · Inventory · Customers · Tasks','#087f78',[['mk-copilot.html','Co-Pilot workspace'],['tasks.html','Tasks & reminders']],'mk-copilot.html']:targetId==='tasks'?['tasks','Tasks & reminders','Follow-ups · Notes · Deadlines','#087f78',[['tasks.html','All tasks']],'tasks.html']:all.find(([id]) => id === targetId);
+    const virtualGroups = {
+      copilot: ['copilot', 'MK Co-Pilot', 'Orders · Inventory · Customers · Tasks', '#087f78', [['mk-copilot.html', 'Co-Pilot workspace'], ['tasks.html', 'Tasks & reminders']], 'mk-copilot.html'],
+      tasks: ['tasks', 'Tasks & reminders', 'Follow-ups · Notes · Deadlines', '#087f78', [['tasks.html', 'All tasks']], 'tasks.html'],
+      brain: ['brain', 'MK AI Analyst', 'Report Intelligence · Forecasting · Cloud AI', '#087f78', [['mk-brain.html', 'MK AI analyst'], ['mk-copilot.html', 'Co-Pilot workspace'], ['cloud-agent.html', 'Cloud AI agent'], ['tasks.html', 'Tasks & reminders']], 'mk-brain.html'],
+      cloudAgent: ['cloudAgent', 'Cloud AI Agent', 'Neural Operations · Autonomous Agent', '#087f78', [['cloud-agent.html', 'Cloud AI agent'], ['mk-brain.html', 'MK AI analyst'], ['mk-copilot.html', 'Co-Pilot workspace'], ['tasks.html', 'Tasks & reminders']], 'cloud-agent.html']
+    };
+    let group = virtualGroups[targetId] || all.find(([id]) => id === targetId);
     if (!group) {
       subBar.hidden = true;
       subBar.style.display = 'none';
@@ -314,10 +342,10 @@
       const activeGroup = allGroups.find(([id, label, subtitle, color, items, primaryUrl]) =>
         items.some(([path]) => active(path)) || active(primaryUrl)
       );
-      currentActiveModuleId = active('replenishment.html') && allGroups.some(g=>g[0]==='procurement') ? 'procurement' : active('mk-copilot.html') ? 'copilot' : active('tasks.html') ? 'tasks' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
+      currentActiveModuleId = active('mk-copilot.html') ? 'copilot' : active('tasks.html') ? 'tasks' : active('mk-brain.html') ? 'brain' : active('cloud-agent.html') ? 'cloudAgent' : activeGroup ? activeGroup[0] : (homeActive ? 'home' : (allGroups[0] ? allGroups[0][0] : 'planning'));
       renderSubnav(currentActiveModuleId);
 
-      if (homeActive || document.body.dataset.systemPage === 'dashboard' || active('mail.html') || active('email.html') || document.body.dataset.systemPage === 'mail') {
+      if (homeActive || active('mail.html') || active('email.html') || document.body.dataset.systemPage === 'mail') {
         tabs.hidden = true;
         tabs.style.display = 'none';
         const subBar = document.querySelector('#system-submodule-bar');
@@ -341,7 +369,7 @@
   function search(query) {
     const q = query.toLowerCase().trim(), s = S.getState();
     if (!q) return [];
-    const routeMatches = [...groups(),['copilot','MK Co-Pilot','','',[['mk-copilot.html','MK Co-Pilot workspace']]],['tasks','Tasks & reminders','','',[['tasks.html','Tasks & reminders']]]].flatMap(([, group, , , items]) => items.map(([path, label]) => ({ label, kind: group, path }))).filter(x => x.label.toLowerCase().includes(q));
+    const routeMatches = [...groups(),['copilot','MK Co-Pilot','','',[['mk-copilot.html','MK Co-Pilot workspace']]],['tasks','Tasks & reminders','','',[['tasks.html','Tasks & reminders']]],['brain','MK AI Analyst','','',[['mk-brain.html','MK AI analyst']]],['cloudAgent','Cloud AI Agent','','',[['cloud-agent.html','Cloud AI agent']]]].flatMap(([, group, , , items]) => items.map(([path, label]) => ({ label, kind: group, path }))).filter(x => x.label.toLowerCase().includes(q));
     const records = [
       ...s.enterprise.accounts.map(x => ({ label: x.name, kind: 'Customer Account', path: 'crm/accounts.html', hay: x.name + ' ' + x.email })),
       ...s.enterprise.vendors.map(x => ({ label: x.name, kind: 'Vendor', path: 'vendor-management/vendors.html', hay: x.name + ' ' + x.email })),
@@ -353,7 +381,7 @@
   }
 
   function start() {
-    if (document.body.classList.contains('tv-view') || document.querySelector('.tv-app') || /\/(login|auth-callback|cloud-agent)\.html$/.test(currentPath)) return;
+    if (document.body.classList.contains('tv-view') || document.querySelector('.tv-app') || /\/(login|auth-callback)\.html$/.test(currentPath)) return;
     if (document.querySelector('.system-header')) return;
 
     const W = window.StarkWorkspace;
@@ -450,7 +478,7 @@
     subnav.className = 'system-submodule-bar';
     subnav.setAttribute('aria-label', 'Active Module Navigation');
 
-    const isHomePage = active('workspace.html') || active('index.html') || document.body.dataset.systemPage === 'dashboard';
+    const isHomePage = active('workspace.html') || active('index.html');
     const isMailPage = active('mail.html') || active('email.html') || document.body.dataset.systemPage === 'mail';
     if (isHomePage) {
       rail.hidden = true;
