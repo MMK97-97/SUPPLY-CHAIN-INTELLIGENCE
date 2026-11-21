@@ -22,9 +22,26 @@
   if (!window.MK97Platform && typeof document !== 'undefined') {
     if (!document.querySelector('script[src*="platform-studio.js"]')) {
       const s = document.createElement('script');
-      s.src = (S?.rootURL ? S.url('assets/platform-studio.js') : 'assets/platform-studio.js') + '?v=20261104-unified1';
+      s.src = (S?.rootURL ? S.url('assets/platform-studio.js') : 'assets/platform-studio.js') + '?v=20261121-logo1';
       s.async = false;
       document.head.appendChild(s);
+    }
+  }
+
+  // Ensure MK97 favicon & Apple touch icon exist on every page
+  if (typeof document !== 'undefined' && document.head) {
+    if (!document.querySelector('link[rel="icon"]')) {
+      const fav = document.createElement('link');
+      fav.rel = 'icon';
+      fav.type = 'image/png';
+      fav.href = S.url('assets/mk97-favicon.png?v=20261121-logo1');
+      document.head.appendChild(fav);
+    }
+    if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+      const touch = document.createElement('link');
+      touch.rel = 'apple-touch-icon';
+      touch.href = S.url('assets/mk97-apple-touch-icon.png?v=20261121-logo1');
+      document.head.appendChild(touch);
     }
   }
 
@@ -391,13 +408,18 @@
     const config = getPlatformConfig();
     const brandName = config?.brandName || 'MK97 ERP';
     const brandSubtitle = config?.brandSubtitle || 'Supply Chain Intelligence';
-    const brandWordmark = config?.brandWordmark || 'SK';
+    const brandWordmark = config?.brandWordmark || 'MK';
+    const isCustomWordmark = brandWordmark && brandWordmark !== 'SK' && brandWordmark !== 'MK';
+    const logoSrc = S.url('assets/mk97-logo.png?v=20261121-logo1');
     const header = document.createElement('header');
     header.className = 'system-header';
     header.innerHTML = `
       <!-- Brand Block -->
       <a class="system-brand" href="${S.url('workspace.html')}" aria-label="${escape(brandName)} Home">
-        <span class="system-wordmark" style="background-color:${escape(config?.primaryColor || '#087f78')}">${escape(brandWordmark)}<span>◆</span></span>
+        ${isCustomWordmark
+          ? `<span class="system-wordmark" style="background-color:${escape(config?.primaryColor || '#087f78')}">${escape(brandWordmark)}<span>◆</span></span>`
+          : `<span class="system-wordmark system-wordmark-logo"><img class="system-brand-logo" src="${logoSrc}" alt="${escape(brandName)}" decoding="async"></span>`
+        }
         <div class="system-brand-text">
           <b>${escape(brandName)}</b>
           <small>${escape(brandSubtitle)}</small>

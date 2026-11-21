@@ -11,6 +11,7 @@ body.stark-system { padding-left:var(--system-sidebar)!important; padding-top:70
 .system-sidebar {position:fixed;inset:0 auto 0 0;width:var(--system-sidebar);display:flex;flex-direction:column;background:#0e2039;color:#c3d3e9;z-index:310;box-shadow:2px 0 12px #0d1c3210;}
 .system-brand {display:flex;gap:12px;align-items:center;padding:25px 21px;text-decoration:none;color:white;min-height:108px;}
 .system-brand img {width:42px;height:42px;object-fit:contain;border-radius:10px;background:white;}
+.system-brand img.system-brand-logo {width:100%;height:100%;border-radius:0;background:transparent;}
 .system-brand small {font-size:11px;letter-spacing:1.6px;color:#80a9df;font-weight:700;}
 .system-brand strong {display:block;line-height:1.3;font-size:17px;font-weight:700;margin-top:3px;}
 .system-workspace-label {font-size:11px;letter-spacing:1.3px;padding:9px 23px 14px;color:#8098bb;font-weight:700;}

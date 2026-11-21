@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8"><link rel="icon" type="image/png" href="assets/mk97-favicon.png?v=20261121-logo1"><link rel="apple-touch-icon" href="assets/mk97-apple-touch-icon.png?v=20261121-logo1">
   <style id="stark-navigation-critical">
     html{background:#f4f7fc;min-height:100%;scrollbar-gutter:stable}
     @view-transition{navigation:auto}::view-transition-group(root){animation-duration:160ms}
@@ -19,19 +19,19 @@
   <meta name="description" content="Choose workspace branding, default work perspective, labels and visible modules.">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
 
-  <link rel="stylesheet" href="assets/unified-system.css?v=20261121-tr1">
-  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261121-tr1">
+  <link rel="stylesheet" href="assets/unified-system.css?v=20261121-logo1">
+  <link rel="stylesheet" href="assets/enterprise-layout.css?v=20261121-logo1">
 
-  <script src="assets/platform-studio.js?v=20261104-unified1"></script>
-  <script src="assets/system-shell.js?v=20261121-tr1" defer></script>
+  <script src="assets/platform-studio.js?v=20261121-logo1"></script>
+  <script src="assets/system-shell.js?v=20261121-logo1" defer></script>
   <script src="assets/system-connectors.js?v=20261028-scan2" defer></script>
   <script src="assets/system-cloud.js?v=20261012-2" defer></script>
   <script src="assets/enterprise-ui.js?v=20261013-1" defer></script>
   <script src="assets/workspace-navigation.js?v=20261013-1" defer></script>
-  <link rel="stylesheet" href="assets/portfolio-mobile.css?v=20261112-hdr1">
+  <link rel="stylesheet" href="assets/portfolio-mobile.css?v=20261121-logo1">
   <script src="assets/portfolio-mobile.js?v=20261012-3" defer></script>
   <link rel="stylesheet" href="assets/workspace-fixes.css?v=20261112-hdr1">
-  <link rel="stylesheet" data-mk97-style="phone-mobile" href="phone-mobile.css?v=20261112-hdr1">
+  <link rel="stylesheet" data-mk97-style="phone-mobile" href="phone-mobile.css?v=20261121-logo1">
 <style>.studio-container button.industry-card{width:100%;text-align:left;font:inherit;color:inherit}.studio-container button.industry-card:focus-visible,.studio-role-option:has(input:focus-visible){outline:3px solid #087f78;outline-offset:2px}.studio-role-option input[type="radio"]{display:block!important;position:absolute;width:1px;height:1px;opacity:0}</style>
 </head>
 <body data-system-page="studio">
@@ -63,7 +63,7 @@
       <section class="studio-card studio-preview-banner">
         <div class="studio-banner-content">
           <div class="preview-brand-block">
-            <div class="preview-wordmark" id="preview-wordmark">SK<span>◆</span></div>
+            <div class="preview-wordmark" id="preview-wordmark" style="background:linear-gradient(180deg,#ffffff 0%,#faf6ee 100%);border:1px solid rgba(212,175,99,.6);padding:5px;"><img src="assets/mk97-logo.png?v=20261121-logo1" alt="MK97" style="width:100%;height:100%;object-fit:contain;display:block;"></div>
             <div>
               <div class="preview-brand-name" id="preview-brand-name">MK97 ERP</div>
               <div class="preview-brand-sub" id="preview-brand-sub">Supply Chain Intelligence</div>
@@ -420,7 +420,7 @@
       function updatePreview() {
         const nameVal = inpName.value.trim() || 'MK97 ERP';
         const subVal = inpSub.value.trim() || 'Supply Chain Intelligence';
-        const markVal = (inpWordmark.value.trim() || 'SK').toUpperCase();
+        const markVal = (inpWordmark.value.trim() || 'MK').toUpperCase();
         const activeSwatch = document.querySelector('.color-swatch.active');
         const colorVal = activeSwatch ? activeSwatch.getAttribute('data-color') : '#087f78';
         const activeCard = document.querySelector('.industry-card.active');
@@ -430,8 +430,24 @@
 
         document.getElementById('preview-brand-name').textContent = nameVal;
         document.getElementById('preview-brand-sub').textContent = subVal;
-        const mark=document.createElement('span');mark.textContent='◆';document.getElementById('preview-wordmark').replaceChildren(markVal,mark);
-        document.getElementById('preview-wordmark').style.background = colorVal;
+        const previewMarkEl = document.getElementById('preview-wordmark');
+        if (!markVal || markVal === 'SK' || markVal === 'MK') {
+          const img = document.createElement('img');
+          img.src = 'assets/mk97-logo.png?v=20261121-logo1';
+          img.alt = nameVal;
+          img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
+          previewMarkEl.replaceChildren(img);
+          previewMarkEl.style.background = 'linear-gradient(180deg,#ffffff 0%,#faf6ee 100%)';
+          previewMarkEl.style.padding = '5px';
+          previewMarkEl.style.border = '1px solid rgba(212,175,99,.6)';
+        } else {
+          const mark = document.createElement('span');
+          mark.textContent = '◆';
+          previewMarkEl.replaceChildren(markVal, mark);
+          previewMarkEl.style.background = colorVal;
+          previewMarkEl.style.padding = '';
+          previewMarkEl.style.border = '';
+        }
         document.getElementById('preview-chip-industry').textContent = industryName;
         document.getElementById('preview-chip-role').textContent =
           activeRole === 'executive' ? '👔 Executive Cockpit' :
@@ -464,7 +480,7 @@
         P.saveConfig({
           brandName: inpName.value.trim() || 'MK97 ERP',
           brandSubtitle: inpSub.value.trim() || 'Supply Chain Intelligence',
-          brandWordmark: (inpWordmark.value.trim() || 'SK').toUpperCase(),
+          brandWordmark: (inpWordmark.value.trim() || 'MK').toUpperCase(),
           industry: indId,
           activeRole: activeRole,
           themeMode: activeTheme,

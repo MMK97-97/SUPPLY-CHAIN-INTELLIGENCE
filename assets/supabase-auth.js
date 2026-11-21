@@ -133,7 +133,7 @@
 
   function showAccessError(message) {
     reveal();
-    document.body.innerHTML = `<main class="auth-access-denied"><section><img src="assets/supply-chain-logo.png" alt=""><p class="eyebrow">Secure workspace</p><h1>Access assignment required</h1><p>${esc(message)}</p><button id="auth-access-signout" type="button">Sign out</button></section></main>`;
+    document.body.innerHTML = `<main class="auth-access-denied"><section><img src="assets/mk97-logo.png?v=20261121-logo1" alt="MK97"><p class="eyebrow">Secure workspace</p><h1>Access assignment required</h1><p>${esc(message)}</p><button id="auth-access-signout" type="button">Sign out</button></section></main>`;
     document.getElementById("auth-access-signout")?.addEventListener("click", () => api.signOut());
   }
 

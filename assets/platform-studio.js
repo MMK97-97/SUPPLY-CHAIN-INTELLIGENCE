@@ -127,8 +127,8 @@
   const DEFAULT_CONFIG = {
     brandName: 'MK97 ERP',
     brandSubtitle: 'Supply Chain Intelligence',
-    brandWordmark: 'SK',
-    brandLogoUrl: '',
+    brandWordmark: 'MK',
+    brandLogoUrl: 'assets/mk97-logo.png?v=20261121-logo1',
     industry: 'retail_ecommerce',
     themeMode: 'light',
     uiDensity: 'comfortable',
@@ -157,7 +157,7 @@
       ...next,
       brandName:string(next.brandName,DEFAULT_CONFIG.brandName,64),
       brandSubtitle:string(next.brandSubtitle,DEFAULT_CONFIG.brandSubtitle,100),
-      brandWordmark:string(next.brandWordmark,DEFAULT_CONFIG.brandWordmark,12).replace(/[^\p{L}\p{N}]/gu,'').slice(0,3).toUpperCase()||'SK',
+      brandWordmark:string(next.brandWordmark,DEFAULT_CONFIG.brandWordmark,12).replace(/[^\p{L}\p{N}]/gu,'').slice(0,3).toUpperCase()||'MK',
       industry:Object.hasOwn(INDUSTRY_PRESETS,next.industry)?next.industry:DEFAULT_CONFIG.industry,
       themeMode:next.themeMode==='dark'?'dark':'light',
       uiDensity:next.uiDensity==='compact'?'compact':'comfortable',
@@ -212,9 +212,32 @@
     if (brandSub) brandSub.textContent = currentConfig.brandSubtitle;
 
     const wordmark = document.querySelector('.system-wordmark');
-    if (wordmark && currentConfig.brandWordmark) {
-      const mark=document.createElement('span');mark.textContent='◆';wordmark.replaceChildren(currentConfig.brandWordmark,mark);
-      wordmark.style.backgroundColor=currentConfig.primaryColor;
+    if (wordmark) {
+      const isDefaultMark = !currentConfig.brandWordmark || currentConfig.brandWordmark === 'SK' || currentConfig.brandWordmark === 'MK';
+      if (isDefaultMark) {
+        const logoHref = window.StarkSystem?.url
+          ? window.StarkSystem.url('assets/mk97-logo.png?v=20261121-logo1')
+          : 'assets/mk97-logo.png?v=20261121-logo1';
+        wordmark.classList.add('system-wordmark-logo');
+        wordmark.style.removeProperty('background-color');
+        const existingImg = wordmark.querySelector('img.system-brand-logo');
+        if (!existingImg) {
+          const img = document.createElement('img');
+          img.className = 'system-brand-logo';
+          img.src = logoHref;
+          img.alt = currentConfig.brandName || 'MK97 ERP';
+          img.decoding = 'async';
+          wordmark.replaceChildren(img);
+        } else {
+          existingImg.alt = currentConfig.brandName || 'MK97 ERP';
+        }
+      } else {
+        wordmark.classList.remove('system-wordmark-logo');
+        const mark = document.createElement('span');
+        mark.textContent = '◆';
+        wordmark.replaceChildren(currentConfig.brandWordmark, mark);
+        wordmark.style.backgroundColor = currentConfig.primaryColor;
+      }
     }
 
     // 3. Document Title Brand Suffix

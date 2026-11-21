@@ -115,7 +115,7 @@
       ["tracking", "Tracking", "shipment-tracking.html", icons.tracking]
     ];
     rail.innerHTML = `
-      <a class="premium-rail-brand" href="workspace.html" aria-label="MK97 ERP home"><img src="assets/supply-chain-logo.png?v=20260918-2" alt=""><div><small>MK97 ERP</small><strong>MK97 ERP</strong></div></a>
+      <a class="premium-rail-brand" href="workspace.html" aria-label="MK97 ERP home"><img src="assets/mk97-logo.png?v=20261121-logo1" alt="MK97"><div><small>MK97 ERP</small><strong>MK97 ERP</strong></div></a>
       <div class="premium-rail-region"><span>${nextRegionCode}</span><div><small>Regional workspace</small><strong>${nextRegionCode === "US" ? "United States" : nextRegionCode === "EU" ? "European Union" : "Canada"}</strong></div></div>
       <nav>
         <section class="premium-nav-group" aria-label="Inventory analysis">
