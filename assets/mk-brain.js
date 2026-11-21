@@ -144,7 +144,7 @@
           </svg>
         </div>
         <h2>Hi, I'm MK 👋</h2>
-        <p>Your Supply Chain Co-Pilot across orders, oders, inventory, vendors, and more.</p>
+        <p>Your Supply Chain Co-Pilot across orders, inventory, vendors, shipments, and more.</p>
       </div>
       <div class="mk-copilot-cards-list">
         <button type="button" class="mk-copilot-action-card" data-prompt="Check inventory for WH-1000XM6">

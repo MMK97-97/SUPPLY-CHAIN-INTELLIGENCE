@@ -376,6 +376,21 @@
   let isComposeActive = false;
   let isComposeExpanded = false;
   let showFilterBar = false;
+  let showHeaderFilters = false;
+  let showIntelPanel = typeof window !== 'undefined' ? window.innerWidth >= 1380 : true;
+  const mailStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const DEFAULT_SETTINGS = { defaultMailbox: 'supply.chain@mk97.com', density: 'comfortable', showTelemetry: true, autoSignature: true };
+  const DEFAULT_SIGNATURE = { name: 'MK97 Operations Standard', body: 'Best regards,\nManoj Manne\nSupply Chain Director · MK97 ERP' };
+  let mailSettings = { ...DEFAULT_SETTINGS };
+  let mailSignature = { ...DEFAULT_SIGNATURE };
+  try {
+    const savedSet = JSON.parse(mailStorage?.getItem('mk97.mail.settings.v1') || 'null');
+    if (savedSet && typeof savedSet === 'object') mailSettings = { ...DEFAULT_SETTINGS, ...savedSet };
+    const savedSig = JSON.parse(mailStorage?.getItem('mk97.mail.signature.v1') || 'null');
+    if (savedSig && typeof savedSig === 'object') mailSignature = { ...DEFAULT_SIGNATURE, ...savedSig };
+  } catch (_) {}
+  function saveMailSettings() { try { mailStorage?.setItem('mk97.mail.settings.v1', JSON.stringify(mailSettings)); } catch (_) {} }
+  function saveMailSignature() { try { mailStorage?.setItem('mk97.mail.signature.v1', JSON.stringify(mailSignature)); } catch (_) {} }
   if (typeof window !== 'undefined' && window.location && window.location.search && (window.location.search.includes('compose=true') || window.location.search.includes('compose=1'))) {
     isComposeActive = true;
   }
@@ -441,22 +456,22 @@
 
   const isShared = t => isCustomer(t) || isVendor(t) || is3PL(t) || isShipping(t);
 
-      function getSidebarCounts() {
+  function getSidebarCounts() {
     return {
-      inbox: Math.max(24, threads.filter(t => t.folder === 'inbox').length),
-      starred: Math.max(5, threads.filter(t => t.starred).length),
-      snoozed: Math.max(3, threads.filter(t => t.snoozed || t.folder === 'snoozed').length),
+      inbox: threads.filter(t => t.folder === 'inbox').length,
+      starred: threads.filter(t => t.starred).length,
+      snoozed: threads.filter(t => t.snoozed || t.folder === 'snoozed').length,
       sent: threads.filter(t => t.folder === 'sent' || t.direction === 'outbound').length,
-      drafts: Math.max(7, threads.filter(t => t.folder === 'drafts').length),
-      archive: Math.max(12, threads.filter(t => t.folder === 'archive').length),
+      drafts: threads.filter(t => t.folder === 'drafts').length,
+      archive: threads.filter(t => t.folder === 'archive').length,
       trash: threads.filter(t => t.folder === 'trash').length,
-      customers: Math.max(8, threads.filter(isCustomer).length),
-      vendors: Math.max(6, threads.filter(isVendor).length),
-      orders: Math.max(10, threads.filter(isOrders).length),
-      shipping: Math.max(4, threads.filter(isShipping).length),
-      procurement: Math.max(3, threads.filter(isProcurement).length),
-      '3pl': Math.max(2, threads.filter(is3PL).length),
-      internal: Math.max(8, threads.filter(isInternal).length),
+      customers: threads.filter(t => t.folder === 'customers' || isCustomer(t)).length,
+      vendors: threads.filter(t => t.folder === 'vendors' || isVendor(t)).length,
+      orders: threads.filter(t => t.folder === 'orders' || isOrders(t)).length,
+      shipping: threads.filter(t => t.folder === 'shipping' || isShipping(t)).length,
+      procurement: threads.filter(t => t.folder === 'procurement' || isProcurement(t)).length,
+      '3pl': threads.filter(t => t.folder === '3pl' || is3PL(t)).length,
+      internal: threads.filter(t => t.folder === 'internal' || isInternal(t)).length,
       unread: threads.filter(t => t.unread).length,
       flagged: threads.filter(t => t.flagged).length,
       attachments: threads.filter(t => t.attachments && t.attachments.length > 0).length,
@@ -656,7 +671,8 @@ startxref
       : 'Just now';
     const fullDate = !isNaN(dateObj.getTime()) ? dateObj.toLocaleString('en-US') : 'Just now';
 
-    const initials = senderName.split(' ').map(p => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'EM';
+    const cleanInitialParts = senderName.replace(/[()<>[\]]/g, ' ').trim().split(/\s+/).map(p => p.replace(/[^a-zA-Z0-9]/g, '')[0]).filter(Boolean);
+    const initials = isOutbound && /^you\b/i.test(senderName) ? 'SC' : (cleanInitialParts.slice(0, 2).join('').toUpperCase() || 'EM');
     const avatarBg = isOutbound ? '#0f766e' : '#1e3a8a';
 
     const tags = Array.isArray(row.tags) ? row.tags : [];
@@ -704,6 +720,8 @@ startxref
         badge.textContent = counts[folder];
       }
     });
+    const navPill = root.querySelector('.workspace-mail-pill');
+    if (navPill) navPill.textContent = counts.inbox;
   }
 
   let mailRealtimeChannel = null;
@@ -829,99 +847,122 @@ startxref
   }
 
   function renderSubHeader() {
-    return `
-      <div class="stark-mail-subheader">
-        <div class="stark-mail-brand">
-          <div class="stark-mail-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="3"/>
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-              <path d="M2 13l4-2.5"/>
-              <path d="M22 13l-4-2.5"/>
-            </svg>
-          </div>
-          <div>
-            <h1 class="stark-mail-title">MK97 Mail</h1>
-            <p class="stark-mail-subtitle">Manage supply-chain communication, forwarding, dispatch, and thread history.</p>
-          </div>
-        </div>
+    const activeFilterCount = [
+      mailboxFilter !== 'all',
+      activeFolder !== 'inbox' && activeFolder !== 'all',
+      labelFilter !== 'all',
+      timeFilter !== 'all'
+    ].filter(Boolean).length;
 
-        <div class="stark-mail-search-bar" role="search">
-          <div class="stark-mail-search-input-wrap">
-            <svg class="mail-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="search" id="stark-mail-search" placeholder="Search emails, senders, subjects or order numbers..." value="${esc(searchQuery)}" aria-label="Search emails">
-            <button type="button" class="mail-filter-btn" id="btn-toggle-filters" title="Filter settings" aria-label="Filter settings">
+    return `
+      <div class="stark-mail-subheader ${showHeaderFilters ? 'filters-open' : ''}">
+        <div class="stark-mail-subheader-main">
+          <div class="stark-mail-brand">
+            <div class="stark-mail-logo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                <rect x="2" y="4" width="20" height="16" rx="3"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                <path d="M2 13l4-2.5"/>
+                <path d="M22 13l-4-2.5"/>
               </svg>
+            </div>
+            <div class="stark-mail-brand-copy">
+              <h1 class="stark-mail-title">MK97 Mail</h1>
+              <p class="stark-mail-subtitle">Enterprise Supply Chain Inbox</p>
+            </div>
+          </div>
+
+          <div class="stark-mail-search-bar" role="search">
+            <div class="stark-mail-search-input-wrap">
+              <svg class="mail-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input type="search" id="stark-mail-search" placeholder="Search mail, PO #, tracking, or sender..." value="${esc(searchQuery)}" aria-label="Search emails">
+              <button type="button" class="mail-filter-btn ${showHeaderFilters || activeFilterCount > 0 ? 'is-active' : ''}" id="btn-toggle-filters" title="Toggle filter dropdowns" aria-label="Filter settings" aria-expanded="${showHeaderFilters}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                ${activeFilterCount > 0 ? `<span class="mail-filter-badge">${activeFilterCount}</span>` : ''}
+              </button>
+            </div>
+          </div>
+
+          <div class="stark-mail-header-actions">
+            <button type="button" class="stark-mail-action-btn mail-mobile-compose-btn" id="btn-mail-compose-mobile" title="Compose email">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+              <span>Compose</span>
+            </button>
+            <button type="button" class="stark-mail-action-btn" id="btn-mail-templates" title="Email templates">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <span>Templates</span>
+            </button>
+            <button type="button" class="stark-mail-action-btn" id="btn-mail-signatures" title="Signatures manager">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                <path d="M2 2l7.586 7.586"/>
+                <circle cx="11" cy="11" r="2"/>
+              </svg>
+              <span>Signatures</span>
+            </button>
+            <button type="button" class="stark-mail-action-btn" id="btn-mail-settings" title="Mail settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              <span>Settings</span>
+            </button>
+            <button type="button" class="stark-mail-action-btn mail-intel-toggle-btn ${showIntelPanel ? 'is-active' : ''}" id="btn-toggle-intel" title="Toggle Supply Chain Context panel" aria-pressed="${showIntelPanel}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/>
+              </svg>
+              <span>Context</span>
             </button>
           </div>
-
-          <div class="stark-mail-filter-dropdowns">
-            <select id="mail-sel-mailbox" aria-label="Mailbox filter">
-              <option value="all" ${mailboxFilter === 'all' ? 'selected' : ''}>All mailboxes</option>
-              <option value="supply" ${mailboxFilter === 'supply' ? 'selected' : ''}>supply.chain@mk97.com</option>
-              <option value="procurement" ${mailboxFilter === 'procurement' ? 'selected' : ''}>procurement@mk97.com</option>
-              <option value="logistics" ${mailboxFilter === 'logistics' ? 'selected' : ''}>logistics@mk97.com</option>
-            </select>
-
-            <select id="mail-sel-folder" aria-label="Folder filter">
-              <option value="all">All folders</option>
-              <option value="inbox">Inbox</option>
-              <option value="starred">Starred</option>
-              <option value="snoozed">Snoozed</option>
-              <option value="sent">Sent</option>
-              <option value="drafts">Drafts</option>
-              <option value="archive">Archive</option>
-            </select>
-
-            <select id="mail-sel-label" aria-label="Label filter">
-              <option value="all" ${labelFilter === 'all' ? 'selected' : ''}>All labels</option>
-              <option value="po" ${labelFilter === 'po' ? 'selected' : ''}>PO</option>
-              <option value="vendor" ${labelFilter === 'vendor' ? 'selected' : ''}>Vendor</option>
-              <option value="shipment" ${labelFilter === 'shipment' ? 'selected' : ''}>Shipment</option>
-              <option value="customer" ${labelFilter === 'customer' ? 'selected' : ''}>Customer</option>
-              <option value="invoice" ${labelFilter === 'invoice' ? 'selected' : ''}>Invoice</option>
-              <option value="internal" ${labelFilter === 'internal' ? 'selected' : ''}>Internal</option>
-              <option value="urgent" ${labelFilter === 'urgent' ? 'selected' : ''}>Urgent</option>
-              <option value="forecast" ${labelFilter === 'forecast' ? 'selected' : ''}>Forecast</option>
-            </select>
-
-            <select id="mail-sel-time" aria-label="Time period filter">
-              <option value="all">Any time</option>
-              <option value="today">Today</option>
-              <option value="week">This week</option>
-              <option value="month">This month</option>
-            </select>
-          </div>
         </div>
 
-        <div class="stark-mail-header-actions">
-          <button type="button" class="stark-mail-action-btn" id="btn-mail-templates">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-            </svg>
-            <span>Email templates</span>
-          </button>
-          <button type="button" class="stark-mail-action-btn" id="btn-mail-signatures">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-              <path d="M2 2l7.586 7.586"/>
-              <circle cx="11" cy="11" r="2"/>
-            </svg>
-            <span>Signatures</span>
-          </button>
-          <button type="button" class="stark-mail-action-btn" id="btn-mail-settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            <span>Mail settings</span>
-          </button>
+        <div class="stark-mail-filter-dropdowns" id="mail-filter-drawer" ${showHeaderFilters ? '' : 'hidden'}>
+          <select id="mail-sel-mailbox" aria-label="Mailbox filter">
+            <option value="all" ${mailboxFilter === 'all' ? 'selected' : ''}>All mailboxes</option>
+            <option value="supply" ${mailboxFilter === 'supply' ? 'selected' : ''}>supply.chain@mk97.com</option>
+            <option value="procurement" ${mailboxFilter === 'procurement' ? 'selected' : ''}>procurement@mk97.com</option>
+            <option value="logistics" ${mailboxFilter === 'logistics' ? 'selected' : ''}>logistics@mk97.com</option>
+          </select>
+
+          <select id="mail-sel-folder" aria-label="Folder filter">
+            <option value="inbox" ${activeFolder === 'inbox' ? 'selected' : ''}>Inbox</option>
+            <option value="starred" ${activeFolder === 'starred' ? 'selected' : ''}>Starred</option>
+            <option value="snoozed" ${activeFolder === 'snoozed' ? 'selected' : ''}>Snoozed</option>
+            <option value="sent" ${activeFolder === 'sent' ? 'selected' : ''}>Sent</option>
+            <option value="drafts" ${activeFolder === 'drafts' ? 'selected' : ''}>Drafts</option>
+            <option value="archive" ${activeFolder === 'archive' ? 'selected' : ''}>Archive</option>
+          </select>
+
+          <select id="mail-sel-label" aria-label="Label filter">
+            <option value="all" ${labelFilter === 'all' ? 'selected' : ''}>All labels</option>
+            <option value="po" ${labelFilter === 'po' ? 'selected' : ''}>PO</option>
+            <option value="vendor" ${labelFilter === 'vendor' ? 'selected' : ''}>Vendor</option>
+            <option value="shipment" ${labelFilter === 'shipment' ? 'selected' : ''}>Shipment</option>
+            <option value="customer" ${labelFilter === 'customer' ? 'selected' : ''}>Customer</option>
+            <option value="invoice" ${labelFilter === 'invoice' ? 'selected' : ''}>Invoice</option>
+            <option value="internal" ${labelFilter === 'internal' ? 'selected' : ''}>Internal</option>
+            <option value="urgent" ${labelFilter === 'urgent' ? 'selected' : ''}>Urgent</option>
+            <option value="forecast" ${labelFilter === 'forecast' ? 'selected' : ''}>Forecast</option>
+          </select>
+
+          <select id="mail-sel-time" aria-label="Time period filter">
+            <option value="all" ${timeFilter === 'all' ? 'selected' : ''}>Any time</option>
+            <option value="today" ${timeFilter === 'today' ? 'selected' : ''}>Today</option>
+            <option value="week" ${timeFilter === 'week' ? 'selected' : ''}>This week</option>
+            <option value="month" ${timeFilter === 'month' ? 'selected' : ''}>This month</option>
+          </select>
+
+          ${activeFilterCount > 0 ? '<button type="button" class="mail-clear-filters-btn" id="btn-clear-header-filters">Clear all</button>' : ''}
         </div>
       </div>
     `;
@@ -1078,32 +1119,19 @@ startxref
             <button type="button" class="mail-list-tab ${activeFilterTab === 'unread' ? 'active' : ''}" data-tab="unread" role="tab" aria-selected="${activeFilterTab === 'unread'}">Unread</button>
             <button type="button" class="mail-list-tab ${activeFilterTab === 'starred' ? 'active' : ''}" data-tab="starred" role="tab" aria-selected="${activeFilterTab === 'starred'}">Starred</button>
             <button type="button" class="mail-list-tab ${activeFilterTab === 'mentions' ? 'active' : ''}" data-tab="mentions" role="tab" aria-selected="${activeFilterTab === 'mentions'}">Mentions</button>
-            <button type="button" class="mail-list-tab ${activeFilterTab === 'attachments' ? 'active' : ''}" data-tab="attachments" role="tab" aria-selected="${activeFilterTab === 'attachments'}">Attachments</button>
+            <button type="button" class="mail-list-tab ${activeFilterTab === 'attachments' ? 'active' : ''}" data-tab="attachments" role="tab" aria-selected="${activeFilterTab === 'attachments'}" title="Attachments" aria-label="Attachments">Files</button>
           </div>
-          <button type="button" class="mail-list-filter-btn" id="btn-toggle-filter" title="Filter" aria-label="Filter threads">
+          <button type="button" class="mail-list-filter-btn ${showFilterBar ? 'is-active' : ''}" id="btn-toggle-filter" title="Quick label filters" aria-label="Filter threads" aria-expanded="${showFilterBar}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
             </svg>
           </button>
         </div>
-                <div class="mail-list-search-row">
-          <div class="mail-search-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:#94a3b8;flex-shrink:0;">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-            </svg>
-            <input type="text" class="mail-list-search-input" id="mail-list-search-input" placeholder="Search in mailbox..." value="${esc(searchQuery)}" aria-label="Search mailbox">
-            <button type="button" class="mail-filter-sliders-btn" id="btn-mail-sliders" title="Filter options">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
-              </svg>
-            </button>
-          </div>
-        </div>
         ${showFilterBar ? `
           <div class="mail-filter-options-bar">
-            <span style="font-weight:600;color:#64748b;">Filter:</span>
-            <button type="button" class="mail-filter-pill ${labelFilter === 'all' ? 'active' : ''}" data-label="all">All Labels</button>
-            <button type="button" class="mail-filter-pill ${labelFilter === 'po' ? 'active' : ''}" data-label="po">PO Only</button>
+            <span class="mail-filter-bar-lbl">Labels:</span>
+            <button type="button" class="mail-filter-pill ${labelFilter === 'all' ? 'active' : ''}" data-label="all">All</button>
+            <button type="button" class="mail-filter-pill ${labelFilter === 'po' ? 'active' : ''}" data-label="po">PO</button>
             <button type="button" class="mail-filter-pill ${labelFilter === 'shipment' ? 'active' : ''}" data-label="shipment">Shipments</button>
             <button type="button" class="mail-filter-pill ${labelFilter === 'urgent' ? 'active' : ''}" data-label="urgent">Urgent</button>
           </div>
@@ -1168,6 +1196,7 @@ startxref
         <div class="mail-compose-pane-head">
           <h2 class="mail-compose-title">Compose Supply Chain Email</h2>
           <div class="mail-compose-win-controls">
+            <button type="button" class="mail-win-clear-btn" id="btn-compose-clear" title="Clear draft fields">Clear draft</button>
             <button type="button" class="mail-win-btn" id="btn-compose-min" title="Minimize">─</button>
             <button type="button" class="mail-win-btn" id="btn-compose-expand" title="Maximize">⤢</button>
             <button type="button" class="mail-win-btn" id="btn-compose-close" title="Close">✕</button>
@@ -1267,7 +1296,7 @@ startxref
         <!-- Rich Toolbar -->
         <div class="mail-compose-toolbar" role="toolbar" aria-label="Formatting options">
           <select class="compose-format-select" id="pane-format-block" aria-label="Text format">
-            <option value="p">Paragraph ▾</option>
+            <option value="p">Paragraph</option>
             <option value="h1">Heading 1</option>
             <option value="h2">Heading 2</option>
             <option value="h3">Heading 3</option>
@@ -1482,16 +1511,45 @@ function renderDetailView() {
 
           <!-- Email Body Content -->
           <div class="mail-body-content">
-            <p class="mail-body-text">${esc(thread.body).replace(/\n\n/g, '</p><p class="mail-body-text">').replace(/\n/g, '<br>')}</p>
+            <div class="mail-message-prose">
+              <p class="mail-body-text">${esc(thread.body).replace(/\n\n/g, '</p><p class="mail-body-text">').replace(/\n/g, '<br>')}</p>
+              ${thread.signOff ? `<div class="mail-signoff">${esc(thread.signOff).replace(/\n/g, '<br>')}</div>` : ''}
+            </div>
 
-            ${renderPrescriptiveDeck(thread)}
-            ${renderRouteStepper(thread)}
-            ${renderErpLineItemsMatrix(thread)}
+            <!-- Attachments Section -->
+            ${thread.attachments && thread.attachments.length > 0 ? `
+              <div class="mail-attachments-card">
+                <div class="mail-attachments-header">
+                  <strong>${thread.attachments.length} Attachment${thread.attachments.length === 1 ? '' : 's'}</strong>
+                  <button type="button" class="mail-download-all-btn" id="btn-download-all">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>Download all</span>
+                  </button>
+                </div>
+
+                <div class="mail-attachments-grid">
+                  ${thread.attachments.map(att => `
+                    <div class="mail-attach-item" data-filename="${esc(att.name)}">
+                      <span class="mail-attach-badge badge-${att.type}">${att.type.toUpperCase()}</span>
+                      <div class="mail-attach-info">
+                        <span class="mail-attach-name" title="${esc(att.name)}">${esc(att.name)}</span>
+                        <small class="mail-attach-size">${esc(att.size)}</small>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
 
             ${thread.shipmentDetails ? `
               <div class="mail-shipment-card">
                 <div class="mail-shipment-head">
-                  <h4>Shipment Details</h4>
+                  <h4>Shipment Summary</h4>
+                  <span class="shipment-status-pill ${thread.shipmentDetails.statusClass}">
+                    <span class="status-dot"></span> ${esc(thread.shipmentDetails.status)}
+                  </span>
                 </div>
                 <div class="mail-shipment-grid">
                   <div class="mail-shipment-item">
@@ -1512,45 +1570,27 @@ function renderDetailView() {
                   </div>
                 </div>
                 <div class="mail-shipment-footer">
-                  <span class="shipment-status-pill ${thread.shipmentDetails.statusClass}">
-                    <span class="status-dot"></span> ${esc(thread.shipmentDetails.status)}
-                  </span>
                   <a href="${S.url(thread.shipmentDetails.trackingUrl)}" class="shipment-track-link">Track Shipment ↗</a>
                 </div>
               </div>
             ` : ''}
 
-            <div class="mail-signoff">
-              ${esc(thread.signOff).replace(/\n/g, '<br>')}
-            </div>
+            <details class="mail-sc-ops-suite" open>
+              <summary class="mail-sc-ops-summary">
+                <span class="mail-sc-ops-summary-left">
+                  <span class="sc-pulse-dot"></span>
+                  <strong>Supply Chain Operations Intelligence</strong>
+                  <span class="mail-sc-ops-meta">AI Decisions · Route Telemetry · PO Line Matrix</span>
+                </span>
+                <span class="mail-sc-ops-chevron" aria-hidden="true">▾</span>
+              </summary>
+              <div class="mail-sc-ops-body">
+                ${renderPrescriptiveDeck(thread)}
+                ${renderRouteStepper(thread)}
+                ${renderErpLineItemsMatrix(thread)}
+              </div>
+            </details>
           </div>
-
-          <!-- Attachments Section -->
-          ${thread.attachments && thread.attachments.length > 0 ? `
-            <div class="mail-attachments-card">
-              <div class="mail-attachments-header">
-                <strong>${thread.attachments.length} Attachments</strong>
-                <button type="button" class="mail-download-all-btn" id="btn-download-all">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  <span>Download all</span>
-                </button>
-              </div>
-
-              <div class="mail-attachments-grid">
-                ${thread.attachments.map(att => `
-                  <div class="mail-attach-item" data-filename="${esc(att.name)}">
-                    <span class="mail-attach-badge badge-${att.type}">${att.type.toUpperCase()}</span>
-                    <div class="mail-attach-info">
-                      <span class="mail-attach-name" title="${esc(att.name)}">${esc(att.name)}</span>
-                      <small class="mail-attach-size">${esc(att.size)}</small>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
 
           <!-- Quick Reply Composer -->
           <div class="mail-composer-card">
@@ -1628,7 +1668,7 @@ function renderDetailView() {
               </span>
               <h3>Related Information</h3>
             </div>
-            <a href="${S.url(rel.orderUrl)}" class="intel-head-action">View in Order Management ↗</a>
+            <a href="${S.url(rel.orderUrl)}" class="intel-head-action" title="View in Order Management">Orders ↗</a>
           </div>
 
           <div class="mail-intel-body">
@@ -2026,6 +2066,44 @@ function renderDetailView() {
       };
     }
 
+    // Header filter drawer toggle
+    const toggleHeaderFiltersBtn = root.querySelector('#btn-toggle-filters');
+    if (toggleHeaderFiltersBtn) {
+      toggleHeaderFiltersBtn.onclick = () => {
+        showHeaderFilters = !showHeaderFilters;
+        const drawer = root.querySelector('#mail-filter-drawer');
+        const sub = root.querySelector('.stark-mail-subheader');
+        if (drawer) drawer.hidden = !showHeaderFilters;
+        if (sub) sub.classList.toggle('filters-open', showHeaderFilters);
+        toggleHeaderFiltersBtn.setAttribute('aria-expanded', String(showHeaderFilters));
+        toggleHeaderFiltersBtn.classList.toggle('is-active', showHeaderFilters);
+      };
+    }
+
+    const clearHeaderFiltersBtn = root.querySelector('#btn-clear-header-filters');
+    if (clearHeaderFiltersBtn) {
+      clearHeaderFiltersBtn.onclick = () => {
+        mailboxFilter = 'all';
+        activeFolder = 'inbox';
+        labelFilter = 'all';
+        timeFilter = 'all';
+        searchQuery = '';
+        updateView();
+      };
+    }
+
+    // Context / Intel Panel toggle
+    const toggleIntelBtn = root.querySelector('#btn-toggle-intel');
+    if (toggleIntelBtn) {
+      toggleIntelBtn.onclick = () => {
+        showIntelPanel = !showIntelPanel;
+        const ws = root.querySelector('.stark-mail-workspace');
+        if (ws) ws.classList.toggle('intel-collapsed', !showIntelPanel);
+        toggleIntelBtn.setAttribute('aria-pressed', String(showIntelPanel));
+        toggleIntelBtn.classList.toggle('is-active', showIntelPanel);
+      };
+    }
+
     // Filter dropdowns
     const selFolder = root.querySelector('#mail-sel-folder');
     if (selFolder) {
@@ -2051,74 +2129,48 @@ function renderDetailView() {
       };
     }
 
+    const selTime = root.querySelector('#mail-sel-time');
+    if (selTime) {
+      selTime.onchange = e => {
+        timeFilter = e.target.value;
+        updateThreadList();
+      };
+    }
+
     // Sidebar navigation buttons
     root.querySelectorAll('.mail-nav-item').forEach(btn => {
       btn.onclick = () => {
         activeFolder = btn.dataset.folder;
+        isComposeActive = false;
+        isComposeExpanded = false;
         const filtered = getFilteredThreads();
         if (filtered.length > 0 && !filtered.some(t => t.id === activeThreadId)) {
           activeThreadId = filtered[0].id;
         }
+        if (window.innerWidth <= 1100) document.body.dataset.phoneMailView = 'messages';
         updateView();
       };
     });
 
-    // Reset filters button
-    const resetFiltersBtn = root.querySelector('#btn-reset-filters');
-    if (resetFiltersBtn) {
-      resetFiltersBtn.onclick = () => {
-        activeFolder = 'inbox';
-        activeFilterTab = 'all';
-        searchQuery = '';
-        labelFilter = 'all';
-        mailboxFilter = 'all';
-        updateView();
-      };
-    }
-
-    // List header tabs
-    root.querySelectorAll('.mail-list-tab').forEach(tab => {
-      tab.onclick = () => {
-        activeFilterTab = tab.dataset.tab;
-        root.querySelectorAll('.mail-list-tab').forEach(t => {
-          t.classList.remove('active');
-          t.setAttribute('aria-selected', 'false');
-        });
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-        updateThreadList();
-      };
-    });
-
-    // Select thread
+    // Bind list controls & thread clicks
+    bindListControls();
     bindThreadClicks();
 
-            // Compose button toggle
+    // Compose button toggle (sidebar + mobile header)
+    const toggleCompose = () => {
+      isComposeActive = !isComposeActive;
+      if (!isComposeActive) {
+        isComposeExpanded = false;
+        if (window.innerWidth <= 1100) document.body.dataset.phoneMailView = 'messages';
+      } else if (window.innerWidth <= 1100) {
+        document.body.dataset.phoneMailView = 'compose';
+      }
+      updateView();
+    };
     const composeBtn = root.querySelector('#btn-mail-compose');
-    if (composeBtn) {
-      composeBtn.onclick = () => {
-        isComposeActive = !isComposeActive;
-        if (!isComposeActive) isComposeExpanded = false;
-        updateView();
-      };
-    }
-
-    // Toggle filter sliders bar & funnel button
-    const slidersBtn = root.querySelector('#btn-mail-sliders');
-    if (slidersBtn) {
-      slidersBtn.onclick = () => {
-        showFilterBar = !showFilterBar;
-        updateThreadList();
-      };
-    }
-
-    const funnelBtn = root.querySelector('#btn-toggle-filter');
-    if (funnelBtn) {
-      funnelBtn.onclick = () => {
-        showFilterBar = !showFilterBar;
-        updateThreadList();
-      };
-    }
+    if (composeBtn) composeBtn.onclick = toggleCompose;
+    const mobileComposeBtn = root.querySelector('#btn-mail-compose-mobile');
+    if (mobileComposeBtn) mobileComposeBtn.onclick = toggleCompose;
 
     // Add shared mailbox button
     const addSharedBtn = root.querySelector('.btn-add-shared');
@@ -2131,20 +2183,28 @@ function renderDetailView() {
       };
     }
 
-    // Quick filter pills
-    root.querySelectorAll('.mail-filter-pill').forEach(pill => {
-      pill.onclick = () => {
-        labelFilter = pill.dataset.label;
-        updateThreadList();
-      };
-    });
-
     if (isComposeActive) {
+      const clearComposeBtn = root.querySelector('#btn-compose-clear');
+      if (clearComposeBtn) {
+        clearComposeBtn.onclick = () => {
+          composeState.toRecipients = [];
+          composeState.ccRecipients = [];
+          composeState.bccRecipients = [];
+          composeState.subject = '';
+          composeState.body = mailSettings.autoSignature && mailSignature.body ? `\n\n${mailSignature.body}` : '';
+          composeState.attachments = [];
+          updateView();
+          document.getElementById('pane-compose-to-input')?.focus();
+          notice('Draft cleared.');
+        };
+      }
+
       const closeBtn = root.querySelector('#btn-compose-close');
       if (closeBtn) {
         closeBtn.onclick = () => {
           isComposeActive = false;
           isComposeExpanded = false;
+          if (window.innerWidth <= 1100) document.body.dataset.phoneMailView = 'messages';
           updateView();
         };
       }
@@ -2154,6 +2214,7 @@ function renderDetailView() {
         minBtn.onclick = () => {
           isComposeActive = false;
           isComposeExpanded = false;
+          if (window.innerWidth <= 1100) document.body.dataset.phoneMailView = 'messages';
           updateView();
         };
       }
@@ -2471,7 +2532,7 @@ function renderDetailView() {
     const sigBtn = root.querySelector('#btn-mail-signatures');
     if (sigBtn) {
       sigBtn.onclick = () => {
-        notice('Signatures manager: MK97 Operations standard HTML signature is active.');
+        openSignaturesModal();
       };
     }
 
@@ -2479,7 +2540,7 @@ function renderDetailView() {
     const setBtn = root.querySelector('#btn-mail-settings');
     if (setBtn) {
       setBtn.onclick = () => {
-        notice('Mail settings: IMAP/SMTP supply chain mail gateway is connected.');
+        openSettingsModal();
       };
     }
 
@@ -2894,7 +2955,11 @@ function renderDetailView() {
         activeThreadId = card.dataset.threadId;
         const thread = getActiveThread();
         if (thread) thread.unread = false;
-        if (isComposeActive) isComposeActive = false;
+        if (isComposeActive) {
+          isComposeActive = false;
+          isComposeExpanded = false;
+        }
+        if (window.innerWidth <= 1100) document.body.dataset.phoneMailView = 'message';
         updateView();
       };
     });
@@ -3081,13 +3146,145 @@ function renderDetailView() {
 
     closeBtn.onclick = close;
     cancelBtn.onclick = close;
+    backdrop.onclick = e => { if (e.target === backdrop) close(); };
+
+    const templatePresets = {
+      '1': {
+        subject: 'PO Shipment Confirmation & Carrier Tracking Request',
+        body: `Hi team,\n\nPlease confirm shipment readiness, carrier BOL, and tracking reference for our upcoming PO consignment so we can lock in dock staging at Sarasota DC.\n\n${mailSignature.body}`
+      },
+      '2': {
+        subject: 'Inventory ATS & Safety Buffer Inquiry',
+        body: `Hello Partner,\n\nCould you share updated Available-to-Sell (ATS) stock quantities and current production lead times for our Q4 replenishment SKUs?\n\n${mailSignature.body}`
+      },
+      '3': {
+        subject: 'Carrier Dispatch & Dock Staging Appointment',
+        body: `Hello Dispatch,\n\nYour inbound freight slot is confirmed at Sarasota DC Hub (Dock Door #12, Staging Bay #4). Please attach packing lists and CoA records to Pallet #1.\n\n${mailSignature.body}`
+      }
+    };
 
     document.querySelectorAll('.template-use-btn').forEach(btn => {
       btn.onclick = () => {
+        const preset = templatePresets[btn.dataset.tmpl] || {};
         close();
-        openComposeModal();
+        openComposeModal({ subject: preset.subject, body: preset.body });
       };
     });
+  }
+
+  function openSignaturesModal() {
+    document.getElementById('signatures-modal-backdrop')?.remove();
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="sys-modal-backdrop" id="signatures-modal-backdrop">
+        <div class="sys-modal mail-templates-dialog" role="dialog" aria-modal="true" aria-labelledby="sig-modal-title">
+          <div class="sys-modal-head">
+            <h3 id="sig-modal-title">Email Signatures</h3>
+            <button type="button" class="sys-modal-close" id="btn-close-signatures" aria-label="Close dialog">✕</button>
+          </div>
+          <div class="sys-modal-body">
+            <div class="sys-form">
+              <label>Signature Label
+                <input type="text" id="sig-name-input" value="${esc(mailSignature.name)}" placeholder="e.g. MK97 Operations Standard">
+              </label>
+              <label>Signature Content
+                <textarea id="sig-body-input" rows="5" placeholder="Enter your email sign-off...">${esc(mailSignature.body)}</textarea>
+              </label>
+              <label class="mail-setting-toggle-row">
+                <input type="checkbox" id="sig-auto-append" ${mailSettings.autoSignature ? 'checked' : ''}>
+                <span>Automatically append signature to new emails &amp; templates</span>
+              </label>
+            </div>
+          </div>
+          <div class="sys-modal-foot">
+            <button type="button" class="sys-btn" id="btn-cancel-signatures">Cancel</button>
+            <button type="button" class="sys-btn primary" id="btn-save-signatures">Save Signature</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const backdrop = wrap.firstElementChild;
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelector('#btn-close-signatures').onclick = close;
+    backdrop.querySelector('#btn-cancel-signatures').onclick = close;
+    backdrop.onclick = e => { if (e.target === backdrop) close(); };
+    backdrop.querySelector('#btn-save-signatures').onclick = () => {
+      mailSignature.name = backdrop.querySelector('#sig-name-input').value.trim() || DEFAULT_SIGNATURE.name;
+      mailSignature.body = backdrop.querySelector('#sig-body-input').value;
+      mailSettings.autoSignature = !!backdrop.querySelector('#sig-auto-append').checked;
+      saveMailSignature();
+      saveMailSettings();
+      close();
+      notice('Email signature saved.');
+    };
+  }
+
+  function openSettingsModal() {
+    document.getElementById('settings-modal-backdrop')?.remove();
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="sys-modal-backdrop" id="settings-modal-backdrop">
+        <div class="sys-modal mail-templates-dialog" role="dialog" aria-modal="true" aria-labelledby="set-modal-title">
+          <div class="sys-modal-head">
+            <h3 id="set-modal-title">Mail Settings</h3>
+            <button type="button" class="sys-modal-close" id="btn-close-settings" aria-label="Close dialog">✕</button>
+          </div>
+          <div class="sys-modal-body">
+            <div class="mail-settings-status-banner">
+              <span class="sc-pulse-dot"></span>
+              <div>
+                <strong>Supply Chain Mail Gateway Connected</strong>
+                <small>Supabase Realtime &amp; Outbound Dispatch ready</small>
+              </div>
+            </div>
+            <div class="sys-form" style="margin-top:14px;">
+              <label>Default Sender Mailbox
+                <select id="set-default-mailbox">
+                  <option value="supply.chain@mk97.com" ${mailSettings.defaultMailbox === 'supply.chain@mk97.com' ? 'selected' : ''}>supply.chain@mk97.com</option>
+                  <option value="procurement@mk97.com" ${mailSettings.defaultMailbox === 'procurement@mk97.com' ? 'selected' : ''}>procurement@mk97.com</option>
+                  <option value="logistics@mk97.com" ${mailSettings.defaultMailbox === 'logistics@mk97.com' ? 'selected' : ''}>logistics@mk97.com</option>
+                </select>
+              </label>
+              <label>Inbox List Density
+                <select id="set-density">
+                  <option value="comfortable" ${mailSettings.density === 'comfortable' ? 'selected' : ''}>Comfortable (Spacious)</option>
+                  <option value="compact" ${mailSettings.density === 'compact' ? 'selected' : ''}>Compact (High Information Density)</option>
+                </select>
+              </label>
+              <label class="mail-setting-toggle-row">
+                <input type="checkbox" id="set-show-telemetry" ${mailSettings.showTelemetry ? 'checked' : ''}>
+                <span>Show Live Supply Chain Telemetry Strip</span>
+              </label>
+              <label class="mail-setting-toggle-row">
+                <input type="checkbox" id="set-show-intel" ${showIntelPanel ? 'checked' : ''}>
+                <span>Show Right-Hand Supply Chain Context Panel</span>
+              </label>
+            </div>
+          </div>
+          <div class="sys-modal-foot">
+            <button type="button" class="sys-btn" id="btn-cancel-settings">Cancel</button>
+            <button type="button" class="sys-btn primary" id="btn-save-settings">Apply Settings</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const backdrop = wrap.firstElementChild;
+    document.body.appendChild(backdrop);
+    const close = () => backdrop.remove();
+    backdrop.querySelector('#btn-close-settings').onclick = close;
+    backdrop.querySelector('#btn-cancel-settings').onclick = close;
+    backdrop.onclick = e => { if (e.target === backdrop) close(); };
+    backdrop.querySelector('#btn-save-settings').onclick = () => {
+      mailSettings.defaultMailbox = backdrop.querySelector('#set-default-mailbox').value;
+      mailSettings.density = backdrop.querySelector('#set-density').value;
+      mailSettings.showTelemetry = !!backdrop.querySelector('#set-show-telemetry').checked;
+      showIntelPanel = !!backdrop.querySelector('#set-show-intel').checked;
+      saveMailSettings();
+      close();
+      updateView();
+      notice('Mail settings updated.');
+    };
   }
 
   function openAssignModal(thread) {
@@ -3311,12 +3508,57 @@ function renderDetailView() {
     notice(`Downloaded ${a.download}`);
   }
 
+  function bindListControls() {
+    const root = document.getElementById('stark-mail-content');
+    if (!root) return;
+
+    // List header tabs
+    root.querySelectorAll('.mail-list-tab').forEach(tab => {
+      tab.onclick = () => {
+        activeFilterTab = tab.dataset.tab;
+        updateThreadList();
+      };
+    });
+
+    // Funnel filter button inside list header
+    const funnelBtn = root.querySelector('#btn-toggle-filter');
+    if (funnelBtn) {
+      funnelBtn.onclick = () => {
+        showFilterBar = !showFilterBar;
+        updateThreadList();
+      };
+    }
+
+    // Quick filter pills
+    root.querySelectorAll('.mail-filter-pill').forEach(pill => {
+      pill.onclick = () => {
+        labelFilter = pill.dataset.label;
+        updateThreadList();
+      };
+    });
+
+    // Reset filters button in empty state
+    const resetFiltersBtn = root.querySelector('#btn-reset-filters');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.onclick = () => {
+        activeFolder = 'inbox';
+        activeFilterTab = 'all';
+        searchQuery = '';
+        labelFilter = 'all';
+        mailboxFilter = 'all';
+        timeFilter = 'all';
+        updateView();
+      };
+    }
+  }
+
   function updateThreadList() {
     const root = document.getElementById('stark-mail-content');
     if (!root) return;
     const listContainer = root.querySelector('.mail-col-list');
     if (listContainer) {
       listContainer.outerHTML = renderThreadList();
+      bindListControls();
       bindThreadClicks();
     }
   }
@@ -3577,8 +3819,8 @@ function renderDetailView() {
                     <span style="font-weight:700;font-family:ui-monospace;">${item.qtyShipped} pcs</span>
                   </td>
                   <td>
-                    <span style="font-family:ui-monospace;">\${item.unitPrice.toFixed(2)}</span>
-                    <small style="display:block;color:#64748b;font-family:ui-monospace;">\${(item.qtyShipped * item.unitPrice).toLocaleString()}</small>
+                    <span style="font-family:ui-monospace;">$${item.unitPrice.toFixed(2)}</span>
+                    <small style="display:block;color:#64748b;font-family:ui-monospace;">$${(item.qtyShipped * item.unitPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</small>
                   </td>
                   <td>
                     <div class="sc-inv-health-bar" title="On-Hand: ${item.onHand} | In-Transit: ${item.inTransit} | Safety: ${item.safetyTarget}">
@@ -3813,30 +4055,34 @@ function renderDetailView() {
   function renderApp() {
     const root = document.getElementById('stark-mail-content');
     if (!root) return;
+    const inboxCount = threads.filter(t => t.folder === 'inbox').length;
 
     root.innerHTML = `
       <div class="mail-workspace-nav" role="navigation" aria-label="Workspace View">
         <div class="workspace-view-switch" role="tablist" aria-label="Workspace View">
-          <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=modules') : 'workspace.html?view=modules'}" role="tab" aria-label="Operational Modules" title="Operational Modules">
-            ▦ Operational Modules
+          <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=operations') : 'workspace.html?view=operations'}" role="tab" aria-label="Operations" title="Operations workspace">
+            Operations
+          </a>
+          <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=modules') : 'workspace.html?view=modules'}" role="tab" aria-label="Modules" title="Operational Modules">
+            Modules
+          </a>
+          <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=telemetry') : 'workspace.html?view=telemetry'}" role="tab" aria-label="Analytics" title="Fulfillment &amp; Demand Analytics">
+            Analytics
           </a>
           <a class="workspace-view-tab workspace-mail-tab active" href="${S ? S.url('mail.html') : 'mail.html'}" role="tab" aria-selected="true" aria-current="page" aria-label="MK97 Mail" title="MK97 Mail · MK97 ERP Enterprise Mail">
             <svg class="workspace-mail-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             <span>MK97 Mail</span>
-            <span class="workspace-mail-pill">12</span>
+            <span class="workspace-mail-pill">${inboxCount}</span>
           </a>
           <a class="workspace-view-tab" href="${S ? S.url('tasks.html') : 'tasks.html'}" role="tab" aria-label="Tasks workspace" title="Tasks &amp; Operational Reminders">
-            ☑ Tasks
-          </a>
-          <a class="workspace-view-tab" href="${S ? S.url('workspace.html?view=telemetry') : 'workspace.html?view=telemetry'}" role="tab" aria-label="Telemetry &amp; KPIs" title="Fulfillment &amp; Demand Telemetry">
-            📊 Telemetry &amp; KPIs
+            Tasks
           </a>
         </div>
       </div>
-      <div class="stark-mail-container">
+      <div class="stark-mail-container density-${esc(mailSettings.density)} ${mailSettings.showTelemetry ? '' : 'telemetry-hidden'}">
         ${renderSubHeader()}
         ${renderTelemetryRibbon()}
-        <div class="stark-mail-workspace ${isComposeActive ? 'compose-active' : ''} ${isComposeExpanded ? 'compose-expanded' : ''}">
+        <div class="stark-mail-workspace ${isComposeActive ? 'compose-active' : ''} ${isComposeExpanded ? 'compose-expanded' : ''} ${showIntelPanel ? '' : 'intel-collapsed'}">
           ${renderSidebar()}
           ${renderThreadList()}
           ${isComposeActive ? renderComposePane() : `${renderDetailView()}${renderIntelPanel()}`}
@@ -3845,6 +4091,9 @@ function renderDetailView() {
     `;
 
     bindEvents();
+    if (window.innerWidth <= 1100) {
+      root.querySelector('.mail-workspace-nav .workspace-view-tab.active')?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
+    }
   }
 
   function init() {
@@ -3867,6 +4116,14 @@ function renderDetailView() {
       activeThreadId = id;
       updateView();
     },
+    closeCompose: () => {
+      if (isComposeActive) {
+        isComposeActive = false;
+        isComposeExpanded = false;
+        updateView();
+      }
+    },
+    isComposeActive: () => isComposeActive,
     getSupabase,
     initReactiveMailFeed,
     mapEmailRecordToThread,
