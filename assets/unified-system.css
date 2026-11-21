@@ -213,9 +213,9 @@ body.stark-system { padding-left:var(--system-sidebar)!important; padding-top:70
 @media(max-width:700px){.stark-system .flow-lane{grid-template-columns:repeat(2,minmax(0,1fr));}.stark-system .flow-node:not(:last-child):after{display:none;}}
 @media(max-width:560px){.system-extra-line{grid-template-columns:1fr 1fr!important;}.system-extra-line label:first-child{grid-column:1/-1;}}
 
-/* Navigation animates captured documents only; live page content never fades out. */
+/* Smooth MPA transitions: stable scrollbar gutter + pinned persistent header/tabs/FAB + buttery cross-fade */
 @view-transition { navigation: auto; }
-html { background: #f4f7fc; }
+html { background: #f4f7fc; scrollbar-gutter: stable; }
 body.stark-system,
 body.stark-system.page-leaving,
 body.stark-system.premium-content-leaving,
@@ -223,10 +223,94 @@ body.stark-system.inventory-fallback-leaving { animation: none !important; opaci
 body.stark-system > main { animation: none !important; }
 body.stark-system.premium-content-leaving > main,
 body.stark-system.inventory-fallback-leaving .inventory-main > * { opacity: 1 !important; transform: none !important; }
-::view-transition-group(root) { animation-duration: 160ms; }
-::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
-::view-transition-new(root) { animation: stark-document-reveal 160ms ease-out both; mix-blend-mode: normal; }
+.system-header { view-transition-name: mk97-header; }
+.mk-brain-launcher { view-transition-name: mk97-fab; }
+.workspace-view-switch:first-of-type { view-transition-name: mk97-workspace-tabs; }
+::view-transition-group(root) { animation-duration: 180ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+::view-transition-old(root) { animation: stark-document-exit 120ms ease-out both; mix-blend-mode: normal; }
+::view-transition-new(root) { animation: stark-document-reveal 180ms cubic-bezier(0.22, 1, 0.36, 1) both; mix-blend-mode: normal; }
+::view-transition-group(mk97-header),
+::view-transition-group(mk97-fab),
+::view-transition-group(mk97-workspace-tabs) { animation-duration: 180ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+::view-transition-old(mk97-header),
+::view-transition-new(mk97-header),
+::view-transition-old(mk97-fab),
+::view-transition-new(mk97-fab) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(mk97-workspace-tabs),
+::view-transition-new(mk97-workspace-tabs) { animation-duration: 160ms; mix-blend-mode: normal; }
+@keyframes stark-document-exit { from { opacity: 1; } to { opacity: 0.94; } }
 @keyframes stark-document-reveal { from { opacity: 0; } to { opacity: 1; } }
+
+/* Unified Workspace Tab Bar geometry across Operations, MK97 Mail, and Tasks (zero position/height jump on switch) */
+body.stark-system.is-home .system-page {
+  padding-top: 10px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+.workspace-overview-header.workspace-clean-header {
+  padding: 0 0 8px 0 !important;
+  margin-bottom: 12px !important;
+}
+.mail-workspace-nav,
+.tasks-workspace-nav {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 24px 8px !important;
+  margin: 0 !important;
+  background: #f4f7fc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-sizing: border-box !important;
+}
+.workspace-view-switch {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  height: 40px !important;
+  margin-left: 0 !important;
+  padding: 3px !important;
+  gap: 3px !important;
+  background: #e9eff6 !important;
+  border: 1px solid #dbe4ef !important;
+  border-radius: 11px !important;
+  box-sizing: border-box !important;
+}
+.workspace-view-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 760px) {
+  .workspace-overview-header.workspace-clean-header,
+  .mail-workspace-nav,
+  .tasks-workspace-nav {
+    padding: 8px 12px !important;
+  }
+  .workspace-view-switch {
+    width: 100% !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    height: 38px !important;
+  }
+  .workspace-view-switch::-webkit-scrollbar { display: none !important; }
+  .workspace-view-tab {
+    height: 30px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    flex-shrink: 0 !important;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

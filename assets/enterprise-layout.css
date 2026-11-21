@@ -1003,7 +1003,7 @@ body.stark-system.is-mail .system-submodule-bar {
   border-radius: 10px;
   padding: 3px;
   border: 1px solid var(--sys-slate-200);
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .workspace-view-tab {
@@ -12818,7 +12818,9 @@ body.stark-system.is-home {
 
 body.is-home .system-page,
 body.stark-system.is-home .system-page {
-  padding-top: 14px !important;
+  padding-top: 10px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
   padding-bottom: 32px !important;
 }
 
@@ -12827,8 +12829,8 @@ body.stark-system.is-home .system-page {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  margin-bottom: 16px !important;
-  padding: 4px 0 14px 0 !important;
+  margin-bottom: 14px !important;
+  padding: 0 0 8px 0 !important;
   border-bottom: 1px solid var(--sys-slate-200) !important;
 }
 

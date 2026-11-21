@@ -143,12 +143,14 @@ body[data-system-page="mail"] .template-card p {
   margin-top: 2px;
 }
 
-/* Keep toasts clear of MK Co-Pilot button & Compose footer */
+/* Keep toasts clear of top workspace tabs & bottom-right MK Co-Pilot button */
 body[data-system-page="mail"] .system-toast {
-  top: 76px !important;
-  right: 20px !important;
-  bottom: auto !important;
-  z-index: 1400 !important;
+  top: auto !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  z-index: 2200 !important;
 }
 
 /* ==========================================================================
@@ -158,9 +160,9 @@ body[data-system-page="mail"] .mail-workspace-nav {
   flex: 0 0 auto !important;
   display: flex !important;
   align-items: center !important;
-  padding: 6px 20px !important;
-  min-height: 44px !important;
-  background: #f8fafc !important;
+  padding: 10px 24px 8px !important;
+  min-height: 0 !important;
+  background: #f4f7fc !important;
   border-bottom: 1px solid #e2e8f0 !important;
   box-sizing: border-box !important;
 }
@@ -170,24 +172,31 @@ body[data-system-page="mail"] .mail-workspace-nav .workspace-view-switch {
   align-items: center !important;
   gap: 3px !important;
   padding: 3px !important;
-  background: #eef2f6 !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 9px !important;
+  height: 40px !important;
+  background: #e9eff6 !important;
+  border: 1px solid #dbe4ef !important;
+  border-radius: 11px !important;
   overflow-x: auto !important;
   scrollbar-width: none !important;
   max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 body[data-system-page="mail"] .mail-workspace-nav .workspace-view-switch::-webkit-scrollbar {
   display: none !important;
 }
 body[data-system-page="mail"] .mail-workspace-nav .workspace-view-tab {
-  padding: 5px 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 32px !important;
+  padding: 0 14px !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
   color: #475569 !important;
-  border-radius: 6px !important;
+  border-radius: 8px !important;
   white-space: nowrap !important;
+  line-height: 1 !important;
   flex: 0 0 auto !important;
+  box-sizing: border-box !important;
 }
 body[data-system-page="mail"] .mail-workspace-nav .workspace-view-tab:hover {
   color: #0f766e !important;
@@ -1077,6 +1086,7 @@ body[data-system-page="mail"] .mail-shipment-head {
   }
   body[data-system-page="mail"] .mail-workspace-nav .workspace-view-switch {
     width: 100% !important;
+    height: 38px !important;
     box-sizing: border-box !important;
   }
 

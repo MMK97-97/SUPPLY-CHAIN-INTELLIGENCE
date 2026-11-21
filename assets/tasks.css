@@ -128,16 +128,33 @@ body.stark-system .sys-modal:has(> .modal-head) > .sys-modal-footer .sys-btn {
 }
 
 #tasks-content {
-  max-width: 1460px;
-  margin: 0 auto;
-  padding: 16px 24px 96px;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #0f172a;
 }
 
 .tasks-workspace-nav {
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 24px 8px;
+  margin: 0;
+  background: #f4f7fc;
+  border-bottom: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+.tasks-workspace-nav .workspace-view-switch {
+  margin-left: 0 !important;
+}
+
+.tsk-shell {
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 14px 24px 110px;
+  box-sizing: border-box;
 }
 
 /* Executive Hero Banner */
@@ -1578,16 +1595,26 @@ body[data-system-page="tasks"] #task-reminder-tray {
     padding: 11px 16px !important;
   }
   #tasks-content {
-    padding: 8px 12px 110px;
+    padding: 0;
+  }
+  .tsk-shell {
+    padding: 10px 12px 110px;
   }
   .tasks-workspace-nav {
     position: sticky;
     top: 64px;
     z-index: 40;
     background: #f4f7fc;
-    padding: 6px 12px;
-    margin: -4px -12px 12px;
+    padding: 8px 12px !important;
+    margin: 0 !important;
     border-bottom: 1px solid #e2e8f0;
+  }
+  .task-reminder-tray {
+    top: 74px !important;
+    bottom: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    max-width: none !important;
   }
   .tasks-workspace-nav .workspace-view-switch {
     display: flex;
