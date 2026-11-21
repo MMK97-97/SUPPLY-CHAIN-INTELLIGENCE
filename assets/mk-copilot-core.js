@@ -1082,6 +1082,766 @@
     };
   }
 
+  // ---- MK v6.0 Live ERP Intelligence, Executive Briefing & Natural-Language Command Parsers ----
+  const moneyFmt = val => '$' + Math.round(positive(val)).toLocaleString('en-US');
+
+  function getInboundQtyBySku(state) {
+    const map = new Map();
+    for (const po of state?.enterprise?.purchaseOrders || []) {
+      if (['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(po.status)) continue;
+      for (const ln of po.lines || []) {
+        const rem = Math.max(0, n(ln.qty) - n(ln.received) - n(ln.cancelledQty));
+        if (rem > 0) map.set(ln.sku, (map.get(ln.sku) || 0) + rem);
+      }
+    }
+    return map;
+  }
+
+  function getTplQtyBySku(state) {
+    const map = new Map();
+    for (const row of state?.logistics?.tplInventory || []) {
+      const list = map.get(row.sku) || [];
+      list.push(row);
+      map.set(row.sku, list);
+    }
+    return map;
+  }
+
+  function getLivePulse(state, mailThreads = []) {
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    const inboundMap = getInboundQtyBySku(state);
+    const activeTasks = (state?.tasks || []).filter(t => t.status !== 'DONE');
+    const ranked = prioritizeTasks(activeTasks, state, { mailThreads });
+    const criticalTasks = ranked.filter(x => x.analysis.tier === 'CRITICAL').length;
+
+    const lowStockSkus = (e.inventory || []).filter(item => {
+      if (item.nature === 'DIGITAL' || String(item.status || '').toLowerCase() === 'internal use') return false;
+      const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+      const inbound = inboundMap.get(item.sku) || 0;
+      return positive(item.safety) > 0 && (free + inbound) < positive(item.safety);
+    });
+
+    const delayedTpl = (l.tplShipments || []).filter(s => s.status === 'DELAYED');
+    const arrivedReceipts = (l.receipts || []).filter(r => r.status === 'ARRIVED');
+    const openPutaway = (l.putaway || []).filter(p => p.status !== 'DONE');
+    const varianceCounts = (l.cycleCounts || []).filter(c => c.status === 'VARIANCE');
+    const vendorWarnings = (e.vendors || []).filter(v => v.status === 'AUDIT_WARNING' || v.compliance === 'REVIEW');
+    const openOrders = (e.orders || []).filter(o => !CLOSED.has(o.status));
+    const openPOs = (e.purchaseOrders || []).filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(p.status));
+
+    const inboundMails = (mailThreads || []).filter(t => t && t.direction !== 'outbound' && t.folder !== 'sent' && t.folder !== 'trash');
+    const unreadMailCount = inboundMails.filter(t => t.unread).length;
+    const pendingTrackingMails = inboundMails.filter(m => {
+      const txt = `${m.subject || ''}\n${m.snippet || ''}\n${m.body || ''}`;
+      if (!/\b(tracking\s*(?:number|#|no\.?|request|info|details|update)|provide\s+(?:the\s+)?tracking|need\s+tracking|send\s+tracking|share\s+tracking)\b/i.test(txt)) return false;
+      return !findTrackingResolutionForMail(m, mailThreads, state);
+    });
+
+    return {
+      activeTasks: activeTasks.length,
+      criticalTasks,
+      lowStockCount: lowStockSkus.length,
+      lowStockSkus,
+      delayedTplCount: delayedTpl.length,
+      delayedTpl,
+      arrivedReceiptsCount: arrivedReceipts.length,
+      openPutawayCount: openPutaway.length,
+      varianceCountsCount: varianceCounts.length,
+      vendorWarningsCount: vendorWarnings.length,
+      openOrdersCount: openOrders.length,
+      openPOsCount: openPOs.length,
+      unreadMailCount,
+      pendingTrackingCount: pendingTrackingMails.length,
+      pendingTrackingMails,
+      topTask: ranked[0] || null
+    };
+  }
+
+  function buildExecutiveBriefing(state, mailThreads = [], options = {}) {
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    const pulse = getLivePulse(state, mailThreads);
+    const inboundMap = getInboundQtyBySku(state);
+
+    const openOrders = (e.orders || []).filter(o => !CLOSED.has(o.status));
+    const openOrderValue = openOrders.reduce((s, o) => s + (o.lines || []).reduce((ls, ln) => ls + positive(ln.qty) * positive(ln.price), 0), 0);
+    const missingOrderTracking = openOrders.filter(o => ['PICKING', 'PACKING'].includes(o.status) && !extractTrackingNumber(o.tracking));
+
+    const openPOs = (e.purchaseOrders || []).filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(p.status));
+    const openPOValue = openPOs.reduce((s, p) => s + (p.lines || []).reduce((ls, ln) => ls + positive(ln.qty) * positive(ln.cost), 0), 0);
+
+    const totalInvValue = (e.inventory || []).reduce((s, i) => s + positive(i.onHand) * positive(i.cost), 0);
+    const reviewAccts = (e.accounts || []).filter(a => a.status === 'REVIEW');
+
+    const lines = [
+      `**MK97 Executive Operations Briefing**`,
+      `Live cross-ERP telemetry across Orders, Inventory, Procurement, Warehouse, 3PL, Mail & Tasks:`,
+      ``,
+      `**1. Urgent Bottlenecks & Risk Radar**`
+    ];
+
+    if (pulse.lowStockSkus.length) {
+      for (const item of pulse.lowStockSkus) {
+        const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+        const suggested = Math.max(25, Math.ceil((positive(item.safety) * 2 - free) / 5) * 5);
+        lines.push(`• **LOW STOCK — ${item.model || item.sku}** (${item.brand}): **${free} free** vs **${item.safety} safety floor** (0 inbound POs) → Recommend ordering **${suggested} units** (${moneyFmt(suggested * positive(item.cost))}).`);
+      }
+    } else {
+      lines.push(`• **Inventory Safety Floors:** All active physical SKUs are covered by on-hand or inbound PO stock.`);
+    }
+
+    if (pulse.delayedTpl.length) {
+      for (const shp of pulse.delayedTpl) {
+        lines.push(`• **3PL DELAY — ${shp.id}** (${shp.orderId}): Delayed at \`${shp.nodeId}\` (${shp.sku}, qty ${shp.qty}) with **no tracking assigned**.`);
+      }
+    }
+    if (pulse.arrivedReceiptsCount || pulse.openPutawayCount) {
+      const rcv = (l.receipts || []).find(r => r.status === 'ARRIVED');
+      const pw = (l.putaway || []).find(p => p.status !== 'DONE');
+      lines.push(`• **Dock Putaway Bottleneck:** ${rcv ? `**${rcv.po}** arrived at Dock ${rcv.dock} (${moneyFmt(rcv.poTotal)})` : `${pulse.arrivedReceiptsCount} arrived receipt(s)`}${pw ? ` · Open putaway **${pw.id}** (${pw.qty} units ${pw.fromBin} → ${pw.toBin}, ${pw.assignee})` : ''}.`);
+    }
+    if (pulse.vendorWarningsCount) {
+      const v = (e.vendors || []).find(x => x.status === 'AUDIT_WARNING');
+      const sla = (e.slaLogs || []).find(s => s.vendorId === v?.id);
+      lines.push(`• **Supplier Compliance Alert:** **${v?.name}** (${v?.status}${sla ? `, ${sla.onTimePct}% on-time vs ${sla.targetDays}d target` : ''}).`);
+    }
+    if (pulse.pendingTrackingCount) {
+      lines.push(`• **Pending Mail Tracking Requests (${pulse.pendingTrackingCount}):** ${pulse.pendingTrackingMails.map(m => `**${m.related?.poNumber || m.subject}** (${m.senderName})`).join(', ')}.`);
+    }
+    if (reviewAccts.length) {
+      const a = reviewAccts[0];
+      const util = a.creditLimit ? Math.round((a.creditUsed / a.creditLimit) * 100) : 0;
+      lines.push(`• **Credit Review Account:** **${a.name}** at **${util}% credit utilization** (${moneyFmt(a.creditUsed)} / ${moneyFmt(a.creditLimit)}).`);
+    }
+
+    lines.push(
+      ``,
+      `**2. Portfolio Snapshot**`,
+      `• **Open Customer Orders:** ${openOrders.length} active (${moneyFmt(openOrderValue)} exposure · ${missingOrderTracking.length} in Picking/Packing without tracking)`,
+      `• **Open Vendor POs:** ${openPOs.length} open (${moneyFmt(openPOValue)} inbound value)`,
+      `• **Warehouse Inventory Value:** ${moneyFmt(totalInvValue)} across ${(e.inventory || []).length} SKUs (${pulse.varianceCountsCount} cycle count variance)`,
+      `• **Tasks Queue:** **${pulse.activeTasks} active** (${pulse.criticalTasks} critical)${pulse.topTask ? ` · **#1 Priority:** ${pulse.topTask.task.title} (${pulse.topTask.analysis.score}/100)` : ''}`
+    );
+
+    const metrics = [
+      { label: 'Active Tasks', value: String(pulse.activeTasks), tone: pulse.criticalTasks ? 'critical' : 'teal' },
+      { label: 'Low Stock', value: String(pulse.lowStockCount), tone: pulse.lowStockCount ? 'warn' : 'ok' },
+      { label: 'Open Orders', value: `${openOrders.length} · ${moneyFmt(openOrderValue)}`, tone: 'info' },
+      { label: 'Tracking Req', value: String(pulse.pendingTrackingCount), tone: pulse.pendingTrackingCount ? 'warn' : 'ok' }
+    ];
+
+    const actions = [];
+    if (pulse.lowStockSkus.length) {
+      const firstLow = pulse.lowStockSkus[0];
+      const free = Math.max(0, n(firstLow.onHand) - n(firstLow.reserved) - n(firstLow.damaged));
+      const qty = Math.max(25, Math.ceil((positive(firstLow.safety) * 2 - free) / 5) * 5);
+      actions.push({ label: `🛒 Issue PO (${qty} × ${firstLow.model || firstLow.sku})`, style: 'primary', prompt: `Place a vendor PO for ${firstLow.model || firstLow.sku} for ${qty} units` });
+    }
+    if (pulse.topTask) {
+      actions.push({ label: `🔔 Remind Team on #1`, style: 'teal', prompt: `Send reminder for #1` });
+    }
+    actions.push({ label: '⚡ Scan Mail & ERP', style: 'ghost', prompt: 'Scan mail and inventory for tasks' });
+    actions.push({ label: '📋 Open Tasks', style: 'ghost', href: 'tasks.html' });
+
+    const followUps = [
+      'Prioritize & analyze my tasks',
+      'Check low stock and inventory value',
+      'Summarize vendor performance',
+      'Show 3PL delays and warehouse status'
+    ];
+
+    return {
+      markdown: lines.join('\n'),
+      metrics,
+      actions,
+      followUps,
+      pulse,
+      inboundMap
+    };
+  }
+
+  function findBestLiveSku(query, state, lastEntity = null) {
+    const inv = state?.enterprise?.inventory || [];
+    const q = String(query || '').toLowerCase();
+    const qCompact = q.replace(/[^a-z0-9]/g, '');
+
+    // Direct exact / substring match on SKU, model, brand, title
+    let best = null;
+    let bestScore = 0;
+    for (const item of inv) {
+      const sku = String(item.sku || '').toLowerCase();
+      const model = String(item.model || '').toLowerCase();
+      const brand = String(item.brand || '').toLowerCase();
+      const title = String(item.title || '').toLowerCase();
+      const modelCompact = model.replace(/[^a-z0-9]/g, '');
+      let s = 0;
+      if (sku && tokenInText(q, sku)) s = Math.max(s, 100);
+      if (model && model.length >= 3 && (tokenInText(q, model) || qCompact.includes(modelCompact))) s = Math.max(s, 95);
+      // Fuzzy model family match e.g. WH-1000XM6 -> WH1000XM5
+      if (modelCompact.length >= 6 && qCompact.includes(modelCompact.slice(0, -1))) s = Math.max(s, 82);
+      if (brand && brand.length >= 3 && tokenInText(q, brand)) s = Math.max(s, 65);
+      if (title && title.split(/\s+/).filter(w => w.length >= 4).some(w => q.includes(w))) s = Math.max(s, 55);
+      if (s > bestScore) { bestScore = s; best = item; }
+    }
+    if (best) return { item: best, fuzzy: bestScore < 90 && bestScore >= 75 };
+    if (lastEntity?.type === 'SKU' && /\b(it|this|that|same)\b/i.test(q)) {
+      const prev = inv.find(i => i.sku === lastEntity.id);
+      if (prev) return { item: prev, fuzzy: false };
+    }
+    return { item: null, fuzzy: false };
+  }
+
+  function queryLiveInventory(query, state, lastEntity = null) {
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    const inv = e.inventory || [];
+    const inboundMap = getInboundQtyBySku(state);
+    const tplMap = getTplQtyBySku(state);
+    const q = String(query || '').toLowerCase();
+
+    const wantLowOnly = /\b(low\s*stock|below\s*safety|deficit|shortage|reorder|need\s*po|stockout)\b/i.test(q);
+    const { item: matched, fuzzy } = wantLowOnly && !/\b(af-200|wh1000|airpods|hcfb1|4217709208|amz|visa|sony|apple|aura)\b/i.test(q)
+      ? { item: null, fuzzy: false }
+      : findBestLiveSku(query, state, lastEntity);
+
+    if (matched) {
+      const free = Math.max(0, n(matched.onHand) - n(matched.reserved) - n(matched.damaged));
+      const inbound = inboundMap.get(matched.sku) || 0;
+      const safety = positive(matched.safety);
+      const deficit = Math.max(0, safety - (free + inbound));
+      const tplRows = tplMap.get(matched.sku) || [];
+      const tplTotal = tplRows.reduce((s, r) => s + positive(r.qty), 0);
+      const openPOs = (e.purchaseOrders || []).filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED'].includes(p.status) && (p.lines || []).some(ln => ln.sku === matched.sku));
+      const openOrders = (e.orders || []).filter(o => !CLOSED.has(o.status) && (o.lines || []).some(ln => ln.sku === matched.sku));
+      const cc = (l.cycleCounts || []).find(c => c.sku === matched.sku && c.status !== 'CLOSED');
+      const val = positive(matched.onHand) * positive(matched.cost);
+      const suggested = deficit > 0 ? Math.max(25, Math.ceil((safety * 2 - free) / 5) * 5) : 0;
+
+      const lines = [
+        `**Live Inventory Intelligence — ${matched.model || matched.sku} (${matched.brand})**`,
+        fuzzy ? `*Closest live catalog match for your query:* **${matched.title}** (\`${matched.sku}\`)` : `**${matched.title}** (\`${matched.sku}\` · ${matched.nature} · Status: ${matched.status})`,
+        ``,
+        `• **Warehouse Stock:** **${matched.onHand}** on-hand · **${matched.reserved}** reserved · **${free} free usable** (Safety floor: **${safety}**)`,
+        `• **Valuation:** ${moneyFmt(val)} at ${moneyFmt(matched.cost)}/unit (Standard price: ${moneyFmt(matched.standardPrice)})`,
+        `• **Inbound Vendor POs:** **${inbound} units**${openPOs.length ? ' — ' + openPOs.map(p => `**${p.po}** (${p.status}, ETA ${dateOnly(p.eta) || 'TBD'})`).join(', ') : ' (None scheduled)'}`,
+        tplRows.length ? `• **3PL Network Stock (${tplTotal} total):** ${tplRows.map(r => `${r.nodeId.replace('tpl_', '').toUpperCase()}: ${r.qty} (${r.reserved} res)`).join(' · ')}` : `• **3PL Network Stock:** 0 units`,
+        `• **Open Customer Demand:** ${openOrders.length} active order(s)${openOrders.length ? ' (' + openOrders.slice(0, 4).map(o => `#${o.po}`).join(', ') + ')' : ''}`,
+        cc ? `• **Warehouse Cycle Count:** \`${cc.id}\` (${cc.binId}) — **${cc.status}** (System ${cc.systemQty} vs Counted ${cc.countedQty ?? 'Pending'})` : ''
+      ].filter(Boolean);
+
+      if (deficit > 0) {
+        lines.push(``, `⚠️ **Action Required:** Free + Inbound (${free + inbound}) is **${deficit} units below safety floor**. Recommended replenishment: **${suggested} units** (${moneyFmt(suggested * positive(matched.cost))}).`);
+      }
+
+      const actions = [];
+      if (deficit > 0 || suggested > 0) {
+        actions.push({ label: `🛒 Issue Vendor PO (${suggested} × ${matched.model || matched.sku})`, style: 'primary', prompt: `Place a vendor PO for ${matched.model || matched.sku} for ${suggested} units` });
+      } else {
+        actions.push({ label: `🛒 Order 30 More Units`, style: 'teal', prompt: `Place a vendor PO for ${matched.model || matched.sku} for 30 units` });
+      }
+      actions.push({ label: `📋 Create Task for ${matched.model || matched.sku}`, style: 'ghost', prompt: `Create task to review ${matched.model || matched.sku} stock with Elena and David due tomorrow` });
+      actions.push({ label: '↗ Open Inventory Bins', style: 'ghost', href: 'warehouse-management/inventory-bins.html?sku=' + encodeURIComponent(matched.sku) });
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Free Usable', value: String(free), tone: deficit > 0 ? 'critical' : 'ok' },
+          { label: 'Safety Floor', value: String(safety), tone: 'info' },
+          { label: 'Inbound PO', value: String(inbound), tone: inbound > 0 ? 'teal' : 'warn' },
+          { label: 'Stock Value', value: moneyFmt(val), tone: 'info' }
+        ],
+        actions,
+        followUps: [`What if demand increases 25% for ${matched.model || matched.sku}?`, `Show open orders for ${matched.brand}`, 'Show executive briefing'],
+        entity: { type: 'SKU', id: matched.sku, label: matched.model || matched.sku }
+      };
+    }
+
+    // Portfolio / Low-Stock Radar view
+    const rows = inv.map(item => {
+      const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+      const inbound = inboundMap.get(item.sku) || 0;
+      const safety = positive(item.safety);
+      const deficit = Math.max(0, safety - (free + inbound));
+      const val = positive(item.onHand) * positive(item.cost);
+      return { item, free, inbound, safety, deficit, val };
+    });
+    const lowRows = rows.filter(r => r.deficit > 0 && r.item.nature !== 'DIGITAL');
+    const totalVal = rows.reduce((s, r) => s + r.val, 0);
+    const totalUnits = rows.reduce((s, r) => s + positive(r.item.onHand), 0);
+    const list = wantLowOnly && lowRows.length ? lowRows : rows.sort((a, b) => b.deficit - a.deficit || a.free - b.free);
+
+    const lines = [
+      wantLowOnly ? `**Low-Stock & Safety-Floor Radar (${lowRows.length} Alert${lowRows.length === 1 ? '' : 's'})**` : `**Live ERP Inventory Portfolio (${inv.length} SKUs · ${moneyFmt(totalVal)})**`,
+      ``
+    ];
+    for (const r of list.slice(0, 8)) {
+      const badge = r.deficit > 0 ? `⚠️ **SHORT ${r.deficit}**` : r.free < r.safety ? `🟡 Covered by ${r.inbound} inbound` : `✅ Healthy`;
+      lines.push(`• **${r.item.model || r.item.sku}** (${r.item.brand}) — Free: **${r.free}** / Safety: ${r.safety} · Inbound: ${r.inbound} · ${badge}`);
+    }
+
+    const actions = [];
+    if (lowRows.length) {
+      const top = lowRows[0];
+      const qty = Math.max(25, Math.ceil((top.safety * 2 - top.free) / 5) * 5);
+      actions.push({ label: `🛒 Issue PO (${qty} × ${top.item.model || top.item.sku})`, style: 'primary', prompt: `Place a vendor PO for ${top.item.model || top.item.sku} for ${qty} units` });
+    }
+    actions.push({ label: '⚡ Run Auto-Scan', style: 'teal', prompt: 'Scan mail and inventory for tasks' });
+    actions.push({ label: '↗ Open Stock & Bins', style: 'ghost', href: 'warehouse-management/inventory-bins.html' });
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: 'Total SKUs', value: String(inv.length), tone: 'info' },
+        { label: 'Total Units', value: totalUnits.toLocaleString('en-US'), tone: 'info' },
+        { label: 'Total Value', value: moneyFmt(totalVal), tone: 'teal' },
+        { label: 'Below Safety', value: String(lowRows.length), tone: lowRows.length ? 'critical' : 'ok' }
+      ],
+      actions,
+      followUps: lowRows.length ? [`Check inventory for ${lowRows[0].item.model}`, `Place a vendor PO for ${lowRows[0].item.model} for 45 units`, 'Show executive briefing'] : ['Check inventory for WH1000XM5', 'Show open vendor POs'],
+      entity: lowRows[0] ? { type: 'SKU', id: lowRows[0].item.sku, label: lowRows[0].item.model } : null
+    };
+  }
+
+  function queryLiveOrders(query, state, options = {}) {
+    const e = state?.enterprise || {};
+    const q = String(query || '').toLowerCase();
+    const report = analyze(state, options);
+    const assessMap = new Map(report.orders.map(a => [a.orderId, a]));
+    const acctMap = new Map((e.accounts || []).map(a => [a.id, a]));
+    const invMap = new Map((e.inventory || []).map(i => [i.sku, i]));
+
+    const openOrders = (e.orders || []).filter(o => !CLOSED.has(o.status));
+
+    // Check for specific order or brand or account filter
+    const filtered = openOrders.filter(o => {
+      const acct = acctMap.get(o.accountId);
+      const lineItems = (o.lines || []).map(ln => invMap.get(ln.sku)).filter(Boolean);
+      const hay = [o.id, o.po, o.orderNumber, o.status, o.type, acct?.name, ...lineItems.map(i => `${i.brand} ${i.model} ${i.sku} ${i.title}`)].join(' ').toLowerCase();
+      if (/\b(missing\s*tracking|no\s*tracking|untracked)\b/i.test(q)) return !extractTrackingNumber(o.tracking);
+      // Extract brand or specific PO/Order tokens if present
+      const brandHit = (e.inventory || []).map(i => i.brand).filter(Boolean).find(b => tokenInText(q, b));
+      if (brandHit) return hay.includes(brandHit.toLowerCase());
+      const acctHit = (e.accounts || []).find(a => a.name && tokenInText(q, a.name.split(' ')[0]));
+      if (acctHit) return o.accountId === acctHit.id;
+      const codeHit = [o.id, o.po, o.orderNumber].filter(Boolean).some(c => tokenInText(q, c));
+      if (codeHit) return true;
+      return false;
+    });
+
+    const targetOrders = filtered.length ? filtered : openOrders;
+    const totalVal = targetOrders.reduce((s, o) => s + (o.lines || []).reduce((ls, ln) => ls + positive(ln.qty) * positive(ln.price), 0), 0);
+    const untracked = targetOrders.filter(o => !extractTrackingNumber(o.tracking)).length;
+
+    const lines = [
+      `**Live Customer Orders Register (${targetOrders.length} Open · ${moneyFmt(totalVal)})**`,
+      ``
+    ];
+    for (const o of targetOrders.slice(0, 8)) {
+      const acct = acctMap.get(o.accountId);
+      const assess = assessMap.get(o.id);
+      const val = (o.lines || []).reduce((ls, ln) => ls + positive(ln.qty) * positive(ln.price), 0);
+      const skuTxt = (o.lines || []).map(ln => `${ln.qty}× ${invMap.get(ln.sku)?.model || ln.sku}`).join(', ');
+      lines.push(`• **#${o.po}**${o.orderNumber ? ` (\`${o.orderNumber}\`)` : ''} — ${acct?.name || 'Customer'} · **${o.status}** · ${moneyFmt(val)} · ${skuTxt}${o.inHandsDate ? ` · In-hands: ${o.inHandsDate}` : ''}${assess ? ` · FIFO: ${assess.allocatable ? '✅ Allocatable' : '⚠️ Review'}` : ''}${!extractTrackingNumber(o.tracking) && ['PICKING', 'PACKING'].includes(o.status) ? ' · ⚠️ No tracking' : ''}`);
+    }
+
+    const reviewAcct = (e.accounts || []).find(a => a.status === 'REVIEW');
+    if (reviewAcct && /\b(credit|account|customer|crm|meridian)\b/i.test(q)) {
+      lines.push(``, `⚠️ **CRM Credit Alert:** **${reviewAcct.name}** (${reviewAcct.status}) — ${moneyFmt(reviewAcct.creditUsed)} used of ${moneyFmt(reviewAcct.creditLimit)} limit (${Math.round(reviewAcct.creditUsed / Math.max(1, reviewAcct.creditLimit) * 100)}%).`);
+    }
+
+    const first = targetOrders[0];
+    const actions = [];
+    if (first) {
+      actions.push({ label: `📋 Create Task for #${first.po}`, style: 'teal', prompt: `Create task to expedite order ${first.po} with Sarah and Marcus due tomorrow` });
+    }
+    actions.push({ label: '↗ Open Orders Register', style: 'ghost', href: 'all-open-orders.html' });
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: 'Open Orders', value: String(targetOrders.length), tone: 'info' },
+        { label: 'Order Value', value: moneyFmt(totalVal), tone: 'teal' },
+        { label: 'No Tracking', value: String(untracked), tone: untracked ? 'warn' : 'ok' }
+      ],
+      actions,
+      followUps: first ? [`Create task for ${first.po} escalation with Sarah due tomorrow`, 'Summarize vendor performance', 'Show executive briefing'] : ['Show executive briefing'],
+      entity: first ? { type: 'ORDER', id: first.id, label: first.po } : null
+    };
+  }
+
+  function queryLiveVendors(query, state) {
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    const vendors = e.vendors || [];
+    const slaMap = new Map((e.slaLogs || []).map(s => [s.vendorId, s]));
+    const openPOs = (e.purchaseOrders || []).filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(p.status));
+    const q = String(query || '').toLowerCase();
+
+    // Specific PO check
+    const matchedPO = openPOs.find(p => tokenInText(q, p.po) || tokenInText(q, p.id) || (String(p.po).match(/\d{5,}/) && q.includes(String(p.po).match(/\d{5,}/)[0])));
+    if (matchedPO) {
+      const v = vendors.find(x => x.id === matchedPO.vendorId);
+      const rcv = (l.receipts || []).find(r => normToken(r.po) === normToken(matchedPO.po));
+      const pw = rcv ? (l.putaway || []).find(p => p.receiptId === rcv.id && p.status !== 'DONE') : null;
+      const val = (matchedPO.lines || []).reduce((s, ln) => s + positive(ln.qty) * positive(ln.cost), 0);
+      const qty = (matchedPO.lines || []).reduce((s, ln) => s + positive(ln.qty), 0);
+      const lines = [
+        `**Vendor PO Intelligence — ${matchedPO.po}**`,
+        `• **Supplier:** ${v?.name || 'Supplier'} (${v?.status || 'ACTIVE'} · Lead time ${v?.leadTime ?? '—'}d)`,
+        `• **Status:** **${matchedPO.status}** · **${qty} units** · Value: **${moneyFmt(val)}** · ETA: **${dateOnly(matchedPO.eta) || 'TBD'}**`,
+        `• **Carrier / Tracking:** ${matchedPO.carrier || 'TBD'} · \`${matchedPO.tracking || 'Not assigned'}\``,
+        rcv ? `• **Warehouse Receipt:** \`${rcv.id}\` — **${rcv.status}** at Dock **${rcv.dock}** (ASN \`${rcv.asn}\`)` : '',
+        pw ? `• **Open Putaway:** \`${pw.id}\` — **${pw.qty} units** (${pw.fromBin} → ${pw.toBin}, Priority: ${pw.priority}, Assignee: ${pw.assignee})` : ''
+      ].filter(Boolean);
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Status', value: matchedPO.status.replace('_', ' '), tone: rcv?.status === 'ARRIVED' ? 'warn' : 'teal' },
+          { label: 'PO Value', value: moneyFmt(val), tone: 'info' },
+          { label: 'Quantity', value: `${qty} units`, tone: 'info' }
+        ],
+        actions: [
+          { label: `📋 Create Escalation Task`, style: 'primary', prompt: `Create task for ${matchedPO.po} escalation with Elena and Marcus due tomorrow` },
+          { label: '↗ Open Procurement', style: 'ghost', href: 'procurement/index.html?po=' + encodeURIComponent(matchedPO.po) }
+        ],
+        followUps: [`Create task for ${matchedPO.po} with Elena and Marcus due tomorrow`, 'Summarize vendor performance', 'Show executive briefing'],
+        entity: { type: 'PO', id: matchedPO.id, label: matchedPO.po }
+      };
+    }
+
+    const totalPOVal = openPOs.reduce((s, p) => s + (p.lines || []).reduce((ls, ln) => ls + positive(ln.qty) * positive(ln.cost), 0), 0);
+    const warnings = vendors.filter(v => v.status === 'AUDIT_WARNING' || (slaMap.get(v.id)?.onTimePct ?? 100) < 92);
+
+    const lines = [
+      `**Vendor Performance & Procurement Intelligence**`,
+      ``,
+      `**Supplier SLA Scorecard (${vendors.length} Vendors):**`
+    ];
+    for (const v of vendors) {
+      const sla = slaMap.get(v.id);
+      const vPOs = openPOs.filter(p => p.vendorId === v.id);
+      const flag = v.status === 'AUDIT_WARNING' || (sla && sla.onTimePct < 92) ? '⚠️ **AUDIT WARNING**' : '✅ Healthy';
+      lines.push(`• **${v.name}** — On-time: **${sla ? sla.onTimePct + '%' : '—'}** (${sla ? `${sla.actualDays}d vs ${sla.targetDays}d target` : `${v.leadTime}d lead`}) · Open POs: ${vPOs.length} · ${flag}`);
+    }
+    lines.push(``, `**Open Purchase Orders (${openPOs.length} · ${moneyFmt(totalPOVal)}):**`);
+    for (const p of openPOs) {
+      const v = vendors.find(x => x.id === p.vendorId);
+      const qty = (p.lines || []).reduce((s, ln) => s + positive(ln.qty), 0);
+      const rcv = (l.receipts || []).find(r => normToken(r.po) === normToken(p.po));
+      lines.push(`• **${p.po}** (${v?.name || 'Supplier'}) — ${p.status} · ${qty} units · ETA ${dateOnly(p.eta) || 'TBD'}${rcv?.status === 'ARRIVED' ? ' · 🟡 **ARRIVED at Dock ' + rcv.dock + '**' : ''}${p.tracking ? ` · \`${p.tracking}\`` : ' · ⚠️ No tracking'}`);
+    }
+
+    const actions = [];
+    if (warnings.length) {
+      actions.push({ label: `📋 Escalate ${warnings[0].name.split(' ')[0]} SLA`, style: 'primary', prompt: `Create task for ${warnings[0].name} SLA audit warning and open PO review with Elena due tomorrow` });
+    }
+    actions.push({ label: '↗ Open Vendor SLAs', style: 'ghost', href: 'vendor-management/sla.html' });
+    actions.push({ label: '↗ Open Procurement', style: 'ghost', href: 'procurement/index.html' });
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: 'Vendors', value: String(vendors.length), tone: 'info' },
+        { label: 'SLA Warnings', value: String(warnings.length), tone: warnings.length ? 'critical' : 'ok' },
+        { label: 'Open POs', value: `${openPOs.length} · ${moneyFmt(totalPOVal)}`, tone: 'teal' }
+      ],
+      actions,
+      followUps: ['Analyze PO-2026-887411', 'Check low stock and reorder radar', 'Show executive briefing'],
+      entity: openPOs[0] ? { type: 'PO', id: openPOs[0].id, label: openPOs[0].po } : null
+    };
+  }
+
+  function queryLiveLogistics3PL(query, state) {
+    const l = state?.logistics || {};
+    const nodes = l.tplNodes || [];
+    const shipments = l.tplShipments || [];
+    const delayed = shipments.filter(s => s.status === 'DELAYED');
+    const receipts = l.receipts || [];
+    const putaway = (l.putaway || []).filter(p => p.status !== 'DONE');
+    const waves = l.waves || [];
+    const ccVar = (l.cycleCounts || []).filter(c => c.status === 'VARIANCE' || c.status === 'OPEN');
+    const recs = (l.reconciliations || []).filter(r => r.status !== 'RESOLVED');
+
+    const lines = [
+      `**3PL Network & Warehouse Operations Pulse**`,
+      ``,
+      `**3PL Partner Nodes:**`,
+      ...nodes.map(nd => `• **${nd.name}** (${nd.city}, ${nd.state}) — On-time: **${nd.onTime}%** · Accuracy: ${nd.inventoryAccuracy}% · ${nd.status === 'WATCH' ? '⚠️ **WATCH**' : '✅ ACTIVE'}`),
+      ``,
+      `**3PL Shipments (${shipments.length} Active · ${delayed.length} Delayed):**`,
+      ...shipments.map(s => `• **${s.id}** (\`${s.orderId}\`) — ${s.sku} × ${s.qty} · **${s.status}**${s.status === 'DELAYED' ? ' 🚨' : ''} · Tracking: \`${s.tracking || 'Missing'}\``),
+      ``,
+      `**Warehouse Control Tower:**`,
+      `• **Dock Receipts:** ${receipts.filter(r => r.status === 'ARRIVED').length} ARRIVED (${receipts.filter(r => r.status === 'ARRIVED').map(r => `${r.po} @ Dock ${r.dock}`).join(', ') || 'None'}) · ${receipts.filter(r => r.status === 'SCHEDULED').length} scheduled`,
+      `• **Open Putaway:** ${putaway.length} job(s)${putaway.length ? ' — ' + putaway.map(p => `${p.id}: ${p.qty}u ${p.fromBin}→${p.toBin} (${p.assignee})`).join('; ') : ''}`,
+      `• **Picking Waves:** ${waves.length} active (${waves.map(w => `${w.id}: ${w.status}`).join(', ')})`,
+      `• **Cycle Counts & 3PL Reconciliations:** ${ccVar.length} open/variance count(s), ${recs.length} open 3PL variance(s)`
+    ];
+
+    const actions = [];
+    if (delayed.length) {
+      actions.push({ label: `📦 Dispatch & Track ${delayed[0].id}`, style: 'primary', prompt: `Provide tracking FDX774920011 for ${delayed[0].id}` });
+    }
+    actions.push({ label: '↗ Open 3PL Shipments', style: 'ghost', href: '3pl-management/shipments.html' });
+    actions.push({ label: '↗ Open Warehouse', style: 'ghost', href: 'warehouse-management/index.html' });
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: '3PL Delayed', value: String(delayed.length), tone: delayed.length ? 'critical' : 'ok' },
+        { label: 'Open Putaway', value: String(putaway.length), tone: putaway.length ? 'warn' : 'ok' },
+        { label: 'Count / Recs', value: String(ccVar.length + recs.length), tone: 'info' }
+      ],
+      actions,
+      followUps: delayed.length ? [`Provide tracking FDX774920011 for ${delayed[0].id}`, 'Prioritize & analyze my tasks', 'Show executive briefing'] : ['Show executive briefing'],
+      entity: delayed[0] ? { type: '3PL', id: delayed[0].id, label: delayed[0].id } : null
+    };
+  }
+
+  function queryLiveMail(query, state, mailThreads = []) {
+    const inbound = (mailThreads || []).filter(t => t && t.direction !== 'outbound' && t.folder !== 'sent' && t.folder !== 'trash');
+    const sent = (mailThreads || []).filter(t => t && (t.direction === 'outbound' || t.folder === 'sent'));
+    const unread = inbound.filter(t => t.unread);
+    const trackingReqs = inbound.filter(m => {
+      const txt = `${m.subject || ''}\n${m.snippet || ''}\n${m.body || ''}`;
+      return /\b(tracking\s*(?:number|#|no\.?|request|info|details|update)|provide\s+(?:the\s+)?tracking|need\s+tracking|send\s+tracking)\b/i.test(txt) && !findTrackingResolutionForMail(m, mailThreads, state);
+    });
+
+    const lines = [
+      `**MK97 Mail Live Inbox Intelligence**`,
+      `• **Inbox:** ${inbound.length} threads (${unread.length} unread) · **Sent:** ${sent.length} outbound messages`,
+      `• **Pending Tracking Requests:** **${trackingReqs.length}** awaiting tracking reply`,
+      ``
+    ];
+    if (trackingReqs.length) {
+      lines.push(`**Action Needed — Tracking Requests:**`);
+      for (const m of trackingReqs) {
+        lines.push(`• **${m.related?.poNumber || m.subject}** from **${m.senderName}** (\`${m.senderEmail}\`) — "${(m.snippet || '').slice(0, 90)}"`);
+      }
+      lines.push(``);
+    }
+    lines.push(`**Latest Inbox Threads:**`);
+    for (const m of inbound.slice(0, 5)) {
+      lines.push(`• ${m.unread ? '🔵' : '⚪'} **${m.subject}** — ${m.senderName}${m.related?.poNumber ? ` (\`${m.related.poNumber}\`)` : ''}`);
+    }
+
+    const actions = [
+      { label: '⚡ Scan Mail & Auto-Create Tasks', style: 'primary', prompt: 'Scan mail and inventory for tasks' }
+    ];
+    if (trackingReqs.length) {
+      actions.push({ label: `📦 Reply Tracking for ${trackingReqs[0].related?.poNumber || trackingReqs[0].id}`, style: 'teal', prompt: `Provide tracking DHL9988776 for ${trackingReqs[0].related?.poNumber || trackingReqs[0].id}` });
+      actions.push({ label: '✉ Open Top Thread', style: 'ghost', href: 'mail.html?thread=' + encodeURIComponent(trackingReqs[0].id) });
+    } else {
+      actions.push({ label: '✉ Open MK97 Mail', style: 'ghost', href: 'mail.html' });
+    }
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: 'Unread Mail', value: String(unread.length), tone: unread.length ? 'info' : 'ok' },
+        { label: 'Tracking Req', value: String(trackingReqs.length), tone: trackingReqs.length ? 'critical' : 'ok' },
+        { label: 'Sent Outbound', value: String(sent.length), tone: 'teal' }
+      ],
+      actions,
+      followUps: trackingReqs.length ? [`Provide tracking DHL9988776 for ${trackingReqs[0].related?.poNumber || trackingReqs[0].id}`, 'Prioritize & analyze my tasks'] : ['Prioritize & analyze my tasks'],
+      entity: trackingReqs[0] ? { type: 'MAIL', id: trackingReqs[0].id, label: trackingReqs[0].related?.poNumber || trackingReqs[0].subject } : null
+    };
+  }
+
+  function parseNaturalTaskCommand(text, roster = DEFAULT_TEAM_ROSTER, nowIso = new Date().toISOString()) {
+    const raw = String(text || '').trim();
+    const nowMs = Date.parse(nowIso);
+
+    // Extract assignees mentioned by first name, full name, or email
+    const assignees = [];
+    const seen = new Set();
+    for (const member of roster) {
+      const first = String(member.name || '').split(/\s+/)[0];
+      const hit = (member.name && tokenInText(raw, member.name)) ||
+        (first && first.length >= 3 && tokenInText(raw, first)) ||
+        (member.email && raw.toLowerCase().includes(member.email.toLowerCase()));
+      if (hit && !seen.has(member.id)) { seen.add(member.id); assignees.push({ ...member }); }
+    }
+    // Also detect any raw external emails
+    for (const m of raw.matchAll(/\b([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})\b/g)) {
+      const em = m[1];
+      if (!assignees.some(a => (a.email || '').toLowerCase() === em.toLowerCase())) {
+        const name = em.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        assignees.push({ id: 'ext_' + em.toLowerCase().replace(/[^a-z0-9]/g, ''), name, email: em, role: 'Collaborator', avatar: name.slice(0, 2).toUpperCase(), color: '#0284c7' });
+      }
+    }
+    if (!assignees.length) assignees.push({ ...roster[0] });
+
+    // Extract due date & reminder time
+    let dueMs = nowMs + 24 * 3600000;
+    const inHours = raw.match(/\bin\s+(\d+)\s*hours?\b/i);
+    const inDays = raw.match(/\bin\s+(\d+)\s*days?\b/i);
+    const isoDate = raw.match(/\b(20\d{2}-\d{2}-\d{2})\b/);
+    if (inHours) dueMs = nowMs + Math.max(1, Number(inHours[1])) * 3600000;
+    else if (inDays) dueMs = nowMs + Math.max(1, Number(inDays[1])) * 86400000;
+    else if (isoDate) dueMs = Date.parse(isoDate[1] + 'T17:00:00Z');
+    else if (/\btoday\b|\beod\b/i.test(raw)) dueMs = nowMs + 6 * 3600000;
+    else if (/\btomorrow\b/i.test(raw)) dueMs = nowMs + 24 * 3600000;
+    else if (/\bnext\s+week\b/i.test(raw)) dueMs = nowMs + 7 * 86400000;
+
+    const remMs = Math.max(nowMs + 15 * 60000, dueMs - 2 * 3600000);
+
+    // Clean title from natural language prefix & trailing assignee/due clauses
+    let title = raw
+      .replace(/^\/create-task\s*/i, '')
+      .replace(/^(?:please\s+)?(?:create|add|make|schedule|open|assign)\s+(?:a\s+)?(?:new\s+)?task\s*(?:to|for|about|regarding|:)?\s*/i, '')
+      .replace(/\s+(?:with|assign(?:ed)?\s+to|involving)\s+[A-Za-z0-9@._,\s&+-]+?(?=\s+(?:due|by|before|in\s+\d+|tomorrow|today|next\s+week)\b|$)/i, '')
+      .replace(/\s+(?:due|by|before)\s+(?:today|tomorrow|eod|next\s+week|in\s+\d+\s*(?:hours?|days?)|20\d{2}-\d{2}-\d{2})\b.*$/i, '')
+      .replace(/\s+in\s+\d+\s*(?:hours?|days?)\b.*$/i, '')
+      .trim();
+    if (!title || title.length < 3) title = raw.replace(/^\/create-task\s*/i, '').trim().slice(0, 140) || 'Operations Follow-Up Task';
+    title = title.charAt(0).toUpperCase() + title.slice(1);
+
+    return {
+      title: title.slice(0, 155),
+      assignees,
+      dueAt: new Date(dueMs).toISOString(),
+      reminderAt: new Date(Math.min(remMs, dueMs)).toISOString(),
+      notes: `Created via MK AI Co-Pilot command: "${raw}"`
+    };
+  }
+
+  function parseVendorPOCommand(text, state, lastEntity = null) {
+    const raw = String(text || '').trim();
+    const { item } = findBestLiveSku(raw, state, lastEntity);
+    if (!item) return null;
+
+    const qtyMatch = raw.match(/\b(?:for|qty|quantity|of)?\s*(\d{1,5})\s*(?:units?|pcs?|pieces?|x\b)?\b/i);
+    // Avoid mistaking model numbers (like 200 in AF-200 or 1000 in WH1000XM5) for quantity
+    const cleanedForQty = raw.replace(new RegExp(escRegex(item.model || ''), 'gi'), '').replace(new RegExp(escRegex(item.sku || ''), 'gi'), '');
+    const cleanQtyMatch = cleanedForQty.match(/\b(\d{1,5})\s*(?:units?|pcs?|pieces?)?\b/i);
+    const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+    const safety = positive(item.safety);
+    const defaultQty = Math.max(25, Math.ceil((Math.max(safety, 20) * 2 - free) / 5) * 5);
+    const qty = cleanQtyMatch ? Math.max(1, Number(cleanQtyMatch[1])) : (qtyMatch && Number(qtyMatch[1]) > 0 && !String(item.model || '').includes(qtyMatch[1]) ? Number(qtyMatch[1]) : defaultQty);
+
+    const vendors = state?.enterprise?.vendors || [];
+    const priceBook = (state?.enterprise?.vendorPriceBooks || []).find(pb => pb.sku === item.sku);
+    const vendor = vendors.find(v => v.id === priceBook?.vendorId) ||
+      vendors.find(v => item.brand && v.name.toLowerCase().includes(item.brand.toLowerCase().split(' ')[0])) ||
+      vendors[0] || { id: 'vend_default', name: item.brand || 'Primary Supplier', leadTime: 7 };
+
+    const unitCost = positive(priceBook?.cost || item.cost);
+    const poNumber = 'PO-2026-' + String(889100 + (state?.enterprise?.purchaseOrders?.length || 0) * 19);
+    const eta = new Date(Date.now() + Math.max(3, positive(vendor.leadTime || 7)) * 86400000).toISOString();
+
+    return {
+      item,
+      qty,
+      vendor,
+      unitCost,
+      totalCost: qty * unitCost,
+      poNumber,
+      eta
+    };
+  }
+
+  function parseTrackingUpdateCommand(text, state, mailThreads = [], lastEntity = null) {
+    const raw = String(text || '').trim();
+    const tracking = extractTrackingNumber(raw);
+    if (!tracking) return null;
+
+    const carrierMatch = raw.match(/\b(DHL(?:\s+Express)?|UPS(?:\s+Ground)?|FedEx(?:\s+Priority|\s+Ground)?|USPS|Aramex)\b/i);
+    const carrier = carrierMatch ? carrierMatch[1] : (/^1Z/i.test(tracking) ? 'UPS' : /^DHL/i.test(tracking) ? 'DHL Express' : /^FDX/i.test(tracking) ? 'FedEx' : 'Carrier');
+
+    // 1. Check 3PL shipments
+    for (const shp of state?.logistics?.tplShipments || []) {
+      if (tokenInText(raw, shp.id) || tokenInText(raw, shp.orderId) || (lastEntity?.type === '3PL' && lastEntity.id === shp.id && /\b(it|this|that)\b/i.test(raw))) {
+        return { tracking, carrier, targetType: '3PL', targetId: shp.id, targetLabel: `${shp.id} (${shp.orderId})` };
+      }
+    }
+
+    // 2. Check Mail threads
+    for (const m of mailThreads || []) {
+      if (m.direction === 'outbound' || m.folder === 'sent') continue;
+      const poRef = normToken(m.related?.poNumber || m.shipmentDetails?.poNumber || '');
+      const hit = tokenInText(raw, m.id) ||
+        (poRef && poRef.length >= 4 && tokenInText(raw, poRef)) ||
+        (m.senderName && m.senderName.length >= 4 && tokenInText(raw, m.senderName.split(' ')[0])) ||
+        (lastEntity?.type === 'MAIL' && lastEntity.id === m.id && /\b(it|this|that)\b/i.test(raw));
+      if (hit) {
+        return { tracking, carrier, targetType: 'MAIL', targetId: m.id, targetLabel: `${m.related?.poNumber || m.subject} (${m.senderName})`, mailThread: m };
+      }
+    }
+
+    // 3. Check Customer Orders
+    for (const o of state?.enterprise?.orders || []) {
+      if ([o.id, o.po, o.orderNumber].filter(Boolean).some(c => tokenInText(raw, c)) || (lastEntity?.type === 'ORDER' && lastEntity.id === o.id && /\b(it|this|that)\b/i.test(raw))) {
+        return { tracking, carrier, targetType: 'ORDER', targetId: o.id, targetLabel: `Order #${o.po}` };
+      }
+    }
+
+    // 4. Fallback to first pending tracking request email if unambiguous
+    const pulse = getLivePulse(state, mailThreads);
+    if (pulse.pendingTrackingMails.length) {
+      const m = pulse.pendingTrackingMails[0];
+      return { tracking, carrier, targetType: 'MAIL', targetId: m.id, targetLabel: `${m.related?.poNumber || m.subject} (${m.senderName})`, mailThread: m };
+    }
+    return null;
+  }
+
+  function simulateLiveInventoryScenario(text, state, lastEntity = null) {
+    const raw = String(text || '').trim();
+    const { item } = findBestLiveSku(raw, state, lastEntity);
+    const items = item ? [item] : (state?.enterprise?.inventory || []).filter(i => i.nature !== 'DIGITAL');
+    if (!items.length) return null;
+
+    const pctMatch = raw.match(/(increase|rise|grow|up|spike|decrease|drop|fall|down)[^\d]{0,16}(\d+(?:\.\d+)?)\s*%/i) || raw.match(/(\d+(?:\.\d+)?)\s*%[^\w]{0,6}(increase|rise|up|decrease|drop|down)/i);
+    const recvMatch = raw.match(/(?:receive|add|inbound|arrive|get)[^\d]{0,16}(\d+)\s*(?:units?)?/i);
+    const safetyMatch = raw.match(/safety(?:\s*stock)?[^\d]{0,14}(\d+)/i);
+
+    let mult = 1, extraUnits = 0, newSafety = null;
+    const desc = [];
+    if (pctMatch) {
+      const dir = isNaN(Number(pctMatch[1])) ? pctMatch[1] : pctMatch[2];
+      const pct = Number(isNaN(Number(pctMatch[1])) ? pctMatch[2] : pctMatch[1]);
+      const neg = /decrease|drop|fall|down/i.test(dir);
+      mult = Math.max(0, 1 + (neg ? -1 : 1) * pct / 100);
+      desc.push(`demand ${neg ? 'down' : 'up'} ${pct}%`);
+    }
+    if (recvMatch) { extraUnits = Number(recvMatch[1]); desc.push(`+${extraUnits} inbound units`); }
+    if (safetyMatch) { newSafety = Number(safetyMatch[1]); desc.push(`safety floor = ${newSafety}`); }
+    if (!desc.length) return null;
+
+    const inboundMap = getInboundQtyBySku(state);
+    const lines = [`**Live ERP What-If Simulation (${desc.join(', ')})**`, `*Read-only simulation — live ERP records unchanged.*`, ``];
+    let totalCurrentNeed = 0, totalSimNeed = 0;
+
+    for (const it of items.slice(0, 6)) {
+      const free = Math.max(0, n(it.onHand) - n(it.reserved) - n(it.damaged));
+      const inbound = inboundMap.get(it.sku) || 0;
+      const baseSafety = positive(it.safety);
+      const simSafety = newSafety !== null ? newSafety : Math.ceil(baseSafety * mult);
+      const baseDeficit = Math.max(0, baseSafety - (free + inbound));
+      const simDeficit = Math.max(0, simSafety - (free + inbound + extraUnits));
+      totalCurrentNeed += baseDeficit;
+      totalSimNeed += simDeficit;
+      lines.push(`• **${it.model || it.sku}** (${it.brand}): Current deficit **${baseDeficit}** → Simulated deficit **${simDeficit}** (Projected free+inbound: ${free + inbound + extraUnits} vs safety ${simSafety})`);
+    }
+
+    const actions = [];
+    if (item && totalSimNeed > 0) {
+      actions.push({ label: `🛒 Pre-Order ${Math.max(25, totalSimNeed * 2)} × ${item.model}`, style: 'primary', prompt: `Place a vendor PO for ${item.model} for ${Math.max(25, totalSimNeed * 2)} units` });
+    }
+    actions.push({ label: '🌅 Executive Briefing', style: 'ghost', prompt: 'Show executive briefing' });
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: 'Current Deficit', value: `${totalCurrentNeed}u`, tone: totalCurrentNeed ? 'warn' : 'ok' },
+        { label: 'Simulated Deficit', value: `${totalSimNeed}u`, tone: totalSimNeed > totalCurrentNeed ? 'critical' : 'teal' }
+      ],
+      actions,
+      followUps: ['Check low stock and reorder radar', 'Show executive briefing']
+    };
+  }
+
   return {
     VERSION,
     DEFAULT_TEAM_ROSTER,
@@ -1098,6 +1858,17 @@
     extractTaskReferences,
     analyzeTaskImportance,
     prioritizeTasks,
-    reconcileAutonomousTasks
+    reconcileAutonomousTasks,
+    getLivePulse,
+    buildExecutiveBriefing,
+    queryLiveInventory,
+    queryLiveOrders,
+    queryLiveVendors,
+    queryLiveLogistics3PL,
+    queryLiveMail,
+    parseNaturalTaskCommand,
+    parseVendorPOCommand,
+    parseTrackingUpdateCommand,
+    simulateLiveInventoryScenario
   };
 });

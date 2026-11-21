@@ -37,8 +37,22 @@
     CA: { name: "stark-regional-inventory-ca", key: "Canada" }
   };
   const DEFAULT_SETTINGS = { critical: 3, coverage: 1, delay: 15, a: 80, b: 95 };
-  const ENGINE_VERSION = "MK Intelligence 5.0 · Decision Lab";
-  const LOCAL_ONLY_INTENTS = new Set(["voice", "space", "settings", "navigation", "export", "tracking", "learn", "help"]);
+  const ENGINE_VERSION = "MK Intelligence 6.0 · Autonomous Command AI";
+  const LOCAL_ONLY_INTENTS = new Set(["voice", "space", "settings", "navigation", "export", "tracking", "learn", "help", "mk-power", "copilot"]);
+  const SLASH_COMMANDS = [
+    { cmd: "/brief", label: "Executive Briefing", desc: "Live ERP pulse across Orders, Stock, POs, 3PL, Mail & Tasks", run: "Show executive briefing" },
+    { cmd: "/tasks", label: "AI Task Priority Order", desc: "Rank all tasks by website-wide ERP impact score", run: "Prioritize & analyze my tasks" },
+    { cmd: "/scan", label: "Autonomous Mail & ERP Scan", desc: "Auto-create PO/tracking tasks & clear resolved ones", run: "Scan mail and inventory for tasks" },
+    { cmd: "/inventory", label: "Live Inventory & Low Stock", desc: "Safety-stock deficits, 3PL stock & valuation", run: "Check low stock and inventory value" },
+    { cmd: "/orders", label: "Open Customer Orders", desc: "FIFO coverage, untracked orders & credit alerts", run: "Show all open customer orders" },
+    { cmd: "/po", label: "Vendor SLAs & Open POs", desc: "Supplier scorecard, ETAs & arrived dock receipts", run: "Summarize vendor performance and open POs" },
+    { cmd: "/3pl", label: "3PL & Warehouse Ops", desc: "Delayed shipments, putaway, waves & cycle counts", run: "Show 3PL delays and warehouse status" },
+    { cmd: "/mail", label: "MK97 Mail Intelligence", desc: "Unread inbox & pending tracking requests", run: "Summarize unread mail and tracking requests" },
+    { cmd: "/create-task", label: "Create & Assign Task", desc: "Create a multi-person task with live AI ranking", template: "Create task for PO-2026-887411 escalation with Elena and Marcus due tomorrow" },
+    { cmd: "/order-po", label: "Issue Vendor PO", desc: "Place a covering Vendor PO & auto-resolve low stock", template: "Place a vendor PO for AF-200 for 45 units" },
+    { cmd: "/provide-tracking", label: "Provide Tracking", desc: "Reply with tracking & auto-resolve tracking task", template: "Provide tracking DHL9988776 for #3PL-GP-918" },
+    { cmd: "/remind", label: "Send Team Reminder", desc: "Notify everyone involved on a task via MK97 Mail", template: "Send reminder for #1" }
+  ];
   const ROUTES = {
     "inventory dashboard": "inventory-dashboard", dashboard: "inventory-dashboard",
     "analysis report": "decision-intelligence", "inventory analysis": "decision-intelligence",
@@ -60,12 +74,15 @@
   let voiceButton;
   let spaceButton;
   let badge;
+  let pulseBar;
+  let slashMenu;
+  let slashIndex = 0;
   let lastAnalysis = null;
   let recognition = null;
   let syncChannel = null;
   let busy = false;
   let activeController = null;
-  const conversation = { scope: "", lastIntent: "", lastItemKey: "", lastQuestion: "", lastAnswer: "", turns: [] };
+  const conversation = { scope: "", lastIntent: "", lastItemKey: "", lastEntity: null, lastQuestion: "", lastAnswer: "", turns: [] };
 
   if (document.readyState !== "complete") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
@@ -127,6 +144,67 @@
 
   function regionKey(code = regionCode()) { return DB_CONFIG[code].key; }
 
+  function renderPulseBar() {
+    if (!pulseBar) return;
+    const S = window.StarkSystem, Core = window.MKCopilotCore;
+    if (!S || !Core?.getLivePulse) { pulseBar.hidden = true; return; }
+    const mails = window.StarkTasks?.getMailThreads ? window.StarkTasks.getMailThreads() : (window.StarkMail?.getThreads ? window.StarkMail.getThreads() : []);
+    const p = Core.getLivePulse(S.getState(), mails);
+    pulseBar.hidden = false;
+    pulseBar.innerHTML = `
+      <button type="button" class="mk-pulse-chip tone-teal" data-pulse-prompt="Show executive briefing" title="Run full executive briefing">🌅 Brief</button>
+      <button type="button" class="mk-pulse-chip ${p.criticalTasks ? 'tone-crit' : 'tone-info'}" data-pulse-prompt="Prioritize & analyze my tasks" title="View AI priority task queue">🎯 ${p.activeTasks} Tasks</button>
+      <button type="button" class="mk-pulse-chip ${p.lowStockCount ? 'tone-warn' : 'tone-ok'}" data-pulse-prompt="Check low stock and reorder radar" title="Inspect low-stock alerts">📦 ${p.lowStockCount} Low</button>
+      <button type="button" class="mk-pulse-chip ${p.delayedTplCount ? 'tone-crit' : 'tone-ok'}" data-pulse-prompt="Show 3PL delays and warehouse status" title="Inspect 3PL delays & warehouse">🚚 ${p.delayedTplCount} Delay</button>
+      <button type="button" class="mk-pulse-chip ${p.pendingTrackingCount ? 'tone-warn' : 'tone-ok'}" data-pulse-prompt="Summarize unread mail and tracking requests" title="Inspect pending tracking emails">✉ ${p.pendingTrackingCount} Track</button>`;
+    pulseBar.querySelectorAll('[data-pulse-prompt]').forEach(btn => {
+      btn.onclick = () => execute(btn.dataset.pulsePrompt);
+    });
+    const urgentTotal = p.criticalTasks + p.lowStockCount + p.delayedTplCount;
+    if (badge && !panel.classList.contains("open") && urgentTotal > 0) {
+      badge.hidden = false;
+      badge.textContent = String(Math.min(9, urgentTotal));
+    }
+  }
+
+  function renderSlashMenu(filterText = "") {
+    if (!slashMenu) return;
+    const q = filterText.replace(/^\//, "").trim().toLowerCase();
+    const matches = SLASH_COMMANDS.filter(item => !q || item.cmd.toLowerCase().includes(q) || item.label.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q));
+    if (!matches.length) { slashMenu.hidden = true; return; }
+    slashIndex = clamp(slashIndex, 0, matches.length - 1);
+    slashMenu.hidden = false;
+    slashMenu.innerHTML = `
+      <div class="mk-slash-head"><span>⚡ MK Command Palette</span><small>↑↓ navigate · Enter select</small></div>
+      <div class="mk-slash-list">
+        ${matches.map((item, idx) => `
+          <button type="button" class="mk-slash-item ${idx === slashIndex ? 'is-active' : ''}" data-slash-idx="${idx}">
+            <span class="mk-slash-cmd">${esc(item.cmd)}</span>
+            <span class="mk-slash-meta"><strong>${esc(item.label)}</strong><small>${esc(item.desc)}</small></span>
+          </button>`).join('')}
+      </div>`;
+    slashMenu.querySelectorAll('.mk-slash-item').forEach(btn => {
+      btn.onmousedown = e => {
+        e.preventDefault();
+        applySlashItem(matches[Number(btn.dataset.slashIdx)]);
+      };
+    });
+  }
+
+  function applySlashItem(item) {
+    if (!item) return;
+    if (slashMenu) slashMenu.hidden = true;
+    if (item.run) {
+      input.value = "";
+      input.style.height = "auto";
+      execute(item.run);
+    } else if (item.template) {
+      input.value = item.template;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }
+
   function renderWelcomeView() {
     if (!feed) return;
     feed.innerHTML = `
@@ -135,88 +213,58 @@
           <svg viewBox="0 0 24 24">
             <defs>
               <linearGradient id="sparkle-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#3b82f6" />
-                <stop offset="50%" stop-color="#8b5cf6" />
-                <stop offset="100%" stop-color="#ec4899" />
+                <stop offset="0%" stop-color="#087f78" />
+                <stop offset="50%" stop-color="#2563eb" />
+                <stop offset="100%" stop-color="#7c3aed" />
               </linearGradient>
             </defs>
             <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="url(#sparkle-grad)" />
           </svg>
         </div>
-        <h2>Hi, I'm MK 👋</h2>
-        <p>Your Supply Chain Co-Pilot across orders, inventory, vendors, shipments, and more.</p>
+        <h2>Hi, I'm MK ⚡</h2>
+        <p>Autonomous Supply Chain Command AI. Ask questions, issue Vendor POs, create tasks, send team reminders, or type <code>/</code> for commands.</p>
       </div>
       <div class="mk-copilot-cards-list">
-        <button type="button" class="mk-copilot-action-card" data-prompt="Check inventory for WH-1000XM6">
-          <span class="mk-card-icon-wrap mk-card-icon-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-              <line x1="12" y1="22.08" x2="12" y2="12"/>
-            </svg>
-          </span>
-          <span class="mk-card-text">Check inventory for WH-1000XM6</span>
-          <span class="mk-card-chevron">&gt;</span>
-        </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Show open orders for Sony">
-          <span class="mk-card-icon-wrap mk-card-icon-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="3" width="15" height="13"/>
-              <polygon points="16 8 20 8 23 11 23 16 16 16 8"/>
-              <circle cx="5.5" cy="18.5" r="2.5"/>
-              <circle cx="18.5" cy="18.5" r="2.5"/>
-            </svg>
-          </span>
-          <span class="mk-card-text">Show open orders for Sony</span>
-          <span class="mk-card-chevron">&gt;</span>
-        </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Generate reorder report">
+        <button type="button" class="mk-copilot-action-card" data-prompt="Show executive briefing">
           <span class="mk-card-icon-wrap mk-card-icon-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"/>
-              <line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="14"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           </span>
-          <span class="mk-card-text">Generate reorder report</span>
-          <span class="mk-card-chevron">&gt;</span>
-        </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Track PO-2026-00125">
-          <span class="mk-card-icon-wrap mk-card-icon-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </span>
-          <span class="mk-card-text">Track PO-2026-00125</span>
+          <span class="mk-card-text"><strong>Executive Operations Briefing</strong><small>Live ERP pulse, risks &amp; 1-click fixes</small></span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
         <button type="button" class="mk-copilot-action-card" data-prompt="Prioritize &amp; analyze my tasks">
+          <span class="mk-card-icon-wrap mk-card-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </span>
+          <span class="mk-card-text"><strong>Prioritize &amp; Analyze My Tasks</strong><small>AI-ranked order with linked POs &amp; orders</small></span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Check low stock and inventory value">
+          <span class="mk-card-icon-wrap mk-card-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          </span>
+          <span class="mk-card-text"><strong>Low-Stock &amp; Reorder Radar</strong><small>Safety-stock deficits, 3PL &amp; instant POs</small></span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Summarize vendor performance and open POs">
+          <span class="mk-card-icon-wrap mk-card-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </span>
+          <span class="mk-card-text"><strong>Vendor SLAs &amp; Open POs</strong><small>Supplier alerts, ETAs &amp; dock arrivals</small></span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Show 3PL delays and warehouse status">
+          <span class="mk-card-icon-wrap mk-card-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </span>
+          <span class="mk-card-text"><strong>3PL Delays &amp; Warehouse Pulse</strong><small>Delayed shipments, putaway &amp; counts</small></span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Summarize unread mail and tracking requests">
           <span class="mk-card-icon-wrap mk-card-icon-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           </span>
-          <span class="mk-card-text">Prioritize &amp; analyze my tasks</span>
-          <span class="mk-card-chevron">&gt;</span>
-        </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Scan mail and inventory for tasks">
-          <span class="mk-card-icon-wrap mk-card-icon-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-            </svg>
-          </span>
-          <span class="mk-card-text">Scan mail &amp; inventory for tasks</span>
-          <span class="mk-card-chevron">&gt;</span>
-        </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Summarize vendor performance">
-          <span class="mk-card-icon-wrap mk-card-icon-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-            </svg>
-          </span>
-          <span class="mk-card-text">Summarize vendor performance</span>
+          <span class="mk-card-text"><strong>Mail Inbox &amp; Tracking Requests</strong><small>Auto-detect requests &amp; resolve in 1 click</small></span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
       </div>`;
@@ -229,8 +277,9 @@
     launcher = document.createElement("button");
     launcher.type = "button";
     launcher.className = "mk-brain-launcher";
-    launcher.setAttribute("aria-label", "Open MK AI Co-Pilot");
+    launcher.setAttribute("aria-label", "Open MK AI Co-Pilot (Alt+M)");
     launcher.setAttribute("aria-expanded", "false");
+    launcher.title = "Open MK AI Co-Pilot (Alt+M)";
     launcher.innerHTML = 'MK<span class="mk-badge" hidden>1</span>';
     badge = launcher.querySelector(".mk-badge");
 
@@ -245,36 +294,44 @@
           <h3>MK — AI Co-Pilot</h3>
           <div class="mk-status-line">
             <span class="dot"></span>
-            <span>Online</span>
+            <span>v6.0 · Autonomous Command</span>
           </div>
         </div>
         <div class="mk-header-controls">
+          <button class="mk-header-control-btn mk-voice-toggle" type="button" aria-pressed="false" aria-label="Enable voice" title="Toggle voice output">🔊</button>
           <button class="mk-header-control-btn mk-minimize" type="button" aria-label="Minimize MK" title="Minimize">—</button>
           <button class="mk-header-control-btn mk-expand" type="button" aria-label="Expand MK" title="Expand / restore">⤢</button>
-          <button class="mk-header-control-btn mk-close" type="button" aria-label="Close MK" title="Close">✕</button>
+          <button class="mk-header-control-btn mk-close" type="button" aria-label="Close MK" title="Close (Esc)">✕</button>
         </div>
       </header>
-      <div class="mk-brain-state" style="display:none;"><b>${esc(REGION_NAMES[regionCode()])}</b><span>Verified report analysis · AI available after setup</span></div>
+      <div class="mk-pulse-bar" aria-label="Live ERP status signals"></div>
+      <div class="mk-brain-state" style="display:none;"><b>${esc(REGION_NAMES[regionCode()])}</b><span>Autonomous ERP Command AI ready</span></div>
       <div class="mk-brain-feed" role="log" aria-live="polite"></div>
+      <div class="mk-slash-menu" hidden role="listbox" aria-label="MK Slash Commands"></div>
       <form class="mk-brain-compose" style="padding: 10px 14px 4px 14px; background: #fff; border-top: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px;">
-        <div style="display: flex; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 4px 6px 4px 14px; flex: 1;">
-          <textarea rows="1" aria-label="Ask anything about orders, inventory, vendors..." placeholder="Ask anything about orders, inventory, vendors..." style="border: none; background: transparent; resize: none; font-size: 13px; color: #1e293b; outline: none; flex: 1; padding: 6px 0; font-family: inherit;"></textarea>
-          <button class="mk-send" type="submit" aria-label="Send" style="width: 32px; height: 32px; border-radius: 50%; background: #0f4c47; border: none; color: #ffffff; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; margin-left: 6px;">
+        <div class="mk-compose-pill" style="display: flex; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 4px 6px 4px 12px; flex: 1; gap: 4px;">
+          <textarea rows="1" aria-label="Ask MK anything or type / for commands" placeholder="Ask MK or type / for commands..." style="border: none; background: transparent; resize: none; font-size: 13px; color: #1e293b; outline: none; flex: 1; padding: 6px 0; font-family: inherit;"></textarea>
+          <button class="mk-mic mk-mic-inline" type="button" aria-label="Voice command" title="Speak a command">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          </button>
+          <button class="mk-send" type="submit" aria-label="Send" style="width: 32px; height: 32px; border-radius: 50%; background: #0f4c47; border: none; color: #ffffff; display: grid; place-items: center; cursor: pointer; flex-shrink: 0;">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
         <button class="mk-stop" type="button" hidden>Stop</button>
       </form>
       <div class="mk-copilot-bottom-actions">
+        <button type="button" class="mk-copilot-sub-btn mk-cmd-trigger" id="mk-btn-commands" title="Browse slash commands (/)" aria-label="Slash commands" style="width:auto;min-width:max-content;height:30px;padding:0 11px;white-space:nowrap;flex:0 0 auto;">/ Commands</button>
         <button type="button" class="mk-copilot-sub-btn" id="mk-btn-paperclip" title="Attach file or report" aria-label="Attach file">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         </button>
-        <button type="button" class="mk-copilot-sub-btn" id="mk-btn-search" title="Search catalog & orders" aria-label="Search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <button type="button" class="mk-copilot-sub-btn" id="mk-btn-search" title="Executive Briefing" aria-label="Executive Briefing">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </button>
         <button type="button" class="mk-copilot-sub-btn" id="mk-btn-plus" title="New Co-Pilot session" aria-label="New session">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
+        <span class="mk-shortcut-hint">Alt+M</span>
       </div>`;
 
     const anchor = document.getElementById("mk-chat-anchor");
@@ -284,16 +341,28 @@
     feed = panel.querySelector(".mk-brain-feed");
     input = panel.querySelector("textarea");
     stateNode = panel.querySelector(".mk-brain-state");
+    pulseBar = panel.querySelector(".mk-pulse-bar");
+    slashMenu = panel.querySelector(".mk-slash-menu");
     voiceButton = panel.querySelector(".mk-voice-toggle");
     spaceButton = panel.querySelector(".mk-space-toggle");
     syncVoiceUi();
     syncSpaceUi();
 
     renderWelcomeView();
+    renderPulseBar();
+    window.addEventListener("stark:system-change", renderPulseBar);
+    window.addEventListener("mk97:mail-updated", renderPulseBar);
     launcher.addEventListener("click", () => togglePanel(!panel.classList.contains("open")));
     panel.querySelector(".mk-close").addEventListener("click", () => togglePanel(false));
     panel.querySelector(".mk-minimize")?.addEventListener("click", () => togglePanel(false));
     panel.querySelector(".mk-expand")?.addEventListener("click", () => panel.classList.toggle("expanded"));
+    voiceButton?.addEventListener("click", toggleVoice);
+    panel.querySelector("#mk-btn-commands")?.addEventListener("click", () => {
+      if (slashMenu && !slashMenu.hidden) { slashMenu.hidden = true; return; }
+      slashIndex = 0;
+      renderSlashMenu("");
+      input.focus();
+    });
     panel.querySelector("#mk-btn-paperclip")?.addEventListener("click", () => {
       const fileInput = document.createElement("input");
       fileInput.type = "file";
@@ -304,10 +373,7 @@
       };
       fileInput.click();
     });
-    panel.querySelector("#mk-btn-search")?.addEventListener("click", () => {
-      input.value = "Search: ";
-      input.focus();
-    });
+    panel.querySelector("#mk-btn-search")?.addEventListener("click", () => execute("Show executive briefing"));
     panel.querySelector("#mk-btn-plus")?.addEventListener("click", () => {
       resetConversation(window.MKAI?.getStatus().scope || regionCode());
       renderWelcomeView();
@@ -324,18 +390,44 @@
     window.addEventListener("mk:conversation-clear", () => { resetConversation(window.MKAI?.getStatus().scope || regionCode()); feed.innerHTML = ""; renderWelcomeView(); });
     panel.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
+      if (slashMenu) slashMenu.hidden = true;
       const question = input.value.trim();
       if (!question) return;
       input.value = "";
+      input.style.height = "auto";
       execute(question);
     });
-    input.addEventListener("input", () => { input.style.height = "auto"; input.style.height = `${Math.min(112, input.scrollHeight)}px`; });
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = `${Math.min(112, input.scrollHeight)}px`;
+      if (input.value.startsWith("/")) { slashIndex = 0; renderSlashMenu(input.value); }
+      else if (slashMenu) slashMenu.hidden = true;
+    });
     input.addEventListener("keydown", event => {
+      if (slashMenu && !slashMenu.hidden) {
+        const items = [...slashMenu.querySelectorAll(".mk-slash-item")];
+        if (event.key === "ArrowDown") { event.preventDefault(); slashIndex = (slashIndex + 1) % Math.max(1, items.length); renderSlashMenu(input.value); return; }
+        if (event.key === "ArrowUp") { event.preventDefault(); slashIndex = (slashIndex - 1 + Math.max(1, items.length)) % Math.max(1, items.length); renderSlashMenu(input.value); return; }
+        if (event.key === "Escape") { event.preventDefault(); slashMenu.hidden = true; return; }
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          const q = input.value.replace(/^\//, "").trim().toLowerCase();
+          const matches = SLASH_COMMANDS.filter(item => !q || item.cmd.toLowerCase().includes(q) || item.label.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q));
+          if (matches[slashIndex]) { applySlashItem(matches[slashIndex]); return; }
+        }
+      }
       if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); panel.querySelector("form").requestSubmit(); }
     });
     panel.querySelectorAll("[data-mk-question]").forEach(button => button.addEventListener("click", () => execute(button.dataset.mkQuestion)));
     panel.querySelector(".mk-mic")?.addEventListener("click", toggleListening);
-    document.addEventListener("keydown", event => { if (event.key === "Escape" && panel.classList.contains("open") && !document.querySelector(".modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop")) togglePanel(false); });
+    document.addEventListener("keydown", event => {
+      if (event.altKey && !event.ctrlKey && !event.metaKey && event.key.toLowerCase() === "m") {
+        event.preventDefault();
+        togglePanel(!panel.classList.contains("open"));
+        return;
+      }
+      if (event.key === "Escape" && panel.classList.contains("open") && !document.querySelector(".modal-backdrop,.sys-modal-backdrop,.op-modal-backdrop")) togglePanel(false);
+    });
   }
 
   function togglePanel(open) {
@@ -359,17 +451,53 @@
     stateNode.innerHTML = `<b>${esc(selected === "ALL" ? "All regions" : REGION_NAMES[selected])}</b><span>${esc(text)}</span>`;
   }
 
-  function addEntry(message, role = "brain", speak = true, category = "answer", result = null) {
+  function safeHref(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return "";
+    if (/^(?:javascript|data|vbscript):/i.test(raw)) return "";
+    if (window.StarkSystem?.url && !/^https?:\/\//i.test(raw)) return window.StarkSystem.url(raw);
+    return raw;
+  }
+
+  function addEntry(message, role = "brain", speak = true, category = "answer", result = null, meta = null) {
     const welcome = feed.querySelector(".mk-copilot-welcome");
     if (welcome) feed.innerHTML = "";
     const entry = document.createElement("div");
     entry.className = `mk-entry ${role === "user" ? "user" : "brain"}`;
+
+    const metricsHtml = role === "brain" && Array.isArray(meta?.metrics) && meta.metrics.length
+      ? `<div class="mk-metrics-strip">${meta.metrics.map(m => `<div class="mk-metric-pill tone-${esc(m.tone || "info")}"><span>${esc(m.label)}</span><strong>${esc(m.value)}</strong></div>`).join("")}</div>`
+      : "";
+
+    const actionsHtml = role === "brain" && Array.isArray(meta?.actions) && meta.actions.length
+      ? `<div class="mk-action-row">${meta.actions.map((a, idx) => a.href
+          ? `<a class="mk-act-btn style-${esc(a.style || "ghost")}" href="${esc(safeHref(a.href))}">${esc(a.label)}</a>`
+          : `<button type="button" class="mk-act-btn style-${esc(a.style || "teal")}" data-mk-exec-idx="${idx}">${esc(a.label)}</button>`).join("")}</div>`
+      : "";
+
+    const followUpsHtml = role === "brain" && Array.isArray(meta?.followUps) && meta.followUps.length
+      ? `<div class="mk-followup-row">${meta.followUps.slice(0, 3).map(f => `<button type="button" class="mk-followup-chip" data-mk-followup="${esc(f)}">${esc(f)}</button>`).join("")}</div>`
+      : "";
+
     const controls = role === "brain" ? `<div class="mk-feedback"><button type="button" data-feedback="useful">Useful</button><button type="button" data-feedback="correction">Needs correction</button></div>` : "";
-    entry.innerHTML = `<div class="mk-entry-card"><div class="mk-entry-meta">${role === "user" ? "You" : "MK • " + esc(category)}</div>${formatMessage(message)}${controls}</div>`;
+    entry.innerHTML = `<div class="mk-entry-card"><div class="mk-entry-meta">${role === "user" ? "You" : "MK • " + esc(category)}</div>${metricsHtml}<div class="mk-entry-body">${formatMessage(message)}</div>${actionsHtml}${followUpsHtml}${controls}</div>`;
     if (result) window.MKAI?.renderResult(entry.querySelector(".mk-entry-card"), result);
     feed.appendChild(entry);
     feed.scrollTop = feed.scrollHeight;
+
     entry.querySelectorAll("[data-feedback]").forEach(button => button.addEventListener("click", () => recordFeedback(button, category)));
+    entry.querySelectorAll("[data-mk-exec-idx]").forEach(btn => {
+      const act = meta.actions[Number(btn.dataset.mkExecIdx)];
+      btn.addEventListener("click", () => {
+        if (!act) return;
+        if (typeof act.onClick === "function") act.onClick();
+        else if (act.prompt) execute(act.prompt);
+      });
+    });
+    entry.querySelectorAll("[data-mk-followup]").forEach(btn => {
+      btn.addEventListener("click", () => execute(btn.dataset.mkFollowup));
+    });
+
     if (role === "brain" && speak && profile.voiceEnabled) speakText(message);
     if (role === "brain" && !panel.classList.contains("open")) { badge.hidden = false; badge.textContent = "1"; }
     return entry;
@@ -377,7 +505,13 @@
 
   function formatMessage(message) {
     return esc(message)
+      .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, url) => {
+        const href = safeHref(url);
+        return href ? `<a class="mk-inline-link" href="${esc(href)}">${label}</a>` : label;
+      })
+      .replace(/`([^`]+)`/g, '<code class="mk-inline-code">$1</code>')
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s.,;:!?)<]|$)/g, "$1<em>$2</em>")
       .replace(/\n/g, "<br>");
   }
 
@@ -493,7 +627,7 @@
   }
 
   function resetConversation(scope) {
-    Object.assign(conversation, { scope, lastIntent: "", lastItemKey: "", lastQuestion: "", lastAnswer: "", turns: [] });
+    Object.assign(conversation, { scope, lastIntent: "", lastItemKey: "", lastEntity: null, lastQuestion: "", lastAnswer: "", turns: [] });
     lastAnalysis = null;
   }
 
@@ -506,12 +640,13 @@
     activeController = new AbortController();
     panel.querySelector(".mk-stop").hidden = false;
     panel.querySelector(".mk-send").disabled = true;
-    setState("Thinking through current and historical signals…", true);
+    setState("Executing live ERP intelligence…", true);
     try {
       const localAnswer = await routeQuestion(question);
       const answer = await enhanceWithSupplyAI(question, localAnswer);
       if (activeController?.signal.aborted) throw new DOMException('Analysis stopped.', 'AbortError');
-      addEntry(answer.message, "brain", true, answer.category || "decision", answer.result);
+      addEntry(answer.message, "brain", true, answer.category || "decision", answer.result, answer.meta || null);
+      if (answer.entity) conversation.lastEntity = answer.entity;
       if (answer.intent === 'copilot') window.MKCopilot?.remember(question, answer.message);
       learnTask(answer.intent || "question");
       conversation.lastIntent = answer.intent || "question";
@@ -519,6 +654,7 @@
       conversation.lastAnswer = answer.message;
       conversation.turns.push({ question: clean(question), intent: conversation.lastIntent, itemKey: answer.itemKey || "", at: Date.now() });
       conversation.turns = conversation.turns.slice(-12);
+      renderPulseBar();
     } catch (error) {
       if (initialScope === (window.MKAI?.getStatus().scope || regionCode())) addEntry(error.name === "AbortError" ? "Analysis stopped." : `I couldn’t complete that task: ${error.message || "unknown error"}.`, "brain", false, "status");
     } finally {
@@ -530,17 +666,346 @@
     }
   }
 
-  function handleTaskCopilotQuestion(raw) {
+  function getLiveMails() {
+    if (window.StarkTasks?.getMailThreads) return window.StarkTasks.getMailThreads();
+    if (window.StarkMail?.getThreads) return window.StarkMail.getThreads();
+    try { return JSON.parse(localStorage.getItem("mk97.mail.threads.v1") || "[]") || []; } catch (_) { return []; }
+  }
+
+  function resolveTaskFromPrompt(raw, ranked) {
     const q = raw.toLowerCase();
-    const isTaskQuery = /\b(task|tasks|reminder|reminders)\b/.test(q) || /\b(priority\s*(?:list|order)|prioriti[sz]e.*task|scan\s*(?:mail|inbox|emails?).*(?:task|tracking|inventory)|auto[- ]?create\s*task)\b/.test(q);
-    if (!isTaskQuery) return null;
+    const rankMatch = raw.match(/(?:#|task\s*#?\s*)(\d{1,2})\b/i);
+    if (rankMatch) {
+      const idx = Number(rankMatch[1]) - 1;
+      if (ranked[idx]) return ranked[idx];
+    }
+    if (/\b(top|first|highest|#1)\b/i.test(q) && ranked[0]) return ranked[0];
+    // Match by PO/Order/SKU/Ref or title token
+    for (const item of ranked) {
+      const hay = `${item.task.title} ${item.task.autoRef || ""} ${(item.analysis.references || []).map(r => r.code).join(" ")}`.toLowerCase();
+      const tokens = q.replace(/[^a-z0-9#-]+/g, " ").split(/\s+/).filter(w => w.length >= 4 && !["send", "remind", "reminder", "task", "complete", "mark", "done", "close", "finish", "everyone", "team", "about", "please"].includes(w));
+      if (tokens.some(tok => hay.includes(tok))) return item;
+    }
+    if (conversation.lastEntity?.type === "TASK") {
+      const prev = ranked.find(x => x.task.id === conversation.lastEntity.id);
+      if (prev) return prev;
+    }
+    return ranked[0] || null;
+  }
+
+  function handlePowerCommand(raw) {
     const S = window.StarkSystem, Core = window.MKCopilotCore, T = window.StarkTasks;
     if (!S || !Core) return null;
+    const state = S.getState();
+    const mails = getLiveMails();
+    const q = raw.toLowerCase().trim();
+
+    // 0. Direct Slash Commands
+    if (q === "/clear" || q === "/reset") {
+      resetConversation(window.MKAI?.getStatus().scope || regionCode());
+      renderWelcomeView();
+      return { intent: "mk-power", category: "Command", message: "Started a fresh MK Co-Pilot command session." };
+    }
+    if (q === "/help" || /^what can you do\b/i.test(q)) {
+      return {
+        intent: "mk-power",
+        category: "MK 6.0 Capabilities",
+        message: `**MK 6.0 · Autonomous Supply Chain Command AI**\nI inspect your entire live ERP in real time **and execute real operational actions** directly from chat:\n\n**⚡ Live Commands & Actions:**\n• **Create & Assign Tasks:** \`Create task for PO-2026-887411 escalation with Elena and Marcus due tomorrow\`\n• **Send Team Reminders:** \`Send reminder for #1\` or \`Remind team about PO-2026-887411\`\n• **Issue Vendor POs:** \`Place a vendor PO for AF-200 for 45 units\` *(auto-resolves low-stock tasks!)*\n• **Provide Tracking:** \`Provide tracking DHL9988776 for #3PL-GP-918\` *(replies in Mail & auto-resolves task!)*\n• **Complete Tasks:** \`Complete task #1\`\n\n**🧠 Deep ERP Intelligence (Zero CSV Required):**\n• \`/brief\` — Executive Operations Briefing across all modules\n• \`/tasks\` & \`/scan\` — AI Priority Ranking & Autonomous Mail/Inventory Scan\n• \`/inventory\`, \`/orders\`, \`/po\`, \`/3pl\`, \`/mail\` — Live real-time drilldowns\n• **What-If Simulations:** \`What if demand increases 25% for AF-200?\``,
+        meta: {
+          actions: [
+            { label: "🌅 Run Executive Briefing", style: "primary", prompt: "Show executive briefing" },
+            { label: "🎯 Prioritize Tasks", style: "teal", prompt: "Prioritize & analyze my tasks" },
+            { label: "⚡ Auto-Scan ERP & Mail", style: "ghost", prompt: "Scan mail and inventory for tasks" }
+          ]
+        }
+      };
+    }
+
+    // 1. ACTION: Create & Assign Task from Natural Language
+    if (/^\/create-task\b|^(?:please\s+)?(?:create|add|make|schedule|open|assign)\s+(?:a\s+)?(?:new\s+)?task\b/i.test(raw)) {
+      const roster = T?.getTeamRoster ? T.getTeamRoster() : Core.DEFAULT_TEAM_ROSTER;
+      const parsed = Core.parseNaturalTaskCommand(raw, roster);
+      let taskId = "";
+      if (T?.save) {
+        taskId = T.save({
+          title: parsed.title,
+          notes: parsed.notes,
+          assignees: parsed.assignees,
+          dueAt: parsed.dueAt,
+          reminderAt: parsed.reminderAt,
+          priority: "AUTO",
+          status: "OPEN"
+        });
+      }
+      const savedTask = (S.getState().tasks || []).find(t => t.id === taskId) || { ...parsed, id: taskId, status: "OPEN" };
+      const ranked = Core.prioritizeTasks(S.getState().tasks || [], S.getState(), { mailThreads: mails });
+      const entry = ranked.find(x => x.task.id === taskId) || { task: savedTask, analysis: Core.analyzeTaskImportance(savedTask, S.getState(), { mailThreads: mails }) };
+      const a = entry.analysis;
+      const teamNames = (savedTask.assignees || []).map(p => p.name).join(", ");
+
+      return {
+        intent: "mk-power",
+        category: "Action Executed · Task Created",
+        entity: { type: "TASK", id: savedTask.id, label: savedTask.title },
+        message: `**✅ Task Created & Ranked by MK Co-Pilot**\n• **Subject:** ${savedTask.title}\n• **AI Priority:** **#${a.rank || 1} · ${a.tier} (${a.score}/100)**\n• **Assigned To (${(savedTask.assignees || []).length}):** ${teamNames}\n• **Matched ERP Records:** ${a.references.length ? a.references.map(r => `\`${r.code}\` (${r.status})`).join(", ") : "General operational task"}\n• **MK Insight:** ${a.reasons[0] || "Tracked in live queue."}`,
+        meta: {
+          metrics: [
+            { label: "Priority Rank", value: `#${a.rank || 1}`, tone: a.tier === "CRITICAL" ? "critical" : "teal" },
+            { label: "AI Score", value: `${a.score}/100`, tone: a.tier === "CRITICAL" ? "critical" : "warn" },
+            { label: "Team", value: `${(savedTask.assignees || []).length} people`, tone: "info" }
+          ],
+          actions: [
+            { label: `🔔 Send Reminder to ${teamNames.split(",")[0]}${(savedTask.assignees || []).length > 1 ? ` +${(savedTask.assignees || []).length - 1}` : ""}`, style: "primary", prompt: `Send reminder for #${a.rank || 1}` },
+            { label: "↗ Open in Tasks", style: "ghost", href: `tasks.html?task=${encodeURIComponent(savedTask.id)}` }
+          ],
+          followUps: ["Prioritize & analyze my tasks", "Show executive briefing"]
+        }
+      };
+    }
+
+    // 2. ACTION: Send Team Reminder from Chat
+    if (/^\/remind\b|^(?:please\s+)?(?:send\s+(?:a\s+)?reminder|remind\s+(?:everyone|all|team|people|elena|marcus|sarah|david|priya|manoj|them)|notify\s+(?:the\s+)?team)/i.test(raw)) {
+      const ranked = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(state.tasks || [], state, { mailThreads: mails })).filter(x => x.task.status !== "DONE");
+      const target = resolveTaskFromPrompt(raw, ranked);
+      if (!target) {
+        return { intent: "mk-power", category: "Reminder", message: "There are no active tasks to send a reminder for. Ask me to **Scan mail and inventory for tasks** or **Create a task** first." };
+      }
+      const log = T?.sendReminder ? T.sendReminder(target.task.id) : null;
+      const names = (log?.recipients || target.task.assignees || []).map(r => r.name).join(", ") || "Assigned Team";
+      return {
+        intent: "mk-power",
+        category: "Action Executed · Reminder Sent",
+        entity: { type: "TASK", id: target.task.id, label: target.task.title },
+        message: `**🔔 Team Reminder Dispatched via MK97 Mail & Workspace**\n• **Task (#${target.analysis.rank}):** ${target.task.title}\n• **Recipients:** ${names}\n• **Logged:** Recorded in Task Reminder History & delivered to [MK97 Mail (Sent)](mail.html).`,
+        meta: {
+          metrics: [
+            { label: "Notified", value: `${(log?.recipients || target.task.assignees || [1]).length} people`, tone: "teal" },
+            { label: "Channel", value: "Mail + ERP", tone: "ok" }
+          ],
+          actions: [
+            { label: "✉ Open MK97 Mail", style: "teal", href: "mail.html" },
+            { label: "↗ Open Task", style: "ghost", href: `tasks.html?task=${encodeURIComponent(target.task.id)}` }
+          ],
+          followUps: ["Prioritize & analyze my tasks", "Show executive briefing"]
+        }
+      };
+    }
+
+    // 3. ACTION: Place / Issue Vendor Purchase Order from Chat
+    if (/^\/order-po\b|^(?:please\s+)?(?:place|issue|create|submit|raise|order|buy|reorder)\s+(?:a\s+)?(?:covering\s+)?(?:vendor\s+)?(?:po|purchase\s*order)\b|^(?:please\s+)?(?:reorder|order|buy)\s+(?:\d+\s+(?:units?\s+(?:of\s+)?)?)?(?:af-?200|wh-?1000|airpods|mtjv|4217709208|hcfb1|amz|visa|aura|sony|apple|fieldbar|kendra|it\b)/i.test(raw)) {
+      const poCmd = Core.parseVendorPOCommand(raw, state, conversation.lastEntity);
+      if (!poCmd) {
+        return {
+          intent: "mk-power",
+          category: "Procurement Action",
+          message: "Specify which SKU or model to order — for example: **`Place a vendor PO for AF-200 for 45 units`** or **`Reorder WH1000XM5 for 30 units`**.",
+          meta: { actions: [{ label: "📦 Check Low Stock Radar", style: "teal", prompt: "Check low stock and reorder radar" }] }
+        };
+      }
+      const beforeAutoResolved = new Set((S.getState().tasks || []).filter(t => t.autoResolved).map(t => t.id));
+      S.transaction("VENDOR_PO_CREATED", `${poCmd.poNumber} (${poCmd.qty} × ${poCmd.item.model || poCmd.item.sku})`, draft => {
+        draft.enterprise.purchaseOrders ||= [];
+        draft.enterprise.purchaseOrders.unshift({
+          id: S.uid("vpo"),
+          vendorId: poCmd.vendor.id,
+          po: poCmd.poNumber,
+          status: "PO_ISSUED",
+          issuedAt: new Date().toISOString(),
+          eta: poCmd.eta,
+          warehouse: "MK97 Southeast Distribution Center",
+          carrier: "TBD",
+          tracking: "",
+          lines: [{ sku: poCmd.item.sku, qty: poCmd.qty, received: 0, cost: poCmd.unitCost }]
+        });
+      });
+      if (T?.runCopilotSync) { try { T.runCopilotSync({ silent: true, force: true }); } catch (_) {} }
+      const newlyResolved = (S.getState().tasks || []).filter(t => t.autoResolved && !beforeAutoResolved.has(t.id));
+      const autoMsg = newlyResolved.length
+        ? `\n• **✨ Auto-Resolved Task (${newlyResolved.length}):** MK Co-Pilot verified safety-stock coverage and automatically removed **${newlyResolved.map(r => r.title).join(", ")}** from your Active queue!`
+        : "";
+      return {
+        intent: "mk-power",
+        category: "Action Executed · Vendor PO Issued",
+        entity: { type: "PO", id: poCmd.poNumber, label: poCmd.poNumber },
+        message: `**🛒 Vendor Purchase Order Issued: ${poCmd.poNumber}**\n• **Item:** ${poCmd.item.model || poCmd.item.sku} — ${poCmd.item.brand} ${poCmd.item.title}\n• **Quantity:** **${poCmd.qty} units** @ $${poCmd.unitCost}/unit (**$${Math.round(poCmd.totalCost).toLocaleString()} total**)\n• **Supplier:** ${poCmd.vendor.name} · Expected Arrival: **${poCmd.eta.slice(0, 10)}**${autoMsg}`,
+        meta: {
+          metrics: [
+            { label: "PO Number", value: poCmd.poNumber, tone: "teal" },
+            { label: "Ordered", value: `${poCmd.qty} units`, tone: "ok" },
+            { label: "Auto-Resolved", value: `${newlyResolved.length} task${newlyResolved.length === 1 ? "" : "s"}`, tone: newlyResolved.length ? "ok" : "info" }
+          ],
+          actions: [
+            { label: "↗ Open Procurement", style: "teal", href: `procurement/index.html?po=${encodeURIComponent(poCmd.poNumber)}` },
+            { label: "🎯 View Updated Tasks", style: "ghost", prompt: "Prioritize & analyze my tasks" }
+          ],
+          followUps: [`Check inventory for ${poCmd.item.model || poCmd.item.sku}`, "Show executive briefing"]
+        }
+      };
+    }
+
+    // 4. ACTION: Provide Tracking & Auto-Resolve from Chat
+    if (/^\/provide-tracking\b|^(?:please\s+)?(?:provide|send|update|add|set|reply(?:\s+with)?|share)\s+(?:the\s+)?tracking\b/i.test(raw)) {
+      const trkCmd = Core.parseTrackingUpdateCommand(raw, state, mails, conversation.lastEntity);
+      if (!trkCmd) {
+        return {
+          intent: "mk-power",
+          category: "Tracking Action",
+          message: "Include a carrier tracking number and target reference — for example:\n• **`Provide tracking DHL9988776 for #3PL-GP-918`**\n• **`Update tracking FDX774920011 for TPL-SHP-77492`**\n• **`Set tracking 1Z999AA10123456784 on SO-89108`**"
+        };
+      }
+      const beforeAutoResolved = new Set((S.getState().tasks || []).filter(t => t.autoResolved).map(t => t.id));
+      if (trkCmd.targetType === "3PL") {
+        S.transaction("TPL_TRACKING_UPDATED", `${trkCmd.targetId}: ${trkCmd.tracking}`, draft => {
+          const shp = (draft.logistics?.tplShipments || []).find(s => s.id === trkCmd.targetId);
+          if (shp) { shp.tracking = trkCmd.tracking; shp.status = "DISPATCHED"; shp.dispatchedAt = new Date().toISOString(); }
+        });
+      } else if (trkCmd.targetType === "ORDER") {
+        S.transaction("ORDER_TRACKING_UPDATED", `${trkCmd.targetId}: ${trkCmd.tracking}`, draft => {
+          const ord = (draft.enterprise?.orders || []).find(o => o.id === trkCmd.targetId);
+          if (ord) { ord.tracking = trkCmd.tracking; ord.status = "SHIPPED"; ord.updatedAt = new Date().toISOString(); }
+        });
+      } else if (trkCmd.targetType === "MAIL" && trkCmd.mailThread) {
+        const list = getLiveMails();
+        const target = list.find(m => m.id === trkCmd.mailThread.id);
+        if (target) {
+          target.related = { ...(target.related || {}), tracking: trkCmd.tracking };
+          target.shipmentDetails = { ...(target.shipmentDetails || {}), trackingNumber: trkCmd.tracking, carrier: trkCmd.carrier, status: "Tracking Provided" };
+        }
+        const reply = {
+          id: "mk-reply-" + Date.now(),
+          senderName: "Manoj Manne",
+          senderCompany: "MK97 Operations (via MK AI)",
+          senderEmail: "supply.chain@mk97.com",
+          to: trkCmd.mailThread.senderEmail || "orders@globalpartsco.com",
+          cc: "",
+          subject: /^re:/i.test(trkCmd.mailThread.subject || "") ? trkCmd.mailThread.subject : `Re: ${trkCmd.mailThread.subject || "Tracking Update"}`,
+          timestamp: "Just now",
+          fullDate: new Date().toLocaleString(),
+          unread: false,
+          starred: false,
+          flagged: false,
+          folder: "sent",
+          direction: "outbound",
+          replyToThreadId: trkCmd.mailThread.id,
+          category: "shipping",
+          avatar: "MK",
+          avatarBg: "#087f78",
+          avatarColor: "#ffffff",
+          tags: [{ name: "Tracking Sent", type: "shipment" }],
+          snippet: `${trkCmd.carrier} Tracking: ${trkCmd.tracking}`,
+          body: `Hi team,\n\nPlease find the confirmed tracking number below:\nCarrier: ${trkCmd.carrier}\nTracking Number: ${trkCmd.tracking}\nReference: ${trkCmd.targetLabel}\n\nBest regards,\nManoj Manne · MK97 ERP`,
+          related: { ...(trkCmd.mailThread.related || {}), tracking: trkCmd.tracking },
+          attachments: []
+        };
+        if (window.StarkMail?.prependEmail) {
+          window.StarkMail.prependEmail(reply);
+        } else {
+          list.unshift(reply);
+          try { localStorage.setItem("mk97.mail.threads.v1", JSON.stringify(list.slice(0, 80))); window.dispatchEvent(new CustomEvent("mk97:mail-updated")); } catch (_) {}
+        }
+      }
+      if (T?.runCopilotSync) { try { T.runCopilotSync({ silent: true, force: true }); } catch (_) {} }
+      const newlyResolved = (S.getState().tasks || []).filter(t => t.autoResolved && !beforeAutoResolved.has(t.id));
+      const autoMsg = newlyResolved.length
+        ? `\n• **✨ Task Auto-Resolved (${newlyResolved.length}):** MK Co-Pilot verified tracking \`${trkCmd.tracking}\` and automatically removed **${newlyResolved.map(r => r.title).join(", ")}** from Active Tasks!`
+        : "";
+      return {
+        intent: "mk-power",
+        category: "Action Executed · Tracking Dispatched",
+        message: `**📦 Tracking Recorded & Verified: \`${trkCmd.tracking}\`**\n• **Target:** ${trkCmd.targetLabel} (${trkCmd.targetType})\n• **Carrier:** ${trkCmd.carrier}${trkCmd.targetType === "MAIL" ? "\n• **MK97 Mail:** Outbound tracking reply logged in Sent." : ""}${autoMsg}`,
+        meta: {
+          metrics: [
+            { label: "Tracking #", value: trkCmd.tracking, tone: "ok" },
+            { label: "Auto-Resolved", value: `${newlyResolved.length} task${newlyResolved.length === 1 ? "" : "s"}`, tone: newlyResolved.length ? "teal" : "info" }
+          ],
+          actions: [
+            { label: "🎯 View Tasks Queue", style: "teal", prompt: "Prioritize & analyze my tasks" },
+            { label: "✉ Open MK97 Mail", style: "ghost", href: "mail.html" }
+          ],
+          followUps: ["Summarize unread mail and tracking requests", "Show executive briefing"]
+        }
+      };
+    }
+
+    // 5. ACTION: Complete / Start / Reopen Task
+    if (/^(?:please\s+)?(?:complete|finish|close|mark|reopen|start)\s+(?:the\s+)?(?:task\b|#\d+)/i.test(raw)) {
+      const reopen = /\breopen\b/i.test(raw);
+      const start = /\bstart\b|\bin\s*progress\b/i.test(raw);
+      const newStatus = reopen ? "OPEN" : start ? "IN_PROGRESS" : "DONE";
+      const allRanked = T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(state.tasks || [], state, { mailThreads: mails });
+      const pool = reopen ? allRanked.filter(x => x.task.status === "DONE") : allRanked.filter(x => x.task.status !== "DONE");
+      const target = resolveTaskFromPrompt(raw, pool);
+      if (!target) return { intent: "mk-power", category: "Task Status", message: "No matching task found to update." };
+      if (T?.setStatus) T.setStatus(target.task.id, newStatus);
+      return {
+        intent: "mk-power",
+        category: "Action Executed · Task Updated",
+        message: `**✅ Task Status Updated to ${newStatus.replace("_", " ")}**\n• ${target.task.title}`,
+        meta: {
+          actions: [{ label: "🎯 View Priority Tasks", style: "teal", prompt: "Prioritize & analyze my tasks" }]
+        }
+      };
+    }
+
+    // 6. QUERY: Executive Operations Briefing
+    if (/^\/brief\b|\b(executive\s*brief\w*|morning\s*brief\w*|daily\s*brief\w*|command\s*brief\w*|what\s+needs\s+attention|erp\s*status|workspace\s*overview|health\s*check|give\s+me\s+(?:a\s+)?(?:brief|summary|status|update))\b/i.test(raw)) {
+      const brief = Core.buildExecutiveBriefing(state, mails);
+      return {
+        intent: "mk-power",
+        category: "Executive Briefing",
+        message: brief.markdown,
+        meta: { metrics: brief.metrics, actions: brief.actions, followUps: brief.followUps }
+      };
+    }
+
+    // 7. QUERY: Tasks Priority / Scan / Reference Importance
+    if (/^\/tasks\b|^\/scan\b/.test(q) || /\b(task|tasks|reminder|reminders)\b/.test(q) || /\b(priority\s*(?:list|order)|prioriti[sz]e.*task|scan\s*(?:mail|inbox|emails?).*(?:task|tracking|inventory)|auto[- ]?create\s*task)\b/.test(q)) {
+      return handleTaskCopilotQuestion(q === "/scan" ? "Scan mail and inventory for tasks" : q === "/tasks" ? "Prioritize & analyze my tasks" : raw);
+    }
+
+    // 8. QUERY: Live MK97 Mail Intelligence
+    if (/^\/mail\b|\b(mail|inbox|emails?|unread\s+mail|tracking\s+requests?)\b/i.test(q) && !/\b(po-2026|vendor\s*po)\b/i.test(q)) {
+      const res = Core.queryLiveMail(raw, state, mails);
+      return { intent: "mk-power", category: "MK97 Mail Intelligence", message: res.markdown, entity: res.entity, meta: { metrics: res.metrics, actions: res.actions, followUps: res.followUps } };
+    }
+
+    // 9. QUERY: Live 3PL & Warehouse Control Tower
+    if (/^\/3pl\b|\b(3pl|delayed\s*shipments?|warehouse|putaway|cycle\s*count|pick(?:ing)?\s*waves?|dock|receiving|reconciliation|tpl-shp)\b/i.test(q)) {
+      const res = Core.queryLiveLogistics3PL(raw, state);
+      return { intent: "mk-power", category: "3PL & Warehouse Pulse", message: res.markdown, entity: res.entity, meta: { metrics: res.metrics, actions: res.actions, followUps: res.followUps } };
+    }
+
+    // 10. QUERY: Live Vendor Performance, SLAs & Open Vendor POs
+    if (/^\/po\b|\b(vendor\s*performance|supplier\s*(?:sla|performance)|kendra\s*scott|open\s*vendor\s*po|open\s*pos|vendor\s*po|po-2026-\d{5,}|vpo_\d+|procurement)\b/i.test(q)) {
+      const res = Core.queryLiveVendors(raw, state);
+      return { intent: "mk-power", category: "Vendor & PO Intelligence", message: res.markdown, entity: res.entity, meta: { metrics: res.metrics, actions: res.actions, followUps: res.followUps } };
+    }
+
+    // 11. QUERY: Live Customer Orders & CRM Accounts
+    if (/^\/orders\b|\b(open\s*orders?|orders?\s+for\b|customer\s*orders?|credit\s*(?:limit|review|risk)|accounts?|northstar|apex\s*incentives|meridian|so-89\d+|87366|88211|88405)\b/i.test(q)) {
+      const res = Core.queryLiveOrders(raw, state);
+      return { intent: "mk-power", category: "Live Orders & CRM", message: res.markdown, entity: res.entity, meta: { metrics: res.metrics, actions: res.actions, followUps: res.followUps } };
+    }
+
+    // 12. QUERY: Live Inventory / Low Stock / SKU Lookup / Reorder Radar (zero CSV required!)
+    if (/^\/inventory\b|\b(check\s+inventory|live\s+inventory|inventory\s+value|low\s*stock|below\s*safety|safety\s*stock|reorder\s*radar|generate\s+reorder\s+report|stock\s+for|af-?200|wh-?1000|airpods|hcfb1|4217709208|amz-100|visa-50|aura\s*frames|fieldbar)\b/i.test(q) && !/\bwhat[- ]?if|simulate\b/i.test(q)) {
+      const res = Core.queryLiveInventory(raw, state, conversation.lastEntity);
+      return { intent: "mk-power", category: "Live Inventory Intelligence", message: res.markdown, entity: res.entity, meta: { metrics: res.metrics, actions: res.actions, followUps: res.followUps } };
+    }
+
+    return null;
+  }
+
+  function handleTaskCopilotQuestion(raw) {
+    const q = raw.toLowerCase();
+    const S = window.StarkSystem, Core = window.MKCopilotCore, T = window.StarkTasks;
+    if (!S || !Core) return null;
+    const mails = getLiveMails();
 
     // 1. Autonomous Mail + Inventory + 3PL Scan command
     if (/\b(scan|sync|auto[- ]?create|check\s*(?:mail|inbox|emails?|inventory)|tracking\s*request)\b/.test(q)) {
       const res = T?.runCopilotSync ? T.runCopilotSync({ silent: true, force: true }) : { created: [], resolved: [], summary: 'Synced.' };
-      const ranked = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(S.getState().tasks || [], S.getState())).filter(x => x.task.status !== 'DONE');
+      const ranked = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(S.getState().tasks || [], S.getState(), { mailThreads: mails })).filter(x => x.task.status !== 'DONE');
       const lines = [
         `**MK Co-Pilot Autonomous Task Scan**`,
         `• Created: **${res.created.length}** new task(s)${res.created.length ? ' — ' + res.created.map(c => c.title).join('; ') : ''}`,
@@ -554,14 +1019,28 @@
           lines.push(`**#${analysis.rank}** (${analysis.score}/100 · ${analysis.tier}) — ${task.title}${refs}`);
         });
       }
-      return { intent: 'copilot', category: 'MK Task Intelligence', message: lines.join('\n') };
+      return {
+        intent: 'copilot',
+        category: 'MK Task Intelligence',
+        message: lines.join('\n'),
+        meta: {
+          metrics: [
+            { label: 'Created', value: String(res.created.length), tone: res.created.length ? 'teal' : 'info' },
+            { label: 'Auto-Resolved', value: String(res.resolved.length), tone: res.resolved.length ? 'ok' : 'info' },
+            { label: 'Active Queue', value: String(ranked.length), tone: 'warn' }
+          ],
+          actions: [
+            ...(ranked[0] ? [{ label: '🔔 Remind Team on #1', style: 'primary', prompt: 'Send reminder for #1' }] : []),
+            { label: '↗ Open Tasks', style: 'ghost', href: 'tasks.html' }
+          ]
+        }
+      };
     }
 
     // 2. Analyze a specific task / PO / Order / SKU reference importance
     const analyzeMatch = raw.match(/(?:analy[sz]e|importance\s+of|score|evaluate|check)\s+(?:task\s+)?(.+)/i);
     if (analyzeMatch && !/\b(my\s+tasks|all\s+tasks|tasks)\b/i.test(analyzeMatch[1].trim())) {
       const probeText = analyzeMatch[1].trim();
-      const mails = T?.getMailThreads ? T.getMailThreads() : [];
       const res = Core.analyzeTaskImportance({ title: probeText, notes: '' }, S.getState(), { mailThreads: mails });
       const lines = [
         `**MK Co-Pilot Task Importance Analysis**`,
@@ -574,18 +1053,35 @@
         '',
         `**Recommended Action:** ${res.recommendedAction}`
       ];
-      return { intent: 'copilot', category: 'MK Task Intelligence', message: lines.join('\n') };
+      return {
+        intent: 'copilot',
+        category: 'MK Task Intelligence',
+        message: lines.join('\n'),
+        meta: {
+          metrics: [
+            { label: 'AI Score', value: `${res.score}/100`, tone: res.tier === 'CRITICAL' ? 'critical' : 'teal' },
+            { label: 'Tier', value: res.tier, tone: res.tier === 'CRITICAL' ? 'critical' : 'warn' },
+            { label: 'ERP Matches', value: String(res.references.length), tone: 'info' }
+          ],
+          actions: [
+            { label: '＋ Create This Task Now', style: 'primary', prompt: `Create task for ${probeText} with Elena and Marcus due tomorrow` }
+          ]
+        }
+      };
     }
 
     // 3. Default: Full Priority Order across all active tasks
     if (T?.runCopilotSync) { try { T.runCopilotSync({ silent: true }); } catch (_) {} }
-    const ranked = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(S.getState().tasks || [], S.getState())).filter(x => x.task.status !== 'DONE');
+    const ranked = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(S.getState().tasks || [], S.getState(), { mailThreads: mails })).filter(x => x.task.status !== 'DONE');
     const autoResolvedCount = (S.getState().tasks || []).filter(t => t.status === 'DONE' && t.autoResolved).length;
     if (!ranked.length) {
       return {
         intent: 'copilot',
         category: 'MK Task Intelligence',
-        message: `**MK Task Priority Queue**\nYou have **0 active tasks** (${autoResolvedCount} auto-resolved by MK Co-Pilot). Ask me to **“Scan mail and inventory for tasks”** or open **Tasks** to create a task with a PO #, Order #, or SKU.`
+        message: `**MK Task Priority Queue**\nYou have **0 active tasks** (${autoResolvedCount} auto-resolved by MK Co-Pilot). Ask me to **“Scan mail and inventory for tasks”** or create a task with a PO #, Order #, or SKU.`,
+        meta: {
+          actions: [{ label: '⚡ Scan Mail & Inventory', style: 'primary', prompt: 'Scan mail and inventory for tasks' }]
+        }
       };
     }
     const lines = [
@@ -596,17 +1092,35 @@
       const refs = analysis.references.slice(0, 2).map(r => r.code).join(', ');
       lines.push(
         `**#${analysis.rank} · ${analysis.tier} (${analysis.score}/100)** — ${task.title}${task.autoCreatedBy === 'mk-copilot' ? ' ✨' : ''}\n` +
-        `   ${refs ? `Refs: ${refs} · ` : ''}${team ? `Team: ${team} · ` : ''}${analysis.reasons[0] || ''}`
+        `   ${refs ? `Refs: \`${refs}\` · ` : ''}${team ? `Team: ${team} · ` : ''}${analysis.reasons[0] || ''}`
       );
     });
-    lines.push('', 'Tip: Mention any PO #, Order #, SKU, or "escalation" when creating a task for live website-wide priority scoring.');
-    return { intent: 'copilot', category: 'MK Task Intelligence', message: lines.join('\n') };
+    const critCount = ranked.filter(x => x.analysis.tier === 'CRITICAL').length;
+    return {
+      intent: 'copilot',
+      category: 'MK Task Intelligence',
+      entity: ranked[0] ? { type: 'TASK', id: ranked[0].task.id, label: ranked[0].task.title } : null,
+      message: lines.join('\n'),
+      meta: {
+        metrics: [
+          { label: 'Active', value: String(ranked.length), tone: 'info' },
+          { label: 'Critical', value: String(critCount), tone: critCount ? 'critical' : 'ok' },
+          { label: 'Auto-Resolved', value: String(autoResolvedCount), tone: 'teal' }
+        ],
+        actions: [
+          { label: '🔔 Remind Team on #1', style: 'primary', prompt: 'Send reminder for #1' },
+          { label: '⚡ Re-Scan Mail & ERP', style: 'teal', prompt: 'Scan mail and inventory for tasks' },
+          { label: '↗ Open Tasks', style: 'ghost', href: 'tasks.html' }
+        ],
+        followUps: ['Create task for PO-2026-887411 escalation with Elena and Marcus due tomorrow', 'Show executive briefing']
+      }
+    };
   }
 
   async function routeQuestion(question) {
     const raw = clean(question);
-    const taskAnswer = handleTaskCopilotQuestion(raw);
-    if (taskAnswer) return taskAnswer;
+    const powerAnswer = handlePowerCommand(raw);
+    if (powerAnswer) return powerAnswer;
     const copilot = window.MKCopilot?.handle(raw);
     if (copilot) return copilot;
     const q = raw.toLowerCase();
@@ -657,7 +1171,23 @@
     if (knowledge) return knowledge;
 
     const analysis = await getInventoryAnalysis();
-    if (!analysis) return { intent: "analysis", category: "data", message: `There is no ${REGION_NAMES[regionCode()]} inventory report available. Upload a Raw Report first; I will analyze it automatically as soon as it is stored.` };
+    if (!analysis) {
+      const S = window.StarkSystem, Core = window.MKCopilotCore;
+      if (S && Core) {
+        if (/what[- ]?if|scenario|simulate|if demand|if lead|if supplier|if stock|if safety/i.test(q)) {
+          const sim = Core.simulateLiveInventoryScenario(raw, S.getState(), conversation.lastEntity);
+          if (sim) return { intent: "mk-power", category: "Live What-If Simulation", message: sim.markdown, meta: { metrics: sim.metrics, actions: sim.actions, followUps: sim.followUps } };
+        }
+        const brief = Core.buildExecutiveBriefing(S.getState(), getLiveMails());
+        return {
+          intent: "mk-power",
+          category: "Executive Briefing",
+          message: `Here is your live MK97 ERP operational pulse *(type \`/\` to browse all commands & actions)*:\n\n${brief.markdown}`,
+          meta: { metrics: brief.metrics, actions: brief.actions, followUps: brief.followUps }
+        };
+      }
+      return { intent: "analysis", category: "data", message: `There is no ${REGION_NAMES[regionCode()]} inventory report available. Upload a Raw Report first; I will analyze it automatically as soon as it is stored.` };
+    }
     lastAnalysis = analysis;
 
     let matched = findItemInQuestion(q, analysis.items);
