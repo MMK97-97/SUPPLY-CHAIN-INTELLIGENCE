@@ -1505,6 +1505,7 @@
           <a class="workspace-view-tab" href="${S.url('workspace.html?view=telemetry')}" role="tab">Analytics</a>
           <a class="workspace-view-tab" href="${S.url('mail.html')}" role="tab">MK97 Mail${mailInboxCount > 0 ? ` <span class="workspace-mail-pill">${mailInboxCount}</span>` : ''}</a>
           <a class="workspace-view-tab active" href="${S.url('tasks.html')}" role="tab" aria-selected="true" aria-current="page">Tasks${activeItems.length > 0 ? ` <span class="workspace-task-pill">${activeItems.length}</span>` : ''}</a>
+          <a class="workspace-view-tab" href="${S.url('connections.html')}" role="tab">Connections</a>
         </div>
       </div>
 

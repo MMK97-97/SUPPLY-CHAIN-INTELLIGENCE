@@ -83,7 +83,7 @@
   function installSpeculationRules() {
     if (!canSpeculate() || document.prerendering || document.querySelector('script[data-stark-speculation]')) return;
     if (isAuthOrSensitive(location.pathname)) return;
-    const corePaths = ['workspace.html', 'mail.html', 'tasks.html', 'all-open-orders.html'];
+    const corePaths = ['workspace.html', 'mail.html', 'tasks.html', 'connections.html', 'all-open-orders.html'];
     const coreUrls = corePaths
       .map(p => new URL(p, ownRoot).href)
       .filter(href => new URL(href).pathname !== location.pathname);

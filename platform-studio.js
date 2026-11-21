@@ -144,7 +144,7 @@
     enabledModules: [
       'itemMaster', 'planning', 'crm', 'orders', 'vendor',
       'procurement', 'shipping', 'warehouse', 'tpl', 'transportation',
-      'analytics', 'data'
+      'connections', 'analytics', 'data'
     ]
   };
 

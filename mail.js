@@ -4188,6 +4188,9 @@ function renderDetailView() {
             <span>Tasks</span>
             ${(() => { const n = (S?.getState?.()?.tasks || []).filter(t => t.status !== 'DONE').length; return n > 0 ? `<span class="workspace-mail-pill workspace-task-pill">${n}</span>` : ''; })()}
           </a>
+          <a class="workspace-view-tab" href="${S ? S.url('connections.html') : 'connections.html'}" role="tab" aria-label="Connections Hub" title="EDI &amp; API Connections">
+            <span>Connections</span>
+          </a>
         </div>
       </div>
       <div class="stark-mail-container density-${esc(mailSettings.density)} ${mailSettings.showTelemetry ? '' : 'telemetry-hidden'}">

@@ -56,6 +56,7 @@
     { cmd: "/orders", label: "Open Customer Orders", desc: "FIFO coverage, untracked orders & credit alerts", run: "Show all open customer orders" },
     { cmd: "/po", label: "Vendor SLAs & Open POs", desc: "Supplier scorecard, ETAs & arrived dock receipts", run: "Summarize vendor performance and open POs" },
     { cmd: "/3pl", label: "3PL & Warehouse Ops", desc: "Delayed shipments, putaway, waves & cycle counts", run: "Show 3PL delays and warehouse status" },
+    { cmd: "/connections", label: "EDI & API Connections", desc: "Check EDI partners, API endpoints & transmit 850/856/REST", run: "Check EDI and API connections" },
     { cmd: "/mail", label: "MK97 Mail Intelligence", desc: "Unread inbox & pending tracking requests", run: "Summarize unread mail and tracking requests" },
     { cmd: "/create-task", label: "Create & Assign Task", desc: "Create a multi-person task with live AI ranking", template: "Create task for PO-2026-887411 escalation with Elena and Marcus due tomorrow" },
     { cmd: "/order-po", label: "Issue Vendor PO", desc: "Place a covering Vendor PO & auto-resolve low stock", template: "Place a vendor PO for AF-200 for 45 units" },
@@ -119,6 +120,7 @@
 
   function getPageContextChip() {
     const p = (location.pathname || "").toLowerCase();
+    if (p.includes("connections.html")) return { label: "🔌 EDI & API Status", prompt: "Check EDI and API connections" };
     if (p.includes("mail.html")) return { label: "✉ Audit Inbox", prompt: "Summarize unread mail and tracking requests" };
     if (p.includes("tasks.html")) return { label: "⚡ Autopilot", prompt: "Show autopilot remediation plan" };
     if (p.includes("order")) return { label: "💰 Order Margins", prompt: "Analyze margin and working capital" };
@@ -1393,6 +1395,45 @@
     if (/^\/mail\b|\b(mail|inbox|emails?|unread\s+mail|tracking\s+requests?)\b/i.test(q) && !/\b(po-2026|vendor\s*po)\b/i.test(q)) {
       const res = Core.queryLiveMail(raw, state, mails);
       return { intent: "mk-power", category: "MK97 Mail Intelligence", message: res.markdown, entity: res.entity, meta: { metrics: res.metrics, actions: res.actions, followUps: res.followUps } };
+    }
+
+    // 9A. QUERY: EDI & API Connections Hub (/connections)
+    if (/^\/connections\b|\b(edi\s*(?:850|855|856|810|846|940|945|997|partner|partners|connection|connections|status|hub)?|api\s*(?:connection|connections|gateway|webhook|endpoint|endpoints|sender)|connections?\s*(?:hub|module|status)|as2|sftp\s*edi)\b/i.test(raw)) {
+      let cData = window.MKConnections?.getData?.();
+      if (!cData) {
+        try { cData = JSON.parse(localStorage.getItem("mk97.connections.v1") || "null"); } catch (_) {}
+      }
+      const list = cData?.connections || [];
+      const ediList = list.filter(c => c.category === "EDI");
+      const apiList = list.filter(c => c.category === "API");
+      const activeCount = list.filter(c => c.active !== false && c.status === "CONNECTED").length;
+      const ourIsa = cData?.ourProfile ? `${cData.ourProfile.isaQualifier}:${cData.ourProfile.isaId}` : "ZZ:MK97ERP00001";
+      const lines = [
+        `**MK97 Connections Hub — EDI & API Gateway**`,
+        `• **Our MK97 ISA ID:** \`${ourIsa}\` (X12 005010 · AS2 / SFTP / REST Ready)`,
+        list.length
+          ? `• **Configured Connections:** **${activeCount}/${list.length} active** (**${ediList.length} EDI Partners** · **${apiList.length} REST/Webhook APIs**)`
+          : `• **Ready to Connect:** Pre-loaded with Amazon, Walmart, SPS Commerce, 3PL 940/945, Shopify, ShipStation, NetSuite & Custom Universal EDI/API templates.`,
+        ...list.slice(0, 5).map(c => `• **${c.name}** (${c.category === "EDI" ? `EDI · ${c.transport} · ISA ${c.isaId}` : `${c.method || "POST"} · ${c.authType}`}) — ${c.active ? "✅ Live" : "⏸ Paused"} · ${c.txCount || 0} tx`)
+      ];
+      return {
+        intent: "mk-power",
+        category: "Connections · EDI & API",
+        message: lines.join("\n"),
+        meta: {
+          metrics: [
+            { label: "EDI Partners", value: String(ediList.length || 3), tone: "teal" },
+            { label: "API / Webhooks", value: String(apiList.length || 3), tone: "info" },
+            { label: "MK97 ISA ID", value: ourIsa, tone: "ok" }
+          ],
+          actions: [
+            { label: "🔌 Open Connections Hub", style: "primary", href: "connections.html" },
+            { label: "📄 Open EDI Studio", style: "teal", href: "connections.html?tab=edi" },
+            { label: "⚡ Open API Sender", style: "ghost", href: "connections.html?tab=api" }
+          ],
+          followUps: ["Show executive briefing", "Summarize vendor performance and open POs"]
+        }
+      };
     }
 
     // 9. QUERY: Live 3PL & Warehouse Control Tower

@@ -86,6 +86,7 @@
       ${[['operations','Operations'],['modules','Modules'],...(showAnalytics?[['telemetry','Analytics']]:[])].map(([id,label])=>`<button type="button" id="workspace-view-${id}" class="workspace-view-tab ${viewMode===id?'active':''}" data-view="${id}" aria-pressed="${viewMode===id}">${label}</button>`).join('')}
       <a class="workspace-view-tab" href="${S.url('mail.html')}">MK97 Mail</a>
       <a class="workspace-view-tab" href="${S.url('tasks.html')}">Tasks${(() => { const n = (S.getState().tasks || []).filter(t => t.status !== 'DONE').length; return n > 0 ? ` <span class="workspace-task-pill">${n}</span>` : ''; })()}</a>
+      <a class="workspace-view-tab" href="${S.url('connections.html')}">Connections</a>
     </div>`;
   }
 
@@ -249,6 +250,19 @@
           <circle cx="280" cy="34" r="14" fill="#1d4ed8" stroke="#93c5fd" stroke-width="1.5"/>
           <path d="M280 24 v10 l7 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
           <text x="342" y="76" text-anchor="end" fill="#bfdbfe" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">FREIGHT TRANSIT &amp; ROUTING</text>
+        </svg>`,
+      connections: `
+        <svg viewBox="0 0 360 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="bg-conn" x1="0" y1="0" x2="360" y2="88" gradientUnits="userSpaceOnUse"><stop stop-color="#072227"/><stop offset="1" stop-color="#0d5952"/></linearGradient></defs>
+          <rect width="360" height="88" fill="url(#bg-conn)"/>
+          <path d="M56 44 H146 M214 44 H304" stroke="#2dd4bf" stroke-width="2" stroke-dasharray="5 4"/>
+          <rect x="24" y="26" width="54" height="36" rx="8" fill="#134e4a" stroke="#5eead4" stroke-width="1.6"/>
+          <text x="51" y="48" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="800">EDI</text>
+          <circle cx="180" cy="44" r="22" fill="#0f766e" stroke="#99f6e4" stroke-width="2"/>
+          <text x="180" y="48" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="800">MK97</text>
+          <rect x="282" y="26" width="54" height="36" rx="8" fill="#1e3a8a" stroke="#93c5fd" stroke-width="1.6"/>
+          <text x="309" y="48" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="800">API</text>
+          <text x="342" y="79" text-anchor="end" fill="#99f6e4" font-size="9" font-family="system-ui,sans-serif" font-weight="600" letter-spacing="1">EDI X12 · AS2 · REST API GATEWAY</text>
         </svg>`,
       analytics: `
         <svg viewBox="0 0 360 88" fill="none" xmlns="http://www.w3.org/2000/svg">
