@@ -37,6 +37,27 @@ body.stark-system.is-home .system-page {
 body.stark-system {
   overflow-x: clip;
 }
+@media (max-width: 820px) {
+  .stark-fab-wrapper, #stark-fab-wrapper {
+    display: none !important;
+  }
+  .module-overview-card:not(.is-expanded) .module-card-content {
+    display: none !important;
+  }
+  .module-overview-card.is-expanded .module-card-content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+@media (min-width: 821px) {
+  .module-card-meta-pill {
+    display: none !important;
+  }
+  .module-card-content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
 .stark-mail-subheader {
   flex-wrap: wrap !important;
   max-width: 100% !important;

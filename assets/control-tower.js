@@ -293,19 +293,24 @@
         ${renderWorkspaceNav()}
         <div class="workspace-actions-wrap">
           <button type="button" class="sys-btn reset-layout-btn" data-reset-module-layout title="Restore default grid arrangement">Restore layout</button>
+          <button type="button" class="sys-btn module-toggle-all-btn" data-toggle-all-modules aria-expanded="false" title="Expand or collapse nested module pages">Expand all</button>
         </div>
         <p id="module-arrangement-help" class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0">Drag a module header to place it anywhere. Moved modules expand with the arrow. Alt + arrow keys move a focused header.</p>
       </div>
 
       <div class="module-overview-grid">
         ${!allGroups.length?empty('No modules are shown. Choose visible modules in Workspace settings.'):''}
-        ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction]) => `
-          <article class="module-overview-card" data-draggable-module="${id}" style="--card-accent:${color}">
-            <header class="module-card-head" id="module-drag-${id}" data-move-module="${id}" tabindex="0" aria-label="Move ${esc(label)}" aria-describedby="module-arrangement-help">
+        ${allGroups.map(([id, label, subtitle, color, items, primaryUrl, quickAction], index) => `
+          <article class="module-overview-card${index===0?' is-expanded':''}" data-draggable-module="${id}" style="--card-accent:${color}">
+            <header class="module-card-head" id="module-drag-${id}" data-move-module="${id}" tabindex="0" aria-label="${esc(label)}" aria-expanded="${index===0?'true':'false'}" aria-describedby="module-arrangement-help">
               <span class="module-card-icon" style="background:${color}">${icon(id)}</span>
               <div class="module-card-titles">
                 <h2>${esc(label)}</h2>
                 <small>${esc(subtitle)}</small>
+              </div>
+              <div class="module-card-meta-pill" aria-hidden="true">
+                <span class="module-card-count">${items.length} pages</span>
+                <span class="module-card-accordion-arrow">▾</span>
               </div>
               <div class="module-card-position-controls">
                 <button type="button" class="module-card-position-button module-card-expand" data-toggle-module="${id}" aria-label="Expand ${esc(label)} options" aria-controls="module-options-${id}" aria-expanded="false" hidden><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="m5 7 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -584,7 +589,28 @@
     listen(grid, 'click', event => {
       const toggle = event.target.closest('[data-toggle-module]');
       if (toggle) { openMenu(toggle.closest('[data-draggable-module]'), event.detail === 0); return; }
+      const head = event.target.closest('.module-card-head');
+      if (head && window.innerWidth <= 820 && !event.target.closest('button, a')) {
+        const card = head.closest('[data-draggable-module]');
+        if (card) {
+          const expanded = card.classList.toggle('is-expanded');
+          head.setAttribute('aria-expanded', String(expanded));
+        }
+      }
     });
+    const toggleAllBtn = host.querySelector('[data-toggle-all-modules]');
+    if (toggleAllBtn) {
+      listen(toggleAllBtn, 'click', () => {
+        const allCards = [...grid.querySelectorAll('[data-draggable-module]')];
+        const anyCollapsed = allCards.some(c => !c.classList.contains('is-expanded'));
+        allCards.forEach(c => {
+          c.classList.toggle('is-expanded', anyCollapsed);
+          c.querySelector('.module-card-head')?.setAttribute('aria-expanded', String(anyCollapsed));
+        });
+        toggleAllBtn.textContent = anyCollapsed ? 'Collapse all' : 'Expand all';
+        toggleAllBtn.setAttribute('aria-expanded', String(anyCollapsed));
+      });
+    }
     listen(grid, 'keydown', event => {
       const toggle = event.target.closest('[data-toggle-module]');
       if (toggle && event.key === 'ArrowDown' && !event.altKey) {
@@ -1072,8 +1098,8 @@
       setPosition(fabCoords.x, fabCoords.y, false);
     } else {
       const fabSize = 58;
-      const defaultLeft = window.innerWidth - fabSize - 28;
-      const defaultTop = window.innerHeight - fabSize - 96;
+      const defaultLeft = window.innerWidth - fabSize - 96;
+      const defaultTop = window.innerHeight - fabSize - 24;
       setPosition(defaultLeft, defaultTop, false);
     }
 
