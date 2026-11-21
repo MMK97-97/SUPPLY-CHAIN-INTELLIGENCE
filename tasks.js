@@ -1123,7 +1123,13 @@
     const isTasksPage = !!document.querySelector('#tasks-content');
     if (isTasksPage && window.innerWidth > 1060 && viewMode === 'priority') {
       render();
-      document.querySelector('.tsk-inspector-col')?.scrollTo?.({ top: 0, behavior: 'smooth' });
+      const insp = document.querySelector('.tsk-inspector-col');
+      if (insp) {
+        const rect = insp.getBoundingClientRect();
+        if (rect.top < 76 || rect.top > window.innerHeight - 120) {
+          window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - 84), behavior: 'smooth' });
+        }
+      }
       return;
     }
 
@@ -1641,10 +1647,6 @@
     // Bind Right Inspector
     const inspCol = host.querySelector('.tsk-inspector-col');
     if (inspCol) bindInspectorInteractions(inspCol);
-
-    if (window.innerWidth <= 1100) {
-      host.querySelector('.tasks-workspace-nav .workspace-view-tab.active')?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
-    }
   }
 
   function updateGlobalTaskPills() {
