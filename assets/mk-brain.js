@@ -37,10 +37,19 @@
     CA: { name: "stark-regional-inventory-ca", key: "Canada" }
   };
   const DEFAULT_SETTINGS = { critical: 3, coverage: 1, delay: 15, a: 80, b: 95 };
-  const ENGINE_VERSION = "MK Intelligence 6.0 · Autonomous Command AI";
+  const ENGINE_VERSION = "MK Intelligence 7.0 · AI Analyst & Autonomous Co-Pilot";
   const LOCAL_ONLY_INTENTS = new Set(["voice", "space", "settings", "navigation", "export", "tracking", "learn", "help", "mk-power", "copilot"]);
   const SLASH_COMMANDS = [
     { cmd: "/brief", label: "Executive Briefing", desc: "Live ERP pulse across Orders, Stock, POs, 3PL, Mail & Tasks", run: "Show executive briefing" },
+    { cmd: "/health", label: "ERP Health & Anomalies", desc: "0–100 Health Score, statistical Z-score spikes & risk radar", run: "Run ERP health score and anomaly detection" },
+    { cmd: "/forecast", label: "Demand Forecast & EOQ", desc: "13-month trend forecast, ROP & Wilson EOQ across 1,885 SKUs", run: "Forecast portfolio demand across all SKUs" },
+    { cmd: "/abc", label: "ABC-XYZ & Pareto 80/20", desc: "Revenue segmentation, demand volatility & HHI concentration", run: "Run ABC XYZ segmentation and Pareto analysis" },
+    { cmd: "/margin", label: "Margin & Working Capital", desc: "Gross profit %, inventory capital & CRM credit exposure", run: "Analyze margin and working capital" },
+    { cmd: "/brands", label: "Top Brands Intelligence", desc: "12-month revenue rankings & trends across 138 brands", run: "Analyze top brands revenue" },
+    { cmd: "/customers", label: "Top Customers & Risk", desc: "131 commercial accounts, revenue share & credit alerts", run: "Analyze top customers and revenue concentration" },
+    { cmd: "/compare", label: "Side-by-Side Comparison", desc: "Compare any two brands, customers, or vendor SLAs", template: "Compare Marc Jacobs vs Gucci" },
+    { cmd: "/optimize", label: "3PL Fulfillment Optimizer", desc: "Find lowest-cost & highest-SLA node by SKU & state", template: "Optimize fulfillment for 25 WH1000XM5 to CA" },
+    { cmd: "/autopilot", label: "Autonomous Fix Playbook", desc: "Preview & execute multi-step ERP remediation in 1 click", run: "Show autopilot remediation plan" },
     { cmd: "/tasks", label: "AI Task Priority Order", desc: "Rank all tasks by website-wide ERP impact score", run: "Prioritize & analyze my tasks" },
     { cmd: "/scan", label: "Autonomous Mail & ERP Scan", desc: "Auto-create PO/tracking tasks & clear resolved ones", run: "Scan mail and inventory for tasks" },
     { cmd: "/inventory", label: "Live Inventory & Low Stock", desc: "Safety-stock deficits, 3PL stock & valuation", run: "Check low stock and inventory value" },
@@ -50,7 +59,9 @@
     { cmd: "/mail", label: "MK97 Mail Intelligence", desc: "Unread inbox & pending tracking requests", run: "Summarize unread mail and tracking requests" },
     { cmd: "/create-task", label: "Create & Assign Task", desc: "Create a multi-person task with live AI ranking", template: "Create task for PO-2026-887411 escalation with Elena and Marcus due tomorrow" },
     { cmd: "/order-po", label: "Issue Vendor PO", desc: "Place a covering Vendor PO & auto-resolve low stock", template: "Place a vendor PO for AF-200 for 45 units" },
+    { cmd: "/receive-po", label: "Post Arrived Dock PO", desc: "Receive arrived dock PO stock into usable inventory", template: "Receive PO-2026-887411" },
     { cmd: "/provide-tracking", label: "Provide Tracking", desc: "Reply with tracking & auto-resolve tracking task", template: "Provide tracking DHL9988776 for #3PL-GP-918" },
+    { cmd: "/email", label: "Draft Executive Email", desc: "Compose & send data-backed vendor/customer email", template: "Draft email to Kendra Scott about late PO delivery" },
     { cmd: "/remind", label: "Send Team Reminder", desc: "Notify everyone involved on a task via MK97 Mail", template: "Send reminder for #1" }
   ];
   const ROUTES = {
@@ -82,7 +93,41 @@
   let syncChannel = null;
   let busy = false;
   let activeController = null;
-  const conversation = { scope: "", lastIntent: "", lastItemKey: "", lastEntity: null, lastQuestion: "", lastAnswer: "", turns: [] };
+  const conversation = { scope: "", lastIntent: "", lastItemKey: "", lastEntity: null, pendingEmail: null, lastQuestion: "", lastAnswer: "", turns: [] };
+  let seedLoadPromise = null;
+
+  function ensureAnalyticsSeed() {
+    if (window.STARK_INVENTORY_ANALYSIS_SEED) return Promise.resolve(window.STARK_INVENTORY_ANALYSIS_SEED);
+    if (seedLoadPromise) return seedLoadPromise;
+    seedLoadPromise = new Promise(resolve => {
+      try {
+        const src = window.StarkSystem?.url
+          ? window.StarkSystem.url("assets/inventory-analysis-seed.js?v=20261121-mk7")
+          : "assets/inventory-analysis-seed.js?v=20261121-mk7";
+        const sc = document.createElement("script");
+        sc.src = src;
+        sc.async = true;
+        sc.onload = () => resolve(window.STARK_INVENTORY_ANALYSIS_SEED || null);
+        sc.onerror = () => resolve(null);
+        document.head.appendChild(sc);
+      } catch (_) {
+        resolve(null);
+      }
+    });
+    return seedLoadPromise;
+  }
+
+  function getPageContextChip() {
+    const p = (location.pathname || "").toLowerCase();
+    if (p.includes("mail.html")) return { label: "✉ Audit Inbox", prompt: "Summarize unread mail and tracking requests" };
+    if (p.includes("tasks.html")) return { label: "⚡ Autopilot", prompt: "Show autopilot remediation plan" };
+    if (p.includes("order")) return { label: "💰 Order Margins", prompt: "Analyze margin and working capital" };
+    if (p.includes("vendor") || p.includes("procurement")) return { label: "⚔ Vendor SLAs", prompt: "Compare vendors" };
+    if (p.includes("3pl") || p.includes("warehouse") || p.includes("transport")) return { label: "🧭 3PL Optimizer", prompt: "Optimize fulfillment for 25 WH1000XM5 to CA" };
+    if (p.includes("crm") || p.includes("sales")) return { label: "👥 Top Customers", prompt: "Analyze top customers and revenue concentration" };
+    if (p.includes("inventory") || p.includes("reorder") || p.includes("item-master")) return { label: "📈 1.8K Forecast", prompt: "Forecast portfolio demand across all SKUs" };
+    return { label: "🩺 Health Audit", prompt: "Run ERP health score and anomaly detection" };
+  }
 
   if (document.readyState !== "complete") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
@@ -150,8 +195,10 @@
     if (!S || !Core?.getLivePulse) { pulseBar.hidden = true; return; }
     const mails = window.StarkTasks?.getMailThreads ? window.StarkTasks.getMailThreads() : (window.StarkMail?.getThreads ? window.StarkMail.getThreads() : []);
     const p = Core.getLivePulse(S.getState(), mails);
+    const ctxChip = getPageContextChip();
     pulseBar.hidden = false;
     pulseBar.innerHTML = `
+      <button type="button" class="mk-pulse-chip tone-ctx" data-pulse-prompt="${esc(ctxChip.prompt)}" title="Context-aware AI Analyst action">${esc(ctxChip.label)}</button>
       <button type="button" class="mk-pulse-chip tone-teal" data-pulse-prompt="Show executive briefing" title="Run full executive briefing">🌅 Brief</button>
       <button type="button" class="mk-pulse-chip ${p.criticalTasks ? 'tone-crit' : 'tone-info'}" data-pulse-prompt="Prioritize & analyze my tasks" title="View AI priority task queue">🎯 ${p.activeTasks} Tasks</button>
       <button type="button" class="mk-pulse-chip ${p.lowStockCount ? 'tone-warn' : 'tone-ok'}" data-pulse-prompt="Check low stock and reorder radar" title="Inspect low-stock alerts">📦 ${p.lowStockCount} Low</button>
@@ -222,49 +269,49 @@
           </svg>
         </div>
         <h2>Hi, I'm MK ⚡</h2>
-        <p>Autonomous Supply Chain Command AI. Ask questions, issue Vendor POs, create tasks, send team reminders, or type <code>/</code> for commands.</p>
+        <p>Executive Supply Chain Analyst &amp; Autonomous ERP Co-Pilot. Run statistical forecasts, margin &amp; anomaly audits, 3PL optimization, or execute live POs, emails &amp; autopilot fixes. Type <code>/</code> for 23 commands.</p>
       </div>
       <div class="mk-copilot-cards-list">
-        <button type="button" class="mk-copilot-action-card" data-prompt="Show executive briefing">
+        <button type="button" class="mk-copilot-action-card" data-prompt="Run ERP health score and anomaly detection">
           <span class="mk-card-icon-wrap mk-card-icon-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </span>
-          <span class="mk-card-text"><strong>Executive Operations Briefing</strong><small>Live ERP pulse, risks &amp; 1-click fixes</small></span>
+          <span class="mk-card-text"><strong>ERP Health Score &amp; Anomaly Radar</strong><small>0–100 audit, Z-score spikes &amp; live bottlenecks</small></span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Prioritize &amp; analyze my tasks">
+        <button type="button" class="mk-copilot-action-card" data-prompt="Forecast portfolio demand across all SKUs">
           <span class="mk-card-icon-wrap mk-card-icon-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
           </span>
-          <span class="mk-card-text"><strong>Prioritize &amp; Analyze My Tasks</strong><small>AI-ranked order with linked POs &amp; orders</small></span>
+          <span class="mk-card-text"><strong>Demand Forecast &amp; EOQ (1,885 SKUs)</strong><small>13-mo trend chart, 90-day projection &amp; ROP</small></span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Check low stock and inventory value">
-          <span class="mk-card-icon-wrap mk-card-icon-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Analyze margin and working capital">
+          <span class="mk-card-icon-wrap mk-card-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           </span>
-          <span class="mk-card-text"><strong>Low-Stock &amp; Reorder Radar</strong><small>Safety-stock deficits, 3PL &amp; instant POs</small></span>
+          <span class="mk-card-text"><strong>Margin, Profit &amp; Working Capital</strong><small>Gross margin %, SKU capital &amp; credit exposure</small></span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Summarize vendor performance and open POs">
+        <button type="button" class="mk-copilot-action-card" data-prompt="Run ABC XYZ segmentation and Pareto analysis">
           <span class="mk-card-icon-wrap mk-card-icon-purple">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </span>
-          <span class="mk-card-text"><strong>Vendor SLAs &amp; Open POs</strong><small>Supplier alerts, ETAs &amp; dock arrivals</small></span>
+          <span class="mk-card-text"><strong>ABC-XYZ Matrix &amp; Brand Pareto 80/20</strong><small>138 brands, 131 customers &amp; HHI risk index</small></span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Show 3PL delays and warehouse status">
+        <button type="button" class="mk-copilot-action-card" data-prompt="Show autopilot remediation plan">
+          <span class="mk-card-icon-wrap mk-card-icon-blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </span>
+          <span class="mk-card-text"><strong>Autonomous Fix Playbook (Autopilot)</strong><small>Issue POs, post dock receipts &amp; remind team</small></span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Prioritize &amp; analyze my tasks">
           <span class="mk-card-icon-wrap mk-card-icon-purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           </span>
-          <span class="mk-card-text"><strong>3PL Delays &amp; Warehouse Pulse</strong><small>Delayed shipments, putaway &amp; counts</small></span>
-          <span class="mk-card-chevron">&gt;</span>
-        </button>
-        <button type="button" class="mk-copilot-action-card" data-prompt="Summarize unread mail and tracking requests">
-          <span class="mk-card-icon-wrap mk-card-icon-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-          </span>
-          <span class="mk-card-text"><strong>Mail Inbox &amp; Tracking Requests</strong><small>Auto-detect requests &amp; resolve in 1 click</small></span>
+          <span class="mk-card-text"><strong>Prioritize Tasks &amp; Mail Tracking</strong><small>AI-ranked order with linked POs &amp; 1-click reply</small></span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
       </div>`;
@@ -289,12 +336,12 @@
     panel.setAttribute("role", "region");
     panel.innerHTML = `
       <header class="mk-copilot-header-white">
-        <div class="mk-avatar-badge">MK</div>
+        <div class="mk-avatar-badge mk-avatar-logo"><img src="${esc(safeHref("assets/mk97-logo.png?v=20261121-logo1") || "assets/mk97-logo.png?v=20261121-logo1")}" alt="MK97"></div>
         <div class="mk-header-titles">
-          <h3>MK — AI Co-Pilot</h3>
+          <h3>MK — AI Analyst &amp; Co-Pilot</h3>
           <div class="mk-status-line">
             <span class="dot"></span>
-            <span>v6.0 · Autonomous Command</span>
+            <span>v7.0 · Analyst &amp; Autopilot</span>
           </div>
         </div>
         <div class="mk-header-controls">
@@ -459,6 +506,98 @@
     return raw;
   }
 
+  function renderAnalystChart(chart) {
+    if (!chart || !chart.type) return "";
+    if (chart.type === "bars" && Array.isArray(chart.items) && chart.items.length) {
+      const maxVal = Math.max(...chart.items.map(it => Math.abs(finite(it.value))), 1);
+      return `<div class="mk-chart-box">
+        <div class="mk-chart-title"><span>${esc(chart.title || "Chart")}</span></div>
+        <div class="mk-bar-list">${chart.items.map(it => {
+          const pct = clamp(Math.round((Math.abs(finite(it.value)) / maxVal) * 100), 4, 100);
+          return `<div class="mk-bar-row">
+            <div class="mk-bar-head"><span class="mk-bar-label">${esc(it.label)}</span><span class="mk-bar-val">${esc(it.display ?? String(it.value))}</span></div>
+            <div class="mk-bar-track"><div class="mk-bar-fill tone-${esc(it.tone || "teal")}" style="width:${pct}%"></div></div>
+          </div>`;
+        }).join("")}</div>
+      </div>`;
+    }
+    if (chart.type === "stacked" && Array.isArray(chart.segments) && chart.segments.length) {
+      return `<div class="mk-chart-box">
+        <div class="mk-chart-title"><span>${esc(chart.title || "Distribution")}</span></div>
+        <div class="mk-stack-bar">${chart.segments.map(seg => `<div class="mk-stack-seg" style="width:${clamp(finite(seg.pct), 2, 100)}%;background:${esc(seg.color || "#087f78")}" title="${esc(seg.label)}"></div>`).join("")}</div>
+        <div class="mk-stack-legend">${chart.segments.map(seg => `<span class="mk-stack-item"><span class="mk-stack-dot" style="background:${esc(seg.color || "#087f78")}"></span>${esc(seg.label)}</span>`).join("")}</div>
+      </div>`;
+    }
+    if (chart.type === "sparkline" && Array.isArray(chart.actual) && chart.actual.length >= 2) {
+      const actual = chart.actual.map(finite);
+      const forecast = Array.isArray(chart.forecast) ? chart.forecast.map(finite) : [];
+      const all = [...actual, ...forecast];
+      const maxV = Math.max(...all, 1);
+      const minV = Math.min(...all, 0);
+      const span = Math.max(1, maxV - minV);
+      const W = 560, H = 128, padX = 12, padY = 14;
+      const stepX = (W - padX * 2) / Math.max(1, all.length - 1);
+      const ptY = v => Math.round((H - padY - ((v - minV) / span) * (H - padY * 2)) * 10) / 10;
+      const ptX = i => Math.round((padX + i * stepX) * 10) / 10;
+      const actPts = actual.map((v, i) => `${ptX(i)},${ptY(v)}`).join(" ");
+      const areaPts = `${ptX(0)},${H - padY} ${actPts} ${ptX(actual.length - 1)},${H - padY}`;
+      const fcPts = forecast.length
+        ? [`${ptX(actual.length - 1)},${ptY(actual[actual.length - 1])}`, ...forecast.map((v, j) => `${ptX(actual.length + j)},${ptY(v)}`)].join(" ")
+        : "";
+      const labels = Array.isArray(chart.labels) && chart.labels.length ? chart.labels : all.map((_, i) => `P${i + 1}`);
+      const fmtVal = v => chart.unit === "$"
+        ? (v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `$${(v / 1e3).toFixed(0)}K` : `$${Math.round(v)}`)
+        : `${Math.round(v).toLocaleString()}${chart.unit || ""}`;
+      const peakIdx = all.indexOf(maxV);
+      return `<div class="mk-chart-box">
+        <div class="mk-chart-title">
+          <span>${esc(chart.title || "Trend")}</span>
+          <span class="mk-chart-legend"><span><i style="background:#087f78"></i>Actual</span>${forecast.length ? `<span><i style="background:#6366f1"></i>Forecast</span>` : ""}</span>
+        </div>
+        <svg class="mk-spark-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(chart.title || "Trend chart")}">
+          <line x1="${padX}" y1="${padY}" x2="${W - padX}" y2="${padY}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="${padX}" y1="${Math.round(H / 2)}" x2="${W - padX}" y2="${Math.round(H / 2)}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="${padX}" y1="${H - padY}" x2="${W - padX}" y2="${H - padY}" stroke="#cbd5e1" stroke-width="1"/>
+          <polygon points="${areaPts}" fill="rgba(8, 127, 120, 0.13)"/>
+          <polyline points="${actPts}" fill="none" stroke="#087f78" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          ${fcPts ? `<polyline points="${fcPts}" fill="none" stroke="#6366f1" stroke-width="2.6" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
+          ${actual.map((v, i) => `<circle cx="${ptX(i)}" cy="${ptY(v)}" r="${i === peakIdx ? 4.8 : 3.2}" fill="${i === peakIdx ? "#0f4c47" : "#087f78"}"><title>${esc(labels[i] || "")}: ${esc(fmtVal(v))}</title></circle>`).join("")}
+          ${forecast.map((v, j) => `<circle cx="${ptX(actual.length + j)}" cy="${ptY(v)}" r="3.8" fill="#6366f1"><title>${esc(labels[actual.length + j] || "")}: ${esc(fmtVal(v))} (Forecast)</title></circle>`).join("")}
+        </svg>
+        <div class="mk-spark-axis"><span>${esc(labels[0] || "")}</span><span>Peak: ${esc(fmtVal(maxV))} (${esc(labels[peakIdx] || "")})</span><span>${esc(labels[labels.length - 1] || "")}</span></div>
+      </div>`;
+    }
+    return "";
+  }
+
+  function renderAnalystTable(table) {
+    if (!table || !Array.isArray(table.columns) || !Array.isArray(table.rows) || !table.rows.length) return "";
+    return `<div class="mk-data-table-box">
+      ${table.title ? `<div class="mk-data-table-title">${esc(table.title)}</div>` : ""}
+      <div class="mk-data-table-wrap">
+        <table class="mk-data-table">
+          <thead><tr>${table.columns.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+          <tbody>${table.rows.map(r => `<tr>${r.map(cell => `<td>${esc(cell)}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  function downloadCsvFile(csvObj) {
+    if (!csvObj?.content) return;
+    try {
+      const blob = new Blob([csvObj.content], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = csvObj.filename || "mk97-analyst-report.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    } catch (_) {}
+  }
+
   function addEntry(message, role = "brain", speak = true, category = "answer", result = null, meta = null) {
     const welcome = feed.querySelector(".mk-copilot-welcome");
     if (welcome) feed.innerHTML = "";
@@ -467,6 +606,13 @@
 
     const metricsHtml = role === "brain" && Array.isArray(meta?.metrics) && meta.metrics.length
       ? `<div class="mk-metrics-strip">${meta.metrics.map(m => `<div class="mk-metric-pill tone-${esc(m.tone || "info")}"><span>${esc(m.label)}</span><strong>${esc(m.value)}</strong></div>`).join("")}</div>`
+      : "";
+
+    const chartHtml = role === "brain" && meta?.chart ? renderAnalystChart(meta.chart) : "";
+    const tableHtml = role === "brain" && meta?.table ? renderAnalystTable(meta.table) : "";
+
+    const exportBarHtml = role === "brain" && (meta?.csv || (meta?.metrics && meta.metrics.length))
+      ? `<div class="mk-export-bar">${meta?.csv ? `<button type="button" class="mk-util-btn mk-btn-csv">⬇ Export CSV</button>` : ""}<button type="button" class="mk-util-btn mk-btn-copy">📋 Copy Memo</button></div>`
       : "";
 
     const actionsHtml = role === "brain" && Array.isArray(meta?.actions) && meta.actions.length
@@ -480,11 +626,24 @@
       : "";
 
     const controls = role === "brain" ? `<div class="mk-feedback"><button type="button" data-feedback="useful">Useful</button><button type="button" data-feedback="correction">Needs correction</button></div>` : "";
-    entry.innerHTML = `<div class="mk-entry-card"><div class="mk-entry-meta">${role === "user" ? "You" : "MK • " + esc(category)}</div>${metricsHtml}<div class="mk-entry-body">${formatMessage(message)}</div>${actionsHtml}${followUpsHtml}${controls}</div>`;
+    entry.innerHTML = `<div class="mk-entry-card"><div class="mk-entry-meta">${role === "user" ? "You" : "MK • " + esc(category)}</div>${metricsHtml}<div class="mk-entry-body">${formatMessage(message)}</div>${chartHtml}${tableHtml}${exportBarHtml}${actionsHtml}${followUpsHtml}${controls}</div>`;
     if (result) window.MKAI?.renderResult(entry.querySelector(".mk-entry-card"), result);
     feed.appendChild(entry);
     feed.scrollTop = feed.scrollHeight;
 
+    entry.querySelector(".mk-btn-csv")?.addEventListener("click", e => {
+      downloadCsvFile(meta.csv);
+      e.currentTarget.classList.add("is-done");
+      e.currentTarget.textContent = "✓ CSV Downloaded";
+    });
+    entry.querySelector(".mk-btn-copy")?.addEventListener("click", async e => {
+      const btn = e.currentTarget;
+      const plain = String(message || "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/`([^`]+)`/g, "$1");
+      try { await navigator.clipboard.writeText(plain); } catch (_) {}
+      btn.classList.add("is-done");
+      btn.textContent = "✓ Copied";
+      window.setTimeout(() => { btn.classList.remove("is-done"); btn.textContent = "📋 Copy Memo"; }, 1800);
+    });
     entry.querySelectorAll("[data-feedback]").forEach(button => button.addEventListener("click", () => recordFeedback(button, category)));
     entry.querySelectorAll("[data-mk-exec-idx]").forEach(btn => {
       const act = meta.actions[Number(btn.dataset.mkExecIdx)];
@@ -693,12 +852,26 @@
     return ranked[0] || null;
   }
 
-  function handlePowerCommand(raw) {
+  async function handlePowerCommand(raw) {
     const S = window.StarkSystem, Core = window.MKCopilotCore, T = window.StarkTasks;
     if (!S || !Core) return null;
     const state = S.getState();
     const mails = getLiveMails();
     const q = raw.toLowerCase().trim();
+    const wrapAnalyst = (res, category) => ({
+      intent: "mk-power",
+      category,
+      entity: res.entity || null,
+      message: res.markdown,
+      meta: {
+        metrics: res.metrics,
+        chart: res.chart,
+        table: res.table,
+        csv: res.csv,
+        actions: res.actions,
+        followUps: res.followUps
+      }
+    });
 
     // 0. Direct Slash Commands
     if (q === "/clear" || q === "/reset") {
@@ -709,16 +882,228 @@
     if (q === "/help" || /^what can you do\b/i.test(q)) {
       return {
         intent: "mk-power",
-        category: "MK 6.0 Capabilities",
-        message: `**MK 6.0 · Autonomous Supply Chain Command AI**\nI inspect your entire live ERP in real time **and execute real operational actions** directly from chat:\n\n**⚡ Live Commands & Actions:**\n• **Create & Assign Tasks:** \`Create task for PO-2026-887411 escalation with Elena and Marcus due tomorrow\`\n• **Send Team Reminders:** \`Send reminder for #1\` or \`Remind team about PO-2026-887411\`\n• **Issue Vendor POs:** \`Place a vendor PO for AF-200 for 45 units\` *(auto-resolves low-stock tasks!)*\n• **Provide Tracking:** \`Provide tracking DHL9988776 for #3PL-GP-918\` *(replies in Mail & auto-resolves task!)*\n• **Complete Tasks:** \`Complete task #1\`\n\n**🧠 Deep ERP Intelligence (Zero CSV Required):**\n• \`/brief\` — Executive Operations Briefing across all modules\n• \`/tasks\` & \`/scan\` — AI Priority Ranking & Autonomous Mail/Inventory Scan\n• \`/inventory\`, \`/orders\`, \`/po\`, \`/3pl\`, \`/mail\` — Live real-time drilldowns\n• **What-If Simulations:** \`What if demand increases 25% for AF-200?\``,
+        category: "MK 7.0 Capabilities",
+        message: `**MK 7.0 · AI Supply Chain Analyst & Autonomous Co-Pilot**\nI combine **quantitative financial & statistical analytics** (with live SVG charts, executive tables & 1-click CSV exports across **1,885 SKUs, 138 brands & 131 customers**) with **autonomous ERP execution**:\n\n**📊 AI Supply Chain Analyst:**\n• \`/health\` — 0–100 ERP Health Score, Z-score demand spikes & dead-stock radar\n• \`/forecast\` — 13-month statistical demand forecast, ROP & Wilson EOQ\n• \`/abc\` — ABC-XYZ segmentation, Pareto 80/20 & customer HHI concentration\n• \`/margin\` — Gross margin %, profit leaders, working capital & credit risk\n• \`/brands\` & \`/customers\` — Deep-dives & 12-month revenue trends\n• \`/compare\` — Side-by-side Brand, Customer & Vendor comparisons\n• \`/optimize\` — 3PL vs Local Warehouse landed cost & SLA routing optimizer\n\n**⚡ Autonomous Co-Pilot Actions:**\n• \`/autopilot\` — Multi-step remediation playbook (scan + POs + dock receiving + reminders)\n• \`/order-po\`, \`/receive-po\`, \`/provide-tracking\`, \`/create-task\`, \`/email\`, \`/remind\``,
         meta: {
           actions: [
-            { label: "🌅 Run Executive Briefing", style: "primary", prompt: "Show executive briefing" },
-            { label: "🎯 Prioritize Tasks", style: "teal", prompt: "Prioritize & analyze my tasks" },
-            { label: "⚡ Auto-Scan ERP & Mail", style: "ghost", prompt: "Scan mail and inventory for tasks" }
+            { label: "🩺 ERP Health Audit", style: "primary", prompt: "Run ERP health score and anomaly detection" },
+            { label: "📈 1.8K SKU Forecast", style: "teal", prompt: "Forecast portfolio demand across all SKUs" },
+            { label: "⚡ Autopilot Playbook", style: "ghost", prompt: "Show autopilot remediation plan" }
           ]
         }
       };
+    }
+
+    // 0A. ACTION: Execute Full Autonomous Remediation Playbook
+    if (/^(?:execute|run)\s+(?:full\s+)?autopilot\b|^\/autopilot\s+--run\b/i.test(raw)) {
+      const seed = await ensureAnalyticsSeed();
+      const beforeHealth = Core.detectAnomaliesAndRisks(S.getState(), seed, mails).healthScore;
+      const beforeAutoResolved = new Set((S.getState().tasks || []).filter(t => t.autoResolved).map(t => t.id));
+      const logLines = [];
+
+      // Step 1: Scan mail & ERP
+      const scanRes = T?.runCopilotSync ? T.runCopilotSync({ silent: true, force: true }) : { created: [], resolved: [] };
+      logLines.push(`• **1. Mail & ERP Scan:** Synced queue (${scanRes.created?.length || 0} created, ${scanRes.resolved?.length || 0} cleared).`);
+
+      // Step 2: Issue covering Vendor POs for every distinct low-stock SKU
+      const pulseNow = Core.getLivePulse(S.getState(), mails);
+      let posIssued = 0;
+      const seenLowSkus = new Set();
+      for (const item of pulseNow.lowStockSkus) {
+        if (!item?.sku || seenLowSkus.has(item.sku)) continue;
+        seenLowSkus.add(item.sku);
+        const poCmd = Core.buildVendorPOForItem
+          ? Core.buildVendorPOForItem(item, 0, S.getState(), posIssued)
+          : Core.parseVendorPOCommand(`Place a vendor PO for ${item.model || item.sku}`, S.getState(), null);
+        if (poCmd) {
+          S.transaction("VENDOR_PO_CREATED", `${poCmd.poNumber} (${poCmd.qty} × ${poCmd.item.model || poCmd.item.sku})`, draft => {
+            draft.enterprise.purchaseOrders ||= [];
+            draft.enterprise.purchaseOrders.unshift({
+              id: S.uid("vpo"),
+              vendorId: poCmd.vendor.id,
+              po: poCmd.poNumber,
+              status: "PO_ISSUED",
+              issuedAt: new Date().toISOString(),
+              eta: poCmd.eta,
+              warehouse: "MK97 Southeast Distribution Center",
+              carrier: "TBD",
+              tracking: "",
+              lines: [{ sku: poCmd.item.sku, qty: poCmd.qty, received: 0, cost: poCmd.unitCost }]
+            });
+          });
+          posIssued++;
+          const regSuffix = poCmd.item.region ? ` [${poCmd.item.region}]` : "";
+          logLines.push(`• **2. Covering PO Issued:** **${poCmd.poNumber}** (${poCmd.qty} × ${poCmd.item.model || poCmd.item.sku}${regSuffix}, $${Math.round(poCmd.totalCost).toLocaleString()}).`);
+        }
+      }
+
+      // Step 3: Receive arrived dock PO receipts cleanly
+      let receivedCount = 0;
+      const arrivedRcvs = (S.getState().logistics?.receipts || []).filter(r => r.status === "ARRIVED");
+      for (const rcv of arrivedRcvs) {
+        const matchPo = (S.getState().enterprise?.purchaseOrders || []).find(p => p.po === rcv.po && !["RECEIVED", "CANCELLED"].includes(p.status));
+        if (matchPo && S.receivePO) {
+          try {
+            S.receivePO(matchPo.id);
+            receivedCount++;
+            logLines.push(`• **3. Dock Receipt Posted:** **${matchPo.po}** received into usable stock & putaway closed.`);
+          } catch (err) {
+            logLines.push(`• **3. Dock Receipt Skipped (${matchPo.po}):** ${err.message}`);
+          }
+        }
+      }
+
+      // Step 4: Final sync & remind team on #1 remaining priority task
+      if (T?.runCopilotSync) { try { T.runCopilotSync({ silent: true, force: true }); } catch (_) {} }
+      const rankedAfter = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(S.getState().tasks || [], S.getState(), { mailThreads: mails })).filter(x => x.task.status !== "DONE");
+      let reminded = 0;
+      if (rankedAfter[0] && T?.sendReminder) {
+        const remLog = T.sendReminder(rankedAfter[0].task.id);
+        reminded = (remLog?.recipients || rankedAfter[0].task.assignees || [1]).length;
+        logLines.push(`• **4. Team Reminder Dispatched:** Notified **${reminded} assignee(s)** via MK97 Mail for **${rankedAfter[0].task.title}**.`);
+      }
+
+      const newlyResolved = (S.getState().tasks || []).filter(t => t.autoResolved && !beforeAutoResolved.has(t.id));
+      const afterHealth = Core.detectAnomaliesAndRisks(S.getState(), seed, mails).healthScore;
+      const delta = afterHealth - beforeHealth;
+
+      return {
+        intent: "mk-power",
+        category: "Autopilot Executed",
+        message: `**⚡ MK v7.0 Full Autopilot Complete**\nERP Health Score improved **${beforeHealth}/100 → ${afterHealth}/100** (${delta >= 0 ? "+" : ""}${delta} pts)${newlyResolved.length ? ` · **${newlyResolved.length} task(s) auto-resolved & cleared**` : ""}:\n\n${logLines.join("\n")}`,
+        meta: {
+          metrics: [
+            { label: "Health Score", value: `${afterHealth}/100 (${delta >= 0 ? "+" : ""}${delta})`, tone: "ok" },
+            { label: "POs Issued", value: String(posIssued), tone: "teal" },
+            { label: "POs Received", value: String(receivedCount), tone: "info" },
+            { label: "Auto-Resolved", value: String(newlyResolved.length), tone: "ok" }
+          ],
+          actions: [
+            { label: "🩺 View Updated Health", style: "teal", prompt: "Run ERP health score and anomaly detection" },
+            { label: "🎯 View Tasks Queue", style: "ghost", prompt: "Prioritize & analyze my tasks" }
+          ],
+          followUps: ["Run ERP health score and anomaly detection", "Show executive briefing"]
+        }
+      };
+    }
+
+    // 0B. PREVIEW: Autonomous Fix Playbook (/autopilot)
+    if (/^\/autopilot\b|\b(autopilot|auto[- ]?fix\s+(?:all|erp|issues)|remediation\s+plan|fix\s+everything)\b/i.test(raw)) {
+      const plan = Core.buildAutopilotPlan(state, mails);
+      return wrapAnalyst(plan, "Autopilot Remediation Plan");
+    }
+
+    // 0C. ACTION: Send Drafted Executive Email
+    if (/^send\s+draft(?:ed)?\s+email\b/i.test(raw) && conversation.pendingEmail) {
+      const draft = conversation.pendingEmail;
+      const outMsg = {
+        id: "mk-email-" + Date.now(),
+        senderName: "Manoj Manne",
+        senderCompany: "MK97 Operations (via MK AI)",
+        senderEmail: "supply.chain@mk97.com",
+        to: draft.toEmail,
+        cc: "",
+        subject: draft.subject,
+        timestamp: "Just now",
+        fullDate: new Date().toLocaleString(),
+        unread: false,
+        starred: false,
+        flagged: false,
+        folder: "sent",
+        direction: "outbound",
+        category: "operations",
+        avatar: "MK",
+        avatarBg: "#087f78",
+        avatarColor: "#ffffff",
+        tags: [{ name: "MK AI Sent", type: "order" }],
+        snippet: draft.body.slice(0, 110),
+        body: draft.body,
+        related: draft.related || {},
+        attachments: []
+      };
+      if (window.StarkMail?.prependEmail) {
+        window.StarkMail.prependEmail(outMsg);
+      } else {
+        const list = getLiveMails();
+        list.unshift(outMsg);
+        try { localStorage.setItem("mk97.mail.threads.v1", JSON.stringify(list.slice(0, 80))); window.dispatchEvent(new CustomEvent("mk97:mail-updated")); } catch (_) {}
+      }
+      conversation.pendingEmail = null;
+      return {
+        intent: "mk-power",
+        category: "Action Executed · Email Sent",
+        message: `**✉ Executive Email Sent via MK97 Mail**\n• **To:** ${draft.toName} (\`${draft.toEmail}\`)\n• **Subject:** ${draft.subject}\n• Logged in [MK97 Mail (Sent)](mail.html).`,
+        meta: {
+          metrics: [{ label: "Status", value: "Sent", tone: "ok" }, { label: "Recipient", value: draft.toName.split(" ")[0], tone: "teal" }],
+          actions: [{ label: "✉ Open MK97 Mail", style: "teal", href: "mail.html" }]
+        }
+      };
+    }
+
+    // 0D. ACTION: Draft Data-Backed Executive Email (/email)
+    if (/^\/email\b|^(?:please\s+)?(?:draft|write|compose|send)\s+(?:an?\s+)?(?:executive\s+)?email\b|^email\s+[a-z]/i.test(raw)) {
+      const draft = Core.parseEmailDraftCommand(raw, state, mails);
+      if (!draft) {
+        const firstVend = state.enterprise?.vendors?.[0]?.name || "Kendra Scott";
+        const firstAcct = state.enterprise?.accounts?.[0]?.name || "Meridian";
+        return {
+          intent: "mk-power",
+          category: "Email Composer",
+          message: `Tell me who to email — for example:\n• **\`Draft email to ${firstVend} about late PO delivery\`**\n• **\`Draft email to ${firstAcct} about account status\`**`,
+          meta: {
+            actions: [
+              { label: `✉ Draft to ${firstVend.split(" ")[0]}`, style: "primary", prompt: `Draft email to ${firstVend} about late PO delivery` },
+              { label: `✉ Draft to ${firstAcct.split(" ")[0]}`, style: "teal", prompt: `Draft email to ${firstAcct} about account status` }
+            ]
+          }
+        };
+      }
+      conversation.pendingEmail = draft;
+      return {
+        intent: "mk-power",
+        category: "Executive Email Draft",
+        message: `**✉ Data-Backed Email Draft Ready**\n• **To:** ${draft.toName} (\`${draft.toEmail}\`)\n• **Subject:** ${draft.subject}\n\n${draft.body}`,
+        meta: {
+          metrics: [{ label: "Recipient", value: draft.toName.split(" ")[0], tone: "teal" }, { label: "Status", value: "Ready to Send", tone: "info" }],
+          actions: [
+            { label: "✉ Send Now via MK97 Mail", style: "primary", prompt: "Send drafted email" },
+            { label: "↗ Open MK97 Mail", style: "ghost", href: "mail.html" }
+          ]
+        }
+      };
+    }
+
+    // 0E. ACTION: Receive / Post Arrived Vendor PO Dock Receipt (/receive-po)
+    if (/^\/receive-po\b|^(?:please\s+)?(?:receive|post\s+(?:dock\s+)?receipt(?:\s+for)?)\s+(?:po|vendor\s+po|arrived)/i.test(raw)) {
+      const openPOs = (state.enterprise?.purchaseOrders || []).filter(p => !["RECEIVED", "CANCELLED", "CLOSED"].includes(p.status));
+      const matched = openPOs.find(p => q.includes(p.po.toLowerCase()) || q.includes(p.id.toLowerCase())) ||
+        openPOs.find(p => (state.logistics?.receipts || []).some(r => r.po === p.po && r.status === "ARRIVED")) ||
+        openPOs[0];
+      if (!matched) {
+        return { intent: "mk-power", category: "Warehouse Receiving", message: "There are no open Vendor POs awaiting dock receiving right now." };
+      }
+      try {
+        if (S.receivePO) S.receivePO(matched.id);
+        if (T?.runCopilotSync) { try { T.runCopilotSync({ silent: true, force: true }); } catch (_) {} }
+        const units = (matched.lines || []).reduce((s, l) => s + Number(l.qty || 0), 0);
+        return {
+          intent: "mk-power",
+          category: "Action Executed · PO Received",
+          message: `**📦 Dock Receipt Posted & Stock Added: ${matched.po}**\n• Added **${units} units** into usable warehouse inventory.\n• Closed linked dock receipt & putaway task.`,
+          meta: {
+            metrics: [
+              { label: "PO", value: matched.po, tone: "teal" },
+              { label: "Units Posted", value: `+${units}u`, tone: "ok" }
+            ],
+            actions: [
+              { label: "📦 Check Inventory", style: "teal", prompt: "Check low stock and inventory value" },
+              { label: "🩺 Re-Check Health", style: "ghost", prompt: "Run ERP health score and anomaly detection" }
+            ]
+          }
+        };
+      } catch (err) {
+        return { intent: "mk-power", category: "Warehouse Receiving", message: `Could not post **${matched.po}**: ${err.message}` };
+      }
     }
 
     // 1. ACTION: Create & Assign Task from Natural Language
@@ -947,6 +1332,47 @@
       };
     }
 
+    // 5A. ANALYST: Side-by-Side Comparison Engine (/compare, "X vs Y")
+    if (/^\/compare\b|\bcompare\b|\bvs\.?\b|\bversus\b/i.test(raw) && !/\bwhat[- ]?if\b/i.test(raw)) {
+      const seed = await ensureAnalyticsSeed();
+      return wrapAnalyst(Core.compareEntities(raw, state, seed), "Side-by-Side Comparison");
+    }
+
+    // 5B. ANALYST: 3PL & Local Warehouse Cost / SLA Fulfillment Optimizer (/optimize)
+    if (/^\/optimize\b|\b(optimi[sz]e\s+(?:fulfillment|3pl|routing|shipping)|best\s+(?:3pl|warehouse|node|fulfillment)|cheapest\s+(?:3pl|node|fulfillment)|routing\s+optimi[sz])/i.test(raw)) {
+      return wrapAnalyst(Core.optimizeFulfillmentAnd3PL(raw, state, conversation.lastEntity), "Fulfillment Routing Optimizer");
+    }
+
+    // 5C. ANALYST: Cross-ERP Health Score & Statistical Anomaly Detector (/health)
+    if (/^\/health\b|\b(health\s*score|erp\s*health|anomal(?:y|ies)|risk\s*(?:audit|radar|score)|dead\s*stock|demand\s*spikes?|outliers?)\b/i.test(raw)) {
+      const seed = await ensureAnalyticsSeed();
+      return wrapAnalyst(Core.detectAnomaliesAndRisks(state, seed, mails), "ERP Health & Anomaly Radar");
+    }
+
+    // 5D. ANALYST: Statistical Demand Forecast, Volatility & Wilson EOQ (/forecast)
+    if (/^\/forecast\b|\b(forecast\w*|eoq|economic\s+order\s+quantit|reorder\s+point|rop\b|seasonality|days\s+of\s+cover|demand\s+velocity|demand\s+trend)\b/i.test(raw) && !/\bwhat[- ]?if\b/i.test(raw)) {
+      const seed = await ensureAnalyticsSeed();
+      return wrapAnalyst(Core.analyzeDemandForecast(raw, state, seed, conversation.lastEntity), "Statistical Demand Forecast");
+    }
+
+    // 5E. ANALYST: ABC-XYZ Matrix & Pareto 80/20 Concentration (/abc)
+    if (/^\/abc\b|\b(abc\s*[-/]?\s*xyz|abc\s+(?:analysis|matrix|segmentation|class)|pareto|80\s*\/\s*20|concentration\s+risk|hhi\b)\b/i.test(raw)) {
+      const seed = await ensureAnalyticsSeed();
+      return wrapAnalyst(Core.analyzeAbcXyzAndPareto(state, seed), "ABC-XYZ & Pareto Intelligence");
+    }
+
+    // 5F. ANALYST: Financial Margin, Gross Profit & Working Capital (/margin)
+    if (/^\/margin\b|\b(gross\s*margin|profit\s*margin|margins?|profitabilit\w*|gross\s*profit|working\s*capital|cogs\b|cash\s*tied|financial\s*(?:summary|analysis|overview|pulse))\b/i.test(raw)) {
+      const seed = await ensureAnalyticsSeed();
+      return wrapAnalyst(Core.analyzeFinancialsAndMargin(state, seed), "Financial & Margin Analyst");
+    }
+
+    // 5G. ANALYST: Brand & Customer Revenue Deep-Dive (/brands, /customers)
+    if (/^\/brands?\b|^\/customers?\b|\b(top\s+brands?|brand\s+(?:revenue|analytics|performance|deep[- ]?dive|ranking)|analy[sz]e\s+brand|top\s+customers?|customer\s+(?:revenue|analytics|concentration|deep[- ]?dive|ranking)|analy[sz]e\s+customer|marc\s+jacobs|gucci|ferragamo|infinity\s+luxe|workhuman|purchasing\s+power|innowave)\b/i.test(raw)) {
+      const seed = await ensureAnalyticsSeed();
+      return wrapAnalyst(Core.analyzeBrandOrCustomerDeepDive(raw, state, seed), "Commercial Revenue Analyst");
+    }
+
     // 6. QUERY: Executive Operations Briefing
     if (/^\/brief\b|\b(executive\s*brief\w*|morning\s*brief\w*|daily\s*brief\w*|command\s*brief\w*|what\s+needs\s+attention|erp\s*status|workspace\s*overview|health\s*check|give\s+me\s+(?:a\s+)?(?:brief|summary|status|update))\b/i.test(raw)) {
       const brief = Core.buildExecutiveBriefing(state, mails);
@@ -1119,7 +1545,7 @@
 
   async function routeQuestion(question) {
     const raw = clean(question);
-    const powerAnswer = handlePowerCommand(raw);
+    const powerAnswer = await handlePowerCommand(raw);
     if (powerAnswer) return powerAnswer;
     const copilot = window.MKCopilot?.handle(raw);
     if (copilot) return copilot;

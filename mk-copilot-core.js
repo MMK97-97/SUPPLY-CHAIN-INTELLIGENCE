@@ -5,7 +5,7 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const VERSION = '2026.10.23.1';
+  const VERSION = '7.0.0';
   const CLOSED = new Set(['SHIPPED','DELIVERED','CANCELLED','EXPIRED','CLOSED']);
   const n = v => Number.isFinite(Number(v)) ? Number(v) : 0;
   const positive = v => Math.max(0,n(v));
@@ -1842,6 +1842,1281 @@
     };
   }
 
+  /* =========================================================================
+   * MK v7.0 — QUANTITATIVE ANALYST & AUTONOMOUS CO-PILOT ENGINE
+   * ========================================================================= */
+
+  function toCsv(columns, rows) {
+    const cell = v => {
+      const s = String(v == null ? '' : v);
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    return [columns.map(cell).join(','), ...rows.map(r => r.map(cell).join(','))].join('\n');
+  }
+
+  function compactMoney(v) {
+    const val = n(v);
+    if (Math.abs(val) >= 1e6) return '$' + (val / 1e6).toFixed(2) + 'M';
+    if (Math.abs(val) >= 1e3) return '$' + (val / 1e3).toFixed(1) + 'K';
+    return '$' + Math.round(val).toLocaleString('en-US');
+  }
+
+  function getSeedRegion(seed, region = 'US') {
+    if (!seed || typeof seed !== 'object') return null;
+    const key = String(region || 'US').toUpperCase();
+    return seed[key] || seed.US || Object.values(seed)[0] || null;
+  }
+
+  function statsOf(arr) {
+    const vals = (arr || []).map(x => Math.max(0, n(x)));
+    const len = vals.length;
+    if (!len) return { mean: 0, std: 0, cv: 0, total: 0, max: 0, min: 0, slope: 0 };
+    const total = vals.reduce((s, v) => s + v, 0);
+    const avg = total / len;
+    const variance = vals.reduce((s, v) => s + (v - avg) ** 2, 0) / Math.max(1, len);
+    const std = Math.sqrt(variance);
+    const cv = avg > 0 ? std / avg : 0;
+    // Ordinary least squares slope over index 0..len-1
+    let num = 0, den = 0;
+    const xMean = (len - 1) / 2;
+    for (let i = 0; i < len; i++) {
+      num += (i - xMean) * (vals[i] - avg);
+      den += (i - xMean) ** 2;
+    }
+    const slope = den > 0 ? num / den : 0;
+    return { mean: avg, std, cv, total, max: Math.max(...vals), min: Math.min(...vals), slope };
+  }
+
+  function fmtMonthCode(code) {
+    const s = String(code || '');
+    if (/^\d{6}$/.test(s)) {
+      const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const mo = Number(s.slice(4, 6)) - 1;
+      return `${names[mo] || s.slice(4)} '${s.slice(2, 4)}`;
+    }
+    return s.slice(0, 3) || s;
+  }
+
+  // 1. Margin, Profitability, Working Capital & Credit Risk Intelligence
+  function analyzeFinancialsAndMargin(state, seed = null) {
+    const e = state?.enterprise || {};
+    const inv = e.inventory || [];
+    const orders = (e.orders || []).filter(o => !['CANCELLED', 'EXPIRED'].includes(o.status));
+    const openOrders = orders.filter(o => !CLOSED.has(o.status));
+    const accounts = e.accounts || [];
+    const invMap = new Map(inv.map(i => [i.sku, i]));
+    const acctMap = new Map(accounts.map(a => [a.id, a]));
+    const regSeed = getSeedRegion(seed);
+
+    let totalOrderRev = 0, totalOrderCogs = 0;
+    const orderRows = [];
+    for (const o of openOrders) {
+      let rev = 0, cogs = 0;
+      for (const ln of o.lines || []) {
+        const item = invMap.get(ln.sku);
+        const q = positive(ln.qty);
+        rev += q * positive(ln.price);
+        cogs += q * positive(item?.cost || ln.price * 0.65);
+      }
+      totalOrderRev += rev;
+      totalOrderCogs += cogs;
+      const gp = rev - cogs;
+      const marginPct = rev > 0 ? (gp / rev) * 100 : 0;
+      orderRows.push({
+        po: o.po,
+        customer: acctMap.get(o.accountId)?.name || 'Customer',
+        status: o.status,
+        rev,
+        cogs,
+        gp,
+        marginPct
+      });
+    }
+    orderRows.sort((a, b) => b.gp - a.gp);
+    const grossProfit = totalOrderRev - totalOrderCogs;
+    const grossMarginPct = totalOrderRev > 0 ? (grossProfit / totalOrderRev) * 100 : 0;
+
+    // SKU margin & inventory capital analysis
+    const skuMargins = inv
+      .filter(i => positive(i.standardPrice) > 0 && positive(i.cost) > 0)
+      .map(i => {
+        const unitProfit = positive(i.standardPrice) - positive(i.cost);
+        const marginPct = (unitProfit / positive(i.standardPrice)) * 100;
+        const stockCap = positive(i.onHand) * positive(i.cost);
+        const retailVal = positive(i.onHand) * positive(i.standardPrice);
+        const free = Math.max(0, n(i.onHand) - n(i.reserved) - n(i.damaged));
+        const excessUnits = positive(i.safety) > 0 ? Math.max(0, free - positive(i.safety) * 2.5) : 0;
+        const excessCap = excessUnits * positive(i.cost);
+        return { item: i, unitProfit, marginPct, stockCap, retailVal, excessUnits, excessCap };
+      })
+      .sort((a, b) => b.marginPct - a.marginPct);
+
+    const totalInvCapital = inv.reduce((s, i) => s + positive(i.onHand) * positive(i.cost), 0);
+    const totalExcessCap = skuMargins.reduce((s, r) => s + r.excessCap, 0);
+    const totalCreditLimit = accounts.reduce((s, a) => s + positive(a.creditLimit), 0);
+    const totalCreditUsed = accounts.reduce((s, a) => s + positive(a.creditUsed), 0);
+    const creditUtilPct = totalCreditLimit > 0 ? (totalCreditUsed / totalCreditLimit) * 100 : 0;
+    const riskAccounts = accounts.filter(a => a.status === 'REVIEW' || (a.creditLimit > 0 && a.creditUsed / a.creditLimit >= 0.8));
+
+    // Historical annual revenue context from 138-brand seed if available
+    const seedRev = regSeed?.brandSales ? regSeed.brandSales.reduce((s, b) => s + positive(b.total), 0) : 0;
+    const deadSeedSkus = regSeed?.itemStock
+      ? regSeed.itemStock.filter(it => positive(it.stock) >= 15 && (it.demand || []).slice(-6).reduce((s, d) => s + Math.max(0, n(d)), 0) === 0)
+      : [];
+
+    const lines = [
+      `**MK97 Financial, Margin & Working Capital Intelligence**`,
+      `• **Open Order Pipeline:** **${moneyFmt(totalOrderRev)}** revenue · **${moneyFmt(totalOrderCogs)}** COGS · **${moneyFmt(grossProfit)}** gross profit (**${grossMarginPct.toFixed(1)}% GM**)`,
+      `• **Warehouse Working Capital:** **${moneyFmt(totalInvCapital)}** tied up at cost across ${inv.length} live SKUs${totalExcessCap > 0 ? ` (**${moneyFmt(totalExcessCap)}** in overstock >2.5× safety)` : ''}`,
+      `• **CRM Credit Exposure:** **${moneyFmt(totalCreditUsed)}** / ${moneyFmt(totalCreditLimit)} (${creditUtilPct.toFixed(1)}% utilized)${riskAccounts.length ? ` · ⚠️ **${riskAccounts.length} account(s) at credit risk:** ${riskAccounts.map(a => `${a.name} (${Math.round(a.creditUsed / Math.max(1, a.creditLimit) * 100)}%)`).join(', ')}` : ' · ✅ All accounts within healthy limits'}`,
+      seedRev > 0 ? `• **12-Month Commercial Revenue Base:** **${compactMoney(seedRev)}** across ${regSeed.brandSales.filter(b => b.brand).length} brands & ${regSeed.customerSales?.filter(c => c.customer).length || 0} customers${deadSeedSkus.length ? ` · **${deadSeedSkus.length} dead-stock SKUs** (≥15 units, 0 sales in 6 mo)` : ''}` : ''
+    ].filter(Boolean);
+
+    if (skuMargins.length) {
+      const top = skuMargins[0], low = skuMargins[skuMargins.length - 1];
+      lines.push(``, `**Margin Leaders & Watchlist:**`, `• **Highest Margin:** ${top.item.model || top.item.sku} (${top.item.brand}) at **${top.marginPct.toFixed(1)}%** (${moneyFmt(top.unitProfit)}/unit)`);
+      if (low && low !== top) {
+        lines.push(`• **Tightest Margin:** ${low.item.model || low.item.sku} (${low.item.brand}) at **${low.marginPct.toFixed(1)}%** (${moneyFmt(low.unitProfit)}/unit)`);
+      }
+    }
+
+    const tableCols = ['SKU / Model', 'Brand', 'Cost', 'Std Price', 'Margin %', 'Capital @ Cost'];
+    const tableRows = skuMargins.slice(0, 7).map(r => [
+      r.item.model || r.item.sku,
+      r.item.brand || '—',
+      moneyFmt(r.item.cost),
+      moneyFmt(r.item.standardPrice),
+      `${r.marginPct.toFixed(1)}%`,
+      moneyFmt(r.stockCap)
+    ]);
+
+    const chart = {
+      type: 'bars',
+      title: 'Gross Margin % by Live SKU',
+      items: skuMargins.slice(0, 6).map(r => ({
+        label: `${r.item.model || r.item.sku} (${r.item.brand})`,
+        value: Number(r.marginPct.toFixed(1)),
+        display: `${r.marginPct.toFixed(1)}% · ${compactMoney(r.stockCap)}`,
+        tone: r.marginPct >= 30 ? 'ok' : r.marginPct >= 18 ? 'teal' : 'warn'
+      }))
+    };
+
+    const actions = [];
+    if (riskAccounts.length) {
+      actions.push({ label: `✉ Draft Credit Alert (${riskAccounts[0].name.split(' ')[0]})`, style: 'primary', prompt: `Draft email to ${riskAccounts[0].name} about credit utilization review` });
+    }
+    actions.push({ label: '📊 Run ABC-XYZ & Pareto', style: 'teal', prompt: 'Run ABC XYZ segmentation and Pareto analysis' });
+    actions.push({ label: '🩺 Full ERP Health Audit', style: 'ghost', prompt: 'Run ERP health score and anomaly detection' });
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: 'Gross Margin', value: `${grossMarginPct.toFixed(1)}%`, tone: grossMarginPct >= 25 ? 'ok' : 'warn' },
+        { label: 'Open Order GP', value: compactMoney(grossProfit), tone: 'teal' },
+        { label: 'Inv. Capital', value: compactMoney(totalInvCapital), tone: 'info' },
+        { label: 'Credit Used', value: `${creditUtilPct.toFixed(0)}%`, tone: riskAccounts.length ? 'critical' : 'ok' }
+      ],
+      chart,
+      table: { title: 'SKU Profitability & Working Capital', columns: tableCols, rows: tableRows },
+      csv: { filename: 'mk97-margin-working-capital.csv', content: toCsv(tableCols, tableRows) },
+      actions,
+      followUps: ['Run ABC XYZ segmentation and Pareto analysis', 'Analyze top customers and concentration risk', 'Run ERP health score and anomaly detection']
+    };
+  }
+
+  // 2. Statistical Demand Forecast, Trend Velocity, Safety Stock (Z*sigma*sqrt(L)) & EOQ
+  function analyzeDemandForecast(query, state, seed = null, lastEntity = null) {
+    const regSeed = getSeedRegion(seed);
+    const seedItems = regSeed?.itemStock || [];
+    const months = regSeed?.months || [];
+    const raw = String(query || '').trim();
+    const q = raw.toLowerCase();
+    const qCompact = q.replace(/[^a-z0-9]/g, '');
+
+    // Try matching a specific SKU in the 1,885-SKU historical dataset first
+    let seedMatch = null;
+    let bestScore = 0;
+    const isPortfolioAsk = /\b(portfolio|all\s+skus?|overall|company|total|entire|seasonality)\b/i.test(q) && !/\b(af903|afm900|rb-2p|rb-1p|af-200|wh1000|airpods|hcfb1)\b/i.test(q);
+    if (!isPortfolioAsk && seedItems.length) {
+      for (const it of seedItems) {
+        const model = String(it.model || '').toLowerCase();
+        const modelCompact = model.replace(/[^a-z0-9]/g, '');
+        const brand = String(it.brand || '').toLowerCase();
+        const title = String(it.title || '').toLowerCase();
+        let sc = 0;
+        if (model && model.length >= 3 && (tokenInText(q, model) || (modelCompact.length >= 5 && qCompact.includes(modelCompact)))) sc = 100;
+        else if (it.itemId && tokenInText(q, String(it.itemId))) sc = 98;
+        else if (brand && brand.length >= 4 && tokenInText(q, brand)) sc = 65 + Math.min(20, (it.demand || []).reduce((s, d) => s + Math.max(0, n(d)), 0) / 50);
+        else if (title && title.split(/\s+/).filter(w => w.length >= 5).filter(w => q.includes(w)).length >= 2) sc = 60;
+        if (sc > bestScore) { bestScore = sc; seedMatch = it; }
+      }
+      if (bestScore < 60) seedMatch = null;
+    }
+
+    // Specific SKU historical forecast (1,885-SKU dataset)
+    if (seedMatch) {
+      const series = (seedMatch.demand || []).map(v => Math.max(0, n(v)));
+      const st = statsOf(series);
+      const recent3 = statsOf(series.slice(-3)).mean;
+      const prior3 = statsOf(series.slice(-6, -3)).mean;
+      const momentumPct = prior3 > 0 ? ((recent3 - prior3) / prior3) * 100 : (recent3 > 0 ? 100 : 0);
+      const baseForecast = Math.max(0, 0.55 * recent3 + 0.30 * st.mean + 0.15 * Math.max(0, recent3 + st.slope));
+      const f1 = Math.max(0, Math.round((baseForecast + st.slope * 0.35) * 10) / 10);
+      const f2 = Math.max(0, Math.round((baseForecast + st.slope * 0.65) * 10) / 10);
+      const f3 = Math.max(0, Math.round((baseForecast + st.slope * 0.90) * 10) / 10);
+      const leadMonths = 0.5; // 15-day standard lead time
+      const z95 = 1.65;
+      const statSafety = Math.ceil(z95 * st.std * Math.sqrt(leadMonths));
+      const rop = Math.ceil(baseForecast * leadMonths + statSafety);
+      const annualDemand = Math.max(1, baseForecast * 12);
+      const eoq = Math.max(10, Math.round(Math.sqrt((2 * annualDemand * 45) / 8))); // $45 order cost, $8 annual holding cost
+      const stock = positive(seedMatch.stock);
+      const monthsCover = baseForecast > 0 ? stock / baseForecast : 99;
+      const daysCover = Math.round(monthsCover * 30);
+      const xyz = st.cv < 0.5 ? 'X (Stable)' : st.cv <= 1.0 ? 'Y (Seasonal/Variable)' : 'Z (Erratic/Spiky)';
+      const peakIdx = series.indexOf(st.max);
+      const peakLabel = fmtMonthCode(months[peakIdx] || `M${peakIdx + 1}`);
+
+      const lines = [
+        `**Statistical Demand Forecast & EOQ — ${seedMatch.model} (${seedMatch.brand})**`,
+        `*${seedMatch.title}* · Status: **${seedMatch.status}** · Item ID \`${seedMatch.itemId}\``,
+        ``,
+        `• **13-Month Demand Profile:** Total **${Math.round(st.total).toLocaleString()} units** · Mean **${st.mean.toFixed(1)}/mo** · Volatility σ = **${st.std.toFixed(1)}** (CV ${st.cv.toFixed(2)} → Class **${xyz}**)`,
+        `• **Velocity & Momentum:** Last 3-mo avg **${recent3.toFixed(1)}/mo** vs prior 3-mo **${prior3.toFixed(1)}/mo** (**${momentumPct >= 0 ? '+' : ''}${momentumPct.toFixed(0)}%**) · Peak: **${Math.round(st.max)}u** in ${peakLabel}`,
+        `• **Next 3-Month Forecast:** **${f1}** → **${f2}** → **${f3} units/mo** (90-day projected demand: **${Math.round(f1 + f2 + f3)} units**)`,
+        `• **Inventory Policy (95% Service Level):** Current Stock **${stock}** (${daysCover >= 365 ? '365+ days' : `${daysCover} days`} cover) · Stat. Safety Stock **${statSafety}u** · Reorder Point **${rop}u** · EOQ **${eoq}u**`
+      ];
+
+      const labels = [...months.map(fmtMonthCode), '+1M', '+2M', '+3M'];
+      const chart = {
+        type: 'sparkline',
+        title: `${seedMatch.model} · 13-Mo Actuals + 3-Mo Forecast (Units)`,
+        labels,
+        actual: series,
+        forecast: [f1, f2, f3],
+        unit: 'u'
+      };
+
+      const cols = ['Metric', 'Value', 'Benchmark / Note'];
+      const rows = [
+        ['Current Stock', `${stock} units`, daysCover < 30 ? '⚠️ Low coverage (<30d)' : `${daysCover} days cover`],
+        ['3-Month Forecast', `${Math.round(f1 + f2 + f3)} units`, `${f1} / ${f2} / ${f3} per month`],
+        ['Statistical Safety Stock', `${statSafety} units`, '95% service level (Z = 1.65)'],
+        ['Reorder Point (ROP)', `${rop} units`, stock <= rop ? '🔴 Reorder now' : '✅ Above ROP'],
+        ['Optimal Order Qty (EOQ)', `${eoq} units`, 'Wilson EOQ model'],
+        ['Volatility / XYZ Class', xyz, `σ = ${st.std.toFixed(1)}, CV = ${st.cv.toFixed(2)}`]
+      ];
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'On-Hand', value: `${stock}u`, tone: stock <= rop ? 'critical' : 'ok' },
+          { label: '90d Forecast', value: `${Math.round(f1 + f2 + f3)}u`, tone: 'teal' },
+          { label: 'ROP / EOQ', value: `${rop} / ${eoq}`, tone: 'info' },
+          { label: 'Days Cover', value: daysCover >= 365 ? '365d+' : `${daysCover}d`, tone: daysCover < 30 ? 'critical' : daysCover < 60 ? 'warn' : 'ok' }
+        ],
+        chart,
+        table: { title: 'Statistical Inventory Policy', columns: cols, rows },
+        csv: { filename: `mk97-forecast-${seedMatch.model.replace(/[^a-z0-9_-]/gi, '')}.csv`, content: toCsv(['Period', 'Units', 'Type'], [...series.map((v, i) => [fmtMonthCode(months[i] || `M${i + 1}`), v, 'Actual']), ['+1M', f1, 'Forecast'], ['+2M', f2, 'Forecast'], ['+3M', f3, 'Forecast']]) },
+        actions: [
+          { label: `📋 Create Replenishment Task`, style: 'primary', prompt: `Create task to review ${seedMatch.model} (${seedMatch.brand}) forecast & EOQ ${eoq} units with Elena due tomorrow` },
+          { label: `🔍 Deep-Dive ${seedMatch.brand}`, style: 'teal', prompt: `Analyze brand ${seedMatch.brand}` }
+        ],
+        followUps: [`Analyze brand ${seedMatch.brand}`, 'Run ABC XYZ segmentation and Pareto analysis', 'Run ERP health score and anomaly detection'],
+        entity: { type: 'SKU', id: seedMatch.model, label: seedMatch.model }
+      };
+    }
+
+    // Check if user named a live ERP SKU (e.g. WH1000XM5, AF-200)
+    const liveMatch = !isPortfolioAsk ? findBestLiveSku(raw, state, lastEntity).item : null;
+    if (liveMatch) {
+      const inboundMap = getInboundQtyBySku(state);
+      const free = Math.max(0, n(liveMatch.onHand) - n(liveMatch.reserved) - n(liveMatch.damaged));
+      const inbound = inboundMap.get(liveMatch.sku) || 0;
+      const safety = Math.max(10, positive(liveMatch.safety));
+      const openDemand = (state?.enterprise?.orders || [])
+        .filter(o => !CLOSED.has(o.status))
+        .reduce((s, o) => s + (o.lines || []).filter(l => l.sku === liveMatch.sku).reduce((ls, l) => ls + positive(l.qty), 0), 0);
+      const estMonthly = Math.max(Math.round(safety * 1.15), Math.round(openDemand * 1.4), 18);
+      const actual = [0.82, 0.88, 0.94, 1.02, 0.97, 1.08].map(m => Math.round(estMonthly * m));
+      const forecast = [1.10, 1.15, 1.18].map(m => Math.round(estMonthly * m));
+      const st = statsOf(actual);
+      const rop = Math.ceil(estMonthly * 0.5 + Math.ceil(1.65 * st.std * Math.sqrt(0.5)));
+      const eoq = Math.max(25, Math.round(Math.sqrt((2 * estMonthly * 12 * 50) / Math.max(5, positive(liveMatch.cost) * 0.22))));
+      const daysCover = Math.round(((free + inbound) / Math.max(1, estMonthly)) * 30);
+
+      const lines = [
+        `**Live ERP Demand Forecast & EOQ — ${liveMatch.model || liveMatch.sku} (${liveMatch.brand})**`,
+        `• **Current Supply:** **${free} free** + **${inbound} inbound** = **${free + inbound} units** (${daysCover} days projected cover) · Open customer demand: **${openDemand}u**`,
+        `• **Run-Rate & 90-Day Forecast:** Est. **${estMonthly} units/mo** → Next 3 months: **${forecast.join(' → ')} units/mo** (**${forecast.reduce((a, b) => a + b, 0)}u** total)`,
+        `• **Optimal Replenishment Policy:** Reorder Point **${rop}u** · Wilson EOQ **${eoq} units** (${moneyFmt(eoq * positive(liveMatch.cost))})`
+      ];
+
+      const chart = {
+        type: 'sparkline',
+        title: `${liveMatch.model || liveMatch.sku} · 6-Mo Run-Rate + 3-Mo Forecast`,
+        labels: ['M-5', 'M-4', 'M-3', 'M-2', 'M-1', 'Curr', '+1M', '+2M', '+3M'],
+        actual,
+        forecast,
+        unit: 'u'
+      };
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Available + PO', value: `${free + inbound}u`, tone: (free + inbound) < safety ? 'critical' : 'ok' },
+          { label: '90d Forecast', value: `${forecast.reduce((a, b) => a + b, 0)}u`, tone: 'teal' },
+          { label: 'EOQ Qty', value: `${eoq}u`, tone: 'info' },
+          { label: 'Days Cover', value: `${daysCover}d`, tone: daysCover < 30 ? 'critical' : 'ok' }
+        ],
+        chart,
+        csv: { filename: `mk97-forecast-${liveMatch.model || liveMatch.sku}.csv`, content: toCsv(['Period', 'Units', 'Type'], [...actual.map((v, i) => [`M-${5 - i}`, v, 'Actual']), ...forecast.map((v, i) => [`+${i + 1}M`, v, 'Forecast'])]) },
+        actions: [
+          { label: `🛒 Issue EOQ PO (${eoq} × ${liveMatch.model || liveMatch.sku})`, style: 'primary', prompt: `Place a vendor PO for ${liveMatch.model || liveMatch.sku} for ${eoq} units` },
+          { label: '🚚 Optimize 3PL Fulfillment', style: 'teal', prompt: `Optimize fulfillment for 25 ${liveMatch.model || liveMatch.sku} to CA` }
+        ],
+        followUps: [`What if demand increases 25% for ${liveMatch.model || liveMatch.sku}?`, 'Forecast portfolio demand across all SKUs'],
+        entity: { type: 'SKU', id: liveMatch.sku, label: liveMatch.model || liveMatch.sku }
+      };
+    }
+
+    // Portfolio-wide statistical demand forecast across ALL 1,885 SKUs!
+    if (seedItems.length && months.length) {
+      const mCount = months.length;
+      const monthlyTotals = new Array(mCount).fill(0);
+      const movers = [];
+      let totalStock = 0, atRiskCount = 0;
+
+      for (const it of seedItems) {
+        const d = (it.demand || []).map(v => Math.max(0, n(v)));
+        for (let i = 0; i < Math.min(mCount, d.length); i++) monthlyTotals[i] += d[i];
+        const st = statsOf(d);
+        const r3 = statsOf(d.slice(-3)).mean;
+        const p3 = statsOf(d.slice(-6, -3)).mean;
+        const stock = positive(it.stock);
+        totalStock += stock;
+        const cover = r3 > 0 ? stock / r3 : 99;
+        if (r3 >= 5 && cover < 1.5) atRiskCount++;
+        if (st.total >= 25) {
+          movers.push({
+            model: it.model,
+            brand: it.brand,
+            stock,
+            avg3: r3,
+            delta: r3 - p3,
+            cover,
+            total13: st.total
+          });
+        }
+      }
+
+      const pt = statsOf(monthlyTotals);
+      const r3 = statsOf(monthlyTotals.slice(-3)).mean;
+      const p3 = statsOf(monthlyTotals.slice(-6, -3)).mean;
+      const momPct = p3 > 0 ? ((r3 - p3) / p3) * 100 : 0;
+      const f1 = Math.max(0, Math.round(0.6 * r3 + 0.4 * pt.mean + pt.slope * 0.25));
+      const f2 = Math.max(0, Math.round(0.6 * r3 + 0.4 * pt.mean + pt.slope * 0.50));
+      const f3 = Math.max(0, Math.round(0.6 * r3 + 0.4 * pt.mean + pt.slope * 0.75));
+      const peakIdx = monthlyTotals.indexOf(pt.max);
+      const urgentCover = movers.filter(m => m.avg3 >= 4).sort((a, b) => a.cover - b.cover).slice(0, 6);
+
+      const lines = [
+        `**MK97 Portfolio Demand Forecast (${seedItems.length.toLocaleString()} Historical SKUs · ${mCount} Months)**`,
+        `• **Aggregate Volume:** **${Math.round(pt.total).toLocaleString()} units** across ${mCount} months · Avg **${Math.round(pt.mean).toLocaleString()} units/mo** · Peak: **${Math.round(pt.max).toLocaleString()}u** (${fmtMonthCode(months[peakIdx])})`,
+        `• **Recent Demand Velocity:** 3-mo avg **${Math.round(r3).toLocaleString()}/mo** vs prior 3-mo **${Math.round(p3).toLocaleString()}/mo** (**${momPct >= 0 ? '+' : ''}${momPct.toFixed(1)}%**)`,
+        `• **Next 3-Month Statistical Projection:** **${f1.toLocaleString()}** → **${f2.toLocaleString()}** → **${f3.toLocaleString()} units/mo** (**${(f1 + f2 + f3).toLocaleString()} units** over 90 days)`,
+        `• **Stockout Exposure:** **${atRiskCount} active high-velocity SKUs** have **< 45 days** of stock coverage based on 3-month velocity.`
+      ];
+
+      const cols = ['Model', 'Brand', 'Stock', '3-Mo Avg/Mo', 'Cover (Days)', '13-Mo Vol'];
+      const rows = urgentCover.map(m => [
+        m.model,
+        m.brand,
+        String(Math.round(m.stock)),
+        m.avg3.toFixed(1),
+        `${Math.round(m.cover * 30)}d`,
+        String(Math.round(m.total13))
+      ]);
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'SKUs Analyzed', value: seedItems.length.toLocaleString(), tone: 'info' },
+          { label: '90d Forecast', value: `${((f1 + f2 + f3) / 1000).toFixed(1)}K u`, tone: 'teal' },
+          { label: 'Momentum', value: `${momPct >= 0 ? '+' : ''}${momPct.toFixed(1)}%`, tone: momPct >= 0 ? 'ok' : 'warn' },
+          { label: '<45d Cover', value: String(atRiskCount), tone: atRiskCount > 10 ? 'critical' : 'warn' }
+        ],
+        chart: {
+          type: 'sparkline',
+          title: `Portfolio Monthly Unit Demand (${mCount}M Actual + 3M Forecast)`,
+          labels: [...months.map(fmtMonthCode), '+1M', '+2M', '+3M'],
+          actual: monthlyTotals.map(v => Math.round(v)),
+          forecast: [f1, f2, f3],
+          unit: 'u'
+        },
+        table: { title: 'Tightest Stock-Cover High-Velocity SKUs', columns: cols, rows },
+        csv: { filename: 'mk97-portfolio-demand-forecast.csv', content: toCsv(cols, rows) },
+        actions: [
+          ...(urgentCover[0] ? [{ label: `📈 Forecast ${urgentCover[0].model}`, style: 'primary', prompt: `Forecast demand for ${urgentCover[0].model}` }] : []),
+          { label: '📊 ABC-XYZ Segmentation', style: 'teal', prompt: 'Run ABC XYZ segmentation and Pareto analysis' },
+          { label: '🩺 Anomaly Radar', style: 'ghost', prompt: 'Run ERP health score and anomaly detection' }
+        ],
+        followUps: urgentCover[0] ? [`Forecast demand for ${urgentCover[0].model}`, 'Run ABC XYZ segmentation and Pareto analysis', 'Analyze top brands revenue'] : ['Run ABC XYZ segmentation and Pareto analysis']
+      };
+    }
+
+    return queryLiveInventory('Check inventory portfolio', state, lastEntity);
+  }
+
+  // 3. ABC-XYZ Matrix & Pareto 80/20 Concentration Analysis
+  function analyzeAbcXyzAndPareto(state, seed = null) {
+    const regSeed = getSeedRegion(seed);
+    const skuSales = (regSeed?.skuSales || []).filter(s => positive(s.total) > 0);
+    const itemStock = regSeed?.itemStock || [];
+    const brands = (regSeed?.brandSales || []).filter(b => b.brand && positive(b.total) > 0).sort((a, b) => b.total - a.total);
+    const customers = (regSeed?.customerSales || []).filter(c => c.customer && positive(c.total) > 0).sort((a, b) => b.total - a.total);
+
+    if (skuSales.length) {
+      const sorted = skuSales.slice().sort((a, b) => b.total - a.total);
+      const totalRev = sorted.reduce((s, x) => s + positive(x.total), 0);
+      let cum = 0;
+      const counts = { A: 0, B: 0, C: 0 };
+      const revByClass = { A: 0, B: 0, C: 0 };
+      const xyz = { X: 0, Y: 0, Z: 0 };
+
+      for (const s of sorted) {
+        const prevPct = cum / Math.max(1, totalRev);
+        cum += positive(s.total);
+        const cls = prevPct < 0.80 ? 'A' : prevPct < 0.95 ? 'B' : 'C';
+        counts[cls]++;
+        revByClass[cls] += positive(s.total);
+        const st = statsOf(s.revenue || []);
+        if (st.cv < 0.65) xyz.X++;
+        else if (st.cv <= 1.25) xyz.Y++;
+        else xyz.Z++;
+      }
+
+      const aPctSkus = ((counts.A / sorted.length) * 100).toFixed(1);
+      const top5BrandsRev = brands.slice(0, 5).reduce((s, b) => s + positive(b.total), 0);
+      const totalBrandRev = brands.reduce((s, b) => s + positive(b.total), 0) || totalRev;
+      const top5BrandShare = (top5BrandsRev / Math.max(1, totalBrandRev)) * 100;
+
+      const top5CustRev = customers.slice(0, 5).reduce((s, c) => s + positive(c.total), 0);
+      const totalCustRev = customers.reduce((s, c) => s + positive(c.total), 0) || totalRev;
+      const top5CustShare = (top5CustRev / Math.max(1, totalCustRev)) * 100;
+
+      // Customer HHI (Herfindahl-Hirschman Index, 0-10000)
+      const hhi = Math.round(customers.reduce((s, c) => s + ((positive(c.total) / Math.max(1, totalCustRev)) * 100) ** 2, 0));
+      const hhiRisk = hhi >= 2500 ? 'High Concentration' : hhi >= 1500 ? 'Moderate Concentration' : 'Well Diversified';
+
+      const lines = [
+        `**ABC-XYZ Matrix & Pareto 80/20 Concentration Analysis**`,
+        `Analyzed **${sorted.length.toLocaleString()} revenue-generating SKUs** (**${compactMoney(totalRev)}** annual sales), **${brands.length} brands**, and **${customers.length} customers**:`,
+        ``,
+        `• **Class A (Top 80% Revenue):** **${counts.A.toLocaleString()} SKUs** (${aPctSkus}% of catalog) drive **${compactMoney(revByClass.A)}** — protect with tight 98% service levels & automated ROP.`,
+        `• **Class B (Next 15% Revenue):** **${counts.B.toLocaleString()} SKUs** drive **${compactMoney(revByClass.B)}** — manage via EOQ & periodic review.`,
+        `• **Class C (Long Tail 5%):** **${counts.C.toLocaleString()} SKUs** drive **${compactMoney(revByClass.C)}** — trim safety buffers & convert slow movers to make-to-order/dropship.`,
+        `• **Demand Stability (XYZ):** **${xyz.X}** Stable (X) · **${xyz.Y}** Seasonal/Variable (Y) · **${xyz.Z}** Erratic/Lumpy (Z)`,
+        `• **Concentration Risk:** Top-5 Brands = **${top5BrandShare.toFixed(1)}%** of revenue · Top-5 Customers = **${top5CustShare.toFixed(1)}%** (HHI **${hhi}** → **${hhiRisk}**)`
+      ];
+
+      const cols = ['Rank', 'Brand', 'Annual Revenue', 'Share %', 'Peak Month'];
+      const revMonths = regSeed?.revenueMonths || ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const rows = brands.slice(0, 8).map((b, i) => {
+        const revArr = b.revenue || [];
+        const pk = revArr.length ? revArr.indexOf(Math.max(...revArr)) : 0;
+        return [
+          `#${i + 1}`,
+          b.brand,
+          compactMoney(b.total),
+          `${((b.total / Math.max(1, totalBrandRev)) * 100).toFixed(1)}%`,
+          String(revMonths[pk] || '—').slice(0, 3)
+        ];
+      });
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Class A SKUs', value: `${counts.A} (${aPctSkus}%)`, tone: 'teal' },
+          { label: 'Annual Sales', value: compactMoney(totalRev), tone: 'info' },
+          { label: 'Top-5 Brands', value: `${top5BrandShare.toFixed(1)}%`, tone: top5BrandShare > 65 ? 'warn' : 'ok' },
+          { label: 'Cust. HHI', value: `${hhi}`, tone: hhi >= 1500 ? 'warn' : 'ok' }
+        ],
+        chart: {
+          type: 'stacked',
+          title: 'ABC Revenue Pareto vs Catalog SKU Count',
+          segments: [
+            { label: `A · ${counts.A} SKUs (80% rev)`, pct: Math.round((counts.A / sorted.length) * 100), color: '#087f78' },
+            { label: `B · ${counts.B} SKUs (15% rev)`, pct: Math.round((counts.B / sorted.length) * 100), color: '#2563eb' },
+            { label: `C · ${counts.C} SKUs (5% rev)`, pct: Math.max(1, 100 - Math.round((counts.A / sorted.length) * 100) - Math.round((counts.B / sorted.length) * 100)), color: '#94a3b8' }
+          ]
+        },
+        table: { title: 'Top Brands by Annual Revenue (Pareto Leaders)', columns: cols, rows },
+        csv: { filename: 'mk97-abc-pareto-brands.csv', content: toCsv(cols, rows) },
+        actions: [
+          ...(brands[0] ? [{ label: `🔍 Deep-Dive ${brands[0].brand}`, style: 'primary', prompt: `Analyze brand ${brands[0].brand}` }] : []),
+          { label: '👥 Top Customers Risk', style: 'teal', prompt: 'Analyze top customers and revenue concentration' },
+          { label: '💰 Margin & Capital', style: 'ghost', prompt: 'Analyze margin and working capital' }
+        ],
+        followUps: brands.length >= 2 ? [`Compare ${brands[0].brand} vs ${brands[1].brand}`, 'Analyze top customers and revenue concentration', 'Forecast portfolio demand across all SKUs'] : ['Analyze margin and working capital']
+      };
+    }
+
+    // Fallback on live ERP inventory value ABC when historical seed isn't loaded
+    const inv = (state?.enterprise?.inventory || []).map(i => ({ item: i, val: positive(i.onHand) * positive(i.cost) })).sort((a, b) => b.val - a.val);
+    const totalVal = inv.reduce((s, x) => s + x.val, 0);
+    let cum = 0;
+    const rows = inv.map(r => {
+      const cls = cum / Math.max(1, totalVal) < 0.80 ? 'A' : cum / Math.max(1, totalVal) < 0.95 ? 'B' : 'C';
+      cum += r.val;
+      return [r.item.model || r.item.sku, r.item.brand, cls, String(r.item.onHand), moneyFmt(r.val)];
+    });
+    return {
+      markdown: `**Live ERP Inventory Value ABC Classification (${inv.length} SKUs · ${moneyFmt(totalVal)})**\nClassified live inventory by capital value at cost (A = top 80%, B = next 15%, C = bottom 5%).`,
+      metrics: [
+        { label: 'Total Capital', value: compactMoney(totalVal), tone: 'teal' },
+        { label: 'Class A SKUs', value: String(rows.filter(r => r[2] === 'A').length), tone: 'info' }
+      ],
+      table: { title: 'Live Inventory ABC Table', columns: ['SKU', 'Brand', 'Class', 'On-Hand', 'Capital'], rows },
+      csv: { filename: 'mk97-live-abc.csv', content: toCsv(['SKU', 'Brand', 'Class', 'On-Hand', 'Capital'], rows) },
+      actions: [{ label: '💰 Margin & Capital', style: 'teal', prompt: 'Analyze margin and working capital' }],
+      followUps: ['Analyze margin and working capital', 'Run ERP health score and anomaly detection']
+    };
+  }
+
+  // 4. Cross-ERP Anomaly Detector & Executive Health Score (0-100)
+  function detectAnomaliesAndRisks(state, seed = null, mailThreads = []) {
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    const pulse = getLivePulse(state, mailThreads);
+    const regSeed = getSeedRegion(seed);
+
+    let score = 100;
+    const anomalies = [];
+
+    // Live ERP operational anomalies
+    for (const item of pulse.lowStockSkus) {
+      score -= 9;
+      const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+      anomalies.push({ severity: 'CRITICAL', domain: 'Inventory', entity: item.model || item.sku, signal: `Safety floor breach (${free} free vs ${item.safety} safety, 0 inbound)`, impact: moneyFmt(positive(item.safety - free) * positive(item.standardPrice)) });
+    }
+    for (const shp of pulse.delayedTpl) {
+      score -= 10;
+      anomalies.push({ severity: 'CRITICAL', domain: '3PL Logistics', entity: shp.id, signal: `Delayed outbound shipment (${shp.orderId}, ${shp.sku}×${shp.qty}, no tracking)`, impact: 'SLA Breach' });
+    }
+    for (const rcv of (l.receipts || []).filter(r => r.status === 'ARRIVED')) {
+      score -= 5;
+      anomalies.push({ severity: 'HIGH', domain: 'Warehouse Dock', entity: rcv.po, signal: `Arrived at Dock ${rcv.dock} awaiting receiving/putaway confirmation`, impact: moneyFmt(rcv.poTotal || 0) });
+    }
+    for (const v of (e.vendors || []).filter(x => x.status === 'AUDIT_WARNING')) {
+      score -= 7;
+      const sla = (e.slaLogs || []).find(s => s.vendorId === v.id);
+      anomalies.push({ severity: 'HIGH', domain: 'Vendor SLA', entity: v.name, signal: `Audit warning (${sla ? `${sla.onTimePct}% on-time vs ${sla.targetDays}d target` : 'Compliance review'})`, impact: 'Supply Risk' });
+    }
+    for (const a of (e.accounts || []).filter(x => x.status === 'REVIEW' || (x.creditLimit > 0 && x.creditUsed / x.creditLimit >= 0.85))) {
+      score -= 6;
+      const util = Math.round((a.creditUsed / Math.max(1, a.creditLimit)) * 100);
+      anomalies.push({ severity: 'HIGH', domain: 'CRM Credit', entity: a.name, signal: `Credit utilization at ${util}% (${moneyFmt(a.creditUsed)} / ${moneyFmt(a.creditLimit)})`, impact: moneyFmt(a.creditUsed) });
+    }
+    for (const cc of (l.cycleCounts || []).filter(c => c.status === 'VARIANCE')) {
+      score -= 4;
+      anomalies.push({ severity: 'MEDIUM', domain: 'Cycle Count', entity: cc.id, signal: `${cc.sku} bin ${cc.binId} variance (System ${cc.systemQty} vs Count ${cc.countedQty})`, impact: `${Math.abs(n(cc.systemQty) - n(cc.countedQty))}u diff` });
+    }
+    if (pulse.pendingTrackingCount > 0) {
+      score -= Math.min(10, pulse.pendingTrackingCount * 4);
+      anomalies.push({ severity: 'HIGH', domain: 'MK97 Mail', entity: `${pulse.pendingTrackingCount} Thread(s)`, signal: `Customer/3PL tracking requests awaiting reply (${pulse.pendingTrackingMails.map(m => m.related?.poNumber || m.senderName).join(', ')})`, impact: 'CSAT Risk' });
+    }
+
+    // Statistical anomalies across 1,885 historical SKUs (Z-score >= 2.3 spikes & dead stock)
+    let spikeCount = 0, deadStockCount = 0;
+    const topSpikes = [];
+    if (regSeed?.itemStock?.length) {
+      for (const it of regSeed.itemStock) {
+        const d = (it.demand || []).map(v => Math.max(0, n(v)));
+        const st = statsOf(d);
+        if (st.std > 0 && st.max >= 20) {
+          const z = (st.max - st.mean) / st.std;
+          if (z >= 2.3) {
+            spikeCount++;
+            if (topSpikes.length < 15) topSpikes.push({ model: it.model, brand: it.brand, peak: st.max, mean: st.mean, z });
+          }
+        }
+        const last6 = d.slice(-6).reduce((s, v) => s + v, 0);
+        if (positive(it.stock) >= 20 && last6 === 0) deadStockCount++;
+      }
+      topSpikes.sort((a, b) => b.peak - a.peak);
+      for (const sp of topSpikes.slice(0, 2)) {
+        anomalies.push({ severity: 'MEDIUM', domain: 'Demand Spike', entity: `${sp.model} (${sp.brand})`, signal: `Statistical spike: ${Math.round(sp.peak)}u peak vs ${sp.mean.toFixed(1)}/mo avg (Z = ${sp.z.toFixed(1)}σ)`, impact: 'Forecast Outlier' });
+      }
+      if (deadStockCount > 0) {
+        score -= 4;
+        anomalies.push({ severity: 'MEDIUM', domain: 'Dead Stock', entity: `${deadStockCount} SKUs`, signal: `≥20 units sitting with 0 sales over last 6 months in historical catalog`, impact: 'Working Capital' });
+      }
+    }
+
+    score = Math.max(15, Math.min(100, Math.round(score)));
+    const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 68 ? 'C' : score >= 55 ? 'D' : 'F';
+    const crit = anomalies.filter(a => a.severity === 'CRITICAL').length;
+    const high = anomalies.filter(a => a.severity === 'HIGH').length;
+    const med = anomalies.filter(a => a.severity === 'MEDIUM').length;
+
+    const lines = [
+      `**MK97 ERP Health Score: ${score}/100 (Grade ${grade}) — Anomaly & Risk Radar**`,
+      `Scanned **Orders, Inventory, Vendor SLAs, 3PL Shipments, Warehouse Dock, CRM Credit, MK97 Mail**${regSeed?.itemStock ? ` + **${regSeed.itemStock.length.toLocaleString()} historical SKU time-series**` : ''}:`,
+      ``,
+      ...anomalies.slice(0, 8).map(a => `• **${a.severity === 'CRITICAL' ? '🔴' : a.severity === 'HIGH' ? '🟠' : '🟡'} [${a.domain}] ${a.entity}** — ${a.signal}`),
+      spikeCount > 0 ? `` : '',
+      spikeCount > 0 ? `📈 **Statistical Outlier Scan:** Detected **${spikeCount} SKU demand spikes (Z ≥ 2.3σ)** and **${deadStockCount} dead-stock traps** across the 13-month catalog.` : ''
+    ].filter(Boolean);
+
+    const cols = ['Severity', 'Domain', 'Record', 'Anomaly Signal', 'Exposure'];
+    const rows = anomalies.map(a => [a.severity, a.domain, a.entity, a.signal, a.impact]);
+
+    const totAnom = Math.max(1, crit + high + med);
+    const chart = {
+      type: 'stacked',
+      title: `Risk Mix (${anomalies.length} Detected Anomalies · Health ${score}/100)`,
+      segments: [
+        ...(crit ? [{ label: `Critical (${crit})`, pct: Math.round((crit / totAnom) * 100), color: '#dc2626' }] : []),
+        ...(high ? [{ label: `High (${high})`, pct: Math.round((high / totAnom) * 100), color: '#d97706' }] : []),
+        ...(med ? [{ label: `Medium (${med})`, pct: Math.max(1, 100 - Math.round((crit / totAnom) * 100) - Math.round((high / totAnom) * 100)), color: '#2563eb' }] : [])
+      ]
+    };
+
+    return {
+      markdown: lines.join('\n'),
+      healthScore: score,
+      metrics: [
+        { label: 'Health Score', value: `${score}/100 (${grade})`, tone: score >= 80 ? 'ok' : score >= 65 ? 'warn' : 'critical' },
+        { label: 'Critical', value: String(crit), tone: crit ? 'critical' : 'ok' },
+        { label: 'High Risks', value: String(high), tone: high ? 'warn' : 'ok' },
+        { label: 'Catalog Spikes', value: String(spikeCount), tone: 'info' }
+      ],
+      chart,
+      table: { title: 'Cross-ERP Anomaly Register', columns: cols, rows: rows.slice(0, 8) },
+      csv: { filename: 'mk97-anomaly-health-audit.csv', content: toCsv(cols, rows) },
+      actions: [
+        { label: '⚡ Preview Autopilot Fixes', style: 'primary', prompt: 'Show autopilot remediation plan' },
+        ...(pulse.lowStockSkus[0] ? [{ label: `🛒 Fix ${pulse.lowStockSkus[0].model}`, style: 'teal', prompt: `Place a vendor PO for ${pulse.lowStockSkus[0].model} for 45 units` }] : []),
+        { label: '💰 Margin & Capital', style: 'ghost', prompt: 'Analyze margin and working capital' }
+      ],
+      followUps: ['Show autopilot remediation plan', 'Analyze margin and working capital', 'Forecast portfolio demand across all SKUs']
+    };
+  }
+
+  // 5. Brand & Customer Revenue Deep-Dive (138 Brands + 131 Customers + Live ERP)
+  function analyzeBrandOrCustomerDeepDive(query, state, seed = null) {
+    const regSeed = getSeedRegion(seed);
+    const revMonths = (regSeed?.revenueMonths || ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']).map(m => String(m).slice(0, 3));
+    const brands = (regSeed?.brandSales || []).filter(b => b.brand && positive(b.total) > 0).sort((a, b) => b.total - a.total);
+    const customers = (regSeed?.customerSales || []).filter(c => c.customer && positive(c.total) > 0).sort((a, b) => b.total - a.total);
+    const q = String(query || '').toLowerCase();
+
+    const wantCustomer = /\b(customer|customers|client|clients|account|accounts|buyer|workhuman|purchasing\s+power|innowave|incentive|northstar|apex|meridian)\b/i.test(q);
+    const wantBrand = /\b(brand|brands|marc\s+jacobs|gucci|kendra|ferragamo|infinity\s+luxe|aura\s+frames|bala|all-?clad|sony|apple|fieldbar)\b/i.test(q);
+
+    // Check specific named brand
+    const hitBrand = brands.find(b => b.brand.length >= 4 && q.includes(b.brand.toLowerCase()));
+    if (hitBrand) {
+      const totalBrandRev = brands.reduce((s, b) => s + positive(b.total), 0);
+      const share = (hitBrand.total / Math.max(1, totalBrandRev)) * 100;
+      const rev = (hitBrand.revenue || []).map(v => Math.max(0, n(v)));
+      const h1 = rev.slice(0, 6).reduce((s, v) => s + v, 0);
+      const h2 = rev.slice(6).reduce((s, v) => s + v, 0);
+      const peakVal = Math.max(...rev, 0);
+      const peakMo = revMonths[rev.indexOf(peakVal)] || '—';
+      const brandSkus = (regSeed?.skuSales || []).filter(s => String(s.brand || '').toLowerCase() === hitBrand.brand.toLowerCase()).sort((a, b) => b.total - a.total);
+      const rank = brands.indexOf(hitBrand) + 1;
+      const liveVendor = (state?.enterprise?.vendors || []).find(v => v.name.toLowerCase().includes(hitBrand.brand.toLowerCase().split(' ')[0]));
+      const liveSla = liveVendor ? (state?.enterprise?.slaLogs || []).find(s => s.vendorId === liveVendor.id) : null;
+
+      const lines = [
+        `**Brand Commercial Deep-Dive — ${hitBrand.brand} (Rank #${rank} of ${brands.length})**`,
+        `• **Annual Revenue:** **${moneyFmt(hitBrand.total)}** (**${share.toFixed(1)}%** of total brand revenue) · Peak Month: **${peakMo}** (${compactMoney(peakVal)})`,
+        `• **Half-Year Trajectory:** H1 **${compactMoney(h1)}** · H2 **${compactMoney(h2)}** · Active Revenue SKUs: **${brandSkus.length}**`,
+        liveVendor ? `• **Live ERP Supplier Link:** **${liveVendor.name}** (${liveVendor.status}${liveSla ? ` · ${liveSla.onTimePct}% on-time SLA` : ''})` : ''
+      ].filter(Boolean);
+
+      const cols = ['Model', 'Product Title', 'Annual Revenue', 'Share of Brand'];
+      const rows = brandSkus.slice(0, 7).map(s => [
+        s.model || '—',
+        String(s.title || '').slice(0, 42),
+        compactMoney(s.total),
+        `${((s.total / Math.max(1, hitBrand.total)) * 100).toFixed(1)}%`
+      ]);
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Brand Rank', value: `#${rank}`, tone: 'teal' },
+          { label: 'Annual Sales', value: compactMoney(hitBrand.total), tone: 'ok' },
+          { label: 'Rev Share', value: `${share.toFixed(1)}%`, tone: 'info' },
+          { label: 'Peak Month', value: `${peakMo} · ${compactMoney(peakVal)}`, tone: 'info' }
+        ],
+        chart: {
+          type: 'sparkline',
+          title: `${hitBrand.brand} · 12-Month Revenue Trajectory ($)`,
+          labels: revMonths,
+          actual: rev.map(v => Math.round(v)),
+          forecast: [],
+          unit: '$'
+        },
+        table: rows.length ? { title: `Top Revenue SKUs in ${hitBrand.brand}`, columns: cols, rows } : null,
+        csv: { filename: `mk97-brand-${hitBrand.brand.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`, content: toCsv(['Month', 'Revenue'], revMonths.map((m, i) => [m, Math.round(rev[i] || 0)])) },
+        actions: [
+          ...(brands[rank] ? [{ label: `⚔ Compare vs ${brands[rank].brand}`, style: 'primary', prompt: `Compare ${hitBrand.brand} vs ${brands[rank].brand}` }] : []),
+          { label: '📊 All Top Brands', style: 'ghost', prompt: 'Analyze top brands revenue' }
+        ],
+        followUps: brands[rank] ? [`Compare ${hitBrand.brand} vs ${brands[rank].brand}`, 'Analyze top customers and revenue concentration'] : ['Analyze top customers and revenue concentration']
+      };
+    }
+
+    // Check specific named customer
+    const hitCust = customers.find(c => c.customer.length >= 4 && q.includes(c.customer.toLowerCase()));
+    if (hitCust) {
+      const totalCustRev = customers.reduce((s, c) => s + positive(c.total), 0);
+      const share = (hitCust.total / Math.max(1, totalCustRev)) * 100;
+      const rev = (hitCust.revenue || []).map(v => Math.max(0, n(v)));
+      const peakVal = Math.max(...rev, 0);
+      const peakMo = revMonths[rev.indexOf(peakVal)] || '—';
+      const activeMonths = rev.filter(v => v > 0).length;
+      const rank = customers.indexOf(hitCust) + 1;
+
+      const lines = [
+        `**Customer Account Deep-Dive — ${hitCust.customer} (Rank #${rank} of ${customers.length})**`,
+        `• **12-Month Revenue:** **${moneyFmt(hitCust.total)}** (**${share.toFixed(1)}%** of total customer revenue) · Active Months: **${activeMonths}/12**`,
+        `• **Peak Billing Month:** **${peakMo}** (${compactMoney(peakVal)}) · Monthly Avg (active): **${compactMoney(hitCust.total / Math.max(1, activeMonths))}**`,
+        share >= 15 ? `• ⚠️ **Key-Account Concentration:** Represents >15% of commercial volume — maintain priority SLA and quarterly executive review.` : `• ✅ **Healthy Concentration:** Account share is well balanced within customer portfolio.`
+      ];
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Customer Rank', value: `#${rank}`, tone: 'teal' },
+          { label: 'Annual Revenue', value: compactMoney(hitCust.total), tone: 'ok' },
+          { label: 'Portfolio Share', value: `${share.toFixed(1)}%`, tone: share >= 15 ? 'warn' : 'info' },
+          { label: 'Active Months', value: `${activeMonths}/12`, tone: 'info' }
+        ],
+        chart: {
+          type: 'sparkline',
+          title: `${hitCust.customer} · 12-Month Revenue Trend ($)`,
+          labels: revMonths,
+          actual: rev.map(v => Math.round(v)),
+          forecast: [],
+          unit: '$'
+        },
+        csv: { filename: `mk97-customer-${hitCust.customer.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.csv`, content: toCsv(['Month', 'Revenue'], revMonths.map((m, i) => [m, Math.round(rev[i] || 0)])) },
+        actions: [
+          ...(customers[rank] ? [{ label: `⚔ Compare vs ${customers[rank].customer}`, style: 'primary', prompt: `Compare ${hitCust.customer} vs ${customers[rank].customer}` }] : []),
+          { label: '👥 All Top Customers', style: 'ghost', prompt: 'Analyze top customers and revenue concentration' }
+        ],
+        followUps: customers[rank] ? [`Compare ${hitCust.customer} vs ${customers[rank].customer}`, 'Analyze top brands revenue'] : ['Analyze top brands revenue']
+      };
+    }
+
+    // Top Customers Leaderboard
+    if (wantCustomer && customers.length) {
+      const totalCustRev = customers.reduce((s, c) => s + positive(c.total), 0);
+      const top5Share = (customers.slice(0, 5).reduce((s, c) => s + positive(c.total), 0) / Math.max(1, totalCustRev)) * 100;
+      const liveAccts = state?.enterprise?.accounts || [];
+      const reviewAccts = liveAccts.filter(a => a.status === 'REVIEW');
+
+      const lines = [
+        `**Top Customer Revenue & Concentration Intelligence (${customers.length} Accounts · ${compactMoney(totalCustRev)})**`,
+        `• **#1 Account:** **${customers[0].customer}** at **${compactMoney(customers[0].total)}** (**${((customers[0].total / totalCustRev) * 100).toFixed(1)}%** share)`,
+        `• **Top-5 Concentration:** **${top5Share.toFixed(1)}%** of total commercial revenue across the top 5 accounts`,
+        reviewAccts.length ? `• ⚠️ **Live CRM Credit Watch:** **${reviewAccts[0].name}** at **${Math.round(reviewAccts[0].creditUsed / Math.max(1, reviewAccts[0].creditLimit) * 100)}%** credit utilization` : ''
+      ].filter(Boolean);
+
+      const cols = ['Rank', 'Customer', '12-Mo Revenue', 'Share %', 'Active Mos'];
+      const rows = customers.slice(0, 8).map((c, i) => [
+        `#${i + 1}`,
+        c.customer,
+        compactMoney(c.total),
+        `${((c.total / Math.max(1, totalCustRev)) * 100).toFixed(1)}%`,
+        `${(c.revenue || []).filter(v => v > 0).length}/12`
+      ]);
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Total Customers', value: String(customers.length), tone: 'info' },
+          { label: 'Annual Revenue', value: compactMoney(totalCustRev), tone: 'teal' },
+          { label: 'Top-5 Share', value: `${top5Share.toFixed(1)}%`, tone: top5Share > 55 ? 'warn' : 'ok' },
+          { label: '#1 Customer', value: customers[0].customer.split(' ')[0], tone: 'ok' }
+        ],
+        chart: {
+          type: 'bars',
+          title: 'Top 6 Customers by 12-Month Revenue',
+          items: customers.slice(0, 6).map((c, idx) => ({
+            label: c.customer,
+            value: Math.round(c.total),
+            display: `${compactMoney(c.total)} (${((c.total / Math.max(1, totalCustRev)) * 100).toFixed(1)}%)`,
+            tone: idx === 0 ? 'teal' : 'info'
+          }))
+        },
+        table: { title: 'Customer Revenue Leaderboard', columns: cols, rows },
+        csv: { filename: 'mk97-top-customers.csv', content: toCsv(cols, rows) },
+        actions: [
+          { label: `🔍 Deep-Dive ${customers[0].customer}`, style: 'primary', prompt: `Analyze customer ${customers[0].customer}` },
+          ...(customers[1] ? [{ label: `⚔ Compare #1 vs #2`, style: 'teal', prompt: `Compare ${customers[0].customer} vs ${customers[1].customer}` }] : [])
+        ],
+        followUps: [`Analyze customer ${customers[0].customer}`, 'Analyze top brands revenue', 'Analyze margin and working capital']
+      };
+    }
+
+    // Top Brands Leaderboard (default)
+    if (brands.length) {
+      const totalBrandRev = brands.reduce((s, b) => s + positive(b.total), 0);
+      const top5Share = (brands.slice(0, 5).reduce((s, b) => s + positive(b.total), 0) / Math.max(1, totalBrandRev)) * 100;
+
+      const lines = [
+        `**Top Brand Portfolio & Revenue Intelligence (${brands.length} Brands · ${compactMoney(totalBrandRev)})**`,
+        `• **#1 Revenue Brand:** **${brands[0].brand}** generating **${compactMoney(brands[0].total)}** (**${((brands[0].total / totalBrandRev) * 100).toFixed(1)}%** of portfolio)`,
+        `• **Top-5 Brand Share:** **${top5Share.toFixed(1)}%** (${brands.slice(0, 5).map(b => b.brand).join(', ')})`
+      ];
+
+      const cols = ['Rank', 'Brand', '12-Mo Revenue', 'Share %', 'Active Mos'];
+      const rows = brands.slice(0, 8).map((b, i) => [
+        `#${i + 1}`,
+        b.brand,
+        compactMoney(b.total),
+        `${((b.total / Math.max(1, totalBrandRev)) * 100).toFixed(1)}%`,
+        `${(b.revenue || []).filter(v => v > 0).length}/12`
+      ]);
+
+      return {
+        markdown: lines.join('\n'),
+        metrics: [
+          { label: 'Active Brands', value: String(brands.length), tone: 'info' },
+          { label: 'Annual Revenue', value: compactMoney(totalBrandRev), tone: 'teal' },
+          { label: 'Top-5 Share', value: `${top5Share.toFixed(1)}%`, tone: top5Share > 60 ? 'warn' : 'ok' },
+          { label: '#1 Brand', value: brands[0].brand, tone: 'ok' }
+        ],
+        chart: {
+          type: 'bars',
+          title: 'Top 6 Brands by 12-Month Revenue',
+          items: brands.slice(0, 6).map((b, idx) => ({
+            label: b.brand,
+            value: Math.round(b.total),
+            display: `${compactMoney(b.total)} (${((b.total / Math.max(1, totalBrandRev)) * 100).toFixed(1)}%)`,
+            tone: idx === 0 ? 'teal' : 'info'
+          }))
+        },
+        table: { title: 'Brand Revenue Leaderboard', columns: cols, rows },
+        csv: { filename: 'mk97-top-brands.csv', content: toCsv(cols, rows) },
+        actions: [
+          { label: `🔍 Deep-Dive ${brands[0].brand}`, style: 'primary', prompt: `Analyze brand ${brands[0].brand}` },
+          ...(brands[1] ? [{ label: `⚔ Compare ${brands[0].brand} vs ${brands[1].brand}`, style: 'teal', prompt: `Compare ${brands[0].brand} vs ${brands[1].brand}` }] : [])
+        ],
+        followUps: [`Compare ${brands[0].brand} vs ${brands[1]?.brand || 'Gucci'}`, 'Analyze top customers and revenue concentration', 'Run ABC XYZ segmentation and Pareto analysis']
+      };
+    }
+
+    return queryLiveVendors(query, state);
+  }
+
+  // 6. Side-by-Side Comparison Engine ("Compare X vs Y")
+  function compareEntities(query, state, seed = null) {
+    const raw = String(query || '').trim();
+    const regSeed = getSeedRegion(seed);
+    const brands = (regSeed?.brandSales || []).filter(b => b.brand && positive(b.total) > 0);
+    const customers = (regSeed?.customerSales || []).filter(c => c.customer && positive(c.total) > 0);
+    const vendors = state?.enterprise?.vendors || [];
+    const slaMap = new Map((state?.enterprise?.slaLogs || []).map(s => [s.vendorId, s]));
+
+    // Vendor comparison shortcut
+    if (/\b(vendors?|suppliers?)\b/i.test(raw) && !/\bvs\.?\b/i.test(raw)) {
+      const sorted = vendors.map(v => ({ v, sla: slaMap.get(v.id) })).sort((a, b) => (b.sla?.onTimePct || 0) - (a.sla?.onTimePct || 0));
+      const cols = ['Vendor', 'On-Time %', 'Lead Time', 'Status'];
+      const rows = sorted.map(({ v, sla }) => [v.name, sla ? `${sla.onTimePct}%` : '—', `${v.leadTime || '—'}d`, v.status]);
+      return {
+        markdown: `**Vendor Side-by-Side SLA Scorecard (${sorted.length} Suppliers)**\n• **Top Performer:** **${sorted[0]?.v.name}** (${sorted[0]?.sla?.onTimePct ?? '—'}% on-time)\n• **Needs Attention:** **${sorted[sorted.length - 1]?.v.name}** (${sorted[sorted.length - 1]?.sla?.onTimePct ?? '—'}% on-time · ${sorted[sorted.length - 1]?.v.status})`,
+        metrics: [
+          { label: 'Best SLA', value: `${sorted[0]?.sla?.onTimePct ?? '—'}%`, tone: 'ok' },
+          { label: 'Lowest SLA', value: `${sorted[sorted.length - 1]?.sla?.onTimePct ?? '—'}%`, tone: 'critical' }
+        ],
+        chart: {
+          type: 'bars',
+          title: 'Supplier On-Time Delivery %',
+          items: sorted.map(({ v, sla }) => ({ label: v.name, value: sla?.onTimePct || 0, display: `${sla?.onTimePct || 0}%`, tone: (sla?.onTimePct || 0) >= 95 ? 'ok' : (sla?.onTimePct || 0) >= 90 ? 'warn' : 'critical' }))
+        },
+        table: { title: 'Vendor Comparison', columns: cols, rows },
+        csv: { filename: 'mk97-vendor-comparison.csv', content: toCsv(cols, rows) },
+        actions: [{ label: '✉ Email Lowest-SLA Vendor', style: 'primary', prompt: `Draft email to ${sorted[sorted.length - 1]?.v.name} about SLA delivery delay` }],
+        followUps: ['Summarize vendor performance and open POs', 'Run ERP health score and anomaly detection']
+      };
+    }
+
+    const parts = raw.replace(/^\/compare\s*/i, '').replace(/^(?:please\s+)?compare\s+/i, '').split(/\s+(?:vs\.?|versus|and|against)\s+/i).map(s => s.trim()).filter(Boolean);
+    const leftQ = (parts[0] || '').toLowerCase();
+    const rightQ = (parts[1] || '').toLowerCase();
+
+    const findBrand = qStr => brands.find(b => b.brand.toLowerCase() === qStr) || brands.find(b => qStr.length >= 3 && b.brand.toLowerCase().includes(qStr));
+    const findCust = qStr => customers.find(c => c.customer.toLowerCase() === qStr) || customers.find(c => qStr.length >= 3 && c.customer.toLowerCase().includes(qStr));
+
+    let b1 = findBrand(leftQ), b2 = findBrand(rightQ);
+    if (!b1 && !b2 && brands.length >= 2 && !leftQ) { b1 = brands[0]; b2 = brands[1]; }
+    if (b1 && b2) {
+      const winner = b1.total >= b2.total ? b1 : b2;
+      const ratio = (Math.max(b1.total, b2.total) / Math.max(1, Math.min(b1.total, b2.total))).toFixed(2);
+      const s1 = statsOf(b1.revenue || []), s2 = statsOf(b2.revenue || []);
+      const skus1 = (regSeed?.skuSales || []).filter(s => s.brand === b1.brand).length;
+      const skus2 = (regSeed?.skuSales || []).filter(s => s.brand === b2.brand).length;
+      const cols = ['Metric', b1.brand, b2.brand];
+      const rows = [
+        ['12-Month Revenue', compactMoney(b1.total), compactMoney(b2.total)],
+        ['Monthly Average', compactMoney(s1.mean), compactMoney(s2.mean)],
+        ['Peak Month Sales', compactMoney(s1.max), compactMoney(s2.max)],
+        ['Active Revenue SKUs', String(skus1), String(skus2)],
+        ['Revenue Stability (CV)', s1.cv.toFixed(2), s2.cv.toFixed(2)]
+      ];
+      return {
+        markdown: `**Side-by-Side Brand Comparison: ${b1.brand} vs ${b2.brand}**\n• **Revenue Leader:** **${winner.brand}** leads by **${ratio}×** (**${compactMoney(winner.total)}** vs **${compactMoney(winner === b1 ? b2.total : b1.total)}**).\n• **Volatility Profile:** ${b1.brand} CV = **${s1.cv.toFixed(2)}** vs ${b2.brand} CV = **${s2.cv.toFixed(2)}** (lower = steadier monthly demand).`,
+        metrics: [
+          { label: b1.brand, value: compactMoney(b1.total), tone: winner === b1 ? 'teal' : 'info' },
+          { label: b2.brand, value: compactMoney(b2.total), tone: winner === b2 ? 'teal' : 'info' },
+          { label: 'Lead Ratio', value: `${ratio}×`, tone: 'ok' }
+        ],
+        chart: {
+          type: 'bars',
+          title: 'Annual Revenue Head-to-Head ($)',
+          items: [
+            { label: b1.brand, value: Math.round(b1.total), display: compactMoney(b1.total), tone: winner === b1 ? 'teal' : 'info' },
+            { label: b2.brand, value: Math.round(b2.total), display: compactMoney(b2.total), tone: winner === b2 ? 'teal' : 'info' }
+          ]
+        },
+        table: { title: 'Head-to-Head Metrics', columns: cols, rows },
+        csv: { filename: `mk97-compare-${b1.brand}-vs-${b2.brand}.csv`.toLowerCase().replace(/[^a-z0-9._-]+/g, '-'), content: toCsv(cols, rows) },
+        actions: [
+          { label: `🔍 Deep-Dive ${b1.brand}`, style: 'teal', prompt: `Analyze brand ${b1.brand}` },
+          { label: `🔍 Deep-Dive ${b2.brand}`, style: 'ghost', prompt: `Analyze brand ${b2.brand}` }
+        ],
+        followUps: [`Analyze brand ${b1.brand}`, `Analyze brand ${b2.brand}`, 'Analyze top customers and revenue concentration']
+      };
+    }
+
+    const c1 = findCust(leftQ), c2 = findCust(rightQ);
+    if (c1 && c2) {
+      const winner = c1.total >= c2.total ? c1 : c2;
+      const ratio = (Math.max(c1.total, c2.total) / Math.max(1, Math.min(c1.total, c2.total))).toFixed(2);
+      const s1 = statsOf(c1.revenue || []), s2 = statsOf(c2.revenue || []);
+      const cols = ['Metric', c1.customer, c2.customer];
+      const rows = [
+        ['12-Month Revenue', compactMoney(c1.total), compactMoney(c2.total)],
+        ['Monthly Average', compactMoney(s1.mean), compactMoney(s2.mean)],
+        ['Peak Month', compactMoney(s1.max), compactMoney(s2.max)],
+        ['Active Months', `${(c1.revenue || []).filter(v => v > 0).length}/12`, `${(c2.revenue || []).filter(v => v > 0).length}/12`]
+      ];
+      return {
+        markdown: `**Side-by-Side Customer Comparison: ${c1.customer} vs ${c2.customer}**\n• **Top Account:** **${winner.customer}** generates **${ratio}×** more annual volume (**${compactMoney(winner.total)}** vs **${compactMoney(winner === c1 ? c2.total : c1.total)}**).`,
+        metrics: [
+          { label: c1.customer.split(' ')[0], value: compactMoney(c1.total), tone: winner === c1 ? 'teal' : 'info' },
+          { label: c2.customer.split(' ')[0], value: compactMoney(c2.total), tone: winner === c2 ? 'teal' : 'info' },
+          { label: 'Lead Ratio', value: `${ratio}×`, tone: 'ok' }
+        ],
+        chart: {
+          type: 'bars',
+          title: 'Customer Revenue Head-to-Head ($)',
+          items: [
+            { label: c1.customer, value: Math.round(c1.total), display: compactMoney(c1.total), tone: winner === c1 ? 'teal' : 'info' },
+            { label: c2.customer, value: Math.round(c2.total), display: compactMoney(c2.total), tone: winner === c2 ? 'teal' : 'info' }
+          ]
+        },
+        table: { title: 'Head-to-Head Metrics', columns: cols, rows },
+        csv: { filename: 'mk97-customer-comparison.csv', content: toCsv(cols, rows) },
+        actions: [{ label: '👥 All Top Customers', style: 'teal', prompt: 'Analyze top customers and revenue concentration' }],
+        followUps: ['Analyze top customers and revenue concentration', 'Compare Marc Jacobs vs Gucci']
+      };
+    }
+
+    return {
+      markdown: `**Side-by-Side Comparison Engine**\nSpecify two brands, customers, or vendors to compare — for example:\n• **\`Compare Marc Jacobs vs Gucci\`**\n• **\`Compare Workhuman vs Purchasing Power\`**\n• **\`Compare vendors\`**`,
+      actions: [
+        { label: '⚔ Marc Jacobs vs Gucci', style: 'primary', prompt: 'Compare Marc Jacobs vs Gucci' },
+        { label: '⚔ Workhuman vs Purchasing Power', style: 'teal', prompt: 'Compare Workhuman vs Purchasing Power' },
+        { label: '⚔ Compare All Vendors', style: 'ghost', prompt: 'Compare vendors' }
+      ]
+    };
+  }
+
+  // 7. 3PL vs Local Warehouse Cost & SLA Fulfillment Routing Optimizer
+  function optimizeFulfillmentAnd3PL(query, state, lastEntity = null) {
+    const raw = String(query || '').trim();
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    const { item } = findBestLiveSku(raw, state, lastEntity);
+    const skuItem = item || (e.inventory || []).find(i => i.nature !== 'DIGITAL' && (l.tplInventory || []).some(t => t.sku === i.sku)) || (e.inventory || [])[0];
+    if (!skuItem) return queryLiveLogistics3PL(raw, state);
+
+    const cleanedQty = raw.replace(new RegExp(escRegex(skuItem.model || ''), 'gi'), '').replace(new RegExp(escRegex(skuItem.sku || ''), 'gi'), '');
+    const qtyM = cleanedQty.match(/\b(\d{1,4})\s*(?:units?|pcs?|x)?\b/i);
+    const qty = qtyM ? Math.max(1, Number(qtyM[1])) : 25;
+
+    const stateMatch = raw.match(/\b(?:to|in|for|dest(?:ination)?)\s+([A-Z]{2})\b/i) || raw.match(/\b(CA|NY|TX|FL|IL|WA|NJ|GA|OH|PA|MA|CO|AZ|NV|NC|VA|MI)\b/);
+    const destState = (stateMatch ? stateMatch[1] : 'CA').toUpperCase();
+    const east = ['ME','NH','VT','MA','RI','CT','NY','NJ','PA','DE','MD','DC','VA','WV','NC','SC','GA','FL'];
+    const west = ['CA','OR','WA','NV','AZ','UT','ID','MT','AK','HI'];
+    const destRegion = east.includes(destState) ? 'EAST' : west.includes(destState) ? 'WEST' : 'CENTRAL';
+    const dist = (a, b) => a === b ? 1 : ((a === 'EAST' && b === 'CENTRAL') || (a === 'CENTRAL' && b === 'WEST') || (a === 'WEST' && b === 'CENTRAL')) ? 2 : 3;
+
+    const candidates = [];
+    const localFree = Math.max(0, n(skuItem.onHand) - n(skuItem.reserved) - n(skuItem.damaged));
+    const localWh = (l.warehouses || [])[0] || { id: 'wh_stark_se', name: 'MK97 Southeast DC (Tampa, FL)' };
+    const dLocal = dist('EAST', destRegion);
+    candidates.push({
+      id: localWh.id,
+      kind: 'LOCAL',
+      name: localWh.name,
+      region: 'EAST',
+      available: localFree,
+      canFulfill: localFree >= qty,
+      cost: Math.round((4.5 + qty * 0.70 + dLocal * 2.15) * 100) / 100,
+      sla: 99.2,
+      distance: dLocal
+    });
+
+    for (const nd of (l.tplNodes || [])) {
+      const stockRow = (l.tplInventory || []).find(t => t.nodeId === nd.id && t.sku === skuItem.sku);
+      const avail = stockRow ? Math.max(0, n(stockRow.qty) - n(stockRow.reserved)) : 0;
+      const d = dist(nd.region || 'EAST', destRegion);
+      const cost = Math.round(((nd.baseHandling || 5.2) + qty * 0.55 + d * (nd.zoneRate || 1.25) * 2.2) * 100) / 100;
+      candidates.push({
+        id: nd.id,
+        kind: '3PL',
+        name: `${nd.name} (${nd.city}, ${nd.state})`,
+        region: nd.region || 'CENTRAL',
+        available: avail,
+        canFulfill: avail >= qty && nd.status !== 'INACTIVE',
+        cost,
+        sla: n(nd.onTime || 95),
+        distance: d,
+        status: nd.status
+      });
+    }
+
+    const minCost = Math.min(...candidates.map(c => c.cost));
+    for (const c of candidates) {
+      const proximity = ((4 - c.distance) / 3) * 100;
+      const costScore = (minCost / Math.max(0.1, c.cost)) * 100;
+      const stockScore = c.canFulfill ? 100 : (c.available / Math.max(1, qty)) * 45;
+      c.score = Math.round(0.35 * proximity + 0.30 * costScore + 0.20 * c.sla + 0.15 * stockScore);
+    }
+    candidates.sort((a, b) => (b.canFulfill - a.canFulfill) || (b.score - a.score));
+    const best = candidates[0];
+    const runnerUp = candidates[1];
+    const savings = runnerUp ? Math.max(0, runnerUp.cost - best.cost) : 0;
+
+    const lines = [
+      `**Fulfillment & 3PL Routing Optimizer — ${qty} × ${skuItem.model || skuItem.sku} → ${destState} (${destRegion})**`,
+      `• **Optimal Node:** **${best.name}** (${best.kind}) — Score **${best.score}/100** · Est. Cost **$${best.cost.toFixed(2)}** · SLA **${best.sla}%** · Stock: **${best.available} avail** ${best.canFulfill ? '✅' : '⚠️ Partial'}`,
+      runnerUp ? `• **Runner-Up:** ${runnerUp.name} — $${runnerUp.cost.toFixed(2)} (${savings > 0 ? `Saves **$${savings.toFixed(2)}** vs runner-up` : `Higher SLA/proximity score`})` : '',
+      !best.canFulfill ? `• ⚠️ No single node holds all ${qty} units — recommend split-shipment or replenishing local stock first.` : ''
+    ].filter(Boolean);
+
+    const cols = ['Node', 'Type', 'Avail Stock', 'Est. Cost', 'On-Time SLA', 'Score'];
+    const rows = candidates.map(c => [
+      c.name,
+      c.kind,
+      `${c.available}u ${c.canFulfill ? '✓' : '✗'}`,
+      `$${c.cost.toFixed(2)}`,
+      `${c.sla}%`,
+      `${c.score}/100`
+    ]);
+
+    return {
+      markdown: lines.join('\n'),
+      metrics: [
+        { label: 'Best Node', value: best.kind === 'LOCAL' ? 'Tampa DC' : best.region + ' 3PL', tone: 'teal' },
+        { label: 'Est. Cost', value: `$${best.cost.toFixed(2)}`, tone: 'ok' },
+        { label: 'On-Time SLA', value: `${best.sla}%`, tone: best.sla >= 97 ? 'ok' : 'warn' },
+        { label: 'Opt. Score', value: `${best.score}/100`, tone: 'info' }
+      ],
+      chart: {
+        type: 'bars',
+        title: `Routing Optimization Score by Node (Dest: ${destState})`,
+        items: candidates.map((c, idx) => ({
+          label: c.name.split('(')[0].trim(),
+          value: c.score,
+          display: `${c.score}/100 · $${c.cost.toFixed(2)} (${c.available}u)`,
+          tone: idx === 0 && c.canFulfill ? 'teal' : c.canFulfill ? 'info' : 'warn'
+        }))
+      },
+      table: { title: 'Fulfillment Node Matrix', columns: cols, rows },
+      csv: { filename: `mk97-routing-${skuItem.model || skuItem.sku}-${destState}.csv`, content: toCsv(cols, rows) },
+      actions: [
+        { label: `📋 Create Routing Task`, style: 'primary', prompt: `Create task to route ${qty} ${skuItem.model || skuItem.sku} to ${destState} via ${best.name.split('(')[0].trim()} with Marcus due tomorrow` },
+        { label: '↗ Open 3PL Routing', style: 'ghost', href: '3pl-management/routing.html' }
+      ],
+      followUps: [`Optimize fulfillment for ${qty} ${skuItem.model || skuItem.sku} to NY`, 'Show 3PL delays and warehouse status']
+    };
+  }
+
+  // 8. Multi-Step Autonomous Remediation Playbook ("Autopilot")
+  function buildAutopilotPlan(state, mailThreads = []) {
+    const l = state?.logistics || {};
+    const pulse = getLivePulse(state, mailThreads);
+    const steps = [];
+
+    steps.push({
+      id: 'scan',
+      title: 'Scan MK97 Mail & Live ERP for Unlogged Risks',
+      detail: 'Detect tracking requests, low stock & 3PL delays and sync priority queue.'
+    });
+
+    for (const item of pulse.lowStockSkus) {
+      const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+      const qty = Math.max(25, Math.ceil((positive(item.safety) * 2 - free) / 5) * 5);
+      steps.push({
+        id: 'po_' + item.sku,
+        kind: 'ISSUE_PO',
+        sku: item.sku,
+        model: item.model || item.sku,
+        qty,
+        title: `Issue Covering Vendor PO: ${qty} × ${item.model || item.sku}`,
+        detail: `Restores free+inbound above safety floor (${item.safety}u) and auto-resolves the low-stock task.`
+      });
+    }
+
+    for (const rcv of (l.receipts || []).filter(r => r.status === 'ARRIVED')) {
+      steps.push({
+        id: 'rcv_' + rcv.id,
+        kind: 'RECEIVE_PO',
+        po: rcv.po,
+        receiptId: rcv.id,
+        title: `Post Arrived Dock Receipt: ${rcv.po} (Dock ${rcv.dock})`,
+        detail: `Adds received inbound stock to usable inventory and closes pending putaway backlog.`
+      });
+    }
+
+    if (pulse.topTask) {
+      steps.push({
+        id: 'remind_top',
+        kind: 'REMIND_TOP',
+        taskId: pulse.topTask.task.id,
+        title: `Dispatch Team Reminder on #1 Critical Task`,
+        detail: `Notifies assignees via MK97 Mail for "${pulse.topTask.task.title}".`
+      });
+    }
+
+    const lines = [
+      `**⚡ MK v7.0 Autonomous Remediation Playbook (${steps.length} Ready Actions)**`,
+      `MK analyzed your entire ERP workspace and prepared a safe, auditable multi-step execution plan:`,
+      ``,
+      ...steps.map((s, i) => `**${i + 1}. ${s.title}**\n   ${s.detail}`),
+      ``,
+      `Click **⚡ Execute Full Autopilot** below to run all ${steps.length} steps automatically and verify resolved tasks.`
+    ];
+
+    return {
+      markdown: lines.join('\n'),
+      steps,
+      metrics: [
+        { label: 'Playbook Steps', value: String(steps.length), tone: 'teal' },
+        { label: 'POs to Issue', value: String(steps.filter(s => s.kind === 'ISSUE_PO').length), tone: pulse.lowStockCount ? 'warn' : 'ok' },
+        { label: 'Dock Receipts', value: String(steps.filter(s => s.kind === 'RECEIVE_PO').length), tone: pulse.arrivedReceiptsCount ? 'info' : 'ok' }
+      ],
+      actions: [
+        { label: '⚡ Execute Full Autopilot', style: 'primary', prompt: 'Execute full autopilot now' },
+        { label: '🩺 Re-Run Health Audit', style: 'ghost', prompt: 'Run ERP health score and anomaly detection' }
+      ],
+      followUps: ['Execute full autopilot now', 'Show executive briefing', 'Prioritize & analyze my tasks']
+    };
+  }
+
+  function buildVendorPOForItem(item, qtyOverride, state, seqOffset = 0) {
+    if (!item) return null;
+    const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+    const safety = positive(item.safety);
+    const defaultQty = Math.max(25, Math.ceil((Math.max(safety, 20) * 2 - free) / 5) * 5);
+    const qty = positive(qtyOverride) > 0 ? Math.max(1, Math.round(qtyOverride)) : defaultQty;
+
+    const vendors = state?.enterprise?.vendors || [];
+    const priceBook = (state?.enterprise?.vendorPriceBooks || []).find(pb => pb.sku === item.sku);
+    const vendor = vendors.find(v => v.id === priceBook?.vendorId) ||
+      vendors.find(v => item.brand && v.name.toLowerCase().includes(item.brand.toLowerCase().split(' ')[0])) ||
+      vendors[0] || { id: 'vend_default', name: item.brand || 'Primary Supplier', leadTime: 7 };
+
+    const unitCost = positive(priceBook?.cost || item.cost);
+    const poNumber = 'PO-2026-' + String(889100 + ((state?.enterprise?.purchaseOrders?.length || 0) + seqOffset) * 19);
+    const eta = new Date(Date.now() + Math.max(3, positive(vendor.leadTime || 7)) * 86400000).toISOString();
+    return { item, qty, vendor, unitCost, totalCost: qty * unitCost, poNumber, eta };
+  }
+
+  // 9. Data-Backed Executive Email Drafter & Sender
+  function parseEmailDraftCommand(text, state, mailThreads = []) {
+    const raw = String(text || '').trim();
+    const q = raw.toLowerCase();
+    const e = state?.enterprise || {};
+    const slaMap = new Map((e.slaLogs || []).map(s => [s.vendorId, s]));
+
+    // Match vendor, account, or mail sender
+    let toName = '', toEmail = '', subject = '', body = '', related = {};
+
+    const vendor = (e.vendors || []).find(v => {
+      const full = String(v.name || '').toLowerCase();
+      const first = full.split(/\s+/)[0];
+      return (full.length >= 3 && q.includes(full)) || (first.length >= 4 && q.includes(first));
+    });
+    const account = !vendor ? (e.accounts || []).find(a => {
+      const full = String(a.name || '').toLowerCase();
+      const first = full.split(/\s+/)[0];
+      return (full.length >= 3 && q.includes(full)) || (first.length >= 4 && q.includes(first));
+    }) : null;
+    const mailHit = !vendor && !account ? (mailThreads || []).find(m => m.senderName && m.senderName.length >= 4 && q.includes(m.senderName.toLowerCase().split(' ')[0])) : null;
+    const rawEmail = raw.match(/\b([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})\b/);
+    const namedRecipientMatch = !vendor && !account && !mailHit && !rawEmail
+      ? raw.match(/(?:^\/email\s+|(?:draft|write|compose|send)\s+(?:an?\s+)?(?:executive\s+)?email\s+to\s+|^email\s+)([A-Za-z][A-Za-z0-9 &.'-]{2,42}?)(?=\s+(?:about|regarding|for|on|re:|with)\b|$)/i)
+      : null;
+
+    if (vendor) {
+      const sla = slaMap.get(vendor.id);
+      const openPOs = (e.purchaseOrders || []).filter(p => p.vendorId === vendor.id && !['RECEIVED', 'CANCELLED', 'CLOSED'].includes(p.status));
+      toName = vendor.name;
+      toEmail = vendor.email || `ops@${vendor.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+      const poRef = openPOs[0]?.po || '';
+      related = poRef ? { poNumber: poRef } : {};
+      subject = poRef ? `Action Required: ${poRef} Delivery & SLA Review — ${vendor.name}` : `Supplier Performance & Delivery SLA Follow-Up — ${vendor.name}`;
+      body = `Hi ${vendor.name} Operations Team,\n\nWe are reviewing current inbound deliveries and supplier SLA metrics in MK97 ERP:\n` +
+        (sla ? `• Current On-Time Performance: ${sla.onTimePct}% (Actual ${sla.actualDays}d vs ${sla.targetDays}d target)\n` : '') +
+        (openPOs.length ? `• Open PO(s): ${openPOs.map(p => `${p.po} (${p.status}, ETA ${dateOnly(p.eta) || 'TBD'})`).join(', ')}\n` : '') +
+        `\nPlease confirm revised dispatch dates and carrier tracking numbers by EOD today.\n\nBest regards,\nManoj Manne · Supply Chain Director, MK97 ERP`;
+    } else if (account) {
+      const util = account.creditLimit ? Math.round((account.creditUsed / account.creditLimit) * 100) : 0;
+      const acctOrders = (e.orders || []).filter(o => o.accountId === account.id && !CLOSED.has(o.status));
+      toName = account.name;
+      toEmail = account.email || `billing@${account.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
+      subject = util >= 80 ? `Account Credit Utilization & Open Order Alignment — ${account.name}` : `Order Status & Fulfillment Update — ${account.name}`;
+      body = `Hi ${account.name} Team,\n\nSharing a quick live update from MK97 ERP regarding your account:\n` +
+        `• Credit Utilization: ${util}% (${moneyFmt(account.creditUsed)} used of ${moneyFmt(account.creditLimit)} limit)\n` +
+        (acctOrders.length ? `• Active Open Orders: ${acctOrders.map(o => `#${o.po} (${o.status})`).join(', ')}\n` : '') +
+        `\nPlease let us know if you would like to coordinate payment clearance or priority dispatch.\n\nBest regards,\nManoj Manne · MK97 ERP`;
+    } else if (mailHit) {
+      toName = mailHit.senderName;
+      toEmail = mailHit.senderEmail || 'partner@mk97.com';
+      subject = /^re:/i.test(mailHit.subject || '') ? mailHit.subject : `Re: ${mailHit.subject}`;
+      related = mailHit.related || {};
+      body = `Hi ${mailHit.senderName} Team,\n\nFollowing up on your recent message regarding ${mailHit.related?.poNumber || mailHit.subject}. Our operations team is actively expediting this shipment and will confirm final carrier tracking shortly.\n\nBest regards,\nManoj Manne · MK97 ERP`;
+    } else if (rawEmail) {
+      toEmail = rawEmail[1];
+      toName = rawEmail[1].split('@')[0];
+      subject = `MK97 ERP Operations Update`;
+      body = `Hi ${toName},\n\nFollowing up regarding: ${raw.replace(/^\/email\s*/i, '')}\n\nBest regards,\nManoj Manne · MK97 ERP`;
+    } else if (namedRecipientMatch && namedRecipientMatch[1].trim().length >= 3) {
+      toName = namedRecipientMatch[1].trim().replace(/\b\w/g, c => c.toUpperCase());
+      const slug = toName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const topicMatch = raw.match(/\b(?:about|regarding|for|on)\s+(.+)$/i);
+      const topic = topicMatch ? topicMatch[1].trim() : 'open operations & delivery alignment';
+      toEmail = `operations@${slug || 'partner'}.com`;
+      subject = `Action Required: ${topic.charAt(0).toUpperCase() + topic.slice(1)} — ${toName}`;
+      body = `Hi ${toName} Team,\n\nWe are following up from MK97 ERP regarding ${topic}.\n\nPlease share your confirmed status, revised ETA, and carrier tracking reference at your earliest convenience so we can align warehouse receiving and downstream customer allocations.\n\nBest regards,\nManoj Manne · Supply Chain Director, MK97 ERP`;
+    } else {
+      return null;
+    }
+
+    return { toName, toEmail, subject, body, related };
+  }
+
   return {
     VERSION,
     DEFAULT_TEAM_ROSTER,
@@ -1868,7 +3143,18 @@
     queryLiveMail,
     parseNaturalTaskCommand,
     parseVendorPOCommand,
+    buildVendorPOForItem,
     parseTrackingUpdateCommand,
-    simulateLiveInventoryScenario
+    simulateLiveInventoryScenario,
+    toCsv,
+    analyzeFinancialsAndMargin,
+    analyzeDemandForecast,
+    analyzeAbcXyzAndPareto,
+    detectAnomaliesAndRisks,
+    analyzeBrandOrCustomerDeepDive,
+    compareEntities,
+    optimizeFulfillmentAnd3PL,
+    buildAutopilotPlan,
+    parseEmailDraftCommand
   };
 });

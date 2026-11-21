@@ -593,3 +593,258 @@
 @media (max-width: 720px) {
   .mk-shortcut-hint { display: none; }
 }
+
+/* ==========================================================================
+   MK v7.0 — Visual Analyst Charts, Tables, Brand Medallion & Export Toolbar
+   ========================================================================== */
+.mk-avatar-badge.mk-avatar-logo {
+  background: linear-gradient(180deg, #ffffff 0%, #faf6ee 100%) !important;
+  border: 1.5px solid rgba(212, 175, 99, 0.72) !important;
+  padding: 4px !important;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12) !important;
+  overflow: hidden;
+}
+.mk-avatar-badge.mk-avatar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.mk-pulse-chip.tone-ctx {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-color: #c7d2fe;
+  color: #3730a3;
+}
+
+.mk-chart-box {
+  margin: 10px 0 6px;
+  padding: 10px 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+.mk-chart-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #334155;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+.mk-chart-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+}
+.mk-chart-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 2.5px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 3px;
+}
+
+/* Horizontal Ranked Bar Chart */
+.mk-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.mk-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mk-bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+}
+.mk-bar-label {
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.mk-bar-val {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  font-size: 10.5px;
+}
+.mk-bar-track {
+  height: 7px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+.mk-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mk-bar-fill.tone-teal { background: linear-gradient(90deg, #0d9488, #087f78); }
+.mk-bar-fill.tone-ok { background: linear-gradient(90deg, #10b981, #059669); }
+.mk-bar-fill.tone-info { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+.mk-bar-fill.tone-warn { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.mk-bar-fill.tone-critical { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+/* SVG Sparkline & Forecast Chart */
+.mk-spark-svg {
+  width: 100%;
+  height: auto;
+  max-height: 158px;
+  display: block;
+  overflow: visible;
+}
+
+/* Keep Quick-Actions FAB cleanly hidden behind open MK drawer + Full-width Expanded Analyst Canvas */
+body.mk-brain-open .stark-fab-container,
+body.mk-brain-open #stark-fab-btn {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+.mk-brain-panel.expanded .mk-entry.brain {
+  max-width: 98% !important;
+  width: 98% !important;
+}
+.mk-brain-panel.expanded .mk-entry.brain .mk-entry-card {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.mk-spark-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Segmented Stacked Bar */
+.mk-stack-bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+.mk-stack-seg {
+  height: 100%;
+  min-width: 4px;
+}
+.mk-stack-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+.mk-stack-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #334155;
+}
+.mk-stack-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Executive Data Table inside Chat */
+.mk-data-table-box {
+  margin: 10px 0 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+.mk-data-table-title {
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #334155;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+.mk-data-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mk-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.mk-data-table th {
+  text-align: left;
+  padding: 6px 9px;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  border-bottom: 1px solid #e2e8f0;
+}
+.mk-data-table td {
+  padding: 6px 9px;
+  color: #0f172a;
+  border-bottom: 1px solid #f1f5f9;
+  white-space: nowrap;
+}
+.mk-data-table tr:last-child td { border-bottom: none; }
+.mk-data-table tr:hover td { background: #f8fafc; }
+
+/* One-Click Export & Copy Toolbar */
+.mk-export-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.mk-util-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font: 700 10.5px/1.2 "DM Sans", system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.mk-util-btn:hover {
+  background: #f0fdfa;
+  color: #0f766e;
+  border-color: #99f6e4;
+}
+.mk-util-btn.is-done {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #6ee7b7;
+}

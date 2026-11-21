@@ -141,7 +141,7 @@
   function bindBrain() {
     const panel=document.querySelector('.mk-brain-panel');if(!panel)return;
     const titleStrong = panel.querySelector('.mk-brain-title strong, .mk-header-titles h3');
-    if (titleStrong) titleStrong.textContent='MK — AI Co-Pilot';
+    if (titleStrong) titleStrong.textContent='MK — AI Analyst & Co-Pilot';
     document.querySelector('.mk-brain-launcher')?.setAttribute('aria-label','Open MK AI Co-Pilot');
     panel.setAttribute('aria-label','MK AI Co-Pilot');
     window.MKBrain?.restoreConversation?.();

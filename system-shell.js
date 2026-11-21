@@ -885,7 +885,7 @@
   if (!document.querySelector('script[src*="tasks.js"]')) {
     const loadTasks=()=>{const tasks=document.createElement('script');tasks.src=S.url('tasks.js?v=20261121-mk7');tasks.onerror=()=>notice('Task reminders could not load. Reload the workspace to try again.',true);document.head.append(tasks);};
     if (!window.MKCopilotCore && !document.querySelector('script[src*="mk-copilot-core.js"]')) {
-      const core=document.createElement('script');core.src=S.url('mk-copilot-core.js?v=20261121-tasks3');core.onload=loadTasks;core.onerror=loadTasks;document.head.append(core);
+      const core=document.createElement('script');core.src=S.url('mk-copilot-core.js?v=20261121-mk70');core.onload=loadTasks;core.onerror=loadTasks;document.head.append(core);
     } else loadTasks();
   }
 
