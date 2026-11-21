@@ -163,7 +163,7 @@
       if(!Array.isArray(s.tasks) || s.tasks.length>10000)throw new Error('Invalid task records.');
       const taskIds=new Set();
       for(const task of s.tasks){
-        if(!task || typeof task.id!=='string' || !task.id || taskIds.has(task.id) || typeof task.title!=='string' || !task.title.trim() || task.title.length>160 || typeof task.notes!=='string' || task.notes.length>20000 || !['OPEN','IN_PROGRESS','DONE'].includes(task.status) || !['LOW','NORMAL','HIGH'].includes(task.priority) || !Array.isArray(task.comments) || task.comments.length>200)throw new Error('Invalid task records.');
+        if(!task || typeof task.id!=='string' || !task.id || taskIds.has(task.id) || typeof task.title!=='string' || !task.title.trim() || task.title.length>160 || typeof task.notes!=='string' || task.notes.length>20000 || !['OPEN','IN_PROGRESS','DONE'].includes(task.status) || !['LOW','NORMAL','HIGH','CRITICAL'].includes(task.priority) || !Array.isArray(task.comments) || task.comments.length>200)throw new Error('Invalid task records.');
         if(task.version!==undefined && (!Number.isSafeInteger(task.version) || task.version<0))throw new Error('Invalid task version.');
         taskIds.add(task.id);
         for(const value of [task.dueAt,task.reminderAt,task.createdAt,task.updatedAt])if(value && !Number.isFinite(Date.parse(value)))throw new Error('Invalid task date.');

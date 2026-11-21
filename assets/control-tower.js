@@ -85,7 +85,7 @@
     return `<div class="workspace-view-switch" role="group" aria-label="Workspace view">
       ${[['operations','Operations'],['modules','Modules'],...(showAnalytics?[['telemetry','Analytics']]:[])].map(([id,label])=>`<button type="button" id="workspace-view-${id}" class="workspace-view-tab ${viewMode===id?'active':''}" data-view="${id}" aria-pressed="${viewMode===id}">${label}</button>`).join('')}
       <a class="workspace-view-tab" href="${S.url('mail.html')}">MK97 Mail</a>
-      <a class="workspace-view-tab" href="${S.url('tasks.html')}">Tasks</a>
+      <a class="workspace-view-tab" href="${S.url('tasks.html')}">Tasks${(() => { const n = (S.getState().tasks || []).filter(t => t.status !== 'DONE').length; return n > 0 ? ` <span class="workspace-task-pill">${n}</span>` : ''; })()}</a>
     </div>`;
   }
 

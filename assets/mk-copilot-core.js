@@ -221,5 +221,883 @@
     if(account && (!account.lastCommunicationAt || account.lastCommunicationAt<=message.occurredAt)){account.contactStatus=message.direction==='OUTBOUND'?'Contacted':'Responded';account.lastCommunicationAt=message.occurredAt;}
     return {duplicate:false,message,task,orderId:order.id,followUp:parsed};
   }
-  return {VERSION,civilDay,dateOnly,dueTime,parseFollowUp,intent,remaining,analyze,demandSeries,applyCommunication};
+
+  // ---- Task Reference Analysis, Priority Ordering & Autonomous Mail/Inventory Reconciliation ----
+  const DEFAULT_TEAM_ROSTER = [
+    { id: 'usr_manoj', name: 'Manoj Manne', email: 'supply.chain@mk97.com', role: 'Supply Chain Director', avatar: 'MM', color: '#087f78' },
+    { id: 'usr_elena', name: 'Elena Rostova', email: 'elena.rostova@mk97.com', role: 'Procurement Lead', avatar: 'ER', color: '#2563eb' },
+    { id: 'usr_marcus', name: 'Marcus Vance', email: 'marcus.vance@mk97.com', role: 'Logistics & 3PL Manager', avatar: 'MV', color: '#7c3aed' },
+    { id: 'usr_sarah', name: 'Sarah Jenkins', email: 'sarah.jenkins@mk97.com', role: 'Order Operations Lead', avatar: 'SJ', color: '#d97706' },
+    { id: 'usr_david', name: 'David Kim', email: 'david.kim@mk97.com', role: 'Inventory & Planning Analyst', avatar: 'DK', color: '#0284c7' },
+    { id: 'usr_priya', name: 'Priya Nair', email: 'priya.nair@mk97.com', role: 'Carrier & Dispatch Coordinator', avatar: 'PN', color: '#059669' }
+  ];
+
+  const NON_TRACKING_WORDS = new Set(['PENDING','NEEDED','REQUEST','REQUESTED','NUMBER','UPDATE','PROCESSING','DISPATCH','UNKNOWN','AVAILABLE','REQUIRED','CONFIRM','CONFIRMED','DELIVERED','SHIPPED','TRANSIT','DELAYED','READY','AUDIT','DAILY','CHECK','COMPLETED','PRIORITY','TRACKING','ORDER','ORDERS','VENDOR','CONSIGNMENT']);
+  const escRegex = s => String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const normToken = s => String(s || '').trim().toUpperCase().replace(/^#+/, '');
+
+  function extractTrackingNumber(text) {
+    const raw = String(text || '');
+    if (!raw.trim()) return '';
+    const patterns = [
+      /\b(1Z[A-Z0-9]{8,20})\b/i,
+      /\b(DHL[-]?[A-Z0-9]{6,16})\b/i,
+      /\b((?:TRK|FDX|ARX|AWB|LL-FRT)[-]?[A-Z0-9-]{4,20})\b/i,
+      /\b(?:ups|fedex|dhl|usps|aramex|carrier)\s*(?:#|tracking(?:\s*(?:number|no\.?|#))?)?\s*[:=]?\s*([A-Z0-9][A-Z0-9-]{5,24})\b/i,
+      /\btracking(?:\s*(?:number|no\.?|#|id|code))?\s*(?:is|:|=|#|-)?\s*([A-Z0-9][A-Z0-9-]{5,24})\b/i
+    ];
+    for (const re of patterns) {
+      const m = raw.match(re);
+      if (!m || !m[1]) continue;
+      const cand = m[1].trim().replace(/[.,;:!?)]+$/, '');
+      const upper = cand.toUpperCase();
+      if (NON_TRACKING_WORDS.has(upper)) continue;
+      if (/^(PO-|ORD-|SO-|3PL-|VI-|RPT-|INV-|CC_|WAVE-)/i.test(upper)) continue;
+      const digits = (upper.match(/\d/g) || []).length;
+      if (digits < 3) continue;
+      return cand;
+    }
+    return '';
+  }
+
+  function tokenInText(haystack, token) {
+    const t = String(token || '').trim();
+    if (!t || t.length < 3) return false;
+    const re = new RegExp('(^|[^A-Za-z0-9])' + escRegex(t) + '($|[^A-Za-z0-9])', 'i');
+    return re.test(haystack);
+  }
+
+  function extractTaskReferences(task, state, mailThreads = []) {
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    const userComments = Array.isArray(task?.comments)
+      ? task.comments.filter(c => c && !['Task Reminder', 'MK Co-Pilot'].includes(c.author)).slice(-5).map(c => c.text || '')
+      : [];
+    const hay = [
+      task?.title || '',
+      task?.notes || '',
+      task?.sourceKey || '',
+      task?.autoRef || '',
+      task?.orderId || '',
+      ...userComments
+    ].join('\n');
+
+    const signals = {
+      isEscalation: /\b(escalat\w*|urgent|critical|asap|emergency|executive|vip|sla\s*breach|complaint|ceo|blocked|blocker|hold\s*release|dispute|chargeback|high\s*priority)\b/i.test(hay),
+      isTrackingRequest: /\b(tracking\s*(?:number|#|no\.?|request|info|details|update)?|provide\s+(?:the\s+)?tracking|need\s+tracking|send\s+tracking|share\s+tracking|awb|waybill|consignment)\b/i.test(hay),
+      isProcurementNeed: /\b(vendor\s*po|place\s*(?:a\s*)?(?:vendor\s*)?po|reorder|replenish\w*|low\s*stock|stockout|safety\s*stock|purchase\s*order|restock)\b/i.test(hay),
+      isShortageOrDelay: /\b(shortage|shortfall|backorder|delay\w*|late|missed|overdue|variance|damaged|exception|discrepanc\w*)\b/i.test(hay)
+    };
+
+    const matchedOrders = [];
+    const seenOrders = new Set();
+    for (const o of e.orders || []) {
+      const candidates = [o.id, o.po, o.orderNumber].filter(Boolean);
+      const basePo = String(o.po || '').replace(/-(HOLD|R\d+)$/i, '');
+      if (basePo && basePo.length >= 5) candidates.push(basePo);
+      const hit = (task?.orderId && task.orderId === o.id) || candidates.some(c => tokenInText(hay, c));
+      if (hit && !seenOrders.has(o.id)) { seenOrders.add(o.id); matchedOrders.push(o); }
+    }
+
+    const matchedPOs = [];
+    const seenPOs = new Set();
+    for (const p of e.purchaseOrders || []) {
+      const numMatch = String(p.po || '').match(/(\d{5,})/);
+      const numSuffix = numMatch ? numMatch[1] : '';
+      const hit = tokenInText(hay, p.po) || tokenInText(hay, p.id) || (numSuffix && new RegExp('(?:po\\s*#?\\s*|#)' + escRegex(numSuffix) + '\\b', 'i').test(hay));
+      if (hit && !seenPOs.has(p.id)) { seenPOs.add(p.id); matchedPOs.push(p); }
+    }
+
+    const matchedSkus = [];
+    const seenSkus = new Set();
+    const addSku = item => { if (item && !seenSkus.has(item.sku)) { seenSkus.add(item.sku); matchedSkus.push(item); } };
+    for (const item of e.inventory || []) {
+      const direct = tokenInText(hay, item.sku) || (item.model && item.model.length >= 4 && tokenInText(hay, item.model)) || (task?.autoEntityId && task.autoEntityId === item.sku);
+      if (direct) addSku(item);
+    }
+
+    // Cross-link SKUs mentioned by matched POs and Orders
+    const invMap = new Map((e.inventory || []).map(i => [i.sku, i]));
+    const relatedSkus = new Set([...seenSkus]);
+    for (const p of matchedPOs) for (const line of p.lines || []) if (invMap.has(line.sku)) relatedSkus.add(line.sku);
+    for (const o of matchedOrders) for (const line of o.lines || []) if (invMap.has(line.sku)) relatedSkus.add(line.sku);
+
+    // Cross-link Receipts & Putaway
+    const matchedReceipts = [];
+    const seenReceipts = new Set();
+    for (const r of l.receipts || []) {
+      const hit = tokenInText(hay, r.id) || tokenInText(hay, r.po) || tokenInText(hay, r.asn) || tokenInText(hay, r.invoice) || matchedPOs.some(p => normToken(p.po) === normToken(r.po));
+      if (hit && !seenReceipts.has(r.id)) { seenReceipts.add(r.id); matchedReceipts.push(r); }
+    }
+
+    const matchedPutaway = (l.putaway || []).filter(pw => pw.status !== 'DONE' && (matchedReceipts.some(r => r.id === pw.receiptId) || seenSkus.has(pw.sku)));
+
+    // Cross-link Cycle Counts
+    const matchedCycleCounts = (l.cycleCounts || []).filter(cc =>
+      tokenInText(hay, cc.id) || (cc.status === 'VARIANCE' && relatedSkus.has(cc.sku))
+    );
+
+    // Cross-link 3PL Shipments
+    const matchedTplShipments = (l.tplShipments || []).filter(shp =>
+      tokenInText(hay, shp.id) || tokenInText(hay, shp.orderId) || (task?.autoEntityId && task.autoEntityId === shp.id) || (shp.status === 'DELAYED' && seenSkus.has(shp.sku))
+    );
+
+    // Cross-link Reconciliations & Invoice Reviews & Returns
+    const matchedReconciliations = (l.reconciliations || []).filter(rec => rec.status !== 'RESOLVED' && seenSkus.has(rec.sku));
+    const matchedInvoices = (state?.invoiceReviews || []).filter(inv =>
+      tokenInText(hay, inv.number) || tokenInText(hay, inv.poReference) || matchedPOs.some(p => p.id === inv.poId)
+    );
+    const matchedReturns = (state?.customerReturns || []).filter(ret =>
+      tokenInText(hay, ret.id) || tokenInText(hay, ret.orderRef) || matchedOrders.some(o => normToken(o.po) === normToken(ret.orderRef))
+    );
+
+    // Downstream open customer orders impacted by matched Vendor POs
+    const impactedOrders = [];
+    if (matchedPOs.length) {
+      const poSkus = new Set(matchedPOs.flatMap(p => (p.lines || []).map(ln => ln.sku)));
+      for (const o of e.orders || []) {
+        if (CLOSED.has(o.status) || seenOrders.has(o.id)) continue;
+        if ((o.lines || []).some(ln => poSkus.has(ln.sku))) impactedOrders.push(o);
+      }
+    }
+
+    // Match Mail Threads (prefer primary/inbound threads & deduplicate by reference code)
+    const matchedMails = [];
+    const seenMails = new Set();
+    const seenMailRefs = new Set();
+    const orderedMails = [...(mailThreads || [])].sort((a, b) => Number(a.direction === 'outbound' || a.folder === 'sent') - Number(b.direction === 'outbound' || b.folder === 'sent'));
+    for (const t of orderedMails) {
+      const poRef = normToken(t.related?.poNumber || t.shipmentDetails?.poNumber || '');
+      const hit = (task?.linkedMailId && task.linkedMailId === t.id) ||
+        (task?.autoEntityId && task.autoEntityId === t.id) ||
+        (poRef && poRef.length >= 4 && tokenInText(hay, poRef)) ||
+        (t.related?.poNumber && tokenInText(hay, t.related.poNumber));
+      if (!hit || seenMails.has(t.id)) continue;
+      if (poRef && seenMailRefs.has(poRef) && t.id !== task?.linkedMailId) continue;
+      seenMails.add(t.id);
+      if (poRef) seenMailRefs.add(poRef);
+      matchedMails.push(t);
+    }
+
+    // Match Vendors & Accounts directly named
+    const matchedVendors = (e.vendors || []).filter(v =>
+      (v.name && v.name.length >= 4 && tokenInText(hay, v.name)) || matchedPOs.some(p => p.vendorId === v.id)
+    );
+    const matchedAccounts = (e.accounts || []).filter(a =>
+      (a.name && a.name.length >= 5 && tokenInText(hay, a.name)) || matchedOrders.some(o => o.accountId === a.id)
+    );
+
+    return {
+      signals,
+      matchedOrders,
+      impactedOrders,
+      matchedPOs,
+      matchedSkus,
+      matchedReceipts,
+      matchedPutaway,
+      matchedCycleCounts,
+      matchedTplShipments,
+      matchedReconciliations,
+      matchedInvoices,
+      matchedReturns,
+      matchedMails,
+      matchedVendors,
+      matchedAccounts
+    };
+  }
+
+  function analyzeTaskImportance(task, state, options = {}) {
+    const nowIso = options.now || new Date().toISOString();
+    const nowMs = Date.parse(nowIso);
+    const timeZone = options.timeZone || state?.copilotSettings?.timeZone || 'America/New_York';
+    const today = civilDay(nowIso, timeZone);
+    const copilotReport = options.copilotReport || analyze(state || { enterprise: {}, logistics: {} }, { now: nowIso, timeZone });
+    const mailThreads = options.mailThreads || [];
+    const e = state?.enterprise || {};
+
+    const extracted = extractTaskReferences(task, state, mailThreads);
+    const { signals } = extracted;
+
+    let score = 18;
+    const reasons = [];
+    const references = [];
+    const addRef = ref => {
+      if (!references.some(r => r.type === ref.type && r.id === ref.id)) references.push(ref);
+    };
+
+    // 1. Semantic / Operational Signals
+    if (signals.isEscalation) {
+      score += 24;
+      reasons.push('Escalation / urgent operational flag detected in task subject or notes.');
+    }
+    if (signals.isShortageOrDelay) {
+      score += 11;
+      reasons.push('Shortage, delay, or variance risk detected.');
+    }
+    if (signals.isTrackingRequest) {
+      score += 11;
+      reasons.push('Active tracking request requires timely dispatch confirmation.');
+    }
+    if (signals.isProcurementNeed) {
+      score += 9;
+    }
+
+    // 2. Due Date / Overdue Urgency
+    const dueMs = validTime(task?.dueAt);
+    if (dueMs !== null) {
+      const hoursLeft = (dueMs - nowMs) / 3600000;
+      if (hoursLeft < 0) {
+        score += 22;
+        reasons.push(`Task is overdue by ${Math.max(1, Math.round(Math.abs(hoursLeft)))} hour(s).`);
+      } else if (hoursLeft <= 24) {
+        score += 12;
+        reasons.push(`Due within ${Math.max(1, Math.round(hoursLeft))} hour(s).`);
+      } else if (hoursLeft <= 72) {
+        score += 7;
+        reasons.push('Due within the next 3 days.');
+      } else if (hoursLeft <= 168) {
+        score += 3;
+      }
+    }
+
+    // 3. Explicit Priority Hint & Multi-Person Team Coordination
+    if (task?.priority === 'CRITICAL') score += 12;
+    else if (task?.priority === 'HIGH') score += 7;
+    else if (task?.priority === 'LOW') score -= 8;
+
+    const assigneeCount = Array.isArray(task?.assignees) ? task.assignees.length : 0;
+    if (assigneeCount >= 2) {
+      score += 4;
+      reasons.push(`Cross-team coordination task involving ${assigneeCount} people.`);
+    }
+
+    // 4. Deep Analysis of Matched Customer Orders
+    const assessmentById = new Map((copilotReport.orders || []).map(a => [a.orderId, a]));
+    const acctById = new Map((e.accounts || []).map(a => [a.id, a]));
+    for (const order of extracted.matchedOrders) {
+      const assess = assessmentById.get(order.id);
+      const acct = acctById.get(order.accountId);
+      const orderVal = (order.lines || []).reduce((sum, ln) => sum + positive(ln.qty) * positive(ln.price), 0);
+      const code = order.po || order.orderNumber || order.id;
+      const isOpen = !CLOSED.has(order.status);
+
+      if (assess) {
+        if (assess.urgency === 'Critical') { score += 32; reasons.push(`Linked Order #${code} is rated CRITICAL by MK Co-Pilot (${assess.reasons[0] || 'deadline at risk'}).`); }
+        else if (assess.urgency === 'High') { score += 22; reasons.push(`Linked Order #${code} is HIGH urgency (${assess.reasons[0] || 'supply constrained'}).`); }
+        else if (assess.urgency === 'Medium') { score += 13; reasons.push(`Linked Order #${code} is MEDIUM urgency (${order.status}).`); }
+        else { score += 8; reasons.push(`Linked open Order #${code} (${order.status}${acct ? ' · ' + acct.name : ''}).`); }
+        if (assess.shortfall > 0) {
+          score += 15;
+          reasons.push(`Order #${code} has ${assess.shortfall} uncovered shortfall unit(s) in the FIFO queue.`);
+        }
+      } else if (isOpen) {
+        score += 12;
+        reasons.push(`Linked open Order #${code} (${order.status}).`);
+      }
+
+      if (isOpen && ['PICKING', 'PACKING'].includes(order.status) && !extractTrackingNumber(order.tracking)) {
+        score += 10;
+        reasons.push(`Order #${code} is in ${order.status} stage without carrier tracking assigned.`);
+      }
+      if (acct?.status === 'REVIEW') {
+        score += 8;
+        reasons.push(`Customer account ${acct.name} is under credit REVIEW.`);
+      }
+      if (orderVal >= 10000) {
+        score += 6;
+        reasons.push(`High-value order exposure ($${Math.round(orderVal).toLocaleString()}).`);
+      }
+
+      addRef({
+        type: 'ORDER',
+        id: order.id,
+        code: '#' + code,
+        label: `Order #${code}${acct ? ' · ' + acct.name : ''}`,
+        path: 'all-open-orders.html?search=' + encodeURIComponent(code),
+        status: order.status,
+        severity: assess?.urgency === 'Critical' ? 'critical' : assess?.urgency === 'High' ? 'high' : 'normal',
+        detail: `${order.status}${order.inHandsDate ? ' · In-hands ' + order.inHandsDate : ''}${orderVal ? ' · $' + Math.round(orderVal).toLocaleString() : ''}${order.tracking ? ' · Trk ' + order.tracking : ' · No tracking'}`
+      });
+    }
+
+    // 5. Deep Analysis of Matched Vendor Purchase Orders
+    const vendorById = new Map((e.vendors || []).map(v => [v.id, v]));
+    const slaByVendor = new Map((e.slaLogs || []).map(s => [s.vendorId, s]));
+    for (const po of extracted.matchedPOs) {
+      const vendor = vendorById.get(po.vendorId);
+      const sla = slaByVendor.get(po.vendorId);
+      const openQty = (po.lines || []).reduce((s, ln) => s + Math.max(0, n(ln.qty) - n(ln.received) - n(ln.cancelledQty)), 0);
+      const poValue = (po.lines || []).reduce((s, ln) => s + positive(ln.qty) * positive(ln.cost), 0);
+      const etaDay = dateOnly(po.eta);
+      const daysToEta = etaDay ? Math.round((Date.parse(etaDay) - Date.parse(today)) / DAY) : null;
+      const isOpenPO = !['RECEIVED', 'CANCELLED', 'CLOSED', 'VOID'].includes(po.status);
+
+      if (isOpenPO) {
+        score += 14;
+        if (daysToEta !== null && daysToEta < 0) {
+          score += 22;
+          reasons.push(`Vendor PO ${po.po} (${vendor?.name || 'Supplier'}) ETA is overdue by ${Math.abs(daysToEta)} day(s).`);
+        } else if (daysToEta !== null && daysToEta <= 3) {
+          score += 14;
+          reasons.push(`Vendor PO ${po.po} (${vendor?.name || 'Supplier'}) is arriving in ${daysToEta === 0 ? 'today' : daysToEta + ' day(s)'} (${openQty} units open, $${Math.round(poValue).toLocaleString()}).`);
+        } else {
+          reasons.push(`Open Vendor PO ${po.po} (${po.status}, ${openQty} units · ${vendor?.name || 'Supplier'}).`);
+        }
+        if (!extractTrackingNumber(po.tracking) && po.status !== 'DRAFT') {
+          score += 8;
+          reasons.push(`Vendor PO ${po.po} has no carrier tracking registered yet.`);
+        }
+      }
+      if (vendor?.status === 'AUDIT_WARNING' || (sla && sla.onTimePct < 92)) {
+        score += 12;
+        reasons.push(`Supplier ${vendor?.name || po.vendorId} flagged for SLA/compliance risk (${sla ? sla.onTimePct + '% on-time' : vendor?.status}).`);
+      }
+      if (extracted.impactedOrders.length > 0) {
+        score += 12;
+        reasons.push(`${extracted.impactedOrders.length} open customer order(s) rely on SKU(s) carried by ${po.po} (${extracted.impactedOrders.slice(0, 3).map(o => '#' + o.po).join(', ')}).`);
+      }
+
+      addRef({
+        type: 'VENDOR_PO',
+        id: po.id,
+        code: po.po,
+        label: `${po.po} · ${vendor?.name || 'Vendor PO'}`,
+        path: 'procurement/index.html?po=' + encodeURIComponent(po.po),
+        status: po.status,
+        severity: (daysToEta !== null && daysToEta <= 1) || vendor?.status === 'AUDIT_WARNING' ? 'high' : 'normal',
+        detail: `${po.status} · ${openQty} open units · $${Math.round(poValue).toLocaleString()}${etaDay ? ' · ETA ' + etaDay : ''}${po.tracking ? ' · ' + po.tracking : ' · No tracking'}`
+      });
+    }
+
+    // 6. Deep Analysis of Matched Inventory SKUs
+    for (const item of extracted.matchedSkus) {
+      const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+      const safety = positive(item.safety);
+      const openInbound = (e.purchaseOrders || [])
+        .filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(p.status))
+        .reduce((sum, p) => sum + (p.lines || []).filter(ln => ln.sku === item.sku).reduce((s, ln) => s + Math.max(0, n(ln.qty) - n(ln.received) - n(ln.cancelledQty)), 0), 0);
+
+      if (free <= 0 && openInbound === 0) {
+        score += 28;
+        reasons.push(`SKU ${item.model || item.sku} is OUT OF STOCK (0 free, 0 inbound PO units).`);
+      } else if (safety > 0 && (free + openInbound) < safety) {
+        score += 22;
+        reasons.push(`SKU ${item.model || item.sku} is below safety stock (${free} free + ${openInbound} inbound vs ${safety} safety floor — deficit ${safety - (free + openInbound)} units).`);
+      } else if (safety > 0 && free < safety) {
+        score += 10;
+        reasons.push(`SKU ${item.model || item.sku} free stock (${free}) is below safety (${safety}), covered by ${openInbound} inbound PO units.`);
+      }
+
+      addRef({
+        type: 'SKU',
+        id: item.sku,
+        code: item.model || item.sku,
+        label: `${item.model || item.sku} · ${item.brand || ''} ${item.title || ''}`.trim(),
+        path: 'warehouse-management/inventory-bins.html?sku=' + encodeURIComponent(item.sku),
+        status: (safety > 0 && free < safety) ? 'BELOW_SAFETY' : 'IN_STOCK',
+        severity: (safety > 0 && (free + openInbound) < safety) ? 'high' : 'normal',
+        detail: `Free: ${free} · On-hand: ${n(item.onHand)} · Reserved: ${n(item.reserved)} · Safety: ${safety} · Inbound PO: ${openInbound}`
+      });
+    }
+
+    // 7. Linked Receipts, Putaway, Cycle Counts, 3PL Shipments, Invoices
+    for (const r of extracted.matchedReceipts) {
+      if (r.status === 'ARRIVED') {
+        score += 14;
+        reasons.push(`Inbound receipt ${r.id} (${r.po}) has ARRIVED at Dock ${r.dock || '—'} awaiting completion.`);
+      }
+      addRef({
+        type: 'RECEIPT',
+        id: r.id,
+        code: r.asn || r.id,
+        label: `Receipt ${r.po} · Dock ${r.dock || '—'}`,
+        path: 'warehouse-management/receiving.html',
+        status: r.status,
+        severity: r.status === 'ARRIVED' ? 'high' : 'normal',
+        detail: `${r.status} · ${r.vendor || ''} · $${Math.round(positive(r.poTotal)).toLocaleString()}`
+      });
+    }
+
+    for (const pw of extracted.matchedPutaway) {
+      score += 8;
+      reasons.push(`Open warehouse putaway ${pw.id} (${pw.qty} units ${pw.fromBin} → ${pw.toBin}, ${pw.assignee}).`);
+    }
+
+    for (const cc of extracted.matchedCycleCounts) {
+      if (cc.status === 'VARIANCE') {
+        const diff = n(cc.countedQty) - n(cc.systemQty);
+        score += 14;
+        reasons.push(`Cycle count ${cc.id} (${cc.binId}) has an unresolved stock variance (${diff > 0 ? '+' : ''}${diff} units).`);
+      }
+      addRef({
+        type: 'CYCLE_COUNT',
+        id: cc.id,
+        code: cc.id,
+        label: `Cycle Count ${cc.id} · ${cc.binId}`,
+        path: 'warehouse-management/cycle-counts.html',
+        status: cc.status,
+        severity: cc.status === 'VARIANCE' ? 'high' : 'normal',
+        detail: `${cc.status} · System ${cc.systemQty} vs Counted ${cc.countedQty ?? 'Pending'}`
+      });
+    }
+
+    for (const shp of extracted.matchedTplShipments) {
+      if (shp.status === 'DELAYED') {
+        score += 22;
+        reasons.push(`3PL Shipment ${shp.id} (${shp.orderId}) is DELAYED with ${shp.tracking ? 'tracking ' + shp.tracking : 'no carrier tracking'}.`);
+      } else if (!extractTrackingNumber(shp.tracking)) {
+        score += 10;
+        reasons.push(`3PL Shipment ${shp.id} (${shp.status}) has no tracking assigned yet.`);
+      }
+      addRef({
+        type: '3PL',
+        id: shp.id,
+        code: shp.id,
+        label: `3PL ${shp.id} · ${shp.orderId}`,
+        path: '3pl-management/shipments.html',
+        status: shp.status,
+        severity: shp.status === 'DELAYED' ? 'critical' : 'normal',
+        detail: `${shp.status} · ${shp.service} · ${shp.tracking || 'Tracking missing'}`
+      });
+    }
+
+    for (const inv of extracted.matchedInvoices) {
+      if (inv.status === 'EXCEPTION') {
+        score += 15;
+        reasons.push(`Invoice ${inv.number} (${inv.poReference}) has ${(inv.evidence?.flags || []).length} matching exception(s).`);
+      }
+      addRef({
+        type: 'INVOICE',
+        id: inv.id,
+        code: inv.number,
+        label: `Invoice ${inv.number}`,
+        path: 'workspace.html?view=operations&section=invoices&review=' + encodeURIComponent(inv.id),
+        status: inv.status,
+        severity: inv.status === 'EXCEPTION' ? 'high' : 'normal',
+        detail: `${inv.status} · ${inv.poReference}`
+      });
+    }
+
+    // 8. Linked Mail Threads
+    for (const mail of extracted.matchedMails) {
+      const mText = `${mail.subject || ''} ${mail.snippet || ''} ${mail.body || ''}`;
+      if (mail.unread && /eod|midday|urgent|priority|tracking request/i.test(mText)) {
+        score += 15;
+        reasons.push(`Linked unread email from ${mail.senderName} requests urgent/same-day response.`);
+      } else if (mail.unread) {
+        score += 7;
+        reasons.push(`Linked unread email thread: "${mail.subject}".`);
+      }
+      addRef({
+        type: 'MAIL',
+        id: mail.id,
+        code: mail.related?.poNumber || mail.senderName,
+        label: `Mail: ${mail.subject}`,
+        path: 'mail.html?thread=' + encodeURIComponent(mail.id),
+        status: mail.unread ? 'UNREAD' : 'READ',
+        severity: mail.unread ? 'high' : 'normal',
+        detail: `From ${mail.senderName} (${mail.senderEmail}) · ${mail.related?.tracking ? 'Trk: ' + mail.related.tracking : mail.timestamp}`
+      });
+    }
+
+    const boundedScore = Math.max(8, Math.min(99, Math.round(score)));
+    const tier = boundedScore >= 80 ? 'CRITICAL' : boundedScore >= 60 ? 'HIGH' : boundedScore >= 38 ? 'MEDIUM' : 'LOW';
+
+    let category = task?.category || '';
+    if (!category || category === 'GENERAL') {
+      if (signals.isEscalation) category = 'ESCALATION';
+      else if (task?.autoTrigger === 'tracking_request' || signals.isTrackingRequest) category = 'TRACKING';
+      else if (task?.autoTrigger === 'low_stock_po' || extracted.matchedPOs.length || signals.isProcurementNeed) category = 'PROCUREMENT';
+      else if (extracted.matchedOrders.length) category = 'ORDER';
+      else if (extracted.matchedTplShipments.length || extracted.matchedReceipts.length || extracted.matchedCycleCounts.length) category = 'WAREHOUSE';
+      else if (extracted.matchedSkus.length) category = 'INVENTORY';
+      else category = 'GENERAL';
+    }
+
+    if (!reasons.length) {
+      reasons.push('Standard operational task — no critical ERP exceptions or tight deadlines linked yet.');
+    }
+
+    let recommendedAction = 'Review details, confirm owner assignments, and update status once complete.';
+    if (task?.autoTrigger === 'tracking_request' || (signals.isTrackingRequest && extracted.matchedMails.length)) {
+      recommendedAction = 'Reply to the linked email in MK97 Mail with the carrier tracking number — MK Co-Pilot will auto-verify and close this task.';
+    } else if (task?.autoTrigger === 'low_stock_po' || (extracted.matchedSkus.length && signals.isProcurementNeed)) {
+      recommendedAction = 'Issue a covering Vendor PO in Procurement — MK Co-Pilot will automatically resolve this task once inbound supply covers safety stock.';
+    } else if (extracted.matchedPutaway.length) {
+      recommendedAction = `Complete dock putaway for ${extracted.matchedReceipts[0]?.po || extracted.matchedPOs[0]?.po || 'arrived PO'} so stock is released to open customer orders.`;
+    } else if (extracted.matchedTplShipments.some(s => s.status === 'DELAYED')) {
+      recommendedAction = 'Contact the 3PL node immediately to obtain carrier tracking and clear the dispatch delay.';
+    } else if (extracted.matchedOrders.length && signals.isEscalation) {
+      recommendedAction = `Expedite Order #${extracted.matchedOrders[0].po} and send an immediate reminder/status check to all involved team members.`;
+    } else if (extracted.matchedPOs.length) {
+      recommendedAction = `Confirm supplier dispatch ETA & tracking for ${extracted.matchedPOs[0].po} and align warehouse receiving dock slot.`;
+    } else if (dueMs !== null && dueMs < nowMs) {
+      recommendedAction = 'Send an immediate team reminder and either complete or reschedule this overdue task.';
+    }
+
+    return {
+      score: boundedScore,
+      tier,
+      category,
+      references,
+      reasons: [...new Set(reasons)].slice(0, 6),
+      recommendedAction,
+      signals,
+      analyzedAt: nowIso,
+      erpSummary: {
+        matchedOrders: extracted.matchedOrders.length,
+        impactedOrders: extracted.impactedOrders.length,
+        matchedPOs: extracted.matchedPOs.length,
+        matchedSkus: extracted.matchedSkus.length,
+        matchedMails: extracted.matchedMails.length,
+        matchedLogistics: extracted.matchedReceipts.length + extracted.matchedCycleCounts.length + extracted.matchedTplShipments.length
+      }
+    };
+  }
+
+  function prioritizeTasks(tasks, state, options = {}) {
+    const nowIso = options.now || new Date().toISOString();
+    const timeZone = options.timeZone || state?.copilotSettings?.timeZone || 'America/New_York';
+    const copilotReport = options.copilotReport || analyze(state || { enterprise: {}, logistics: {} }, { now: nowIso, timeZone });
+    const sharedOpts = { ...options, now: nowIso, timeZone, copilotReport };
+
+    const enriched = (tasks || []).map(task => ({
+      task,
+      analysis: analyzeTaskImportance(task, state, sharedOpts)
+    }));
+
+    const active = enriched.filter(x => x.task.status !== 'DONE');
+    const done = enriched.filter(x => x.task.status === 'DONE');
+
+    active.sort((a, b) => {
+      if (b.analysis.score !== a.analysis.score) return b.analysis.score - a.analysis.score;
+      const aDue = validTime(a.task.dueAt) ?? Infinity;
+      const bDue = validTime(b.task.dueAt) ?? Infinity;
+      if (aDue !== bDue) return aDue - bDue;
+      return String(b.task.updatedAt || '').localeCompare(String(a.task.updatedAt || ''));
+    });
+
+    active.forEach((item, idx) => { item.analysis.rank = idx + 1; });
+    done.sort((a, b) => String(b.task.completedAt || b.task.updatedAt || '').localeCompare(String(a.task.completedAt || a.task.updatedAt || '')));
+    done.forEach(item => { item.analysis.rank = null; });
+
+    return [...active, ...done];
+  }
+
+  function normalizeSubjectKey(subj) {
+    return String(subj || '').toLowerCase().replace(/^(?:re|fwd|fw)\s*:\s*/gi, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  function findTrackingResolutionForMail(inbound, allMails, state) {
+    const directTrk = extractTrackingNumber(inbound.shipmentDetails?.trackingNumber || '') || extractTrackingNumber(inbound.related?.tracking || '');
+    if (directTrk) return { tracking: directTrk, via: 'email record update' };
+
+    const inboundPo = normToken(inbound.related?.poNumber || inbound.shipmentDetails?.poNumber || '');
+    const inboundSubj = normalizeSubjectKey(inbound.subject);
+    const senderEmail = String(inbound.senderEmail || '').toLowerCase();
+
+    // Check outbound emails for a reply containing a tracking number
+    for (const out of allMails || []) {
+      const isOut = out.direction === 'outbound' || out.folder === 'sent';
+      if (!isOut || out.id === inbound.id) continue;
+      const outHay = `${out.subject || ''}\n${out.body || ''}\n${out.snippet || ''}\n${out.related?.tracking || ''}\n${out.shipmentDetails?.trackingNumber || ''}`;
+      const trk = extractTrackingNumber(outHay);
+      if (!trk) continue;
+
+      const outTo = String(out.to || '').toLowerCase();
+      const outSubj = normalizeSubjectKey(out.subject);
+      const matchesThread = (out.replyToThreadId && out.replyToThreadId === inbound.id) ||
+        (inboundPo && inboundPo.length >= 4 && tokenInText(outHay, inboundPo)) ||
+        (inboundSubj && inboundSubj.length >= 6 && outSubj.includes(inboundSubj)) ||
+        (senderEmail && outTo.includes(senderEmail));
+      if (matchesThread) {
+        return { tracking: trk, via: `MK97 Mail reply ("${out.subject || 'Outbound Reply'}")` };
+      }
+    }
+
+    // Check ERP orders & 3PL shipments matching this email's PO ref
+    if (inboundPo && inboundPo.length >= 4) {
+      for (const o of state?.enterprise?.orders || []) {
+        const codes = [o.po, o.orderNumber, o.id].map(normToken);
+        if (codes.some(c => c && (c === inboundPo || c.includes(inboundPo) || inboundPo.includes(c)))) {
+          const trk = extractTrackingNumber(o.tracking);
+          if (trk) return { tracking: trk, via: `Order #${o.po} shipment update` };
+        }
+      }
+      for (const shp of state?.logistics?.tplShipments || []) {
+        const codes = [shp.id, shp.orderId].map(normToken);
+        if (codes.some(c => c && (c === inboundPo || c.includes(inboundPo) || inboundPo.includes(c)))) {
+          const trk = extractTrackingNumber(shp.tracking);
+          if (trk) return { tracking: trk, via: `3PL Shipment ${shp.id}` };
+        }
+      }
+    }
+    return null;
+  }
+
+  function reconcileAutonomousTasks(state, mailThreads = [], options = {}) {
+    const now = options.now || new Date().toISOString();
+    const dryRun = options.dryRun === true;
+    const resetDismissed = options.resetDismissed === true;
+    const owner = options.actor || 'mk-copilot';
+    const e = state?.enterprise || {};
+    const l = state?.logistics || {};
+    state.tasks ||= [];
+    state.taskMeta ||= { dismissedAutoKeys: [] };
+    if (resetDismissed) state.taskMeta.dismissedAutoKeys = [];
+    const dismissed = new Set(state.taskMeta.dismissedAutoKeys || []);
+
+    const created = [];
+    const resolved = [];
+    const desired = new Map();
+
+    const pickTeam = ids => DEFAULT_TEAM_ROSTER.filter(m => ids.includes(m.id)).map(m => ({ ...m }));
+
+    // RULE A: Inventory Level Analysis → Auto-Create Vendor PO Tasks
+    for (const item of e.inventory || []) {
+      if (item.nature === 'DIGITAL' || String(item.status || '').toLowerCase() === 'internal use') continue;
+      const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+      const safety = positive(item.safety);
+      if (!safety) continue;
+      const openInbound = (e.purchaseOrders || [])
+        .filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(p.status))
+        .reduce((sum, p) => sum + (p.lines || []).filter(ln => ln.sku === item.sku).reduce((s, ln) => s + Math.max(0, n(ln.qty) - n(ln.received) - n(ln.cancelledQty)), 0), 0);
+
+      const autoKey = 'auto:po:' + item.sku;
+      if ((free + openInbound) < safety) {
+        const deficit = safety - (free + openInbound);
+        const suggestedQty = Math.max(25, Math.ceil((safety * 2 - free) / 5) * 5);
+        desired.set(autoKey, {
+          autoKey,
+          autoTrigger: 'low_stock_po',
+          autoEntityId: item.sku,
+          autoRef: item.model || item.sku,
+          title: `Place Vendor PO for ${item.model || item.sku} (${item.brand || ''} ${item.title || ''}) — Below Safety Stock`.replace(/\s+/g, ' ').trim().slice(0, 160),
+          notes: `Auto-detected by MK Co-Pilot Inventory Monitor:\n• SKU: ${item.sku} (${item.model || '—'})\n• Free Usable Stock: ${free} units (On-hand ${n(item.onHand)}, Reserved ${n(item.reserved)})\n• Safety Stock Floor: ${safety} units (Deficit: ${deficit} units)\n• Open Inbound Vendor POs: ${openInbound} units\n• Recommended PO Quantity: ${suggestedQty} units\n\nOnce a covering Vendor PO is issued (or stock recovers above ${safety} units), MK Co-Pilot will automatically resolve and remove this task.`,
+          category: 'PROCUREMENT',
+          priority: free <= Math.floor(safety * 0.5) ? 'CRITICAL' : 'HIGH',
+          assignees: pickTeam(['usr_elena', 'usr_david']),
+          sourcePath: 'procurement/index.html?sku=' + encodeURIComponent(item.sku),
+          dueAt: new Date(Date.parse(now) + 24 * 3600000).toISOString(),
+          reminderAt: new Date(Date.parse(now) + 4 * 3600000).toISOString(),
+          suggestedQty
+        });
+      }
+    }
+
+    // RULE B: Received Mail → Tracking Requests (Auto-Create & Auto-Resolve when Tracking Provided)
+    const inboundMails = (mailThreads || []).filter(t => t && t.direction !== 'outbound' && t.folder !== 'sent' && t.folder !== 'trash');
+    for (const mail of inboundMails) {
+      const mText = `${mail.subject || ''}\n${mail.snippet || ''}\n${mail.body || ''}`;
+      const asksTracking = /\b(tracking\s*(?:number|#|no\.?|request|info|details|update)|provide\s+(?:the\s+)?tracking|need\s+tracking|send\s+tracking|share\s+tracking|where\s+is\s+(?:my|the)\s+tracking)\b/i.test(mText);
+      if (!asksTracking) continue;
+
+      const resolution = findTrackingResolutionForMail(mail, mailThreads, state);
+      const autoKey = 'auto:tracking:' + mail.id;
+      if (!resolution) {
+        const refCode = mail.related?.poNumber || mail.shipmentDetails?.poNumber || mail.subject;
+        const urgent = /\b(eod|midday|priority|urgent|asap|today)\b/i.test(mText);
+        desired.set(autoKey, {
+          autoKey,
+          autoTrigger: 'tracking_request',
+          autoEntityId: mail.id,
+          autoRef: refCode,
+          linkedMailId: mail.id,
+          title: `Provide Tracking for ${refCode} — ${mail.senderName}`.slice(0, 160),
+          notes: `Auto-created by MK Co-Pilot from received email:\n• From: ${mail.senderName} <${mail.senderEmail || 'unknown'}>\n• Subject: ${mail.subject}\n• Reference: ${refCode}\n• Excerpt: "${(mail.snippet || mail.body || '').slice(0, 220)}"\n\nOnce tracking is provided via MK97 Mail reply or updated on the shipment/order, MK Co-Pilot will automatically analyze the update and remove this task from your active list.`,
+          category: 'TRACKING',
+          priority: urgent ? 'HIGH' : 'NORMAL',
+          assignees: pickTeam(['usr_marcus', 'usr_priya']),
+          sourcePath: 'mail.html?thread=' + encodeURIComponent(mail.id),
+          dueAt: new Date(Date.parse(now) + (urgent ? 8 : 24) * 3600000).toISOString(),
+          reminderAt: new Date(Date.parse(now) + (urgent ? 2 : 6) * 3600000).toISOString()
+        });
+      }
+    }
+
+    // RULE C: Delayed 3PL Shipments Missing Tracking
+    for (const shp of l.tplShipments || []) {
+      if (shp.status === 'DELAYED' && !extractTrackingNumber(shp.tracking)) {
+        const autoKey = 'auto:3pl-delay:' + shp.id;
+        desired.set(autoKey, {
+          autoKey,
+          autoTrigger: 'tpl_delay_tracking',
+          autoEntityId: shp.id,
+          autoRef: shp.orderId || shp.id,
+          title: `Resolve Delayed 3PL Shipment ${shp.id} (${shp.orderId}) — Tracking Missing`.slice(0, 160),
+          notes: `Auto-detected by MK Co-Pilot 3PL Monitor:\n• Shipment: ${shp.id} · Order: ${shp.orderId}\n• SKU: ${shp.sku} (Qty ${shp.qty}) · Carrier: ${shp.service}\n• Status: DELAYED without carrier tracking.\n\nThis task auto-resolves as soon as carrier tracking is recorded or the shipment dispatches.`,
+          category: 'ESCALATION',
+          priority: 'CRITICAL',
+          assignees: pickTeam(['usr_marcus', 'usr_sarah']),
+          sourcePath: '3pl-management/shipments.html',
+          dueAt: new Date(Date.parse(now) + 12 * 3600000).toISOString(),
+          reminderAt: new Date(Date.parse(now) + 2 * 3600000).toISOString()
+        });
+      }
+    }
+
+    // RULE D: Received Mail Escalations / Urgent Supply Issues (non-tracking)
+    for (const mail of inboundMails) {
+      if (desired.has('auto:tracking:' + mail.id)) continue;
+      const mText = `${mail.subject || ''}\n${mail.snippet || ''}\n${mail.body || ''}`;
+      const isEsc = /\b(escalat\w*|urgent|short\s*shipment|damaged|wrong\s*item|cancel\w*|sla\s*breach)\b/i.test(mText);
+      if (!isEsc) continue;
+      const hasOutboundReply = (mailThreads || []).some(out =>
+        (out.direction === 'outbound' || out.folder === 'sent') &&
+        ((out.replyToThreadId && out.replyToThreadId === mail.id) ||
+          (mail.senderEmail && String(out.to || '').toLowerCase().includes(String(mail.senderEmail).toLowerCase()) && normalizeSubjectKey(out.subject).includes(normalizeSubjectKey(mail.subject))))
+      );
+      if (!hasOutboundReply) {
+        const autoKey = 'auto:mail-esc:' + mail.id;
+        const refCode = mail.related?.poNumber || mail.subject;
+        desired.set(autoKey, {
+          autoKey,
+          autoTrigger: 'mail_escalation',
+          autoEntityId: mail.id,
+          autoRef: refCode,
+          linkedMailId: mail.id,
+          title: `Escalation Follow-Up: ${mail.subject} (${mail.senderName})`.slice(0, 160),
+          notes: `Auto-created by MK Co-Pilot from urgent email:\n• From: ${mail.senderName} <${mail.senderEmail || ''}>\n• Excerpt: "${(mail.snippet || mail.body || '').slice(0, 220)}"\n\nAuto-resolves once an outbound resolution reply is sent.`,
+          category: 'ESCALATION',
+          priority: 'HIGH',
+          assignees: pickTeam(['usr_manoj', 'usr_sarah']),
+          sourcePath: 'mail.html?thread=' + encodeURIComponent(mail.id),
+          dueAt: new Date(Date.parse(now) + 12 * 3600000).toISOString(),
+          reminderAt: new Date(Date.parse(now) + 2 * 3600000).toISOString()
+        });
+      }
+    }
+
+    // 1. AUTO-RESOLVE active tasks whose condition is now satisfied!
+    for (const task of state.tasks) {
+      if (task.status === 'DONE') continue;
+      let resolveReason = '';
+
+      if (task.autoTrigger === 'low_stock_po' && task.autoEntityId) {
+        const item = (e.inventory || []).find(i => i.sku === task.autoEntityId);
+        if (item) {
+          const free = Math.max(0, n(item.onHand) - n(item.reserved) - n(item.damaged));
+          const safety = positive(item.safety);
+          const openInbound = (e.purchaseOrders || [])
+            .filter(p => !['RECEIVED', 'CANCELLED', 'CLOSED', 'REJECTED', 'VOID'].includes(p.status))
+            .reduce((sum, p) => sum + (p.lines || []).filter(ln => ln.sku === item.sku).reduce((s, ln) => s + Math.max(0, n(ln.qty) - n(ln.received) - n(ln.cancelledQty)), 0), 0);
+          if ((free + openInbound) >= safety) {
+            resolveReason = openInbound > 0
+              ? `Vendor PO placed covering ${openInbound} inbound unit(s) (free ${free} + inbound ${openInbound} ≥ safety ${safety}). Automatically resolved by MK Co-Pilot.`
+              : `Free inventory (${free}) now meets safety stock (${safety}). Automatically resolved by MK Co-Pilot.`;
+          }
+        }
+      } else if (task.autoTrigger === 'tracking_request' || (task.linkedMailId && /\btracking\b/i.test(task.title + ' ' + task.notes))) {
+        const mail = (mailThreads || []).find(t => t.id === (task.linkedMailId || task.autoEntityId));
+        if (mail) {
+          const res = findTrackingResolutionForMail(mail, mailThreads, state);
+          if (res) {
+            resolveReason = `Tracking number ${res.tracking} provided via ${res.via}. Verified and automatically resolved by MK Co-Pilot.`;
+          }
+        }
+      } else if (task.autoTrigger === 'tpl_delay_tracking' && task.autoEntityId) {
+        const shp = (l.tplShipments || []).find(s => s.id === task.autoEntityId);
+        if (shp && (extractTrackingNumber(shp.tracking) || ['DISPATCHED', 'DELIVERED'].includes(shp.status))) {
+          resolveReason = `3PL Shipment ${shp.id} updated (${shp.status}${shp.tracking ? ', tracking ' + shp.tracking : ''}). Automatically resolved by MK Co-Pilot.`;
+        }
+      } else if (task.autoTrigger === 'mail_escalation' && task.linkedMailId) {
+        const mail = (mailThreads || []).find(t => t.id === task.linkedMailId);
+        if (mail && !desired.has(task.autoKey)) {
+          resolveReason = `Outbound reply dispatched for "${mail.subject}". Automatically resolved by MK Co-Pilot.`;
+        }
+      }
+
+      if (resolveReason) {
+        resolved.push({ id: task.id, title: task.title, autoKey: task.autoKey || '', reason: resolveReason });
+        if (!dryRun) {
+          task.status = 'DONE';
+          task.completedAt = now;
+          task.updatedAt = now;
+          task.version = (task.version || 0) + 1;
+          task.autoResolved = true;
+          task.autoResolvedAt = now;
+          task.autoResolvedReason = resolveReason;
+          task.comments ||= [];
+          task.comments.push({
+            id: 'mk-auto-res-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            text: '✨ MK Co-Pilot Auto-Resolved: ' + resolveReason,
+            time: now,
+            author: 'MK Co-Pilot'
+          });
+        }
+      }
+    }
+
+    // 2. AUTO-CREATE missing autonomous tasks
+    const existingActiveKeys = new Set(state.tasks.filter(t => t.status !== 'DONE' && t.autoKey).map(t => t.autoKey));
+    const existingResolvedKeys = new Set(state.tasks.filter(t => t.status === 'DONE' && t.autoKey && !t.autoResolved).map(t => t.autoKey));
+    for (const [key, spec] of desired.entries()) {
+      if (existingActiveKeys.has(key) || dismissed.has(key) || existingResolvedKeys.has(key)) continue;
+      const newTask = {
+        id: 'mk-task-' + key.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-' + Math.random().toString(36).slice(2, 6),
+        title: spec.title,
+        notes: spec.notes,
+        status: 'OPEN',
+        priority: spec.priority,
+        category: spec.category,
+        assignees: spec.assignees,
+        dueAt: spec.dueAt,
+        reminderAt: spec.reminderAt,
+        sourcePath: spec.sourcePath || '',
+        sourceKey: key,
+        linkedMailId: spec.linkedMailId || '',
+        autoCreatedBy: 'mk-copilot',
+        autoKey: key,
+        autoTrigger: spec.autoTrigger,
+        autoEntityId: spec.autoEntityId || '',
+        autoRef: spec.autoRef || '',
+        suggestedQty: spec.suggestedQty || 0,
+        autoResolved: false,
+        autoResolvedAt: '',
+        autoResolvedReason: '',
+        reminderLog: [],
+        lastRemindedAt: '',
+        comments: [{
+          id: 'mk-auto-init-' + Math.random().toString(36).slice(2, 7),
+          text: '✨ Autonomously created by MK Co-Pilot after analyzing live ERP & Mail signals.',
+          time: now,
+          author: 'MK Co-Pilot'
+        }],
+        createdAt: now,
+        updatedAt: now,
+        createdBy: owner,
+        ownerUserId: 'local',
+        completedAt: '',
+        version: 1
+      };
+      created.push({ id: newTask.id, title: newTask.title, autoKey: key, trigger: spec.autoTrigger });
+      if (!dryRun) state.tasks.push(newTask);
+    }
+
+    return {
+      created,
+      resolved,
+      scannedAt: now,
+      summary: `MK Co-Pilot scan complete: ${created.length} task(s) created, ${resolved.length} task(s) auto-resolved.`
+    };
+  }
+
+  return {
+    VERSION,
+    DEFAULT_TEAM_ROSTER,
+    civilDay,
+    dateOnly,
+    dueTime,
+    parseFollowUp,
+    intent,
+    remaining,
+    analyze,
+    demandSeries,
+    applyCommunication,
+    extractTrackingNumber,
+    extractTaskReferences,
+    analyzeTaskImportance,
+    prioritizeTasks,
+    reconcileAutonomousTasks
+  };
 });

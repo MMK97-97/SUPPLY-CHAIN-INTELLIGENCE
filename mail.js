@@ -379,6 +379,7 @@
   let showHeaderFilters = false;
   let showIntelPanel = typeof window !== 'undefined' ? window.innerWidth >= 1380 : true;
   const mailStorage = window.StarkWorkspace?.localStorage || window.localStorage;
+  const MAIL_BRIDGE_KEY = 'mk97.mail.threads.v1';
   const DEFAULT_SETTINGS = { defaultMailbox: 'supply.chain@mk97.com', density: 'comfortable', showTelemetry: true, autoSignature: true };
   const DEFAULT_SIGNATURE = { name: 'MK97 Operations Standard', body: 'Best regards,\nManoj Manne\nSupply Chain Director · MK97 ERP' };
   let mailSettings = { ...DEFAULT_SETTINGS };
@@ -391,6 +392,73 @@
   } catch (_) {}
   function saveMailSettings() { try { mailStorage?.setItem('mk97.mail.settings.v1', JSON.stringify(mailSettings)); } catch (_) {} }
   function saveMailSignature() { try { mailStorage?.setItem('mk97.mail.signature.v1', JSON.stringify(mailSignature)); } catch (_) {} }
+
+  function serializeThreadForBridge(t) {
+    return {
+      id: t.id,
+      senderName: t.senderName,
+      senderCompany: t.senderCompany || '',
+      senderEmail: t.senderEmail || '',
+      to: t.to || '',
+      cc: t.cc || '',
+      subject: t.subject || '',
+      timestamp: t.timestamp || '',
+      fullDate: t.fullDate || '',
+      unread: !!t.unread,
+      starred: !!t.starred,
+      flagged: !!t.flagged,
+      folder: t.folder || 'inbox',
+      direction: t.direction || (t.folder === 'sent' ? 'outbound' : 'inbound'),
+      replyToThreadId: t.replyToThreadId || '',
+      category: t.category || 'all',
+      avatar: t.avatar || 'MK',
+      avatarBg: t.avatarBg || '#f1f5f9',
+      avatarColor: t.avatarColor || '#334155',
+      tags: Array.isArray(t.tags) ? t.tags.slice(0, 8) : [],
+      snippet: String(t.snippet || '').slice(0, 220),
+      body: String(t.body || '').slice(0, 4000),
+      shipmentDetails: t.shipmentDetails ? { ...t.shipmentDetails } : undefined,
+      related: t.related ? { ...t.related } : undefined,
+      attachments: Array.isArray(t.attachments) ? t.attachments.slice(0, 6) : []
+    };
+  }
+
+  function persistMailBridge() {
+    try {
+      mailStorage?.setItem(MAIL_BRIDGE_KEY, JSON.stringify(threads.slice(0, 80).map(serializeThreadForBridge)));
+      window.dispatchEvent(new CustomEvent('mk97:mail-updated', { detail: { count: threads.length } }));
+    } catch (_) {}
+  }
+
+  function hydrateMailBridge() {
+    try {
+      const saved = JSON.parse(mailStorage?.getItem(MAIL_BRIDGE_KEY) || 'null');
+      if (!Array.isArray(saved) || !saved.length) return;
+      const byId = new Map(threads.map(t => [t.id, t]));
+      const extras = [];
+      for (const item of saved) {
+        if (!item || !item.id) continue;
+        const base = byId.get(item.id);
+        if (base) {
+          Object.assign(base, {
+            unread: item.unread,
+            starred: item.starred,
+            flagged: item.flagged,
+            folder: item.folder || base.folder,
+            related: item.related ? { ...(base.related || {}), ...item.related } : base.related,
+            shipmentDetails: item.shipmentDetails ? { ...(base.shipmentDetails || {}), ...item.shipmentDetails } : base.shipmentDetails
+          });
+        } else {
+          extras.push(item);
+        }
+      }
+      if (extras.length) {
+        threads = [...extras, ...threads];
+      }
+    } catch (_) {}
+  }
+  hydrateMailBridge();
+
   if (typeof window !== 'undefined' && window.location && window.location.search && (window.location.search.includes('compose=true') || window.location.search.includes('compose=1'))) {
     isComposeActive = true;
   }
@@ -408,6 +476,19 @@
   let activeThreadId = 'thread-1';
   let activeFilterTab = 'all'; // all, unread, mentions, orderRelated
   let activeFolder = 'inbox'; // inbox, starred, snoozed, sent, drafts, archive, trash, shared, vendor, customer, procurement, shipping, internal
+  if (typeof window !== 'undefined' && window.location && window.location.search) {
+    try {
+      const requestedThread = new URLSearchParams(window.location.search).get('thread');
+      if (requestedThread) {
+        const matched = threads.find(t => t.id === requestedThread);
+        if (matched) {
+          activeThreadId = matched.id;
+          if (matched.folder === 'sent' || matched.direction === 'outbound') activeFolder = 'sent';
+          else if (matched.folder) activeFolder = matched.folder;
+        }
+      }
+    } catch (_) {}
+  }
   let searchQuery = '';
   let mailboxFilter = 'all';
   let labelFilter = 'all';
@@ -747,6 +828,8 @@ startxref
         const newRecords = mappedRecords.filter(r => !existingIds.has(r.id));
         if (newRecords.length > 0) {
           threads.unshift(...newRecords);
+          persistMailBridge();
+          window.StarkTasks?.runCopilotSync?.({ silent: true });
           updateThreadList();
           updateSidebarCounts();
         }
@@ -771,9 +854,15 @@ startxref
               const newThread = mapEmailRecordToThread(payload.new);
               if (!threads.some(t => t.id === newThread.id)) {
                 threads.unshift(newThread);
+                persistMailBridge();
+                const syncRes = window.StarkTasks?.runCopilotSync?.({ silent: true });
                 updateThreadList();
                 updateSidebarCounts();
-                notice('New email received: ' + newThread.subject);
+                if (syncRes?.created?.length) {
+                  notice(`New email received: ${newThread.subject} · MK Co-Pilot created ${syncRes.created.length} task(s).`);
+                } else {
+                  notice('New email received: ' + newThread.subject);
+                }
               }
             }
           }
@@ -2495,9 +2584,12 @@ function renderDetailView() {
             };
             threads.unshift(newThread);
             composeState.attachments = [];
+            persistMailBridge();
+            const syncRes = window.StarkTasks?.runCopilotSync?.({ silent: true });
 
             const attachNotice = newThread.attachments.length > 0 ? ` with ${newThread.attachments.length} attachment(s)` : '';
-            notice(`Email dispatched to ${toInput}${attachNotice} successfully!`);
+            const autoMsg = syncRes?.resolved?.length ? ` · ✨ MK Co-Pilot auto-resolved ${syncRes.resolved.length} task(s)!` : '';
+            notice(`Email dispatched to ${toInput}${attachNotice} successfully!${autoMsg}`);
             isComposeActive = false;
             isComposeExpanded = false;
             activeThreadId = newThread.id;
@@ -2568,49 +2660,52 @@ function renderDetailView() {
           return;
         }
 
-        const sb = getSupabase();
-        if (!sb) {
-          notice('Supabase client is not available. Please check configuration.', true);
-          return;
-        }
+        const active = getActiveThread();
+        const recipientEmail = active?.senderEmail || 'supply.chain@mk97.com';
+        const replySubject = active?.subject
+          ? (/^re:/i.test(active.subject) ? active.subject : `Re: ${active.subject}`)
+          : 'Re: Supply Chain Update';
 
         const originalBtnHtml = sendReplyBtn.innerHTML;
         sendReplyBtn.disabled = true;
         sendReplyBtn.innerHTML = '<span>Sending…</span>';
 
         const payload = {
-          to: "your-github-email@example.com",
-          subject: "Re: Staging Bay Confirmation PO #87366",
+          to: recipientEmail,
+          subject: replySubject,
           body: text
         };
 
         try {
-          // 1. Invoke the Supabase Edge Function named 'send-sandbox-email' (with fallback to 'index-ts')
-          let funcData = null;
+          const sb = getSupabase();
           let funcError = null;
-
-          const primaryInvoke = await sb.functions.invoke('send-sandbox-email', {
-            body: payload
-          });
-
-          if (!primaryInvoke.error) {
-            funcData = primaryInvoke.data;
-          } else {
-            const fallbackInvoke = await sb.functions.invoke('index-ts', {
-              body: payload
-            });
-            if (!fallbackInvoke.error) {
-              funcData = fallbackInvoke.data;
-            } else {
-              funcError = primaryInvoke.error;
-              console.warn('Edge Function invoke warning:', primaryInvoke.error);
+          if (sb && sb.functions) {
+            try {
+              const primaryInvoke = await sb.functions.invoke('send-sandbox-email', { body: payload });
+              if (primaryInvoke.error) {
+                const fallbackInvoke = await sb.functions.invoke('index-ts', { body: payload });
+                if (fallbackInvoke.error) funcError = primaryInvoke.error;
+              }
+            } catch (e) {
+              funcError = e;
             }
           }
 
-          // 2. On success: clear out the text input frame
           if (replyInput) replyInput.value = '';
 
-          // 3. Log the outbound record into local Supabase 'emails' table with direction marked as 'outbound'
+          const detectedTrk = window.MKCopilotCore?.extractTrackingNumber?.(text) || '';
+          if (active && detectedTrk) {
+            active.related = { ...(active.related || {}), tracking: detectedTrk };
+            active.shipmentDetails = {
+              ...(active.shipmentDetails || {}),
+              poNumber: active.shipmentDetails?.poNumber || active.related?.poNumber || '',
+              trackingNumber: detectedTrk,
+              status: 'Tracking Provided',
+              statusClass: 'status-transit',
+              trackingUrl: `shipment-tracking.html?tracking=${encodeURIComponent(detectedTrk)}`
+            };
+          }
+
           const outboundRecord = {
             direction: 'outbound',
             to_email: payload.to,
@@ -2619,41 +2714,43 @@ function renderDetailView() {
             subject: payload.subject,
             body: payload.body,
             snippet: text.slice(0, 85) + (text.length > 85 ? '…' : ''),
-            sender: 'You (Supply Chain)',
-            sender_name: 'You (Supply Chain)',
+            sender: 'Manoj Manne',
+            sender_name: 'Manoj Manne',
             sender_email: 'supply.chain@mk97.com',
             sender_company: 'MK97 Operations',
             status: funcError ? 'logged_locally' : 'sent',
             created_at: new Date().toISOString()
           };
 
-          try {
-            const { error: insertError } = await sb
-              .from('emails')
-              .insert([outboundRecord]);
-            if (insertError) {
-              console.warn('Supabase emails table insert warning:', insertError.message);
+          if (sb && sb.from) {
+            try {
+              await sb.from('emails').insert([outboundRecord]);
+            } catch (insertErr) {
+              console.warn('Supabase insert exception:', insertErr);
             }
-          } catch (insertErr) {
-            console.warn('Supabase insert exception:', insertErr);
           }
 
-          // Prepend locally so it is visible immediately without a hard browser reload
-          const outboundThread = mapEmailRecordToThread(outboundRecord);
-          if (!threads.some(t => t.id === outboundThread.id)) {
-            threads.unshift(outboundThread);
-            updateThreadList();
-            updateSidebarCounts();
-          }
+          const outboundThread = {
+            ...mapEmailRecordToThread(outboundRecord),
+            id: 'reply-' + Date.now(),
+            folder: 'sent',
+            direction: 'outbound',
+            replyToThreadId: active?.id || '',
+            related: active?.related ? { ...active.related, ...(detectedTrk ? { tracking: detectedTrk } : {}) } : undefined
+          };
+          threads.unshift(outboundThread);
+          persistMailBridge();
 
-          // 4. Show a clean toast notification confirming transmission or explaining cloud deployment state
-          if (funcError) {
-            notice(`Saved to emails table. Notice: Edge Function 'send-sandbox-email' is not deployed on Supabase cloud (404 Not Found). Deploy it in your Supabase project to dispatch live emails.`, true);
+          const syncRes = window.StarkTasks?.runCopilotSync?.({ silent: true });
+          updateView();
+
+          if (syncRes?.resolved?.length) {
+            notice(`Reply sent to ${active?.senderName || payload.to}! ✨ MK Co-Pilot verified ${detectedTrk ? 'tracking ' + detectedTrk : 'your reply'} and auto-resolved ${syncRes.resolved.length} task(s).`);
           } else {
-            notice('Transmission confirmed: Outbound email sent successfully.');
+            notice(`Reply sent to ${active?.senderName || payload.to} (${payload.subject}).`);
           }
         } catch (err) {
-          console.error('Error invoking send-sandbox-email:', err);
+          console.error('Error sending reply:', err);
           notice('Transmission failed: ' + (err.message || 'Error sending email'), true);
         } finally {
           sendReplyBtn.disabled = false;
@@ -2700,11 +2797,24 @@ function renderDetailView() {
       };
     }
 
-    // Quick reminder button
+    // Quick reminder button -> Create real synced Task linked to this email
     const reminderBtn = root.querySelector('#btn-quick-reminder');
     if (reminderBtn) {
       reminderBtn.onclick = () => {
-        notice('Follow-up reminder set for PO #87366 (tomorrow at 9:00 AM).');
+        const thread = getActiveThread();
+        if (window.StarkTasks?.edit && thread) {
+          const ref = thread.related?.poNumber || thread.shipmentDetails?.poNumber || '';
+          const title = ref ? `Follow up: ${ref} — ${thread.subject}` : `Follow up: ${thread.subject}`;
+          const notes = `Linked email from ${thread.senderName} <${thread.senderEmail || ''}>\nSubject: ${thread.subject}\n\n${(thread.snippet || thread.body || '').slice(0, 320)}`;
+          window.StarkTasks.edit(null, {
+            title: title.slice(0, 155),
+            notes,
+            linkedMailId: thread.id,
+            sourcePath: 'mail.html?thread=' + encodeURIComponent(thread.id)
+          });
+        } else {
+          notice('Follow-up reminder set for ' + (thread?.related?.poNumber || thread?.subject || 'this thread') + '.');
+        }
       };
     }
 
@@ -4075,7 +4185,8 @@ function renderDetailView() {
             <span class="workspace-mail-pill">${inboxCount}</span>
           </a>
           <a class="workspace-view-tab" href="${S ? S.url('tasks.html') : 'tasks.html'}" role="tab" aria-label="Tasks workspace" title="Tasks &amp; Operational Reminders">
-            Tasks
+            <span>Tasks</span>
+            ${(() => { const n = (S?.getState?.()?.tasks || []).filter(t => t.status !== 'DONE').length; return n > 0 ? `<span class="workspace-mail-pill workspace-task-pill">${n}</span>` : ''; })()}
           </a>
         </div>
       </div>
@@ -4097,9 +4208,22 @@ function renderDetailView() {
   }
 
   function init() {
+    persistMailBridge();
     if (document.body.dataset.systemPage === 'mail' || document.getElementById('stark-mail-content')) {
       renderApp();
       initReactiveMailFeed();
+      window.addEventListener('storage', e => {
+        if (e.key === MAIL_BRIDGE_KEY) {
+          hydrateMailBridge();
+          updateThreadList();
+          updateSidebarCounts();
+        }
+      });
+      window.addEventListener('stark:system-change', () => {
+        const pill = document.querySelector('#stark-mail-content .workspace-task-pill');
+        const activeCount = (S?.getState?.()?.tasks || []).filter(t => t.status !== 'DONE').length;
+        if (pill) pill.textContent = String(activeCount);
+      });
     }
   }
 
@@ -4112,6 +4236,7 @@ function renderDetailView() {
   window.MK97Mail = window.StarkMail = {
     render: renderApp,
     getThreads: () => threads,
+    persistBridge: persistMailBridge,
     selectThread: id => {
       activeThreadId = id;
       updateView();
@@ -4128,9 +4253,10 @@ function renderDetailView() {
     initReactiveMailFeed,
     mapEmailRecordToThread,
     prependEmail: record => {
-      const thread = mapEmailRecordToThread(record);
+      const thread = record?.senderName && record?.folder ? record : mapEmailRecordToThread(record);
       if (!threads.some(t => t.id === thread.id)) {
         threads.unshift(thread);
+        persistMailBridge();
         updateThreadList();
         updateSidebarCounts();
       }

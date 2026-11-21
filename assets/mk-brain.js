@@ -191,6 +191,25 @@
           <span class="mk-card-text">Track PO-2026-00125</span>
           <span class="mk-card-chevron">&gt;</span>
         </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Prioritize &amp; analyze my tasks">
+          <span class="mk-card-icon-wrap mk-card-icon-green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </span>
+          <span class="mk-card-text">Prioritize &amp; analyze my tasks</span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
+        <button type="button" class="mk-copilot-action-card" data-prompt="Scan mail and inventory for tasks">
+          <span class="mk-card-icon-wrap mk-card-icon-purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </span>
+          <span class="mk-card-text">Scan mail &amp; inventory for tasks</span>
+          <span class="mk-card-chevron">&gt;</span>
+        </button>
         <button type="button" class="mk-copilot-action-card" data-prompt="Summarize vendor performance">
           <span class="mk-card-icon-wrap mk-card-icon-purple">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -511,8 +530,83 @@
     }
   }
 
+  function handleTaskCopilotQuestion(raw) {
+    const q = raw.toLowerCase();
+    const isTaskQuery = /\b(task|tasks|reminder|reminders)\b/.test(q) || /\b(priority\s*(?:list|order)|prioriti[sz]e.*task|scan\s*(?:mail|inbox|emails?).*(?:task|tracking|inventory)|auto[- ]?create\s*task)\b/.test(q);
+    if (!isTaskQuery) return null;
+    const S = window.StarkSystem, Core = window.MKCopilotCore, T = window.StarkTasks;
+    if (!S || !Core) return null;
+
+    // 1. Autonomous Mail + Inventory + 3PL Scan command
+    if (/\b(scan|sync|auto[- ]?create|check\s*(?:mail|inbox|emails?|inventory)|tracking\s*request)\b/.test(q)) {
+      const res = T?.runCopilotSync ? T.runCopilotSync({ silent: true, force: true }) : { created: [], resolved: [], summary: 'Synced.' };
+      const ranked = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(S.getState().tasks || [], S.getState())).filter(x => x.task.status !== 'DONE');
+      const lines = [
+        `**MK Co-Pilot Autonomous Task Scan**`,
+        `• Created: **${res.created.length}** new task(s)${res.created.length ? ' — ' + res.created.map(c => c.title).join('; ') : ''}`,
+        `• Auto-Resolved & Cleared: **${res.resolved.length}** task(s)${res.resolved.length ? ' — ' + res.resolved.map(r => `${r.title} (${r.reason})`).join('; ') : ''}`,
+        `• Active Priority Queue: **${ranked.length}** open task(s)`
+      ];
+      if (ranked.length) {
+        lines.push('', '**Top Priority Order:**');
+        ranked.slice(0, 5).forEach(({ task, analysis }) => {
+          const refs = analysis.references.length ? ` [${analysis.references.slice(0, 2).map(r => r.code).join(', ')}]` : '';
+          lines.push(`**#${analysis.rank}** (${analysis.score}/100 · ${analysis.tier}) — ${task.title}${refs}`);
+        });
+      }
+      return { intent: 'copilot', category: 'MK Task Intelligence', message: lines.join('\n') };
+    }
+
+    // 2. Analyze a specific task / PO / Order / SKU reference importance
+    const analyzeMatch = raw.match(/(?:analy[sz]e|importance\s+of|score|evaluate|check)\s+(?:task\s+)?(.+)/i);
+    if (analyzeMatch && !/\b(my\s+tasks|all\s+tasks|tasks)\b/i.test(analyzeMatch[1].trim())) {
+      const probeText = analyzeMatch[1].trim();
+      const mails = T?.getMailThreads ? T.getMailThreads() : [];
+      const res = Core.analyzeTaskImportance({ title: probeText, notes: '' }, S.getState(), { mailThreads: mails });
+      const lines = [
+        `**MK Co-Pilot Task Importance Analysis**`,
+        `Subject: **${probeText}**`,
+        `Priority Tier: **${res.tier}** · Importance Score: **${res.score}/100** · Category: **${res.category}**`,
+        res.references.length ? `Matched Website Records: ${res.references.map(r => `**${r.type.replace('_', ' ')} ${r.code}** (${r.status})`).join(', ')}` : 'Matched Website Records: None directly referenced yet.',
+        '',
+        '**Evidence & Signals:**',
+        ...res.reasons.map(r => `• ${r}`),
+        '',
+        `**Recommended Action:** ${res.recommendedAction}`
+      ];
+      return { intent: 'copilot', category: 'MK Task Intelligence', message: lines.join('\n') };
+    }
+
+    // 3. Default: Full Priority Order across all active tasks
+    if (T?.runCopilotSync) { try { T.runCopilotSync({ silent: true }); } catch (_) {} }
+    const ranked = (T?.analyzeAll ? T.analyzeAll() : Core.prioritizeTasks(S.getState().tasks || [], S.getState())).filter(x => x.task.status !== 'DONE');
+    const autoResolvedCount = (S.getState().tasks || []).filter(t => t.status === 'DONE' && t.autoResolved).length;
+    if (!ranked.length) {
+      return {
+        intent: 'copilot',
+        category: 'MK Task Intelligence',
+        message: `**MK Task Priority Queue**\nYou have **0 active tasks** (${autoResolvedCount} auto-resolved by MK Co-Pilot). Ask me to **“Scan mail and inventory for tasks”** or open **Tasks** to create a task with a PO #, Order #, or SKU.`
+      };
+    }
+    const lines = [
+      `**MK Co-Pilot Priority Order (${ranked.length} Active · ${autoResolvedCount} Auto-Resolved)**`
+    ];
+    ranked.slice(0, 7).forEach(({ task, analysis }) => {
+      const team = (task.assignees || []).map(a => a.name).join(', ');
+      const refs = analysis.references.slice(0, 2).map(r => r.code).join(', ');
+      lines.push(
+        `**#${analysis.rank} · ${analysis.tier} (${analysis.score}/100)** — ${task.title}${task.autoCreatedBy === 'mk-copilot' ? ' ✨' : ''}\n` +
+        `   ${refs ? `Refs: ${refs} · ` : ''}${team ? `Team: ${team} · ` : ''}${analysis.reasons[0] || ''}`
+      );
+    });
+    lines.push('', 'Tip: Mention any PO #, Order #, SKU, or "escalation" when creating a task for live website-wide priority scoring.');
+    return { intent: 'copilot', category: 'MK Task Intelligence', message: lines.join('\n') };
+  }
+
   async function routeQuestion(question) {
     const raw = clean(question);
+    const taskAnswer = handleTaskCopilotQuestion(raw);
+    if (taskAnswer) return taskAnswer;
     const copilot = window.MKCopilot?.handle(raw);
     if (copilot) return copilot;
     const q = raw.toLowerCase();
