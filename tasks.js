@@ -1241,8 +1241,13 @@
 
   function checkReminders() {
     if (!document.body || !window.StarkSystemUI) return;
-    const due = dueReminders();
     let tray = document.querySelector('#task-reminder-tray');
+    // On tasks.html the user is already viewing their full Tasks & Reminders workspace; never cover it with floating reminder cards.
+    if (document.body.dataset.systemPage === 'tasks' || document.querySelector('#tasks-content')) {
+      tray?.remove();
+      return;
+    }
+    const due = dueReminders();
     if (!due.length) { tray?.remove(); return; }
     if (!tray) {
       tray = document.createElement('aside');
@@ -1252,26 +1257,28 @@
       tray.setAttribute('aria-live', 'polite');
       document.body.append(tray);
     }
-    const signature = due.slice(0, 3).map(t => t.id + t.reminderAt + t.title + (t.assignees?.length || 0)).join('|');
+    const top = due[0];
+    const extra = due.length - 1;
+    const signature = `${top.id}|${top.reminderAt}|${top.title}|${extra}`;
     if (tray.dataset.signature === signature) return;
     tray.dataset.signature = signature;
-    tray.innerHTML = due.slice(0, 3).map(task => {
-      const team = (task.assignees || []).map(a => a.name).join(', ');
-      return `
-        <div class="task-reminder">
-          <div class="task-reminder-head">
-            <strong>🔔 Task Reminder</strong>
-            <span class="tsk-tier-mini tier-${esc((task.priority || 'NORMAL').toLowerCase())}">${esc(task.priority || 'NORMAL')}</span>
-          </div>
-          <a href="${S.url('tasks.html?task=' + encodeURIComponent(task.id))}">${esc(task.title)}</a>
-          <span>${esc(when(task.dueAt || task.reminderAt))}${team ? ' · 👥 ' + esc(team) : ''}</span>
-          <div class="task-reminder-actions">
-            <button type="button" class="sys-btn" data-tray-remind="${esc(task.id)}">Notify Team</button>
-            <button type="button" class="sys-btn" data-dismiss-reminder="${esc(task.id)}">Dismiss</button>
-          </div>
-        </div>`;
-    }).join('');
+    const team = (top.assignees || []).map(a => a.name).join(', ');
+    tray.innerHTML = `
+      <div class="task-reminder">
+        <div class="task-reminder-head">
+          <strong>🔔 Task Reminder${extra > 0 ? ` (+${extra} more)` : ''}</strong>
+          <span class="tsk-tier-mini tier-${esc((top.priority || 'NORMAL').toLowerCase())}">${esc(top.priority || 'NORMAL')}</span>
+        </div>
+        <a href="${S.url('tasks.html?task=' + encodeURIComponent(top.id))}">${esc(top.title)}</a>
+        <span>${esc(when(top.dueAt || top.reminderAt))}${team ? ' · 👥 ' + esc(team) : ''}</span>
+        <div class="task-reminder-actions">
+          <button type="button" class="sys-btn" data-tray-remind="${esc(top.id)}">Notify Team</button>
+          <button type="button" class="sys-btn" data-dismiss-reminder="${esc(top.id)}">Dismiss</button>
+          ${extra > 0 ? `<button type="button" class="sys-btn" data-dismiss-all-reminders="1">Dismiss All</button>` : ''}
+        </div>
+      </div>`;
     tray.querySelectorAll('[data-dismiss-reminder]').forEach(button => { button.onclick = () => dismiss(button.dataset.dismissReminder); });
+    tray.querySelector('[data-dismiss-all-reminders]')?.addEventListener('click', () => { due.forEach(t => dismiss(t.id)); });
     tray.querySelectorAll('[data-tray-remind]').forEach(button => { button.onclick = () => openReminderModal(button.dataset.trayRemind); });
   }
 

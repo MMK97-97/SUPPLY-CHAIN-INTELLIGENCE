@@ -859,9 +859,9 @@
       else await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=S.url(file+'?v=20261028-scan2');script.onload=resolve;script.onerror=()=>reject(new Error('Barcode scanning could not load. Reload to try again.'));document.head.append(script);});
     }
   })().catch(error=>notice(error.message,true));
-  if (!document.querySelector('link[href*="tasks.css"]')) {const style=document.createElement('link');style.rel='stylesheet';style.href=S.url('tasks.css?v=20261121-tasks4');document.head.append(style);}
+  if (!document.querySelector('link[href*="tasks.css"]')) {const style=document.createElement('link');style.rel='stylesheet';style.href=S.url('tasks.css?v=20261121-mk7');document.head.append(style);}
   if (!document.querySelector('script[src*="tasks.js"]')) {
-    const loadTasks=()=>{const tasks=document.createElement('script');tasks.src=S.url('tasks.js?v=20261121-tasks4');tasks.onerror=()=>notice('Task reminders could not load. Reload the workspace to try again.',true);document.head.append(tasks);};
+    const loadTasks=()=>{const tasks=document.createElement('script');tasks.src=S.url('tasks.js?v=20261121-mk7');tasks.onerror=()=>notice('Task reminders could not load. Reload the workspace to try again.',true);document.head.append(tasks);};
     if (!window.MKCopilotCore && !document.querySelector('script[src*="mk-copilot-core.js"]')) {
       const core=document.createElement('script');core.src=S.url('mk-copilot-core.js?v=20261121-tasks3');core.onload=loadTasks;core.onerror=loadTasks;document.head.append(core);
     } else loadTasks();
